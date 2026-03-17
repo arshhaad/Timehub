@@ -1,0 +1,52 @@
+.ecom/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media files (user uploads)
+media/
+
+# Static files (collected)
+staticfiles/
+
+# Environment variables
+.env
+.env.*
+
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# Pip cache
+pip-wheel-metadata/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Testing
+.pytest_cache/
+
+# Migrations (optional — usually keep them!)
+# */migrations/*
+# !*/migrations/__init__.py
+
