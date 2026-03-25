@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,7 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

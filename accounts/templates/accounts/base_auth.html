@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TimeHub{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}TimeHub — Manage your time efficiently{% endblock %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/auth.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="auth-body">
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="auth-icon">
+                    {% block auth_icon %}
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    {% endblock %}
+                </div>
+                <h1>{% block auth_title %}Welcome{% endblock %}</h1>
+                <p>{% block auth_subtitle %}{% endblock %}</p>
+            </div>
+
+            <!-- Form errors (non-field) -->
+            {% if form.non_field_errors %}
+            <div class="form-errors">
+                <ul>
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Main content -->
+            {% block auth_content %}{% endblock %}
+        </div>
+
+        <!-- Switch link (e.g. "Already have an account? Sign In") -->
+        {% block auth_switch %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
