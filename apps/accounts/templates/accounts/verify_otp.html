@@ -1,0 +1,71 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+
+{% block title %}Verify Email — TimeHub{% endblock %}
+{% block meta_description %}Verify your email address with OTP{% endblock %}
+
+{% block auth_icon %}
+<svg viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="14" rx="2"/>
+    <polyline points="3 7 12 13 21 7"/>
+</svg>
+{% endblock %}
+
+{% block auth_title %}Verify Your Email{% endblock %}
+{% block auth_subtitle %}Enter the 6-digit code sent to your email{% endblock %}
+
+{% block auth_content %}
+<!-- Email display -->
+{% if email %}
+<div class="email-display">
+    Code sent to <strong>{{ email }}</strong>
+</div>
+{% endif %}
+
+<form method="post" novalidate id="verify-otp-form">
+    {% csrf_token %}
+
+    <!-- OTP Input -->
+    <div class="form-group">
+        <label for="id_otp">Verification Code</label>
+        <input type="text"
+               name="otp"
+               id="id_otp"
+               class="otp-input"
+               placeholder="000000"
+               maxlength="6"
+               pattern="[0-9]{6}"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               required
+               autofocus>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-primary" id="verify-btn">Verify Email</button>
+</form>
+
+<!-- Resend OTP -->
+<a href="{% url 'resend-otp' %}" class="btn-secondary" id="resend-otp-btn">Resend OTP</a>
+{% endblock %}
+
+{% block auth_switch %}
+<p class="auth-switch">Wrong email? <a href="{% url 'signup' %}" id="back-signup-link">Sign up again</a></p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-focus and only allow digits in OTP input
+    const otpInput = document.getElementById('id_otp');
+    otpInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
+
+    // Auto-submit when 6 digits entered
+    otpInput.addEventListener('input', (e) => {
+        if (e.target.value.length === 6) {
+            document.getElementById('verify-otp-form').submit();
+        }
+    });
+</script>
+{% endblock %}

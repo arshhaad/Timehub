@@ -1,0 +1,51 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+
+{% block title %}Forgot Password — TimeHub{% endblock %}
+{% block meta_description %}Reset your TimeHub account password{% endblock %}
+
+{% block auth_icon %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+</svg>
+{% endblock %}
+
+{% block auth_title %}Forgot Password{% endblock %}
+{% block auth_subtitle %}Enter your email address and we'll send you a link to reset your password.{% endblock %}
+
+{% block auth_content %}
+<form method="post" novalidate id="forgot-form">
+    {% csrf_token %}
+
+    <!-- Email -->
+    <div class="form-group">
+        <label for="id_email">Account Email</label>
+        <input type="email"
+               name="email"
+               id="id_email"
+               placeholder="name@example.com"
+               value="{{ form.email.value|default:'' }}"
+               class="{% if form.email.errors %}is-invalid{% endif %}"
+               autocomplete="email"
+               required>
+        {% for error in form.email.errors %}
+        <div class="field-error">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-primary" id="reset-btn">Send Reset</button>
+</form>
+{% endblock %}
+
+{% block auth_switch %}
+<p class="auth-switch">
+    <a href="{% url 'login' %}" id="signin-link" style="display: inline-flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Sign In
+    </a>
+</p>
+{% endblock %}

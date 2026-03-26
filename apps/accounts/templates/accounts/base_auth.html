@@ -38,6 +38,15 @@
             </div>
             {% endif %}
 
+            <!-- Django messages -->
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <!-- Main content -->
             {% block auth_content %}{% endblock %}
         </div>

@@ -1,5 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import random
+from datetime import timedelta
+from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
@@ -36,7 +41,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True)
+    email= models.EmailField(unique=True)
     avatar = models.ImageField(upload_to='user_avatar', null=True, blank=True)
     phone_number = models.CharField(max_length=13, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
@@ -59,6 +64,28 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class EmailOTP(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="otps")
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    @staticmethod
+    def generate_otp():
+        return str(random.randint(100000,999999))
+    
+
+    @property
+    def is_expired(self):
+        return self.created_at < timezone.now() - timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+    
+    def save(self, *args, **kwargs):
+        if not self.otp:
+            self.otp = self.generate_otp()
+        EmailOTP.objects.filter(user=self.user).delete()
+        super().save(*args, **kwargs)
 
 
-
+class User(AbstractUser):
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    reward_points = models.IntegerField(default=0)

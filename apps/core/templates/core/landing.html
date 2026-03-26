@@ -930,11 +930,11 @@
                 style="display: flex; align-items: center; gap: 15px; border-left: 1px solid var(--border-color); padding-left: 15px;">
                 <span style="font-weight: 500; font-size: 0.9rem; opacity: 0.9;"><i class="fa-regular fa-user"
                         style="margin-right: 5px;"></i> {{ user.username }}</span>
-                <a href="#" class="btn btn-outline"
+                <a href="{% url 'logout' %}" class="btn btn-outline"
                     style="padding: 8px 16px; font-size: 0.85rem;">Logout</a>
             </div>
             {% else %}
-            <a href="#" class="btn btn-ghost">Sign In</a>
+            <a href="{% url 'login' %}" class="btn btn-ghost">Sign In</a>
             <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
 
             {% endif %}
@@ -948,7 +948,7 @@
         </video>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>{% if user.is_authenticated %}Welcome back, <br><span>{{ user.username }}</span>{% else %}Where Time
+            <h1>{% if user.is_authenticated %}Welcome back, <br><span>{{ user.first_name }}</span>{% else %}Where Time
                 Meets <br><span>Perfection</span>{% endif %}</h1>
             <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional
                 craftsmanship, heritage, and uncompromised quality.</p>
