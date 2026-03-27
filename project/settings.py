@@ -53,8 +53,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     # local apps
-    'core',
-    'accounts',
+    'user_apps.core',
+    'user_apps.accounts',
+    'user_apps.edit',
 ]
 
 MIDDLEWARE = [

@@ -85,7 +85,3 @@ class EmailOTP(models.Model):
         super().save(*args, **kwargs)
 
 
-class User(AbstractUser):
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    reward_points = models.IntegerField(default=0)

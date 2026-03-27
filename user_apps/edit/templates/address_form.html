@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address - TimeHub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --sidebar-color: #111115;
+            --card-bg: #15151a;
+            --primary-color: #f98822;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #27272a;
+            --radius-md: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        .sidebar { width: 280px; background-color: var(--sidebar-color); padding: 40px 20px; border-right: 1px solid var(--border-color); }
+        .main-content { flex: 1; padding: 40px 60px; display: flex; flex-direction: column; align-items: center; }
+
+        .form-container { width: 100%; max-width: 600px; background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .form-container h1 { margin-bottom: 30px; font-size: 1.8rem; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: #fff;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 10px rgba(249, 136, 34, 0.1); }
+
+        .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+        .btn { padding: 12px 24px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; border: none; transition: var(--transition); text-decoration: none; text-align: center; flex: 1; }
+        .btn-save { background: var(--primary-color); color: #000; }
+        .btn-cancel { background: rgba(255, 255, 255, 0.05); color: #fff; }
+
+        .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .checkbox-group input { width: auto; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 800; margin-bottom: 50px;">
+            <i class="fas fa-clock" style="color: var(--primary-color);"></i><span>TimeHub</span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="form-container">
+            <h1>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address</h1>
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-save">Save Address</button>
+                    <a href="{% url 'address_list' %}" class="btn btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+</body>
+</html>

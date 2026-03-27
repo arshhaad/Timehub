@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Addresses - TimeHub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --sidebar-color: #111115;
+            --card-bg: #15151a;
+            --card-hover: #1c1c23;
+            --primary-color: #f98822;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #27272a;
+            --accent-gold: #e2b04a;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Reuse Sidebar from Dashboard */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-color);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 50px;
+        }
+
+        .sidebar-logo i { color: var(--primary-color); }
+
+        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 18px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .nav-item a:hover, .nav-item.active a {
+            background: rgba(249, 136, 2, 0.1);
+            color: var(--primary-color);
+        }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px 60px; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .header-section h1 { font-size: 2.2rem; }
+
+        .add-address-btn {
+            background: var(--primary-color);
+            color: #000;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+        .add-address-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3); }
+
+        .address-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .address-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            position: relative;
+            transition: var(--transition);
+        }
+        .address-card:hover { border-color: var(--primary-color); background: var(--card-hover); }
+
+        .address-card .default-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .address-card h3 { font-size: 1.1rem; margin-bottom: 15px; }
+        .address-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px; }
+
+        .address-actions { display: flex; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .action-btn { font-size: 0.85rem; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .edit-btn { color: var(--primary-color); }
+        .delete-btn { color: #ef4444; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo"><i class="fas fa-clock"></i><span>TimeHub</span></div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
+            <li class="nav-item active"><a href="#"><i class="fas fa-map-marker-alt"></i> Saved Addresses</a></li>
+            <!-- Other items... -->
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header-section">
+            <h1>Saved Addresses</h1>
+            <a href="{% url 'add_address' %}" class="add-address-btn"><i class="fas fa-plus"></i> Add New Address</a>
+        </div>
+
+        <div class="address-grid">
+            {% for address in addresses %}
+            <div class="address-card">
+                {% if address.is_default %}<span class="default-badge">DEFAULT</span>{% endif %}
+                <h3>{{ address.full_name }}</h3>
+                <p>{{ address.street }}</p>
+                <p>{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
+                <p>{{ address.country }}</p>
+                <p><i class="fas fa-phone"></i> {{ address.phone }}</p>
+
+                <div class="address-actions">
+                    <a href="{% url 'edit_address' address.id %}" class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'delete_address' address.id %}" class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+                <p>No addresses found. Add your first address to get started.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+</body>
+</html>

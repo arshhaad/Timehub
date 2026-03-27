@@ -1,0 +1,454 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - TimeHub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --sidebar-color: #111115;
+            --card-bg: #15151a;
+            --card-hover: #1c1c23;
+            --primary-color: #fca311;
+            /* More yellow-orange like the image */
+            --primary-hover: #e5930f;
+            --accent-gold: #e2b04a;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #27272a;
+            --input-bg: #0d0d12;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-color);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 50px;
+            padding-left: 10px;
+        }
+
+        .sidebar-logo i {
+            color: var(--primary-color);
+        }
+
+        .user-brief {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+        }
+
+        .user-brief .avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-color);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            overflow: hidden;
+        }
+
+        .user-brief .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-brief .info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .user-brief .info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 18px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-item a:hover {
+            background-color: rgba(252, 163, 17, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-item.active a {
+            background-color: transparent;
+            color: var(--text-muted);
+        }
+
+        .nav-item.logout {
+            margin-top: auto;
+        }
+
+        .nav-item.logout a {
+            color: #ef4444;
+        }
+
+        .nav-item.logout a:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            flex: 1;
+            padding: 50px 80px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .edit-form-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        /* Avatar Section */
+        .avatar-edit-section {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .large-avatar {
+            width: 100px;
+            height: 100px;
+            background-color: var(--primary-color);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .large-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .btn-change-avatar {
+            background-color: #232a3b;
+            color: #8fa0c0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .btn-change-avatar:hover {
+            background-color: #2c3549;
+            color: #fff;
+        }
+
+        .avatar-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            background-color: var(--input-bg);
+            border: 1px solid transparent;
+            padding: 14px 18px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            border-color: rgba(252, 163, 17, 0.5);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .form-actions {
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-save:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-cancel {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .btn-cancel:hover {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span
+                style="background: var(--primary-color); color: #000; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 1.1rem; margin-right: -4px;">T</span>
+            <span>TimeHub <span style="color: var(--primary-color);">.</span></span>
+        </div>
+
+        <div class="user-brief">
+            <div class="avatar">
+                {% if user.avatar and user.avatar.url %}
+                <img src="{{ user.avatar.url }}" alt="User Avatar">
+                {% else %}
+                {{ user.email|slice:":2"|upper }}
+                {% endif %}
+            </div>
+            <div class="info">
+                <h4>{{ user.first_name|default:user.email }}</h4>
+                <p>Premium Member</p>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="{% url 'dashboard' %}"><i class="fas fa-th-large" style="width: 20px"></i>
+                    Dashboard</a></li>
+            <li class="nav-item"><a href="#"><i class="fas fa-shopping-bag" style="width: 20px"></i> My Orders</a></li>
+            <li class="nav-item"><a href="#"><i class="fas fa-heart" style="width: 20px"></i> Wishlist</a></li>
+            <li class="nav-item"><a href="{% url 'address_list' %}"><i class="fas fa-map-marker-alt"
+                        style="width: 20px"></i> Saved Addresses</a></li>
+            <li class="nav-item"><a href="#"><i class="fas fa-credit-card" style="width: 20px"></i> Payment Methods</a>
+            </li>
+            <li class="nav-item"><a href="#"><i class="fas fa-exchange-alt" style="width: 20px"></i> Compare Watches</a>
+            </li>
+            <li class="nav-item"><a href="#"><i class="fas fa-bell" style="width: 20px"></i> Notifications</a></li>
+            <li class="nav-item"><a href="{% url 'edit_profile' %}"><i class="fas fa-cog" style="width: 20px"></i>
+                    Account Settings</a></li>
+
+            <li class="nav-item logout"><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"
+                        style="width: 20px"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <h1>Edit Profile</h1>
+            <p>Update your personal information and contact details.</p>
+        </div>
+
+        <div class="edit-form-card">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="avatar-edit-section">
+                    <div class="large-avatar">
+                        {% if user.avatar %}
+                        <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
+                        {% else %}
+                        <span id="avatar-preview-text">{{ user.email|slice:":2"|upper }}</span>
+                        <!-- Hidden img for preview -->
+                        <img id="avatar-preview" src=""
+                            style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <div class="avatar-actions">
+                        <label class="btn-change-avatar">
+                            Change Avatar
+                            <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;"
+                                onchange="previewImage(event)">
+                        </label>
+                        <span class="avatar-hint">JPG, GIF or PNG. Max size of 800K</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email Address</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                        {{ form.phone_number }}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Save Changes</button>
+                    <a href="{% url 'dashboard' %}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var output = document.getElementById('avatar-preview');
+                var text = document.getElementById('avatar-preview-text');
+                if (text) text.style.display = 'none';
+                output.style.display = 'block';
+                output.src = reader.result;
+            };
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
+        // Add form control classes to django inputs programmatically if needed
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputs = document.querySelectorAll('.form-group input');
+            inputs.forEach(input => {
+                input.removeAttribute('required'); // Match typical behavior; django handles validation
+                if (!input.placeholder && input.name === 'phone_number') {
+                    input.placeholder = "+1 (555) 234-5678";
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -928,8 +928,11 @@
             {% if user.is_authenticated %}
             <div
                 style="display: flex; align-items: center; gap: 15px; border-left: 1px solid var(--border-color); padding-left: 15px;">
-                <span style="font-weight: 500; font-size: 0.9rem; opacity: 0.9;"><i class="fa-regular fa-user"
-                        style="margin-right: 5px;"></i> {{ user.username }}</span>
+                <a href="{% url 'dashboard' %}" style="text-decoration: none; color: inherit;">
+                    <span style="font-weight: 500; font-size: 0.9rem; opacity: 0.9; cursor: pointer; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
+                        <i class="fa-regular fa-user" style="margin-right: 5px;"></i> {{ user.email }}
+                    </span>
+                </a>
                 <a href="{% url 'logout' %}" class="btn btn-outline"
                     style="padding: 8px 16px; font-size: 0.85rem;">Logout</a>
             </div>
