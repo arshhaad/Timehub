@@ -39,7 +39,7 @@ def verify_otp(request):
             del request.session['verify_email']
 
             # auto login
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             messages.success(request, "Email verified successfully!")
             return redirect("home")

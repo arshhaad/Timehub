@@ -91,7 +91,7 @@ def login_view(request):
                 return redirect('verify-otp')
 
             # all good — log in
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('landing_view')
 
     else:

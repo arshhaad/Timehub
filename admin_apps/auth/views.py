@@ -29,7 +29,7 @@ def admin_login(request):
             user = authenticate(request, username=email, password=password)
             
             if user is not None and user.is_superuser:
-                login(request, user)
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect("dashboard")
             elif user is not None:
                 messages.error(request, "You are not authorized to access the admin dashboard.")
