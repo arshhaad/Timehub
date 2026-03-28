@@ -811,7 +811,7 @@
                         <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-users"></i> Users</a>
+                        <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
                     </li>
                 </ul>
 
@@ -872,22 +872,21 @@
 
                     <a href="{% url 'admin_profile' %}" class="admin-profile"
                         style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
-                        <div class="admin-info">
-                            <span class="admin-name">
-                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{
-                                user.email }}{% endif %}
+                        <div class="admin-info" style="text-align: right;">
+                            <span class="admin-name" style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; line-height: 1.2;">
+                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}
                             </span>
-                            <span class="admin-role">Super admin</span>
+                            <span class="admin-role" style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); display: block;">Super admin</span>
                         </div>
-                        <div class="brand-icon" style="flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--primary-bg); color: #fff; font-size: 0.9rem; font-weight: 700;">
+                        <div class="brand-icon" style="width: 40px; height: 40px; font-size: 0.9rem; margin-bottom: 0; box-shadow: none; flex-shrink: 0;">
                             {% if user.profile and user.profile.image %}
-                            <img src="{{ user.profile.image.url }}" alt="Admin"
-                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            <img src="{{ user.profile.image.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                             {% elif user.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="Admin"
-                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            <img src="{{ user.avatar.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                             {% else %}
-                            {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f3f4f6; color: #4b5563; font-weight: 700;">
+                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                            </div>
                             {% endif %}
                         </div>
                     </a>
@@ -960,7 +959,8 @@
                             <div class="step-item">
                                 <div class="step-dot"></div>
                                 <div class="step-content">
-                                    <div class="step-user">OR.NO-{{ order.id }} - {{ order.user.first_name|default:order.user.email }}</div>
+                                    <div class="step-user">OR.NO-{{ order.id }} - {{
+                                        order.user.first_name|default:order.user.email }}</div>
                                     <div class="step-info">
                                         {% with first_item=order.items.first %}
                                         {{ first_item.product.name }}{% if order.items.count > 1 %} + {{
@@ -1002,9 +1002,11 @@
                                         </div>
                                     </div>
                                     <div class="item-stats" style="text-align: right;">
-                                        <span class="item-price" style="font-size: 0.95rem; font-weight: 700;">${{ product.price|floatformat:0 }}</span>
+                                        <span class="item-price" style="font-size: 0.95rem; font-weight: 700;">${{
+                                            product.price|floatformat:0 }}</span>
                                         <span class="item-sales"
-                                            style="font-size: 0.75rem; color: var(--text-muted);">{{ product.stock }} in stock</span>
+                                            style="font-size: 0.75rem; color: var(--text-muted);">{{ product.stock }} in
+                                            stock</span>
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -1022,7 +1024,8 @@
                                 <div class="alert-item" style="padding: 12px 0;">
                                     <div class="item-info">
                                         <div class="item-name" style="font-size: 0.9rem;">{{ alert.name }}</div>
-                                        <div class="item-cat" style="font-size: 0.75rem;">SKU: {{ alert.id|stringformat:"04d" }}</div>
+                                        <div class="item-cat" style="font-size: 0.75rem;">SKU: {{
+                                            alert.id|stringformat:"04d" }}</div>
                                     </div>
                                     <div class="alert-stock" style="font-size: 0.8rem; padding: 6px 14px;">
                                         <span class="alert-dot"></span> {{ alert.stock }} left

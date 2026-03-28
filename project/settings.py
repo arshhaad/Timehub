@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'user_apps.edit',
     # admin apps
     'admin_apps.auth',
+    'admin_apps.user_manage',
 ]
 
 MIDDLEWARE = [
