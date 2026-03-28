@@ -1,0 +1,1046 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TimeHub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #fafbfc;
+            --sidebar-width: 260px;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #f3f4f6;
+            --primary-bg: #ff6b00;
+            /* Vibrant orange for clock icon */
+            --primary-text: #ffffff;
+            --black-btn: #000000;
+
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --processing-bg: #e0f2fe;
+            --processing-text: #0369a1;
+            --shipped-bg: #f3e8ff;
+            --shipped-text: #7e22ce;
+            --pending-bg: #ffedd5;
+            --pending-text: #c2410c;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-pill: 9999px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Component */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .brand-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-bg);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        .brand-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(255, 107, 0, 0.4);
+        }
+
+        .brand h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        /* Nav container for scrolling */
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Scrollbar styling for sidebar */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .nav-item a i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item a:hover {
+            background-color: #f9fafb;
+            color: var(--text-main);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active a {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .nav-item.active a:hover {
+            transform: none;
+        }
+
+        /* Sidebar Section Header */
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ca3af;
+            font-weight: 700;
+            margin: 25px 0 15px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Main Content Wrapper */
+        .main-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Topbar */
+        .topbar {
+            height: 80px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            width: 400px;
+            gap: 12px;
+        }
+
+        .search-bar i {
+            color: #9ca3af;
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .search-bar input::placeholder {
+            color: #9ca3af;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .icon-btn {
+            position: relative;
+            color: #6b7280;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            color: var(--text-main);
+        }
+
+        .icon-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+        }
+
+        .btn-add {
+            background-color: var(--black-btn);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-add:hover {
+            background-color: #1f2937;
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-left: 20px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .admin-info {
+            text-align: right;
+        }
+
+        .admin-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: block;
+        }
+
+        .admin-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 40px;
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .date-pill {
+            background-color: #f3f4f6;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #e5e7eb;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .stat-change {
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .change-positive {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .change-negative {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .stat-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        /* Bottom Layout */
+        .bottom-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+
+        .side-notes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        /* Note-Side Styling */
+        .note-card {
+            background-color: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .note-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .note-orders::before {
+            background-color: #3b82f6;
+        }
+
+        .note-selling::before {
+            background-color: #10b981;
+        }
+
+        .note-alerts::before {
+            background-color: #f97316;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .note-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Step-by-step / Timeline style for Orders */
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .step-list::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+
+        .step-item {
+            position: relative;
+            padding-bottom: 30px;
+            padding-left: 20px;
+        }
+
+        .step-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .step-dot {
+            position: absolute;
+            left: -24px;
+            top: 6px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            border: 2px solid #3b82f6;
+            z-index: 2;
+        }
+
+        .step-content {
+            font-size: 0.85rem;
+        }
+
+        .step-user {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .step-info {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .step-status {
+            margin-top: 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* Tables & Lists Shared Styles */
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .panel-action {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .panel-action:hover {
+            color: var(--text-main);
+        }
+
+        /* Recent Orders Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .table th {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table td {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .fw-600 {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .text-sm {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 90px;
+        }
+
+        .status-delivered {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-processing {
+            background-color: var(--processing-bg);
+            color: var(--processing-text);
+        }
+
+        .status-shipped {
+            background-color: var(--shipped-bg);
+            color: var(--shipped-text);
+        }
+
+        .status-pending {
+            background-color: var(--pending-bg);
+            color: var(--pending-text);
+        }
+
+        /* Top Selling List */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-img {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            background-color: #f3f4f6;
+            object-fit: cover;
+        }
+
+        .item-img-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            background-color: #f3f4f6;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .item-cat {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .item-stats {
+            text-align: right;
+        }
+
+        .item-price {
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: block;
+        }
+
+        .item-sales {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Alerts List */
+        .alert-panel .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-panel .panel-title i {
+            color: #f97316;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-stock {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ea580c;
+            background-color: #ffedd5;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+        }
+
+        .alert-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #ea580c;
+            border-radius: 50%;
+        }
+
+        .btn-manage {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-manage:hover {
+            background-color: #f9fafb;
+            border-color: #e5e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+                </div>
+                <h2>TimeHub</h2>
+            </div>
+
+            <div class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="sidebar-section-title">Main Menu</li>
+                    <li class="nav-item active">
+                        <a href="#"><i class="fas fa-th-large"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-chart-pie"></i> Revenue</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-users"></i> Users</a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="sidebar-section-title"><i class="fas fa-chart-line"></i> Featured</li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-calendar-alt"></i> Reschedule</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-user-edit"></i> Admin Request</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-wallet"></i> Wallet</a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list">
+                    <li class="sidebar-section-title">System</li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-chart-bar"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#"><i class="fas fa-bullhorn"></i> Marketing</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_profile' %}"><i class="fas fa-cog"></i> Settings</a>
+                    </li>
+                </ul>
+
+                <ul class="nav-list"
+                    style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <li class="nav-item">
+                        <a href="{% url 'admin_logout' %}" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i>
+                            Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search orders, products, or users...">
+                </div>
+
+                <div class="topbar-right">
+                    <div class="icon-btn">
+                        <i class="fa-regular fa-comment-dots"></i>
+                    </div>
+                    <div class="icon-btn">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="icon-dot"></span>
+                    </div>
+
+                    <a href="{% url 'admin_profile' %}" class="admin-profile"
+                        style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
+                        <div class="admin-info">
+                            <span class="admin-name">
+                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{
+                                user.email }}{% endif %}
+                            </span>
+                            <span class="admin-role">Super admin</span>
+                        </div>
+                        <div class="brand-icon" style="flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--primary-bg); color: #fff; font-size: 0.9rem; font-weight: 700;">
+                            {% if user.profile and user.profile.image %}
+                            <img src="{{ user.profile.image.url }}" alt="Admin"
+                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            {% elif user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Admin"
+                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            {% else %}
+                            {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="content">
+
+                <div class="page-header">
+                    <div>
+                        <h1>Dashboard Overview</h1>
+                        <p>Welcome back. Here's what's happening with your store today.</p>
+                    </div>
+                    <div class="date-pill">
+                        {{ now|date:"l, F j, Y" }}
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                            <div class="stat-change change-positive">+12.5%</div>
+                        </div>
+                        <div class="stat-title">Total Revenue</div>
+                        <div class="stat-value">${{ total_revenue|floatformat:2 }}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                            <div class="stat-change change-positive">+5.2%</div>
+                        </div>
+                        <div class="stat-title">Total Orders</div>
+                        <div class="stat-value">{{ total_orders }}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                            <div class="stat-change change-positive">+18.1%</div>
+                        </div>
+                        <div class="stat-title">Total Customers</div>
+                        <div class="stat-value">{{ total_customers }}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-change change-negative">-2.4%</div>
+                        </div>
+                        <div class="stat-title">Total Products</div>
+                        <div class="stat-value">{{ total_products }}</div>
+                    </div>
+                </div>
+
+                <!-- Bottom Layout -->
+                <!-- Bottom Layout (Orders and Sub-Grid) -->
+                <div class="bottom-grid">
+                    <!-- Recent Orders Note (Full Width) -->
+                    <div class="note-card note-orders">
+                        <div class="note-header">
+                            <div class="note-title"><i class="fas fa-shopping-cart"></i> Recent Orders</div>
+                            <a href="#" class="panel-action">View All Detailed</a>
+                        </div>
+                        <div class="step-list">
+                            {% for order in recent_orders %}
+                            <div class="step-item">
+                                <div class="step-dot"></div>
+                                <div class="step-content">
+                                    <div class="step-user">OR.NO-{{ order.id }} - {{ order.user.first_name|default:order.user.email }}</div>
+                                    <div class="step-info">
+                                        {% with first_item=order.items.first %}
+                                        {{ first_item.product.name }}{% if order.items.count > 1 %} + {{
+                                        order.items.count|add:"-1" }} more {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                    <div class="step-status"
+                                        style="color: {% if order.status|lower == 'delivered' %}#166534{% elif order.status|lower == 'processing' %}#0369a1{% else %}#c2410c{% endif %};">
+                                        {{ order.status }} • ${{ order.total_amount|floatformat:2 }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-sm">No recent orders.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Side-by-Side: Top Selling & Alerts -->
+                    <div class="side-notes-grid">
+                        <!-- Top Selling Note -->
+                        <div class="note-card note-selling">
+                            <div class="note-header">
+                                <div class="note-title"><i class="fas fa-fire"></i> Top Selling Watches</div>
+                            </div>
+                            <div class="item-list">
+                                {% for product in top_selling %}
+                                <div class="list-item">
+                                    <div class="item-img-placeholder"
+                                        style="width: 45px; height: 45px; background:#f3f4f6;">
+                                        {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                            style="width:100%; height:100%; object-fit:cover; border-radius:var(--radius-sm);">
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-info">
+                                        <div class="item-name" style="font-size: 0.9rem;">{{ product.name }}</div>
+                                        <div class="item-cat" style="font-size: 0.8rem;">{{ product.collection.name }}
+                                        </div>
+                                    </div>
+                                    <div class="item-stats" style="text-align: right;">
+                                        <span class="item-price" style="font-size: 0.95rem; font-weight: 700;">${{ product.price|floatformat:0 }}</span>
+                                        <span class="item-sales"
+                                            style="font-size: 0.75rem; color: var(--text-muted);">{{ product.stock }} in stock</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Low Stock Note -->
+                        <div class="note-card note-alerts">
+                            <div class="note-header">
+                                <div class="note-title"><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts
+                                </div>
+                            </div>
+                            <div class="item-list">
+                                {% for alert in low_stock %}
+                                <div class="alert-item" style="padding: 12px 0;">
+                                    <div class="item-info">
+                                        <div class="item-name" style="font-size: 0.9rem;">{{ alert.name }}</div>
+                                        <div class="item-cat" style="font-size: 0.75rem;">SKU: {{ alert.id|stringformat:"04d" }}</div>
+                                    </div>
+                                    <div class="alert-stock" style="font-size: 0.8rem; padding: 6px 14px;">
+                                        <span class="alert-dot"></span> {{ alert.stock }} left
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-sm">All items in stock.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        </main>
+    </div>
+    </div>
+
+</body>
+
+</html>

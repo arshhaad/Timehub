@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'user_apps.core',
     'user_apps.accounts',
     'user_apps.edit',
+    # admin apps
+    'admin_apps.auth',
 ]
 
 MIDDLEWARE = [
@@ -106,6 +108,10 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
+
+# Admin login redirect
+LOGIN_URL = '/adminpanel/login/'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
