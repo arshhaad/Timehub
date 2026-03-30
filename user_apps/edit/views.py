@@ -90,6 +90,23 @@ def delete_address(request, id):
     address.delete()
     return redirect('address_list')
 
+@login_required
+@never_cache
+def toggle_default_address(request, id):
+    address = get_object_or_404(Address, id=id, user=request.user)
+    
+    if not address.is_default:
+        # Unset others and set this one
+        Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
+        address.is_default = True
+        address.save()
+    else:
+        # Toggle off
+        address.is_default = False
+        address.save()
+        
+    return redirect('address_list')
+
 
 @login_required
 @never_cache

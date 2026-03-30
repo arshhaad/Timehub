@@ -19,6 +19,5 @@ class AddressForm(forms.ModelForm):
             'state',
             'postal_code',
             'country',
-            'phone',
-            'is_default'
+            'phone'
         ]

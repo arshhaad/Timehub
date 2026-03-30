@@ -441,10 +441,134 @@
             background: rgba(59, 130, 246, 0.2);
             color: var(--processing);
         }
+
+        /* Mobile Header Toggle */
+        .mobile-header {
+            display: none;
+            background-color: var(--sidebar-color);
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color);
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transition: var(--transition);
+                z-index: 1001;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                padding: 30px;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(4px);
+                z-index: 1000;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .profile-card {
+                flex-direction: column;
+                gap: 30px;
+                text-align: center;
+            }
+
+            .profile-info {
+                flex-direction: column;
+            }
+
+            .profile-contact {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-card {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+
+            .order-amount {
+                text-align: left;
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .welcome-msg h1 {
+                font-size: 1.8rem;
+            }
+
+            .referral-box {
+                flex-direction: column;
+                width: 100%;
+                border-radius: 20px;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
+            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
+            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
+        </div>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -567,6 +691,20 @@
             {% endfor %}
         </section>
     </main>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    </script>
 
 </body>
 

@@ -182,10 +182,102 @@
         .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .checkbox-group input { width: auto; }
 
+        /* Mobile Header Toggle */
+        .mobile-header {
+            display: none;
+            background-color: var(--sidebar-color);
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color);
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transition: var(--transition);
+                z-index: 1001;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                padding: 30px;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(4px);
+                z-index: 1000;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .form-container {
+                padding: 25px;
+            }
+
+            .form-container h1 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body>
 
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
+            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
+            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
+        </div>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <i class="fas fa-clock"></i>
@@ -245,6 +337,20 @@
             </form>
         </div>
     </main>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    </script>
 
 </body>
 </html>

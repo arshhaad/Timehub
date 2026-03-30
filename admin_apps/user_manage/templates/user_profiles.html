@@ -24,11 +24,65 @@
             --primary-bg: #ff6b00;
             --primary-text: #ffffff;
             --black-btn: #000000;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
             --radius-pill: 9999px;
             --transition: all 0.2s ease;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            height: 60px;
+            background: #fff;
+            padding: 0 20px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+
+        .mobile-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .mobile-brand .brand-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        .menu-toggle {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 99;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
         }
 
         * {
@@ -415,20 +469,89 @@
             line-height: 1.5;
         }
 
-        .default-tag { background: #000; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 10px; }
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                left: -260px;
+                transition: left 0.3s ease;
+            }
 
-        .msg-card { border: 2px solid var(--border-color); cursor: pointer; transition: var(--transition); background: #fafbfc; position: relative; }
-        .msg-card:hover { border-color: var(--primary-bg); background: #fff; transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        input[type="radio"]:checked + .msg-card { border-color: var(--primary-bg); background: #fff; box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1); }
-        input[type="radio"]:checked + .msg-card::after { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 15px; right: 15px; color: var(--primary-bg); font-size: 1.2rem; }
-        
-        .btn-premium { background: var(--black-btn); color: #fff; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; border: 1px solid transparent; }
-        .btn-premium:hover { background: #1f2937; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .btn-premium:active { transform: translateY(0); }
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .topbar {
+                padding: 0 20px;
+                height: 70px;
+            }
+
+            .search-bar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .profile-header-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 20px;
+                padding: 24px 20px;
+            }
+
+            .profile-identity {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .stats-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .section-panel div[style*="display: grid"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            .msg-card-grid {
+               grid-template-columns: 1fr !important;
+            }
+
+            .admin-info {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="#" class="mobile-brand">
+            <div class="brand-icon">
+                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+            </div>
+            TimeHub
+        </a>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </header>
+
     <div class="admin-layout">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -776,6 +899,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Sidebar Toggle Script -->
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    </script>
 </body>
 
 </html>

@@ -850,6 +850,58 @@
             font-weight: 600;
         }
 
+        /* MOBILE MENU */
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+            z-index: 101;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            height: 100vh;
+            background: var(--bg-card);
+            z-index: 1000;
+            padding: 100px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            transition: 0.4s ease;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 1024px) {
             .hero h1 {
@@ -859,6 +911,8 @@
             .art-section {
                 flex-direction: column;
                 text-align: center;
+                gap: 50px;
+                padding: 60px 5%;
             }
 
             .feature-item {
@@ -879,21 +933,48 @@
         }
 
         @media (max-width: 768px) {
+            nav {
+                padding: 15px 5%;
+            }
+
             .nav-links {
                 display: none;
             }
 
+            .nav-actions .btn-ghost {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 2.8rem;
+                line-height: 1.2;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
             }
 
             .stats {
                 flex-wrap: wrap;
                 gap: 30px;
+                padding: 40px 5%;
             }
 
             .stat-item {
                 width: 45%;
+            }
+
+            .art-content h2 {
+                font-size: 2.2rem;
             }
 
             .cards-grid,
@@ -904,6 +985,28 @@
 
             .footer-grid {
                 grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .stat-item {
+                width: 100%;
+            }
+
+            .brand-pill {
+                padding: 10px 20px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -923,8 +1026,6 @@
             <a href="#">Contact</a>
         </div>
         <div class="nav-actions">
-
-
             {% if user.is_authenticated %}
             <div
                 style="display: flex; align-items: center; gap: 15px; border-left: 1px solid var(--border-color); padding-left: 15px;">
@@ -941,10 +1042,28 @@
             {% else %}
             <a href="{% url 'login' %}" class="btn btn-ghost">Sign In</a>
             <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
-
             {% endif %}
+
+            <div class="mobile-toggle" id="mobileToggle">
+                <i class="fa-solid fa-bars"></i>
+            </div>
         </div>
     </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="overlay" id="overlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#">Home</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'user_dashboard' %}">Dashboard</a>
+        <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+        <a href="{% url 'login' %}">Sign In</a>
+        <a href="{% url 'signup' %}">Sign Up</a>
+        {% endif %}
+    </div>
 
     <!-- HERO SECTION -->
     <section class="hero">
@@ -1256,6 +1375,27 @@
         </div>
     </footer>
 
+    <script>
+        const mobileToggle = document.getElementById('mobileToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Toggle icon
+            const icon = mobileToggle.querySelector('i');
+            if (mobileMenu.classList.contains('active')) {
+                icon.classList.replace('fa-bars', 'fa-xmark');
+            } else {
+                icon.classList.replace('fa-xmark', 'fa-bars');
+            }
+        }
+
+        mobileToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+    </script>
 </body>
 
 </html>

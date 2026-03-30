@@ -1,19 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeHub - Where Time Meets Perfection</title>
+    <title>TimeHub - Luxury Timepieces</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <!-- FontAwesome for Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
         :root {
             --bg-color: #0b0b0e;
@@ -21,1159 +18,516 @@
             --bg-card-hover: #1c1c23;
             --text-main: #ffffff;
             --text-muted: #9ca3af;
-            --accent: #ff6a00;
-            --accent-hover: #e05e00;
+            --primary-color: #f98822; /* Premium Orange/Gold */
+            --primary-hover: #e07a1b;
             --border-color: #27272a;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        body { background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; line-height: 1.6; }
+        h1, h2, h3, .logo { font-family: 'Outfit', sans-serif; }
+        ul { list-style: none; }
+        a { text-decoration: none; color: inherit; transition: var(--transition); }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-            transition: color 0.3s ease;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 28px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            outline: none;
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(255, 106, 0, 0.3);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 106, 0, 0.4);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-main);
-        }
-
-        .btn-ghost:hover {
-            color: var(--accent);
-        }
+        .container { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 32px; border-radius: 50px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: var(--transition); border: none; gap: 10px; }
+        .btn-primary { background: var(--primary-color); color: #000; box-shadow: 0 4px 20px rgba(249, 136, 34, 0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(249, 136, 34, 0.4); background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border-color); color: #fff; }
+        .btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 { font-size: 2.8rem; margin-bottom: 15px; }
+        .section-header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
 
         /* NAVBAR */
-        nav {
-            position: absolute;
-            top: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 6%;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            color: var(--accent);
-            font-size: 1.6rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-        }
-
-        .nav-links a {
-            font-size: 0.95rem;
-            font-weight: 500;
-            opacity: 0.8;
-        }
-
-        .nav-links a:hover {
-            opacity: 1;
-            color: var(--accent);
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
+        header { position: fixed; top: 0; width: 100%; z-index: 1000; transition: var(--transition); padding: 25px 0; border-bottom: 1px solid transparent; }
+        header.scrolled { background: rgba(11, 11, 14, 0.8); backdrop-filter: blur(15px); padding: 15px 0; border-color: var(--border-color); }
+        .nav-wrap { display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 1.8rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--primary-color); }
+        .nav-links { display: flex; gap: 35px; }
+        .nav-links a { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+        .nav-links a:hover { color: var(--primary-color); }
+        .nav-actions { display: flex; align-items: center; gap: 20px; }
+        .icon-btn { font-size: 1.2rem; color: var(--text-muted); cursor: pointer; }
+        .icon-btn:hover { color: var(--primary-color); }
 
         /* HERO SECTION */
-        .hero {
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 5%;
-            overflow: hidden;
+        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding-top: 100px; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: -10%; right: -10%; width: 50% ; height: 50%; background: radial-gradient(circle, rgba(249, 136, 34, 0.1) 0%, transparent 70%); z-index: -1; }
+        .hero-content { flex: 1; z-index: 1; }
+        .hero-content h4 { color: var(--primary-color); text-transform: uppercase; letter-spacing: 4px; font-weight: 700; margin-bottom: 20px; font-size: 0.9rem; }
+        .hero-content h1 { font-size: 4.8rem; line-height: 1.1; margin-bottom: 30px; }
+        .hero-content h1 span { color: var(--primary-color); }
+        .hero-container { display: flex; align-items: center; }
+        .hero-content p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 40px; max-width: 550px; }
+        .hero-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; background: rgba(249, 136, 34, 0.1); border: 1px solid rgba(249, 136, 34, 0.2); color: var(--primary-color); font-weight: 700; margin-bottom: 30px; font-size: 0.85rem; }
+        .hero-image { flex: 1; position: relative; display: flex; justify-content: flex-end; }
+        .hero-image img { max-width: 120%; position: relative; z-index: 2; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.8)); transform: rotate(-10deg); transition: var(--transition); }
+        .hero-image:hover img { transform: rotate(0deg) scale(1.05); }
+
+        /* CATEGORIES SECTION */
+        .categories { padding: 100px 0; }
+        .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+        .cat-card { position: relative; height: 400px; border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; border: 1px solid var(--border-color); }
+        .cat-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; opacity: 0.6; }
+        .cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; transition: var(--transition); }
+        .cat-card:hover img { transform: scale(1.1); opacity: 0.8; }
+        .cat-card:hover .cat-overlay { background: linear-gradient(to top, rgba(249, 136, 34, 0.4) 0%, transparent 80%); }
+        .cat-overlay h3 { font-size: 1.5rem; margin-bottom: 5px; }
+        .cat-overlay span { color: var(--primary-color); font-weight: 600; font-size: 0.85rem; }
+
+        /* PRODUCT SECTIONS */
+        .products-section { padding: 80px 0; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .product-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); transition: var(--transition); position: relative; }
+        .product-card:hover { transform: translateY(-10px); border-color: var(--primary-color); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        .card-top { position: relative; height: 260px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden; }
+        .product-card img { max-width: 80%; transition: var(--transition); }
+        .product-card:hover img { transform: scale(1.1); }
+        .card-badge { position: absolute; top: 15px; left: 15px; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; background: var(--primary-color); color: #000; }
+        .wish-btn { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); }
+        .wish-btn:hover { background: #ff4757; color: #fff; }
+        .rating { color: #f1c40f; font-size: 0.8rem; margin-bottom: 8px; }
+        .product-card h3 { font-size: 1.1rem; margin-bottom: 12px; }
+        .price-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .price { font-size: 1.2rem; font-weight: 800; color: #fff; }
+        .old-price { color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem; }
+        .add-cart-btn { width: 100%; border-radius: var(--radius-md); font-size: 0.85rem; padding: 12px; }
+
+        /* FLASH DEALS */
+        .flash-deals { padding: 100px 0; background: linear-gradient(135deg, #15151a 0%, #0b0b0e 100%); position: relative; overflow: hidden; border-radius: 40px; margin: 40px 0; }
+        .flash-content { display: flex; align-items: center; gap: 60px; }
+        .flash-timer { display: flex; gap: 20px; margin: 30px 0; }
+        .timer-unit { background: rgba(255,255,255,0.05); padding: 15px 20px; border-radius: var(--radius-md); text-align: center; min-width: 80px; border: 1px solid var(--border-color); }
+        .timer-unit span { display: block; font-size: 2rem; font-weight: 800; color: var(--primary-color); }
+        .timer-unit label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+
+        /* TRUST SECTION */
+        .trust-section { padding: 80px 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
+        .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+        .trust-item { text-align: center; }
+        .trust-item i { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 20px; }
+        .trust-item h4 { margin-bottom: 10px; font-size: 1.1rem; }
+        .trust-item p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* TESTIMONIALS */
+        .testimonials { padding: 100px 0; }
+        .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .testi-card { background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); }
+        .testi-user { display: flex; align-items: center; gap: 15px; margin-top: 30px; }
+        .testi-user img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .testi-info h5 { font-size: 1rem; margin-bottom: 2px; }
+        .testi-info p { font-size: 0.75rem; color: #10b981; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+
+        /* NEWSLETTER */
+        .newsletter { padding: 80px 0; }
+        .news-wrap { background: var(--primary-color); color: #000; border-radius: 30px; padding: 60px; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        .news-content h2 { font-size: 2.4rem; margin-bottom: 10px; }
+        .news-form { display: flex; flex: 1; max-width: 500px; gap: 15px; }
+        .news-form input { flex: 1; padding: 15px 25px; border-radius: 50px; border: none; outline: none; font-weight: 600; }
+        .news-form .btn { background: #000; color: #fff; }
+
+        /* FOOTER */
+        footer { padding: 80px 0 40px; background: #050507; border-top: 1px solid var(--border-color); }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 60px; }
+        .footer-logo { margin-bottom: 25px; }
+        .footer-desc { color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
+        .socials { display: flex; gap: 15px; }
+        .social-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: var(--transition); border: 1px solid var(--border-color); }
+        .social-icon:hover { background: var(--primary-color); color: #000; border-color: var(--primary-color); transform: translateY(-5px); }
+        .footer-col h4 { font-size: 1.2rem; margin-bottom: 25px; }
+        .footer-col li { margin-bottom: 15px; }
+        .footer-col a { color: var(--text-muted); font-size: 0.9rem; }
+        .footer-col a:hover { color: var(--primary-color); }
+        .footer-bottom { border-top: 1px solid var(--border-color); padding-top: 30px; display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem; }
+        .payments { display: flex; gap: 15px; font-size: 1.5rem; }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1200px) {
+            .hero-content h1 { font-size: 3.8rem; }
+            .cat-grid { grid-template-columns: repeat(3, 1fr); }
+            .testi-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        .hero-bg-video {
-            position: absolute;
+        @media (max-width: 992px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 150px; }
+            .hero-container { flex-direction: column; }
+            .hero-content { display: flex; flex-direction: column; align-items: center; margin-bottom: 60px; }
+            .hero-image { justify-content: center; }
+            .hero-image img { max-width: 80%; transform: rotate(0); }
+            .nav-links { display: none; }
+            .cat-grid { grid-template-columns: repeat(2, 1fr); }
+            .news-wrap { flex-direction: column; text-align: center; padding: 40px; }
+            .trust-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .section-header h2 { font-size: 2.2rem; }
+            .hero-content h1 { font-size: 2.8rem; }
+            .cat-grid { grid-template-columns: 1fr; }
+            .cat-card { height: 300px; }
+            .testi-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .news-form { flex-direction: column; width: 100%; }
+            .hero-buttons { flex-direction: column; width: 100%; }
+            .btn { width: 100%; }
+            .trust-grid { grid-template-columns: 1fr; }
+        }
+
+        /* MOBILE MENU STYLES */
+        .mobile-menu {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -2;
-            opacity: 0.8;
-        }
-
-        @keyframes subtlyScale {
-            0% {
-                transform: scale(1);
-            }
-
-            100% {
-                transform: scale(1.05);
-            }
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, rgba(11, 11, 14, 0.3) 0%, #0b0b0e 100%);
-            z-index: -1;
-        }
-
-        .hero-content {
-            max-width: 900px;
-            margin-top: 60px;
-            animation: fadeInUp 1s ease forwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero h1 {
-            font-size: 4.5rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 25px;
-            letter-spacing: -1.5px;
-        }
-
-        .hero h1 span {
-            background-color: var(--accent);
-            display: inline-block;
-            padding: 0 15px;
-            color: #000;
-        }
-
-        .hero p {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .play-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .play-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .play-btn:hover {
-            color: var(--accent);
-        }
-
-        .play-btn:hover .play-icon {
-            border-color: var(--accent);
-            background-color: rgba(255, 106, 0, 0.1);
-        }
-
-        .scroll-down {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--text-muted);
-            font-size: 0.8rem;
+            height: 100vh;
+            background: rgba(11, 11, 14, 0.98);
+            z-index: 2000;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            animation: bounce 2s infinite;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
         }
 
-        @keyframes bounce {
-
-            0%,
-            20%,
-            50%,
-            80%,
-            100% {
-                transform: translateY(0) translateX(-50%);
-            }
-
-            40% {
-                transform: translateY(-10px) translateX(-50%);
-            }
-
-            60% {
-                transform: translateY(-5px) translateX(-50%);
-            }
+        .mobile-menu.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        /* STATS SECTION */
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            padding: 40px 5%;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: #0d0d10;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-item h3 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-item p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* SECTION HEADERS */
-        .section-header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* THE ART OF TIMEKEEPING */
-        .art-section {
-            padding: 100px 8%;
-            display: flex;
-            align-items: center;
-            gap: 80px;
-        }
-
-        .art-image {
-            flex: 1;
-            position: relative;
-        }
-
-        .art-image img {
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            transition: transform 0.5s ease;
-        }
-
-        .art-image:hover img {
-            transform: translateY(-10px);
-        }
-
-        .art-image::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(45deg, var(--accent), transparent);
-            z-index: -1;
-            border-radius: 22px;
-            filter: blur(15px);
-            opacity: 0.3;
-        }
-
-        .art-content {
-            flex: 1;
-        }
-
-        .art-content h2 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .art-content h2 span {
-            color: var(--accent);
-        }
-
-        .art-content>p {
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            font-size: 1.05rem;
-        }
-
-        .feature-list {
+        .mobile-nav-links {
             display: flex;
             flex-direction: column;
             gap: 25px;
+            text-align: center;
             margin-bottom: 40px;
         }
 
-        .feature-item {
-            display: flex;
-            gap: 20px;
+        .mobile-nav-links a {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
         }
 
-        .feature-icon {
-            color: var(--accent);
-            font-size: 1.5rem;
-            background: rgba(255, 106, 0, 0.1);
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        .mobile-nav-links a:hover {
+            color: var(--primary-color);
         }
 
-        .feature-text h4 {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .feature-text p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .link-arrow {
-            color: var(--accent);
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: gap 0.3s;
-        }
-
-        .link-arrow:hover {
-            gap: 15px;
-        }
-
-        /* COLLECTION SECTION */
-        .collection-section {
-            padding: 80px 8%;
-            background: #09090b;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-        }
-
-        .product-card {
-            background: var(--bg-card);
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.4s ease;
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .product-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            border-color: rgba(255, 106, 0, 0.3);
-        }
-
-        .card-badge {
+        .close-menu {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            z-index: 2;
-        }
-
-        .product-img-wrap {
-            height: 350px;
-            overflow: hidden;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .product-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.7s ease;
-            opacity: 0.8;
-        }
-
-        .product-card:hover .product-img-wrap img {
-            transform: scale(1.1);
-            opacity: 1;
-        }
-
-        .product-info {
-            padding: 25px;
-        }
-
-        .product-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .product-price {
-            color: var(--accent);
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        /* TRUSTED BRANDS */
-        .brands-section {
-            padding: 60px 8%;
-            text-align: center;
-        }
-
-        .brands-title {
+            top: 30px;
+            right: 30px;
+            font-size: 2rem;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
-        }
-
-        .brands-grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .brand-pill {
-            padding: 12px 30px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            transition: all 0.3s;
-            cursor: default;
-        }
-
-        .brand-pill:hover {
-            color: #fff;
-            border-color: var(--text-muted);
-            background: #1a1a20;
-        }
-
-        /* WHY CHOOSE US */
-        .why-section {
-            padding: 80px 8%;
-            background: #0d0d10;
-        }
-
-        .why-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-top: 40px;
-        }
-
-        .why-card {
-            background: var(--bg-card);
-            padding: 35px 20px;
-            text-align: center;
-            border-radius: 16px;
-            transition: transform 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.02);
-        }
-
-        .why-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 106, 0, 0.2);
-        }
-
-        .why-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            background: rgba(255, 106, 0, 0.1);
-            color: var(--accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .why-card h4 {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-
-        .why-card p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        /* TESTIMONIALS */
-        .testimonials {
-            padding: 100px 8%;
-        }
-
-        .testi-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-        }
-
-        .testi-card {
-            background: var(--bg-card);
-            padding: 35px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stars {
-            color: var(--accent);
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-
-        .testi-text {
-            color: #e5e7eb;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            margin-bottom: 30px;
-            font-style: italic;
-        }
-
-        .testi-user {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .av-1 {
-            background: #3b82f6;
-        }
-
-        .av-2 {
-            background: #10b981;
-        }
-
-        .av-3 {
-            background: #8b5cf6;
-        }
-
-        .user-info h5 {
-            font-size: 0.95rem;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
-            color: #10b981;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* NEWSLETTER */
-        .newsletter {
-            padding: 80px 5%;
-            background-color: var(--accent);
-            text-align: center;
-            color: #fff;
-        }
-
-        .newsletter h2 {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            color: #fff;
-        }
-
-        .newsletter p {
-            margin-bottom: 30px;
-            opacity: 0.9;
-            font-size: 0.95rem;
-        }
-
-        .newsletter-form {
-            display: flex;
-            max-width: 500px;
-            margin: 0 auto 15px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 6px;
-            border-radius: 30px;
-        }
-
-        .newsletter-form input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 10px 20px;
-            color: #fff;
-            outline: none;
-        }
-
-        .newsletter-form input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .newsletter-form button {
-            background: #fff;
-            color: var(--accent);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
         }
 
-        .newsletter-form button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .disclaimer {
-            font-size: 0.75rem;
-            opacity: 0.7;
-        }
-
-        /* FOOTER */
-        footer {
-            padding: 80px 8% 40px;
-            background: #050507;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 50px;
-            margin-bottom: 60px;
-        }
-
-        .footer-brand p {
-            color: var(--text-muted);
-            margin: 20px 0;
-            font-size: 0.9rem;
-            max-width: 300px;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 15px;
-        }
-
-        .social-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--bg-card);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            transition: all 0.3s;
-        }
-
-        .social-link:hover {
-            background: var(--accent);
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
             color: #fff;
-            transform: translateY(-3px);
+            cursor: pointer;
         }
 
-        .footer-col h4 {
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-
-        .footer-col ul {
-            list-style: none;
-        }
-
-        .footer-col ul li {
-            margin-bottom: 15px;
-        }
-
-        .footer-col ul a {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .footer-col ul a:hover {
-            color: var(--accent);
-        }
-
-        .contact-info li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .contact-info i {
-            color: var(--accent);
-            margin-top: 3px;
-        }
-
-        .footer-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .payment-methods {
-            display: flex;
-            gap: 10px;
-        }
-
-        .pay-pill {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 1024px) {
-            .hero h1 {
-                font-size: 3.5rem;
-            }
-
-            .art-section {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .feature-item {
-                text-align: left;
-            }
-
-            .cards-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .testi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .stats {
-                flex-wrap: wrap;
-                gap: 30px;
-            }
-
-            .stat-item {
-                width: 45%;
-            }
-
-            .cards-grid,
-            .testi-grid,
-            .why-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: block;
             }
         }
     </style>
 </head>
-
 <body>
 
     <!-- NAVBAR -->
-    <nav>
-        <a href="/" class="logo">
-            <i class="fa-solid fa-clock logo-icon"></i>
-            TimeHub
-        </a>
-        <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">About</a>
-            <a href="#">Contact</a>
-        </div>
-        <div class="nav-actions">
-
-
-            {% if user.is_authenticated %}
-            <div
-                style="display: flex; align-items: center; gap: 15px; border-left: 1px solid var(--border-color); padding-left: 15px;">
-                <a href="{% url 'user_dashboard' %}" style="text-decoration: none; color: inherit;">
-                    <span style="font-weight: 500; font-size: 0.9rem; opacity: 0.9; cursor: pointer; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
-                        <i class="fa-regular fa-user" style="margin-right: 5px;"></i> {{ user.email }}
-                    </span>
-                </a>
-                <a href="{% url 'logout' %}" class="btn btn-outline"
-                    style="padding: 8px 16px; font-size: 0.85rem;">Logout</a>
+    <header id="header">
+        <div class="container nav-wrap">
+            <a href="/" class="logo">
+                <i class="fas fa-clock"></i>
+                TimeHub
+            </a>
+            <nav class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Luxury</a>
+                <a href="#">Sport</a>
+                <a href="#">Smart</a>
+                <a href="#">Vintage</a>
+            </nav>
+            <div class="nav-actions">
+                <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
+                <div class="icon-btn"><i class="fas fa-shopping-cart"></i></div>
+                <div class="mobile-toggle" id="mobileToggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                {% if user.is_authenticated %}
+                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"></i></a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary" style="padding: 10px 24px; font-size: 0.85rem;">Login</a>
+                {% endif %}
             </div>
-            {% else %}
-            <a href="{% url 'login' %}" class="btn btn-ghost">Sign In</a>
-            <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
-
-            {% endif %}
         </div>
-    </nav>
+    </header>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="close-menu" id="closeMenu">
+            <i class="fas fa-times"></i>
+        </div>
+        <nav class="mobile-nav-links">
+            <a href="/">Home</a>
+            <a href="#">Luxury</a>
+            <a href="#">Sport</a>
+            <a href="#">Smart</a>
+            <a href="#">Vintage</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_dashboard' %}">Dashboard</a>
+            {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </nav>
+        <div class="socials">
+            <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+        </div>
+    </div>
 
     <!-- HERO SECTION -->
     <section class="hero">
-        <video autoplay muted loop playsinline class="hero-bg-video">
-            <source src="{% static 'images/watchs_hero.mp4' %}" type="video/mp4">
-        </video>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>{% if user.is_authenticated %}Welcome back, <br><span>{{ user.first_name }}</span>{% else %}Where Time
-                Meets <br><span>Perfection</span>{% endif %}</h1>
-            <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional
-                craftsmanship, heritage, and uncompromised quality.</p>
-            <div class="hero-buttons">
-                {% if user.is_authenticated %}
-                <a href="#" class="btn btn-primary">Explore Collection</a>
-                {% else %}
-                <a href="#" class="btn btn-ghost">Explore Collection</a>
-                {% endif %}
-                <div class="play-btn">
-                    <div class="play-icon">
-                        <i class="fa-solid fa-play"></i>
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">Limited Edition: Premium Collection</div>
+                <h4>Timeless Elegance</h4>
+                <h1>Where <span>Precision</span> Meets Luxury</h1>
+                <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional craftsmanship starting at ₹2,999.</p>
+                <div class="hero-buttons" style="display: flex; gap: 20px;">
+                    <a href="#" class="btn btn-primary">Shop Collection <i class="fas fa-arrow-right"></i></a>
+                    <a href="#" class="btn btn-outline">Watch Our Story <i class="fas fa-play-circle"></i></a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="{% static 'images/hero_watch.png' %}" alt="Luxury Watch">
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="categories">
+        <div class="container">
+            <div class="section-header">
+                <h2>Explore Categories</h2>
+                <p>Find the perfect style that defines your personality.</p>
+            </div>
+            <div class="cat-grid">
+                <div class="cat-card">
+                    <img src="{% static 'images/luxury_category.png' %}" alt="Luxury">
+                    <div class="cat-overlay">
+                        <h3>Luxury</h3>
+                        <span>120+ Products</span>
                     </div>
-                    Watch Our Story
+                </div>
+                <div class="cat-card">
+                    <img src="{% static 'images/sport_category.png' %}" alt="Sport">
+                    <div class="cat-overlay">
+                        <h3>Sport</h3>
+                        <span>85+ Products</span>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <img src="{% static 'images/smart_category.png' %}" alt="Smart">
+                    <div class="cat-overlay">
+                        <h3>Smart</h3>
+                        <span>60+ Products</span>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <img src="{% static 'images/digital_category.png' %}" alt="Digital">
+                    <div class="cat-overlay">
+                        <h3>Digital</h3>
+                        <span>45+ Products</span>
+                    </div>
+                </div>
+                <div class="cat-card">
+                    <img src="{% static 'images/vintage_category.png' %}" alt="Vintage">
+                    <div class="cat-overlay">
+                        <h3>Vintage</h3>
+                        <span>30+ Products</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="scroll-down">
-            SCROLL
-            <i class="fa-solid fa-chevron-down"></i>
-        </div>
     </section>
 
-    <!-- STATS -->
-    <section class="stats">
-        <div class="stat-item">
-            <h3>50,000 +</h3>
-            <p>Happy Customers</p>
-        </div>
-        <div class="stat-item">
-            <h3>2,500 +</h3>
-            <p>Trusted Partners</p>
-        </div>
-        <div class="stat-item">
-            <h3>100 %</h3>
-            <p>Authenticity Guaranteed</p>
-        </div>
-        <div class="stat-item">
-            <h3>24/7</h3>
-            <p>Expert Support</p>
-        </div>
-    </section>
-
-    <!-- ART OF TIMEKEEPING -->
-    <section class="art-section">
-        <div class="art-image">
-            <img src="{% static 'images/art_watch.png' %}" alt="Luxury watch in hand">
-        </div>
-        <div class="art-content">
-            <h2>The Art of <br><span>Timekeeping</span></h2>
-            <p>At TimeHub, we believe a watch is more than just a tool to tell time—it's a statement of character, a
-                piece of history, and a legacy passed down through generations. Our commitment to authenticity and craft
-                ensures that every timepiece in our collection meets the highest standards of excellence.</p>
-
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-certificate"></i></div>
-                    <div class="feature-text">
-                        <h4>Certified Authentic</h4>
-                        <p>Every watch is inspected by certified horologists to ensure absolute authenticity and perfect
-                            condition.</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-gem"></i></div>
-                    <div class="feature-text">
-                        <h4>Expert Curated</h4>
-                        <p>Our experts search the world to offer a selection of the most sought-after models in the
-                            finest condition.</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                    <div class="feature-text">
-                        <h4>Lifetime Warranty</h4>
-                        <p>We stand behind the quality of our watches with comprehensive lifetime warranties for total
-                            peace of mind.</p>
-                    </div>
-                </div>
+    <!-- BEST SELLERS -->
+    <section class="products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Best Sellers</h2>
+                <p>The most loved timepieces by our global community.</p>
             </div>
-
-            <a href="#" class="link-arrow">Learn More About Us <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-    </section>
-
-    <!-- THE COLLECTION -->
-    <section class="collection-section">
-        <div class="section-header">
-            <h2>The Collection</h2>
-            <p>Hand-picked masterpieces for the discerning collector.</p>
-        </div>
-        <div class="cards-grid">
-            <!-- Card 1 -->
-            <div class="product-card">
-                <div class="card-badge">Top Choice</div>
-                <div class="product-img-wrap">
-                    <img src="{% static 'images/omega_watch.png' %}" alt="Omega Speedmaster">
+            <div class="card-grid">
+                <div class="product-card">
+                    <span class="card-badge">Best Seller</span>
+                    <div class="wish-btn"><i class="far fa-heart"></i></div>
+                    <div class="card-top">
+                        <img src="{% static 'images/rolex_submariner.png' %}" alt="Rolex Submariner">
+                    </div>
+                    <div class="rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <h3>Rolex Submariner</h3>
+                    <div class="price-wrap">
+                        <span class="price">₹12,49,999</span>
+                        <span class="old-price">₹14,00,000</span>
+                    </div>
+                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                 </div>
-                <div class="product-info">
+
+                <div class="product-card">
+                    <span class="card-badge">New Arrival</span>
+                    <div class="wish-btn"><i class="far fa-heart"></i></div>
+                    <div class="card-top">
+                        <img src="{% static 'images/omega_speedmaster.png' %}" alt="Omega Speedmaster">
+                    </div>
+                    <div class="rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                    </div>
                     <h3>Omega Speedmaster</h3>
-                    <div class="product-price">From $6,500</div>
+                    <div class="price-wrap">
+                        <span class="price">₹5,49,999</span>
+                    </div>
+                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                 </div>
-            </div>
-            <!-- Card 2 -->
-            <div class="product-card">
-                <div class="card-badge">Top Reviews</div>
-                <div class="product-img-wrap">
-                    <img src="{% static 'images/tag_watch.png' %}" alt="Tag Heuer Carrera">
-                </div>
-                <div class="product-info">
+
+                <div class="product-card">
+                    <span class="card-badge">Limited Stock</span>
+                    <div class="wish-btn"><i class="far fa-heart"></i></div>
+                    <div class="card-top">
+                        <img src="{% static 'images/tag_watch.png' %}" alt="Tag Heuer Carrera">
+                    </div>
+                    <div class="rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                    </div>
                     <h3>Tag Heuer Carrera</h3>
-                    <div class="product-price">From $5,200</div>
+                    <div class="price-wrap">
+                        <span class="price">₹4,20,000</span>
+                        <span class="old-price">₹5,00,000</span>
+                    </div>
+                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                 </div>
-            </div>
-            <!-- Card 3 -->
-            <div class="product-card">
-                <div class="card-badge">Exclusive</div>
-                <div class="product-img-wrap">
-                    <img src="{% static 'images/tag_watch.png' %}" alt="Breitling Navitimer"
-                        style="filter: hue-rotate(20deg);">
-                </div>
-                <div class="product-info">
-                    <h3>Breitling Navitimer</h3>
-                    <div class="product-price">From $8,400</div>
+
+                <div class="product-card">
+                    <div class="wish-btn"><i class="far fa-heart"></i></div>
+                    <div class="card-top">
+                        <img src="{% static 'images/omega_watch.png' %}" alt="Omega Seamaster">
+                    </div>
+                    <div class="rating">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <h3>Omega Seamaster</h3>
+                    <div class="price-wrap">
+                        <span class="price">₹3,90,000</span>
+                    </div>
+                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- TRUSTED BRANDS -->
-    <section class="brands-section">
-        <div class="brands-title">Our Trusted Brands</div>
-        <div class="brands-grid">
-            <div class="brand-pill">ROLEX</div>
-            <div class="brand-pill">OMEGA</div>
-            <div class="brand-pill">CARTIER</div>
-            <div class="brand-pill">TITAN</div>
-            <div class="brand-pill">wristar</div>
-            <div class="brand-pill">TAG HEUER</div>
+    <!-- FLASH DEALS -->
+    <section class="container">
+        <div class="flash-deals">
+            <div class="container flash-content">
+                <div style="flex: 1;">
+                    <div class="hero-badge" style="background:#000; border-color:var(--primary-color);">Midnight Sale</div>
+                    <h2 style="font-size: 3rem; margin-bottom: 20px;">Flash Deals of <br>The Day</h2>
+                    <p style="color: var(--text-muted);">Hurry up! Grab your favorite luxury watches at heavily discounted prices before they run out. Valid for today only!</p>
+                    <div class="flash-timer">
+                        <div class="timer-unit"><span>08</span><label>Hours</label></div>
+                        <div class="timer-unit"><span>42</span><label>Mins</label></div>
+                        <div class="timer-unit"><span>15</span><label>Secs</label></div>
+                    </div>
+                    <a href="#" class="btn btn-primary">Grab The Deal <i class="fas fa-bolt"></i></a>
+                </div>
+                <div style="flex: 1; text-align: center;">
+                    <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; margin-bottom: 20px;">Limited Edition <br>Starting from ₹1,999</p>
+                    <img src="{% static 'images/art_watch.png' %}" alt="Flash Deal Watch" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));">
+                    <p style="color: #ef4444; font-weight: 700; margin-top: 20px;"><i class="fas fa-exclamation-circle"></i> Only 12 items left in stock!</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- WHY CHOOSE US -->
-    <section class="why-section">
-        <div class="section-header">
-            <h2>Why Choose Us</h2>
-            <p>We provide the best overall experience for buying luxury watches.</p>
-        </div>
-        <div class="why-grid">
-            <div class="why-card">
-                <div class="why-icon"><i class="fa-solid fa-truck-fast"></i></div>
+    <!-- TRUST SECTION -->
+    <section class="trust-section">
+        <div class="container trust-grid">
+            <div class="trust-item">
+                <i class="fas fa-shipping-fast"></i>
                 <h4>Free Shipping</h4>
-                <p>On all orders over $500</p>
+                <p>On all orders above ₹9,999</p>
             </div>
-            <div class="why-card">
-                <div class="why-icon"><i class="fa-solid fa-shield-check"></i></div>
+            <div class="trust-item">
+                <i class="fas fa-shield-alt"></i>
                 <h4>Secure Payment</h4>
-                <p>100% secure checkout</p>
+                <p>100% SSL encrypted payments</p>
             </div>
-            <div class="why-card">
-                <div class="why-icon"><i class="fa-solid fa-headset"></i></div>
-                <h4>24/7 Support</h4>
-                <p>Dedicated customer service</p>
-            </div>
-            <div class="why-card">
-                <div class="why-icon"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+            <div class="trust-item">
+                <i class="fas fa-history"></i>
                 <h4>Easy Returns</h4>
-                <p>30 day return policy</p>
+                <p>30-day hassle-free return policy</p>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-headset"></i>
+                <h4>24/7 Support</h4>
+                <p>Proactive expert assistance</p>
             </div>
         </div>
     </section>
 
     <!-- TESTIMONIALS -->
     <section class="testimonials">
-        <div class="section-header">
-            <h2>What Our Customers Say</h2>
-            <p>Don't just take our word for it, hear from our community of collectors.</p>
-        </div>
-        <div class="testi-grid">
-            <div class="testi-card">
-                <div class="stars">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                </div>
-                <p class="testi-text">"The watch I received surpassed all my expectations. The craftsmanship is
-                    impeccable, and the customer service team was incredibly helpful throughout the purchasing process.
-                    Highly recommended!"</p>
-                <div class="testi-user">
-                    <div class="user-avatar av-1">JD</div>
-                    <div class="user-info">
-                        <h5>John Doe</h5>
-                        <p><i class="fa-solid fa-circle-check"></i> Verified Buyer</p>
+        <div class="container">
+            <div class="section-header">
+                <h2>Voices of Trust</h2>
+                <p>What our community of collectors has to say about their experience.</p>
+            </div>
+            <div class="testi-grid">
+                <div class="testi-card">
+                    <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p>"The Rolex I purchased was in pristine condition. The authentication process gave me total peace of mind. Truly a premium experience."</p>
+                    <div class="testi-user">
+                        <div class="testi-info">
+                            <h5>Arjun Sharma</h5>
+                            <p><i class="fas fa-check-circle"></i> Verified Buyer</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="testi-card">
-                <div class="stars">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                </div>
-                <p class="testi-text">"It was a gift for my husband's 40th, he is thrilled with his Rolex Submariner.
-                    The authentication process was flawless and it was incredibly fast shipping overall."</p>
-                <div class="testi-user">
-                    <div class="user-avatar av-2">MS</div>
-                    <div class="user-info">
-                        <h5>Michael Smith</h5>
-                        <p><i class="fa-solid fa-circle-check"></i> Verified Buyer</p>
+                <div class="testi-card">
+                    <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p>"Incredible service. The watch arrived within 2 days in beautiful packaging. The support team answered all my technical questions."</p>
+                    <div class="testi-user">
+                        <div class="testi-info">
+                            <h5>Sarah Williams</h5>
+                            <p><i class="fas fa-check-circle"></i> Verified Buyer</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="testi-card">
-                <div class="stars">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                        class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                </div>
-                <p class="testi-text">"Absolutely in love with my Omega. The detail is phenomenon and the service is
-                    unmatched. This is definitely my new go-to place for premium watches."</p>
-                <div class="testi-user">
-                    <div class="user-avatar av-3">EP</div>
-                    <div class="user-info">
-                        <h5>Emily Parker</h5>
-                        <p><i class="fa-solid fa-circle-check"></i> Verified Buyer</p>
+                <div class="testi-card">
+                    <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <p>"Found a rare Omega piece I've been searching for years. The pricing was fair and the condition was exactly as described."</p>
+                    <div class="testi-user">
+                        <div class="testi-info">
+                            <h5>Vikram Mehra</h5>
+                            <p><i class="fas fa-check-circle"></i> Verified Buyer</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1182,78 +536,106 @@
 
     <!-- NEWSLETTER -->
     <section class="newsletter">
-        <h2>Stay in the Loop</h2>
-        <p>Subscribe to our newsletter to get the latest updates on new arrivals,<br>exclusive offers, and watch guides.
-        </p>
-        <form class="newsletter-form" onsubmit="event.preventDefault()">
-            <input type="email" placeholder="Enter your email address" required>
-            <button type="submit">Subscribe</button>
-        </form>
-        <p class="disclaimer">By subscribing you agree to our Terms and Conditions.</p>
+        <div class="container">
+            <div class="news-wrap">
+                <div class="news-content">
+                    <h2>Get 10% OFF</h2>
+                    <p>Subscribe to our newsletter for exclusive deals and new arrivals.</p>
+                </div>
+                <form class="news-form" onsubmit="event.preventDefault()">
+                    <input type="email" placeholder="Your email address" required>
+                    <button class="btn">Subscribe <i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
     </section>
 
     <!-- FOOTER -->
     <footer>
-        <div class="footer-grid">
-            <div class="footer-brand">
-                <a href="/" class="logo" style="margin-bottom: 20px;">
-                    <i class="fa-solid fa-clock logo-icon"></i>
-                    TimeHub
-                </a>
-                <p>Your premier destination for luxury timepieces. We are dedicated to delivering excellence to
-                    collectors, ensuring authenticity and unparalleled service.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="social-link"><i class="fa-brands fa-twitter"></i></a>
-                    <a href="#" class="social-link"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="social-link"><i class="fa-brands fa-linkedin-in"></i></a>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="logo footer-logo">
+                        <i class="fas fa-clock"></i>
+                        TimeHub
+                    </a>
+                    <p class="footer-desc">Your ultimate destination for luxury timepieces. Crafting moments that last a lifetime through precision and heritage.</p>
+                    <div class="socials">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Best Sellers</a></li>
+                        <li><a href="#">Watch Guides</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Return Policy</a></li>
+                        <li><a href="#">Order Tracking</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-map-marker-alt" style="margin-right:10px; color:var(--primary-color);"></i> Mumbai, MH, India</li>
+                        <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-phone-alt" style="margin-right:10px; color:var(--primary-color);"></i> +91 98765 43210</li>
+                        <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-envelope" style="margin-right:10px; color:var(--primary-color);"></i> support@timehub.com</li>
+                    </ul>
                 </div>
             </div>
-
-            <div class="footer-col">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Shop All</a></li>
-                    <li><a href="#">New Arrivals</a></li>
-                    <li><a href="#">Brands</a></li>
-                    <li><a href="#">Blog</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4>Customer Service</h4>
-                <ul>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Shipping Policy</a></li>
-                    <li><a href="#">Returns & Exchanges</a></li>
-                    <li><a href="#">FAQ</a></li>
-                    <li><a href="#">Track Order</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h4>Contact Us</h4>
-                <ul class="contact-info">
-                    <li><i class="fa-solid fa-location-dot"></i> <span>123 Watchmaker Street, Suite 100<br>New York, NY
-                            10001</span></li>
-                    <li><i class="fa-solid fa-phone"></i> <span>+1 (555) 123-4567</span></li>
-                    <li><i class="fa-solid fa-envelope"></i> <span>support@timehub.com</span></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <p>&copy; 2026 TimeHub. All rights reserved.</p>
-            <div class="payment-methods">
-                <span class="pay-pill">VISA</span>
-                <span class="pay-pill">MC</span>
-                <span class="pay-pill">AMEX</span>
-                <span class="pay-pill">PPAL</span>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TimeHub Luxury. All Rights Reserved.</p>
+                <div class="payments">
+                    <i class="fab fa-cc-visa"></i>
+                    <i class="fab fa-cc-mastercard"></i>
+                    <i class="fab fa-google-pay"></i>
+                    <i class="fab fa-apple-pay"></i>
+                </div>
             </div>
         </div>
     </footer>
 
-</body>
+    <script>
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
 
+        // Mobile Menu Toggle
+        const mobileToggle = document.getElementById('mobileToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMenu = document.getElementById('closeMenu');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : 'auto';
+        }
+
+        if (mobileToggle) mobileToggle.addEventListener('click', toggleMenu);
+        if (closeMenu) closeMenu.addEventListener('click', toggleMenu);
+
+        // Close menu on link click
+        document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        });
+    </script>
+</body>
 </html>

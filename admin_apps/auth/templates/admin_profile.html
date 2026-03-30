@@ -30,6 +30,63 @@
             --transition: all 0.2s ease;
         }
 
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            height: 60px;
+            background: #fff;
+            padding: 0 20px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+
+        .mobile-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .mobile-brand .brand-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        .menu-toggle {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 99;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -497,7 +554,61 @@
             border: 1px solid #fecaca;
         }
 
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                left: -260px;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .topbar {
+                padding: 0 20px;
+                height: 70px;
+            }
+
+            .search-bar {
+                display: none; /* Hide search on mobile profile settings */
+            }
+        }
+
         @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .page-header {
+                text-align: center;
+            }
+
+            .profile-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .profile-info-main {
+                flex-direction: column;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+
             .form-grid {
                 grid-template-columns: 1fr;
             }
@@ -506,21 +617,39 @@
                 grid-column: span 1;
             }
 
-            .profile-card {
+            .avatar-upload-section {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
+                align-items: center;
             }
 
-            .contact-info {
-                flex-direction: column;
-                gap: 10px;
+            .topbar-right {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .admin-profile-top div {
+                display: none;
             }
         }
     </style>
 </head>
 
 <body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <a href="#" class="mobile-brand">
+            <div class="brand-icon">
+                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+            </div>
+            TimeHub
+        </a>
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </header>
 
     <div class="admin-layout">
         <!-- Sidebar -->
@@ -800,6 +929,19 @@
                 reader.readAsDataURL(event.target.files[0]);
             }
         }
+
+        // Sidebar Toggle Script
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
     </script>
 </body>
 
