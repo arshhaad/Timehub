@@ -127,20 +127,15 @@ def forgot_password(request):
         send_mail(
             subject='TimeHub — Password Reset OTP',
             message=f"""Hello from TimeHub ⏱
-
-    You requested a password reset.
-
-
-    🔐  YOUR ONE-TIME PASSWORD
+            You requested a password reset.
+            🔐  YOUR ONE-TIME PASSWORD
 
                     {otp_obj.otp}   
                     
-    ⏳ Valid for 5 minutes only.
-    🚫 Do not share it with anyone.
-
-    If you did not request this, please ignore this email.
-
-    — The TimeHub Team 🚀""",
+            ⏳ Valid for 5 minutes only.
+            🚫 Do not share it with anyone.
+            If you did not request this, please ignore this email.
+             — The TimeHub Team 🚀""",
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[email],
         )
