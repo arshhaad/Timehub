@@ -12,7 +12,7 @@ from django.views.decorators.cache import never_cache
 def dashboard(request):
     user = request.user
     
-    # Placeholder data for stats (to be replaced with real models later)
+    # Placeholder data for stats (to be replaced with real models 
     stats = {
         'total_orders': 12,  # Mock value
         'saved_items': 0,    # Mock value
@@ -98,7 +98,7 @@ def edit_profile(request):
         form = UserEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect('dashboard')
+            return redirect('user_dashboard')
     else:
         form = UserEditForm(instance=request.user)
 

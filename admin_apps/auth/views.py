@@ -94,7 +94,7 @@ def admin_forgot_password(request):
             # Generate OTP using the user-side model
             otp_obj = EmailOTP.objects.create(user=user)
             
-         # Save the email carefully into the browser session
+         # Save the email into the browser session
             request.session['admin_reset_email'] = email
             
             # Dispatch the email
@@ -185,7 +185,7 @@ def admin_resend_otp(request):
 
     last_otp = user.otps.order_by('-created_at').first()
 
-    # cooldown check (2 minutes = 120 seconds) default if settings doesn't exist
+    # cooldown check (2 minutes = 120 seconds) 
     cooldown = getattr(settings, 'RESET_OTP_COOLDOWN_SEC', 120)
     if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < cooldown:
         messages.error(request, "Please wait before requesting another OTP.")
