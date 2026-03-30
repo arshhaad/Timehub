@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q, Count, Sum
 from django.core.paginator import Paginator
 from django.contrib import messages
-from .forms import UserForm
 from user_apps.edit.models import Address
 from user_apps.core.models import Notification
 
@@ -26,39 +25,18 @@ def superuser_required(view_func):
 def user_list(request):
     if not request.user.is_superuser:
         return redirect("home")
-    
-    if request.method == "POST":
-        action = request.POST.get("action", "")
-        if action == "edit":
-            user_ids = request.POST.getlist("user_ids")
-            if user_ids:
-                return redirect("user_edit", user_id=user_ids[0])
-            else:
-                # Smart fallback: If no check boxes selected, edit the FIRST user in current view
-                query = request.GET.get("q")
-                temp_list = User.objects.filter(is_superuser=False).order_by("-created_at")
-                if query:
-                    temp_list = temp_list.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query))
-                
-                first_user = temp_list.first()
-                if first_user:
-                    return redirect("user_edit", user_id=first_user.id)
-                else:
-                    messages.warning(request, "No users found to edit.")
-                    return redirect("user_list")
-        
-        elif action.startswith("delete_"):
-            user_id = action.replace("delete_", "")
-            user_to_delete = get_object_or_404(User, pk=user_id)
-            user_to_delete.delete()
-            messages.success(request, f"User {user_to_delete.email} updated successfully!")
-            return redirect("user_list")
 
     users_list = User.objects.filter(is_superuser=False).annotate(
         order_count=Count('orders'),
         total_spent=Sum('orders__total_amount')
     ).order_by("-created_at")
     
+    status = request.GET.get("status")
+    if status == "active":
+        users_list = users_list.filter(is_active=True)
+    elif status == "blocked":
+        users_list = users_list.filter(is_active=False)
+
     query = request.GET.get("q")
     if query:
         users_list = users_list.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query))
@@ -68,69 +46,10 @@ def user_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, "user_list.html", {"users": page_obj, "query": query, 'active_menu': 'users'})
+    return render(request, "user_list.html", {"users": page_obj, "query": query, "status": status, 'active_menu': 'users'})
 
 
-@never_cache
-@login_required(login_url="admin_login")
-def user_add(request):
-    if not request.user.is_superuser:
-        return redirect("home")
-    if request.method == "POST":
-        form = UserForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data["password"])
-            user.save()
-            messages.success(request, "User created.")
-            return redirect("user_list")
-        else:
-            messages.error(request, "Please fix the errors below.")
-    else:
-        form = UserForm()
 
-    return render(request, "user_add.html", {"form": form})
-
-
-@never_cache
-@login_required(login_url="admin_login")
-def user_edit(request, user_id):
-    if not request.user.is_superuser:
-        return redirect("home")
-    user = get_object_or_404(User, pk=user_id)
-
-    if request.method == "POST":
-        form = UserForm(request.POST, instance=user)
-        if form.is_valid():
-            # commit=False to handle password properly
-            user_obj = form.save(commit=False)
-
-            pwd = form.cleaned_data.get("password")
-            if pwd:
-                user_obj.set_password(pwd)
-
-            user_obj.save()
-            messages.success(request, "User updated successfully ✅")
-            return redirect("user_list")
-        else:
-            messages.error(request, "Please fix the errors below ✋")
-    else:
-        form = UserForm(instance=user)
-
-    return render(request, "user_edit.html", {"form": form, "user": user})
-
-
-@never_cache
-@login_required(login_url="admin_login")
-def user_delete(request, pk):
-    if not request.user.is_superuser:
-        return redirect("home")
-    user = get_object_or_404(User, pk=pk)
-    if request.method == "POST":
-        user.delete()
-        messages.success(request, "User deleted")
-        return redirect("user_list")
-    return render(request, "user_delete.html", {"user": user})
 
 
 @superuser_required
@@ -155,6 +74,13 @@ def user_profiles(request, user_id):
                 
                 messages.success(request, f"Notification sent to {customer.first_name}: \"{msg_text}\"")
                 return redirect("user_profiles", user_id=user_id)
+
+        elif action == "toggle_status":
+            customer.is_active = not customer.is_active
+            customer.save()
+            status_text = "unblocked" if customer.is_active else "blocked"
+            messages.success(request, f"User {customer.email} has been {status_text}.")
+            return redirect("user_profiles", user_id=user_id)
 
     # Prefetch orders and their items for efficiency
     orders = customer.orders.all().prefetch_related('items__product').order_by('-created_at')

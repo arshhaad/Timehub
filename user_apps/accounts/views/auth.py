@@ -42,7 +42,6 @@ def signup_view(request):
             return redirect('verify-otp')
 
         # form invalid → fall through and re-render
-
     else:
         form = SignupForm()
 

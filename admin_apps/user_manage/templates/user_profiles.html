@@ -564,16 +564,19 @@
                         {% else %}
                         <span class="status-badge status-blocked"><i class="fas fa-ban"></i> Account Blocked</span>
                         {% endif %}
-                        
-                        <a href="{% url 'user_edit' customer.id %}" class="status-badge" style="background: #fff; color: var(--text-main); border: 1px solid var(--border-color); cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: var(--transition);">
-                            <i class="fas fa-user-edit"></i> Edit User
-                        </a>
 
-                        <form action="{% url 'user_delete' customer.id %}" method="POST" style="display: inline;">
+                        <form method="POST" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="status-badge" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; cursor: pointer; height: 100%; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: var(--transition);" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
-                                <i class="fas fa-trash-alt"></i> Delete User
+                            <input type="hidden" name="action" value="toggle_status">
+                            {% if customer.is_active %}
+                            <button type="submit" class="status-badge" style="background: #fff; color: #c2410c; border: 1px solid #fed7aa; cursor: pointer; height: 100%; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: var(--transition);">
+                                <i class="fas fa-user-lock"></i> Block User
                             </button>
+                            {% else %}
+                            <button type="submit" class="status-badge" style="background: #fff; color: #166534; border: 1px solid #bbf7d0; cursor: pointer; height: 100%; display: flex; align-items: center; gap: 8px; font-family: inherit; transition: var(--transition);">
+                                <i class="fas fa-user-check"></i> Unblock User
+                            </button>
+                            {% endif %}
                         </form>
                     </div>
                 </div>

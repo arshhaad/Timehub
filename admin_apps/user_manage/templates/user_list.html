@@ -626,6 +626,9 @@
                     <i class="fas fa-search"></i>
                     <input type="text" name="q" placeholder="Search orders, products, or users..."
                         value="{{ query|default:'' }}">
+                    {% if status %}
+                    <input type="hidden" name="status" value="{{ status }}">
+                    {% endif %}
                 </form>
 
                 <div class="topbar-right">
@@ -668,21 +671,15 @@
                         <p>Manage customer accounts, view purchase history, and handle permissions.</p>
                     </div>
                     <div class="header-actions">
-                        <button type="submit" name="action" value="edit" class="btn btn-outline">
-                            <i class="fas fa-user-edit"></i> Edit User
-                        </button>
-                        <a href="{% url 'user_add' %}" class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Add User
-                        </a>
                     </div>
                 </div>
 
                 <div class="table-container">
                     <div class="table-controls">
                         <div class="filter-tabs">
-                            <a href="#" class="filter-tab active">All Users</a>
-                            <a href="#" class="filter-tab">Active</a>
-                            <a href="#" class="filter-tab">Blocked</a>
+                            <a href="?status=all{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if not status or status == 'all' %}active{% endif %}">All Users</a>
+                            <a href="?status=active{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'active' %}active{% endif %}">Active</a>
+                            <a href="?status=blocked{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'blocked' %}active{% endif %}">Blocked</a>
                         </div>
                         <div class="table-actions">
                             <!-- Placeholder for bulk actions -->
@@ -700,7 +697,6 @@
                                     <col style="width: 130px;">
                                     <col style="width: 120px;">
                                     <col style="width: 120px;">
-                                    <col style="width: 100px;">
                                 </colgroup>
                                 <thead>
                                     <tr>
@@ -711,7 +707,6 @@
                                         <th>Total Spent</th>
                                         <th>Status</th>
                                         <th>Join Date</th>
-                                        <th style="text-align: right;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -756,18 +751,11 @@
                                         <td>
                                             <div style="font-size: 0.85rem;">{{ u.created_at|date:"M d, Y" }}</div>
                                         </td>
-                                        <td>
-                                            <div class="action-btns">
-                                                <a href="{% url 'user_edit' u.id %}" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
-                                                <button type="submit" name="action" value="delete_{{ u.id }}" class="action-btn btn-delete" title="Delete" onclick="return confirm('Are you sure?')">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </div>
-                                        </td>
+
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="8"
+                                        <td colspan="7"
                                             style="text-align: center; padding: 40px; color: var(--text-muted);">
                                             No users found matching your search.
                                         </td>
@@ -783,7 +771,7 @@
                             </div>
                             <div class="header-actions">
                                 {% if users.has_previous %}
-                                <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
                                     class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;">Previous</a>
                                 {% else %}
                                 <button class="btn btn-outline"
@@ -796,7 +784,7 @@
                                 </span>
 
                                 {% if users.has_next %}
-                                <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                                <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
                                     class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;">Next</a>
                                 {% else %}
                                 <button class="btn btn-outline"
