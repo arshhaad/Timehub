@@ -6,7 +6,7 @@ from django.db.models import Q, Count, Sum
 from django.core.paginator import Paginator
 from django.contrib import messages
 from user_apps.edit.models import Address
-from user_apps.core.models import Notification
+from user_apps.core.models import Notification, Collection, Product
 
 User = get_user_model()
 
@@ -26,6 +26,29 @@ def user_list(request):
     if not request.user.is_superuser:
         return redirect("home")
 
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "add_user":
+            email = request.POST.get("email")
+            first_name = request.POST.get("first_name")
+            last_name = request.POST.get("last_name")
+            password = request.POST.get("password")
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "Email already exists.")
+            else:
+                User.objects.create_user(email=email, first_name=first_name, last_name=last_name, password=password)
+                messages.success(request, f"User {email} created successfully.")
+            return redirect("user_list")
+
+        elif action == "toggle_status":
+            user_id = request.POST.get("user_id")
+            user_to_toggle = get_object_or_404(User, id=user_id)
+            user_to_toggle.is_active = not user_to_toggle.is_active
+            user_to_toggle.save()
+            status_text = "unblocked" if user_to_toggle.is_active else "blocked"
+            messages.success(request, f"User {user_to_toggle.email} has been {status_text}.")
+            return redirect("user_list")
+
     users_list = User.objects.filter(is_superuser=False).annotate(
         order_count=Count('orders'),
         total_spent=Sum('orders__total_amount')
@@ -42,13 +65,11 @@ def user_list(request):
         users_list = users_list.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query))
     
     # Pagination
-    paginator = Paginator(users_list, 10) # 10 users per page
+    paginator = Paginator(users_list, 10) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
     return render(request, "user_list.html", {"users": page_obj, "query": query, "status": status, 'active_menu': 'users'})
-
-
 
 
 

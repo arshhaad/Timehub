@@ -459,10 +459,10 @@
         <div class="sidebar-scroll">
             <div class="user-brief">
                 <div class="avatar">
-                    {% if user.avatar and user.avatar.url %}
-                    <img src="{{ user.avatar.url }}" alt="User Avatar">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
                     {% else %}
-                    {{ user.email|slice:":2"|upper }}
+                        {{ user.email|slice:":1"|upper }}
                     {% endif %}
                 </div>
                 <div class="info">
@@ -509,7 +509,7 @@
                         {% if user.avatar %}
                         <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
                         {% else %}
-                        <span id="avatar-preview-text">{{ user.email|slice:":2"|upper }}</span>
+                        <span id="avatar-preview-text">{{ user.email|slice:":1"|upper }}</span>
                         <!-- Hidden img for preview -->
                         <img id="avatar-preview" src=""
                             style="display: none; width: 100%; height: 100%; object-fit: cover;">

@@ -212,6 +212,7 @@
         .nav-item.active a {
             background-color: #000;
             color: #fff;
+            border-radius: 10px;
         }
 
         .sidebar-section-title {
@@ -355,17 +356,22 @@
         }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
+            padding: 12px 24px;
+            border-radius: 10px;
             font-weight: 600;
             font-size: 0.9rem;
             cursor: pointer;
             border: none;
             transition: var(--transition);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: #000;
+            color: #fff;
         }
 
         .btn-outline {
@@ -379,22 +385,12 @@
             border-color: #d1d5db;
         }
 
-        .btn-primary {
-            background: var(--black-btn);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #1f2937;
-        }
-
         /* Table Filter Section */
         .table-controls {
-            background: #fff;
-            padding: 20px;
+            padding: 24px;
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
             border: 1px solid var(--border-color);
-            border-bottom: none;
+            background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -402,7 +398,10 @@
 
         .filter-tabs {
             display: flex;
-            gap: 20px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
         }
 
         .filter-tab {
@@ -410,22 +409,19 @@
             font-weight: 600;
             color: var(--text-muted);
             text-decoration: none;
-            padding-bottom: 10px;
-            position: relative;
+            padding: 8px 20px;
+            border-radius: 10px;
+            transition: var(--transition);
         }
 
-        .filter-tab.active {
+        .filter-tab:hover {
             color: var(--text-main);
         }
 
-        .filter-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--black-btn);
+        .filter-tab.active {
+            background: #ffffff;
+            color: var(--text-main);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
         /* Modern Table Styling */
@@ -452,8 +448,8 @@
         }
 
         .user-table th {
-            background: #fafbfc;
-            padding: 16px 20px;
+            background: #ffffff;
+            padding: 16px 24px;
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -565,7 +561,7 @@
         .action-btn {
             width: 32px;
             height: 32px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
             background: #fff;
             color: var(--text-muted);
@@ -576,6 +572,18 @@
             transition: var(--transition);
         }
 
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition);
+        }
+
         .action-btn:hover {
             color: var(--text-main);
             border-color: #d1d5db;
@@ -583,10 +591,70 @@
             transform: translateY(-2px);
         }
 
-        .btn-delete:hover {
+        .btn-status {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 10px;
+            font-weight: 700;
+            width: 80px;
+            justify-content: center;
+            border: 1px solid transparent;
+        }
+
+        .btn-status-block {
+            background: #fee2e2;
             color: #ef4444;
             border-color: #fecaca;
-            background: #fef2f2;
+        }
+
+        .btn-status-unblock {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        /* Pagination Styling */
+        .pagination-container {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 24px; 
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-info {
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            font-weight: 500;
+        }
+
+        .pagination-info span {
+            color: var(--text-main); 
+            font-weight: 700;
+        }
+
+        .pagination-controls {
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+        }
+
+        .pagination-page-indicator {
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            background: #f3f4f6; 
+            padding: 8px 16px; 
+            border-radius: 10px; 
+            min-width: 80px; 
+            justify-content: center;
+        }
+
+        .pagination-page-indicator span {
+            color: #9ca3af; 
+            font-weight: 400;
         }
 
         /* Checkbox Styling */
@@ -706,12 +774,15 @@
                         <a href="#"><i class="fas fa-chart-line"></i> Revenue</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                        <a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a>
+                    </li>
+                    <li class="nav-item {% if active_menu == 'categories' %}active{% endif %}">
+                        <a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a>
                     </li>
                     <li class="nav-item">
                         <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
                     </li>
-                    <li class="nav-item active">
+                    <li class="nav-item {% if active_menu == 'users' %}active{% endif %}">
                         <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
                     </li>
 
@@ -799,6 +870,9 @@
                         <p>Manage customer accounts, view purchase history, and handle permissions.</p>
                     </div>
                     <div class="header-actions">
+                        <button type="button" class="btn btn-primary" onclick="openModal('addUserModal')">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
                     </div>
                 </div>
 
@@ -820,10 +894,11 @@
                                 <colgroup>
                                     <col style="width: 50px;">
                                     <col style="width: 250px;">
-                                    <col style="width: 240px;">
-                                    <col style="width: 90px;">
-                                    <col style="width: 130px;">
+                                    <col style="width: 200px;">
+                                    <col style="width: 80px;">
                                     <col style="width: 120px;">
+                                    <col style="width: 120px;">
+                                    <col style="width: 110px;">
                                     <col style="width: 120px;">
                                 </colgroup>
                                 <thead>
@@ -835,6 +910,7 @@
                                         <th>Total Spent</th>
                                         <th>Status</th>
                                         <th>Join Date</th>
+                                        <th style="text-align:right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -852,7 +928,9 @@
                                                 </div>
                                                 {% endif %}
                                                 <div>
-                                                    <span class="user-info-name">{{ u.first_name }} {{ u.last_name }}</span>
+                                                    <span class="user-info-name">
+                                                        {% if u.first_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.email }}{% endif %}
+                                                    </span>
                                                     <span class="user-info-id">USR-{{ u.id|stringformat:"04d" }}</span>
                                                 </div>
                                             </a>
@@ -877,13 +955,32 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div style="font-size: 0.85rem;">{{ u.created_at|date:"M d, Y" }}</div>
+                                            <div style="font-size: 0.85rem; text-align:right;">{{ u.created_at|date:"M d, Y" }}</div>
+                                        </td>
+                                        <td class="action-btns">
+                                            <form method="POST" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="toggle_status">
+                                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                                {% if u.is_active %}
+                                                <button type="submit" class="btn btn-status btn-status-block">
+                                                    <i class="fas fa-ban"></i> Block
+                                                </button>
+                                                {% else %}
+                                                <button type="submit" class="btn btn-status btn-status-unblock">
+                                                    <i class="fas fa-check"></i> Unblock
+                                                </button>
+                                                {% endif %}
+                                            </form>
+                                            <a href="{% url 'user_profiles' u.id %}" class="action-btn" title="View Profile">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                         </td>
 
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7"
+                                        <td colspan="8"
                                             style="text-align: center; padding: 40px; color: var(--text-muted);">
                                             No users found matching your search.
                                         </td>
@@ -892,31 +989,30 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination">
-                            <div>
-                                Showing {{ users.start_index }} to {{ users.end_index }} of {{ users.paginator.count }}
-                                results
+                        <div class="pagination-container">
+                            <div class="pagination-info">
+                                Showing <span>{{ users.start_index }}</span> to <span>{{ users.end_index }}</span> of <span>{{ users.paginator.count }}</span> users
                             </div>
-                            <div class="header-actions">
+                            <div class="pagination-controls">
                                 {% if users.has_previous %}
                                 <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                                    class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;">Previous</a>
+                                    class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px;">Previous</a>
                                 {% else %}
-                                <button class="btn btn-outline"
-                                    style="padding: 6px 12px; font-size: 0.8rem; opacity: 0.5; cursor: not-allowed;"
+                                <button type="button" class="btn btn-outline"
+                                    style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; opacity: 0.5; cursor: not-allowed;"
                                     disabled>Previous</button>
                                 {% endif %}
 
-                                <span style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
-                                    {{ users.number }} / {{ users.paginator.num_pages }}
-                                </span>
+                                <div class="pagination-page-indicator">
+                                    {{ users.number }} <span>/</span> {{ users.paginator.num_pages }}
+                                </div>
 
                                 {% if users.has_next %}
                                 <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                                    class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;">Next</a>
+                                    class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px;">Next</a>
                                 {% else %}
-                                <button class="btn btn-outline"
-                                    style="padding: 6px 12px; font-size: 0.8rem; opacity: 0.5; cursor: not-allowed;"
+                                <button type="button" class="btn btn-outline"
+                                    style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; opacity: 0.5; cursor: not-allowed;"
                                     disabled>Next</button>
                                 {% endif %}
                             </div>
@@ -926,6 +1022,44 @@
             </form>
         </div>
     </div>
+    <!-- Modals -->
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="addUserModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal-content" style="background: #fff; width: 500px; max-width: 90%; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 1.25rem; font-weight: 800;">Add New User</h2>
+                <span style="font-size: 1.5rem; color: #6b7280; cursor: pointer;" onclick="closeModal('addUserModal')">&times;</span>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_user">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">First Name</label>
+                        <input type="text" name="first_name" style="width: 100%; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 12px; outline: none;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Last Name</label>
+                        <input type="text" name="last_name" style="width: 100%; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 12px; outline: none;" required>
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Email Address</label>
+                    <input type="email" name="email" style="width: 100%; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 12px; outline: none;" required>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Initial Password</label>
+                    <input type="password" name="password" style="width: 100%; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 12px; outline: none;" required>
+                </div>
+                <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addUserModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Sidebar Toggle Script -->
     <script>
         const menuToggle = document.getElementById('menuToggle');
@@ -939,6 +1073,18 @@
 
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            setTimeout(() => modal.style.opacity = '1', 10);
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
     </script>
 </body>
 

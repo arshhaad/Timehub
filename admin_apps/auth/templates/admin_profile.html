@@ -671,10 +671,10 @@
                         <a href="#"><i class="fas fa-chart-pie"></i> Revenue</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                        <a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
+                        <a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
@@ -795,8 +795,7 @@
                                     <i class="fa-regular fa-envelope"></i> {{ user.email }}
                                 </div>
                                 <div class="contact-item">
-                                    <i class="fa-solid fa-phone"></i> {{ user.phone_number|default:"+1 (555) 000-0000"
-                                    }}
+                                    <i class="fa-solid fa-phone"></i> {{ user.phone_number|default:"+1 (555) 000-0000"}}
                                 </div>
                             </div>
                         </div>

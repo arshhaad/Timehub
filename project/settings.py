@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'cloudinary',
+    'cloudinary_storage',
     # local apps
     'user_apps.core',
     'user_apps.accounts',
@@ -59,6 +61,7 @@ INSTALLED_APPS = [
     # admin apps
     'admin_apps.auth',
     'admin_apps.user_manage',
+    'admin_apps.product_manage',
 ]
 
 MIDDLEWARE = [
@@ -98,6 +101,17 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+CLOUDINARY_URL = env("CLOUDINARY_URL")
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_LOGIN_METHODS = {'email'}

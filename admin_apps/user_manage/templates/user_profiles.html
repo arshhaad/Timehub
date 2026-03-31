@@ -469,6 +469,100 @@
             line-height: 1.5;
         }
 
+        /* Message Cards & Selection Logic */
+        .msg-card {
+            padding: 24px; 
+            border-radius: 10px; 
+            height: 100%;
+            border: 2px solid var(--border-color);
+            background: #fff;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .msg-card:hover {
+            border-color: #d1d5db;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="radio"]:checked + .msg-card {
+            border-color: var(--primary-bg);
+            background: rgba(255, 107, 0, 0.03);
+            box-shadow: 0 0 0 1px var(--primary-bg);
+        }
+
+        input[type="radio"]:checked + .msg-card::after {
+            content: "\f058";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            color: var(--primary-bg);
+            font-size: 1.2rem;
+        }
+
+        .btn-premium {
+            background: #000;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-premium:hover {
+            background: #1f2937;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-premium:active {
+            transform: translateY(0);
+        }
+
+        /* Search Bar Refinement */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f3f4f6;
+            padding: 10px 20px;
+            border-radius: 10px;
+            width: 400px;
+            gap: 12px;
+            border: 1px solid transparent;
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within {
+            background: #fff;
+            border-color: var(--primary-bg);
+            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.05);
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .search-bar i {
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .sidebar {
@@ -572,10 +666,13 @@
                         <a href="#"><i class="fas fa-chart-line"></i> Revenue</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-box"></i> Products</a>
+                        <a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#"><i class="fas fa-shopping-cart"></i> Orders</a>
+                        <a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'user_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
                     </li>
                     <li class="nav-item active">
                         <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
@@ -614,10 +711,10 @@
 
         <div class="main-wrapper">
             <header class="topbar">
-                <div class="search-bar">
+                <form action="{% url 'user_list' %}" method="GET" class="search-bar">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search orders, products, or users...">
-                </div>
+                    <input type="text" name="q" placeholder="Search orders, products, or users...">
+                </form>
 
                 <div class="topbar-right">
                     <div class="icon-btn">
@@ -812,7 +909,7 @@
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px;">
                                 <label style="display: block; cursor: pointer;">
                                     <input type="radio" name="msg_type" value="password" required style="display: none;">
-                                    <div class="msg-card" style="padding: 24px; border-radius: var(--radius-lg); height: 100%;">
+                                    <div class="msg-card">
                                         <div style="width: 45px; height: 45px; background: rgba(255,107,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
                                             <i class="fas fa-key" style="font-size: 1.2rem; color: var(--primary-bg);"></i>
                                         </div>
@@ -822,7 +919,7 @@
                                 </label>
                                 <label style="display: block; cursor: pointer;">
                                     <input type="radio" name="msg_type" value="address" style="display: none;">
-                                    <div class="msg-card" style="padding: 24px; border-radius: var(--radius-lg); height: 100%;">
+                                    <div class="msg-card">
                                         <div style="width: 45px; height: 45px; background: rgba(255,107,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
                                             <i class="fas fa-map-marked-alt" style="font-size: 1.2rem; color: var(--primary-bg);"></i>
                                         </div>
@@ -832,7 +929,7 @@
                                 </label>
                                 <label style="display: block; cursor: pointer;">
                                     <input type="radio" name="msg_type" value="phone" style="display: none;">
-                                    <div class="msg-card" style="padding: 24px; border-radius: var(--radius-lg); height: 100%;">
+                                    <div class="msg-card">
                                         <div style="width: 45px; height: 45px; background: rgba(255,107,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
                                             <i class="fas fa-phone-alt" style="font-size: 1.2rem; color: var(--primary-bg);"></i>
                                         </div>
