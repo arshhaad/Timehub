@@ -670,12 +670,12 @@
         /* Responsive */
         @media (max-width: 1024px) {
             .sidebar {
-                left: -260px;
-                transition: left 0.3s ease;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
 
             .sidebar.active {
-                left: 0;
+                transform: translateX(0);
             }
 
             .main-wrapper {

@@ -167,6 +167,9 @@
         }
 
         @media (max-width: 600px) {
+            .nav-wrap { align-items: center; }
+            .nav-actions { gap: 10px; }
+            .nav-actions .btn { padding: 8px 15px; font-size: 0.75rem; }
             .section-header h2 { font-size: 2.2rem; }
             .hero-content h1 { font-size: 2.8rem; }
             .cat-grid { grid-template-columns: 1fr; }
@@ -175,7 +178,8 @@
             .footer-grid { grid-template-columns: 1fr; }
             .news-form { flex-direction: column; width: 100%; }
             .hero-buttons { flex-direction: column; width: 100%; }
-            .btn { width: 100%; }
+            .btn { width: auto; } /* Reset width from previous 100% since we want them inline if possible */
+            .btn-primary.add-cart-btn { width: 100%; } /* But add-cart remains 100% */
             .trust-grid { grid-template-columns: 1fr; }
         }
 
@@ -270,7 +274,8 @@
                 {% if user.is_authenticated %}
                 <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"></i></a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn btn-primary" style="padding: 10px 24px; font-size: 0.85rem;">Login</a>
+                <a href="{% url 'login' %}" class="btn btn-outline" style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
+                <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">Sign Up</a>
                 {% endif %}
             </div>
         </div>
@@ -309,7 +314,7 @@
                 <h1>Where <span>Precision</span> Meets Luxury</h1>
                 <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional craftsmanship starting at ₹2,999.</p>
                 <div class="hero-buttons" style="display: flex; gap: 20px;">
-                    <a href="#" class="btn btn-primary">Shop Collection <i class="fas fa-arrow-right"></i></a>
+                    <a href="{% url 'product_listing' %}" class="btn btn-primary">Shop Collection <i class="fas fa-arrow-right"></i></a>
                     <a href="#" class="btn btn-outline">Watch Our Story <i class="fas fa-play-circle"></i></a>
                 </div>
             </div>
@@ -327,41 +332,46 @@
                 <p>Find the perfect style that defines your personality.</p>
             </div>
             <div class="cat-grid">
-                <div class="cat-card">
+                <a href="{% url 'product_listing' %}" class="cat-card">
                     <img src="{% static 'images/luxury_category.png' %}" alt="Luxury">
                     <div class="cat-overlay">
                         <h3>Luxury</h3>
                         <span>120+ Products</span>
                     </div>
-                </div>
-                <div class="cat-card">
+                </a>
+                <a href="{% url 'product_listing' %}" class="cat-card">
                     <img src="{% static 'images/sport_category.png' %}" alt="Sport">
                     <div class="cat-overlay">
                         <h3>Sport</h3>
                         <span>85+ Products</span>
                     </div>
-                </div>
-                <div class="cat-card">
+                </a>
+                <a href="{% url 'product_listing' %}" class="cat-card">
                     <img src="{% static 'images/smart_category.png' %}" alt="Smart">
                     <div class="cat-overlay">
                         <h3>Smart</h3>
                         <span>60+ Products</span>
                     </div>
-                </div>
-                <div class="cat-card">
+                </a>
+                <a href="{% url 'product_listing' %}" class="cat-card">
                     <img src="{% static 'images/digital_category.png' %}" alt="Digital">
                     <div class="cat-overlay">
                         <h3>Digital</h3>
                         <span>45+ Products</span>
                     </div>
-                </div>
-                <div class="cat-card">
+                </a>
+                <a href="{% url 'product_listing' %}" class="cat-card">
                     <img src="{% static 'images/vintage_category.png' %}" alt="Vintage">
                     <div class="cat-overlay">
                         <h3>Vintage</h3>
                         <span>30+ Products</span>
                     </div>
-                </div>
+                </a>
+                <style>
+                    /* Ensure a tags behave like the cards they wrap */
+                    .cat-card { display: block; border-color: var(--border-color); }
+                    .cat-card:hover { border-color: var(--primary-color); }
+                </style>
             </div>
         </div>
     </section>
@@ -438,6 +448,12 @@
                     </div>
                     <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                 </div>
+            </div>
+        </div>
+            <div style="text-align: center; margin-top: 50px;">
+                <a href="{% url 'product_listing' %}" class="btn btn-primary" style="padding: 14px 40px; font-size: 1rem;">
+                    See More Best Sellers <i class="fas fa-plus"></i>
+                </a>
             </div>
         </div>
     </section>

@@ -54,10 +54,11 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'cloudinary',
     'cloudinary_storage',
-    # local apps
+    # user apps
     'user_apps.core',
     'user_apps.accounts',
     'user_apps.edit',
+    'user_apps.products',
     # admin apps
     'admin_apps.auth',
     'admin_apps.user_manage',

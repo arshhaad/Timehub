@@ -6,7 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.contrib import messages
-from user_apps.core.models import Collection, Product, ProductImage
+from user_apps.core.models import Collection, Product, ProductImage, Color
 from PIL import Image, ImageOps
 import io
 
@@ -104,22 +104,28 @@ def product_list(request):
             name = request.POST.get("name")
             collection_id = request.POST.get("collection_id")
             price = request.POST.get("price")
+            colors = request.POST.getlist("colors")
             stock = request.POST.get("stock")
             description = request.POST.get("description", "")
             
             # Robust sanitization
             try:
                 price = float(price) if price else 0.0
+                discount_price = float(discount_price) if discount_price else None
                 stock = int(stock) if stock else 0
             except ValueError:
-                price, stock = 0.0, 0
+                price, discount_price, stock = 0.0, None, 0
             
             collection = get_object_or_404(Collection, id=collection_id)
             
             product = Product.objects.create(
                 name=name, collection=collection, price=price,
+                discount_price=discount_price,
                 stock=stock, description=description
             )
+            
+            if colors:
+                product.colors.set(colors)
             
             # Process up to 3 numbered image slots
             for i in range(1, 4):
@@ -145,11 +151,15 @@ def product_list(request):
             # Update fields
             try:
                 product.price = float(request.POST.get("price", 0))
+                disc_price = request.POST.get("discount_price")
+                product.discount_price = float(disc_price) if disc_price else None
                 product.stock = int(request.POST.get("stock", 0))
             except ValueError:
                 pass
 
             product.name = request.POST.get("name")
+            colors = request.POST.getlist("colors")
+            product.colors.set(colors)
             product.collection = get_object_or_404(Collection, id=request.POST.get("collection_id"))
             product.description = request.POST.get("description", "")
             product.is_active = request.POST.get("is_active") == "on"
@@ -184,7 +194,7 @@ def product_list(request):
             return redirect("product_list")
 
     # Base queryset: only non-deleted products, sorted by ID descending
-    products_qs = Product.objects.filter(is_deleted=False).prefetch_related('images', 'collection').order_by('-id')
+    products_qs = Product.objects.filter(is_deleted=False).prefetch_related('images', 'collection', 'colors').order_by('-id')
 
     # Search logic
     query = request.GET.get("q", "")
@@ -201,6 +211,7 @@ def product_list(request):
     context = {
         'products': page_obj,
         'all_categories': all_categories,
+        'all_colors': Color.objects.all(),
         'query': query,
         'active_menu': 'products'
     }

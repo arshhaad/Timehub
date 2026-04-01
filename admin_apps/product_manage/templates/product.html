@@ -618,6 +618,172 @@
             background: var(--danger-bg);
             color: var(--danger-text);
         }
+
+        /* Color Selection Chips */
+        .color-section {
+            margin-top: 24px;
+            margin-bottom: 30px;
+        }
+
+        .color-section-header {
+            margin-bottom: 16px;
+        }
+
+        .color-section-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .color-section-header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .color-checkbox {
+            display: none;
+        }
+
+        .color-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .color-chip:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .color-checkbox:checked + .color-chip {
+            background: #f9fafb;
+            border-color: #000;
+        }
+
+        .color-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .color-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .check-mark {
+            font-size: 0.8rem;
+            color: #000;
+            display: none;
+        }
+
+        .color-checkbox:checked + .color-chip .check-mark {
+            display: block;
+        }
+
+        /* Color dots in table */
+        .color-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* Responsive Media Queries */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                height: 70px;
+            }
+
+            .search-bar {
+                display: none; /* Hide search on very small mobile if space is tight, or adapt */
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .image-upload-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Table Responsiveness */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .prod-table {
+            min-width: 800px; /* Force scroll on mobile */
+        }
     </style>
 </head>
 
@@ -775,77 +941,97 @@
                 {% endif %}
 
                 <div class="table-panel">
-                    <table class="prod-table">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                                <th style="text-align:right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for prod in products %}
-                            <tr>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:12px;">
-                                        {% if prod.image %}
-                                        <img src="{{ prod.image.url }}" class="product-thumb">
-                                        {% else %}
-                                        <div class="product-thumb"
-                                            style="display:flex; align-items:center; justify-content:center; background:#eee;">
-                                            <i class="fas fa-image" style="color:#ccc"></i>
-                                        </div>
-                                        {% endif %}
-                                        <div>
-                                            <div style="font-weight:700;">{{ prod.name }}</div>
-                                            <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}
+                    <div class="table-responsive">
+                        <table class="prod-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Color</th>
+                                    <th>Pricing</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prod in products %}
+                                <tr>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            {% if prod.image %}
+                                            <img src="{{ prod.image.url }}" class="product-thumb">
+                                            {% else %}
+                                            <div class="product-thumb"
+                                                style="display:flex; align-items:center; justify-content:center; background:#eee;">
+                                                <i class="fas fa-image" style="color:#ccc"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div style="font-weight:700;">{{ prod.name }}</div>
+                                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{ prod.collection.name|default:"General" }}</span>
-                                </td>
-                                <td style="font-weight:600;">₹{{ prod.price }}</td>
-                                <td>
-                                    {% if prod.stock <= 5 %}
-                                    <span class="badge" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;">{{ prod.stock }} Low</span>
-                                    {% else %}
-                                    <span style="font-weight: 600; color: var(--text-main);">{{ prod.stock }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if prod.is_active %}
-                                    <span class="badge badge-success">Active</span>
-                                    {% else %}
-                                    <span class="badge badge-danger">Disabled</span>
-                                    {% endif %}
-                                </td>
-                                <td class="action-btns">
-                                    <button class="action-btn"
-                                        onclick="openEditModal('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}', '{{ prod.collection.id|escapejs }}', '{{ prod.price|escapejs }}', '{{ prod.stock|escapejs }}', '{{ prod.description|escapejs }}', '{{ prod.is_active|yesno:'true,false' }}')"
-                                        title="Edit">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </button>
-                                    <button class="action-btn delete"
-                                        onclick="confirmDelete('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}')"
-                                        title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding: 60px; color:var(--text-muted);">
-                                    No products found. Start by adding a luxury timepiece!
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{ prod.collection.name|default:"General" }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="color-dots">
+                                            {% for c in prod.colors.all %}
+                                            <div class="color-dot" style="background: {{ c.hex_code }};" title="{{ c.name }}"></div>
+                                            {% empty %}
+                                            <span style="font-size: 0.75rem; color: var(--text-muted);">None</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td style="font-weight:600;">
+                                        {% if prod.discount_price %}
+                                        <div style="color: var(--text-main);">₹{{ prod.discount_price }}</div>
+                                        <div style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">₹{{ prod.price }}</div>
+                                        {% else %}
+                                        ₹{{ prod.price }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prod.stock <= 5 %}
+                                        <span class="badge" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;">{{ prod.stock }} Low</span>
+                                        {% else %}
+                                        <span style="font-weight: 600; color: var(--text-main);">{{ prod.stock }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prod.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="action-btns">
+                                        <button class="action-btn"
+                                            onclick="openEditModal('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}', '{{ prod.collection.id|escapejs }}', '{{ prod.price|escapejs }}', '{{ prod.discount_price|default:''|escapejs }}', '[{% for c in prod.colors.all %}{{ c.id }}{% if not forloop.last %},{% endif %}{% endfor %}]', '{{ prod.stock|escapejs }}', '{{ prod.description|escapejs }}', '{% if prod.is_active %}true{% else %}false{% endif %}')"
+                                            title="Edit">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                        <button class="action-btn delete"
+                                            onclick="confirmDelete('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}')"
+                                            title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" style="text-align:center; padding: 60px; color:var(--text-muted);">
+                                        No products found. Start by adding a luxury timepiece!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+able>
 
                     <!-- Pagination -->
                     {% if products.paginator.num_pages > 1 %}
@@ -907,10 +1093,37 @@
                             {% endfor %}
                         </select>
                     </div>
+                </div>
+
+                <div class="color-section">
+                    <div class="color-section-header">
+                        <h3>Available Colors</h3>
+                        <p>Select all colors this watch is available in.</p>
+                    </div>
+                    <div class="color-grid">
+                        {% for color in all_colors %}
+                        <div class="color-item">
+                            <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}" class="color-checkbox">
+                            <label for="color_{{ color.id }}" class="color-chip">
+                                <span class="color-indicator" style="background: {{ color.hex_code }};"></span>
+                                <span class="color-name">{{ color.name }}</span>
+                                <i class="fas fa-check check-mark"></i>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="grid-2">
                     <div class="form-group">
-                        <label class="form-label">Price (₹)</label>
+                        <label class="form-label">Regular Price (₹)</label>
                         <input type="number" name="price" id="formPrice" class="form-input" placeholder="0.00"
                             step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discount Price (₹) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
+                        <input type="number" name="discount_price" id="formDiscountPrice" class="form-input" placeholder="0.00"
+                            step="0.01">
                     </div>
                 </div>
 
@@ -1030,6 +1243,9 @@
             document.getElementById('modalTitle').innerText = 'Add New Product';
             document.getElementById('submitBtn').innerText = 'Create Product';
 
+            // Clear checkboxes
+            document.querySelectorAll('.color-checkbox').forEach(cb => cb.checked = false);
+
             // Re-bind previews
             for (let i = 1; i <= 3; i++) {
                 document.getElementById(`preview-${i}`).innerHTML = '';
@@ -1038,7 +1254,7 @@
             openModal('productModal');
         }
 
-        function openEditModal(id, name, catId, price, stock, desc, isActive) {
+        function openEditModal(id, name, catId, price, discPrice, colorIds, stock, desc, isActive) {
             openProductModal('edit');
             document.getElementById('formAction').value = 'edit_product';
             document.getElementById('modalTitle').innerText = 'Edit Product';
@@ -1046,7 +1262,22 @@
             document.getElementById('formProductId').value = id;
             document.getElementById('formName').value = name;
             document.getElementById('formCategory').value = catId;
+            
+            // Set colors
+            if (colorIds && colorIds.length > 2) {
+                try {
+                    const colors = JSON.parse(colorIds);
+                    colors.forEach(cid => {
+                        const cb = document.getElementById(`color_${cid}`);
+                        if (cb) cb.checked = true;
+                    });
+                } catch (e) {
+                    console.error("Error parsing color IDs:", e);
+                }
+            }
+
             document.getElementById('formPrice').value = price;
+            document.getElementById('formDiscountPrice').value = discPrice;
             document.getElementById('formStock').value = stock;
             document.getElementById('formDesc').value = desc;
             document.getElementById('formActive').checked = isActive === 'true';
