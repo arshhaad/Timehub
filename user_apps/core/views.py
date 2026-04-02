@@ -6,8 +6,8 @@ from django.views.decorators.cache import never_cache
 # landing page
 @never_cache
 def landing_view(request):
-    # if request.user.is_authenticated:
-    #     return redirect("home")
+    if request.user.is_authenticated:
+        return redirect("home")
     return render(request, "core/landing.html")
 
 # authenticated home dashboard

@@ -1,480 +1,156 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address - TimeHub</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-color: #0b0b0e;
-            --sidebar-color: #111115;
-            --card-bg: rgba(21, 21, 26, 0.7);
-            --card-hover: rgba(28, 28, 35, 0.9);
-            --primary-color: #ff6a00;
-            --primary-glow: rgba(255, 106, 0, 0.2);
-            --text-main: #ffffff;
-            --text-muted: #9ca3af;
-            --border-color: rgba(39, 39, 42, 0.6);
-            --accent-gold: #e2b04a;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-pill: 30px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --glass: blur(12px);
+{% extends 'base_user.html' %}
+
+{% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Address - TimeHub{% endblock %}
+
+{% block nav_address %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .form-container { 
+        width: 100%; 
+        max-width: 600px; 
+        background: var(--card-bg); 
+        backdrop-filter: var(--glass);
+        padding: 45px; 
+        border-radius: 24px; 
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-container:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .form-container h1 { 
+        margin-bottom: 35px; 
+        font-size: 2rem; 
+        font-weight: 800;
+        margin-top: 0;
+        background: linear-gradient(to right, #fff, #9ca3af);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .form-group { margin-bottom: 24px; }
+    .form-group label { 
+        display: block; 
+        margin-bottom: 10px; 
+        font-size: 0.85rem; 
+        color: var(--text-muted); 
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: #fff;
+        outline: none;
+        transition: var(--transition);
+        font-size: 0.95rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--primary-color); 
+        box-shadow: 0 0 15px var(--primary-glow); 
+    }
+
+    .form-actions { 
+        display: flex; 
+        gap: 20px; 
+        margin-top: 40px; 
+    }
+    .btn { 
+        padding: 14px 28px; 
+        border-radius: var(--radius-pill); 
+        font-weight: 700; 
+        cursor: pointer; 
+        border: none; 
+        transition: var(--transition); 
+        text-decoration: none; 
+        text-align: center; 
+        flex: 1; 
+        font-size: 0.9rem;
+    }
+    .btn-save { 
+        background: linear-gradient(135deg, var(--primary-color), #e05e00); 
+        color: #fff; 
+        box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2); 
+    }
+    .btn-save:hover { 
+        transform: translateY(-3px) scale(1.02); 
+        box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4); 
+    }
+    .btn-cancel { 
+        background: rgba(255, 255, 255, 0.05); 
+        color: #fff; 
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 600px) {
+        .form-container {
+            padding: 25px;
         }
 
-        html, body {
-            overflow-x: hidden;
+        .form-container h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
             width: 100%;
         }
+    }
+</style>
+{% endblock %}
 
-        body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 106, 0, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(226, 176, 74, 0.03) 0%, transparent 40%);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            width: 280px;
-            background-color: var(--sidebar-color);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            overflow: hidden;
-            z-index: 1001;
-            transform: translateX(0);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            padding: 40px 20px 30px 25px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--sidebar-color);
-            z-index: 2;
-        }
-
-        .sidebar-logo i {
-            color: var(--primary-color);
-            filter: drop-shadow(0 0 8px var(--primary-glow));
-        }
-
-        .sidebar-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 20px 40px 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .user-brief {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .user-brief:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .user-brief .avatar {
-            width: 44px;
-            height: 44px;
-            background: var(--accent-gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 0 15px rgba(226, 176, 74, 0.2);
-        }
+{% block content %}
+<div class="content-center">
+    <div class="form-container">
+    <h1>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address</h1>
+    <form method="post">
+        {% csrf_token %}
         
-        .user-brief .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-brief .info h4 {
-            font-size: 0.9rem;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-
-        .user-brief .info p {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .nav-menu {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            color: var(--text-muted);
-            text-decoration: none;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: var(--transition);
-            border: 1px solid transparent;
-        }
-
-        .nav-item a:hover {
-            background-color: rgba(255, 106, 0, 0.05);
-            color: var(--primary-color);
-            padding-left: 22px;
-        }
-
-        .nav-item.active a {
-            background: linear-gradient(90deg, rgba(255, 106, 0, 0.15) 0%, transparent 100%);
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            font-weight: 600;
-        }
-
-        .nav-item.logout {
-            margin-top: 30px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .nav-item.logout a:hover {
-            background-color: rgba(239, 68, 68, 0.05);
-            color: #ef4444;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 40px 60px;
-            margin-left: 280px;
-            min-height: 100vh;
-            background-color: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .form-container { 
-            width: 100%; 
-            max-width: 600px; 
-            background: var(--card-bg); 
-            backdrop-filter: var(--glass);
-            padding: 45px; 
-            border-radius: 24px; 
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .form-container:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .form-container h1 { 
-            margin-bottom: 35px; 
-            font-size: 2rem; 
-            font-weight: 800;
-            background: linear-gradient(to right, #fff, #9ca3af);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .form-group { margin-bottom: 24px; }
-        .form-group label { 
-            display: block; 
-            margin-bottom: 10px; 
-            font-size: 0.85rem; 
-            color: var(--text-muted); 
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 14px 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: #fff;
-            outline: none;
-            transition: var(--transition);
-            font-size: 0.95rem;
-        }
-        .form-group input:focus { 
-            background: rgba(255, 255, 255, 0.04);
-            border-color: var(--primary-color); 
-            box-shadow: 0 0 15px var(--primary-glow); 
-        }
-
-        .form-actions { 
-            display: flex; 
-            gap: 20px; 
-            margin-top: 40px; 
-        }
-        .btn { 
-            padding: 14px 28px; 
-            border-radius: var(--radius-pill); 
-            font-weight: 700; 
-            cursor: pointer; 
-            border: none; 
-            transition: var(--transition); 
-            text-decoration: none; 
-            text-align: center; 
-            flex: 1; 
-            font-size: 0.9rem;
-        }
-        .btn-save { 
-            background: linear-gradient(135deg, var(--primary-color), #e05e00); 
-            color: #fff; 
-            box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2); 
-        }
-        .btn-save:hover { 
-            transform: translateY(-3px) scale(1.02); 
-            box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4); 
-        }
-        .btn-cancel { 
-            background: rgba(255, 255, 255, 0.05); 
-            color: #fff; 
-            border: 1px solid var(--border-color);
-        }
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .checkbox-group input { width: auto; }
-
-        /* Mobile Header Toggle */
-        .mobile-header {
-            display: none;
-            background-color: var(--sidebar-color);
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .menu-toggle {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1024px) {
-            .sidebar {
-                left: auto;
-                right: 0;
-                transform: translateX(100%) !important;
-                border-left: 1px solid var(--border-color);
-                border-right: none;
-                width: 80% !important;
-                max-width: 300px;
-            }
-
-            .sidebar.active {
-                transform: translateX(0) !important;
-            }
-
-            .main-content {
-                padding: 20px !important;
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-
-            .mobile-header {
-                display: flex !important;
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
-                z-index: 1000;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .main-content {
-                padding: 20px;
-            }
-
-            .form-container {
-                padding: 25px;
-            }
-
-            .form-container h1 {
-                font-size: 1.5rem;
-                margin-bottom: 20px;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-
-    </style>
-</head>
-<body>
-
-    <!-- Mobile Header -->
-    <div class="mobile-header">
-        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
-            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
-            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
-        </div>
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </div>
-    </div>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <i class="fas fa-clock"></i>
-            <span>TimeHub</span>
-        </div>
-
-        <div class="sidebar-scroll">
-            <div class="user-brief">
-                <div class="avatar">
-                    {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
-                    {% else %}
-                        {{ user.email|slice:":1"|upper }}
-                    {% endif %}
-                </div>
-                <div class="info">
-                    <h4>{{ user.first_name|default:user.email }}</h4>
-                    <p>Premium Member</p>
-                </div>
-            </div>
-
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'user_dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-shopping-bag"></i> My Orders</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-heart"></i> Wishlist</a></li>
-                <li class="nav-item active"><a href="{% url 'address_list' %}"><i class="fas fa-map-marker-alt"></i> Saved
-                        Addresses</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-credit-card"></i> Payment Methods</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-exchange-alt"></i> Compare Watches</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-bell"></i> Notifications</a></li>
-                <li class="nav-item"><a href="{% url 'edit_profile' %}"><i class="fas fa-user-cog"></i> Account Settings</a>
-                </li>
-                <li class="nav-item"><a href="#"><i class="fas fa-wallet"></i> Wallet</a></li>
-
-                <li class="nav-item logout"><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            </ul>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <div class="form-container">
-            <h1>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address</h1>
-            <form method="post">
-                {% csrf_token %}
-                
-                {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                </div>
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <p style="color: #ef4444; font-size: 0.8rem; margin-top: 5px;">{{ error }}</p>
                 {% endfor %}
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-save">Save Address</button>
-                    <a href="{% url 'address_list' %}" class="btn btn-cancel">Cancel</a>
-                </div>
-            </form>
+            {% endif %}
         </div>
-    </main>
+        {% endfor %}
 
-    <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
-        if (overlay) overlay.addEventListener('click', toggleSidebar);
-    </script>
-
-</body>
-</html>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-save">Save Address</button>
+            <a href="{% url 'address_list' %}" class="btn btn-cancel">Cancel</a>
+        </div>
+    </form>
+    </div>
+</div>
+{% endblock %}

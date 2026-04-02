@@ -1,19 +1,31 @@
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.db.models import Q, Count, Max
+from django.template.loader import render_to_string
 from django.core.paginator import Paginator
-from django.db.models import Q
-from user_apps.core.models import Product, Collection
+from django.shortcuts import render
+from user_apps.core.models import Product, Collection, ComparisonHistory
 
 def product_list(request):
     # Base queryset: Active and not deleted
     products = Product.objects.filter(is_active=True, is_deleted=False)
     
+    # Get all categories and annotate with product count (only active/not deleted)
+    categories = Collection.objects.filter(is_deleted=False).annotate(
+        product_count=Count('products', filter=Q(products__is_active=True, products__is_deleted=False))
+    )
+    paginator = Paginator(products, 10)  # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Search functionality
     query = request.GET.get('q', '')
     if query:
         products = products.filter(
             Q(name__icontains=query) | 
-            Q(description__icontains=query)
-        )
+            Q(description__icontains=query) |
+            Q(brand__icontains=query) |
+            Q(collection__name__icontains=query)
+        ).distinct()
     
     # Filter by Category (Collection)
     category_id = request.GET.get('category')
@@ -27,6 +39,35 @@ def product_list(request):
         products = products.filter(price__gte=min_price)
     if max_price:
         products = products.filter(price__lte=max_price)
+    
+    # Advanced Filters
+    brand = request.GET.get('brand')
+    if brand:
+        products = products.filter(brand__icontains=brand)
+    
+    gender = request.GET.get('gender')
+    if gender:
+        products = products.filter(gender=gender)
+        
+    occasion = request.GET.get('occasion')
+    if occasion:
+        products = products.filter(occasion=occasion)
+        
+    strap_material = request.GET.get('strap_material')
+    if strap_material:
+        products = products.filter(strap_material__icontains=strap_material)
+        
+    strap_color = request.GET.get('strap_color')
+    if strap_color:
+        products = products.filter(strap_color__icontains=strap_color)
+        
+    dial_color = request.GET.get('dial_color')
+    if dial_color:
+        products = products.filter(dial_color__icontains=dial_color)
+        
+    function_type = request.GET.get('function')
+    if function_type:
+        products = products.filter(function=function_type)
     
     # Sorting
     sort = request.GET.get('sort', 'newest')
@@ -46,19 +87,30 @@ def product_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get all categories and annotate with product count (only active/not deleted)
-    from django.db.models import Count
-    categories = Collection.objects.filter(is_deleted=False).annotate(
-        product_count=Count('products', filter=Q(products__is_active=True, products__is_deleted=False))
-    )
-    
     # Total count for "All Watches"
     total_products = Product.objects.filter(is_active=True, is_deleted=False).count()
     
     # Get Max Price for the slider
-    from django.db.models import Max
     max_price_db = Product.objects.filter(is_active=True, is_deleted=False).aggregate(Max('price'))['price__max'] or 1000
     
+    # Filter Options for UI
+    occasions = ['Casual', 'Formal', 'Sport', 'Luxury']
+    genders = ['Men', 'Women', 'Unisex']
+    functions = ['Analog', 'Digital', 'Chronograph', 'Automatic']
+    strap_materials = ['Leather', 'Steel', 'Silicon', 'Fabric']
+    strap_colors = ['Black', 'Brown', 'Silver', 'Gold', 'Blue']
+    dial_colors = ['Black', 'White', 'Blue', 'Green', 'Silver']
+    
+    # Pass current compare list from session to context
+    compare_ids = request.session.get('compare_list', [])
+    compare_products = Product.objects.filter(id__in=compare_ids, is_active=True, is_deleted=False)
+    
+    # Slider Percentages (Python Pre-calc)
+    min_price_val = float(min_price or 0)
+    max_price_val = float(max_price or max_price_db)
+    min_percent = (min_price_val / float(max_price_db)) * 100 if max_price_db else 0
+    max_percent = (max_price_val / float(max_price_db)) * 100 if max_price_db else 100
+
     context = {
         'products': page_obj,
         'categories': categories,
@@ -69,6 +121,115 @@ def product_list(request):
         'min_price': min_price or 0,
         'max_price': max_price or float(max_price_db),
         'max_price_limit': float(max_price_db),
+        'min_percent': min_percent,
+        'max_percent': max_percent,
+        'selected_brand': brand,
+        'selected_gender': gender,
+        'selected_occasion': occasion,
+        'selected_strap_material': strap_material,
+        'selected_strap_color': strap_color,
+        'selected_dial_color': dial_color,
+        'selected_function': function_type,
+        'occasions': occasions,
+        'genders': genders,
+        'functions': functions,
+        'strap_materials': strap_materials,
+        'strap_colors': strap_colors,
+        'dial_colors': dial_colors,
+        'current_compare_ids': [int(pid) for pid in compare_ids if str(pid).isdigit()],
+        'current_compare_products': compare_products,
     }
     
     return render(request, 'product_listing.html', context)
+
+def compare_products(request):
+    # Try to get IDs from session first, then GET
+    product_ids = request.session.get('compare_list', [])
+    if not product_ids:
+        product_ids_str = request.GET.get('ids', '')
+        product_ids = [pid for pid in product_ids_str.split(',') if str(pid).isdigit()]
+    
+    # Filter out empty strings and invalid IDs
+    product_ids = [pid for pid in product_ids if str(pid).isdigit()]
+    
+    if not product_ids:
+        # Show history if no active comparison
+        history = []
+        if request.user.is_authenticated:
+            history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
+        return render(request, 'compare.html', {'products': [], 'history': history})
+        
+    # Get products, limit to 5
+    products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:5]
+    
+    # Save to history if logged in
+    if request.user.is_authenticated and products.exists():
+        for p in products:
+            ComparisonHistory.objects.update_or_create(
+                user=request.user, 
+                product=p,
+                defaults={'created_at': None} 
+            )
+            
+    # Process features for each product
+    for product in products:
+        if product.features:
+            product.features_list = [f.strip() for f in product.features.split(',')]
+        else:
+            product.features_list = []
+            
+    # Get overall history
+    history = []
+    if request.user.is_authenticated:
+        history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
+            
+    context = {
+        'products': products,
+        'history': history,
+    }
+    return render(request, 'compare.html', context)
+
+def toggle_compare_ajax(request):
+    product_id = request.GET.get('id')
+    if not product_id:
+        return JsonResponse({'success': False, 'error': 'No ID provided'})
+    
+    compare_list = request.session.get('compare_list', [])
+    
+    if str(product_id) in compare_list:
+        compare_list.remove(str(product_id))
+    else:
+        if len(compare_list) >= 5:
+            return JsonResponse({'success': False, 'error': 'Maximum 5 products allowed'})
+        compare_list.append(str(product_id))
+    
+    request.session['compare_list'] = compare_list
+    request.session.modified = True
+    
+    # Get objects for the bar
+    compare_products = Product.objects.filter(id__in=compare_list, is_active=True, is_deleted=False)
+    
+    products_data = []
+    for p in compare_products:
+        products_data.append({
+            'id': p.id,
+            'name': p.name,
+            'image': p.image.url if p.image else None
+        })
+    
+    return JsonResponse({
+        'success': True, 
+        'count': len(products_data),
+        'products': products_data
+    })
+
+def clear_compare_ajax(request):
+    request.session['compare_list'] = []
+    request.session.modified = True
+    return JsonResponse({'success': True, 'count': 0, 'products': []})
+
+def toggle_compare_mode_ajax(request):
+    is_active = request.GET.get('active') == 'true'
+    request.session['compare_mode_active'] = is_active
+    request.session.modified = True
+    return JsonResponse({'success': True, 'mode': is_active})

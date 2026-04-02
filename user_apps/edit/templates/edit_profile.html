@@ -1,768 +1,322 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_user.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile - TimeHub</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-color: #0b0b0e;
-            --sidebar-color: #111115;
-            --card-bg: rgba(21, 21, 26, 0.7);
-            --card-hover: rgba(28, 28, 35, 0.9);
-            --primary-color: #ff6a00;
-            --primary-glow: rgba(255, 106, 0, 0.2);
-            --accent-gold: #e2b04a;
-            --text-main: #ffffff;
-            --text-muted: #9ca3af;
-            --border-color: rgba(39, 39, 42, 0.6);
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-pill: 30px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --glass: blur(12px);
-        }
+{% block title %}Edit Profile - TimeHub{% endblock %}
 
-        html, body {
-            overflow-x: hidden;
-            width: 100%;
-        }
+{% block nav_profile %}active{% endblock %}
 
-        body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 106, 0, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(226, 176, 74, 0.03) 0%, transparent 40%);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-        }
+{% block extra_css %}
+<style>
+    .content-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
 
-        /* Sidebar Styling */
-        .sidebar {
-            width: 280px;
-            background-color: var(--sidebar-color);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            overflow: hidden;
-            z-index: 1001;
-            transform: translateX(0);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+    .page-header {
+        width: 100%;
+        max-width: 800px;
+        margin-bottom: 40px;
+    }
 
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            padding: 40px 20px 30px 25px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--sidebar-color);
-            z-index: 2;
-        }
+    .page-header h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: linear-gradient(to right, #fff, #9ca3af);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-        .sidebar-logo i {
-            color: var(--primary-color);
-            filter: drop-shadow(0 0 8px var(--primary-glow));
-        }
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
 
-        .sidebar-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 20px 40px 20px;
-            display: flex;
-            flex-direction: column;
-        }
+    .edit-form-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 50px;
+        max-width: 800px;
+        transition: var(--transition);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
 
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
+    .edit-form-card:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
 
-        .user-brief {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
+    /* Avatar Section */
+    .avatar-edit-section {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        margin-bottom: 50px;
+    }
 
-        .user-brief:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
+    .large-avatar {
+        width: 120px;
+        height: 120px;
+        background: var(--accent-gold);
+        color: #000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 800;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(226, 176, 74, 0.2);
+        border: 4px solid rgba(255, 255, 255, 0.05);
+    }
 
-        .user-brief .avatar {
-            width: 44px;
-            height: 44px;
-            background: var(--accent-gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 0 15px rgba(226, 176, 74, 0.2);
-        }
-        
-        .user-brief .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+    .large-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-        .user-brief .info h4 {
-            font-size: 0.9rem;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
+    .avatar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
 
-        .user-brief .info p {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+    .btn-change-avatar {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid var(--border-color);
+        display: inline-block;
+    }
 
-        .nav-menu {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+    .btn-change-avatar:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
 
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            color: var(--text-muted);
-            text-decoration: none;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: var(--transition);
-            border: 1px solid transparent;
-        }
+    .avatar-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
 
-        .nav-item a:hover {
-            background-color: rgba(255, 106, 0, 0.05);
-            color: var(--primary-color);
-            padding-left: 22px;
-        }
+    /* Form Grid */
+    .form-row {
+        display: flex;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
 
-        .nav-item.active a {
-            background: linear-gradient(90deg, rgba(255, 106, 0, 0.15) 0%, transparent 100%);
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            font-weight: 600;
-        }
+    .form-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        .nav-item.logout {
-            margin-top: 30px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
+    .form-group label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-        .nav-item.logout a:hover {
-            background-color: rgba(239, 68, 68, 0.05);
-            color: #ef4444;
-        }
+    .form-group input {
+        width: 100%;
+        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: #fff;
+        outline: none;
+        transition: var(--transition);
+        font-size: 0.95rem;
+    }
 
-        /* Main Content Styling */
-        .main-content {
-            flex: 1;
-            padding: 40px 60px;
-            margin-left: 280px;
-            min-height: 100vh;
-            background-color: transparent;
-        }
+    .form-group input:focus {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px var(--primary-glow);
+    }
 
-        .page-header {
-            margin-bottom: 40px;
-        }
+    .form-actions {
+        margin-top: 50px;
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
 
-        .page-header h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(to right, #fff, #9ca3af);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .btn-save {
+        background: linear-gradient(135deg, var(--primary-color), #e05e00);
+        color: #fff;
+        padding: 14px 40px;
+        border-radius: var(--radius-pill);
+        border: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2);
+    }
 
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
+    .btn-save:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4);
+    }
 
+    .btn-cancel {
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: var(--transition);
+        padding: 10px 20px;
+        border-radius: var(--radius-md);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
         .edit-form-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--glass);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 50px;
-            max-width: 800px;
-            transition: var(--transition);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px 20px;
+            border-radius: 20px;
         }
 
-        .edit-form-card:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Avatar Section */
         .avatar-edit-section {
-            display: flex;
-            align-items: center;
-            gap: 40px;
-            margin-bottom: 50px;
-        }
-
-        .large-avatar {
-            width: 120px;
-            height: 120px;
-            background: var(--accent-gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 800;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(226, 176, 74, 0.2);
-            border: 4px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .large-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
         }
 
         .avatar-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
+            align-items: center;
         }
 
-        .btn-change-avatar {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: var(--radius-md);
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-            display: inline-block;
-        }
-
-        .btn-change-avatar:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .avatar-hint {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* Form Grid */
         .form-row {
-            display: flex;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            flex: 1;
-            display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            color: #fff;
-            outline: none;
-            transition: var(--transition);
-            font-size: 0.95rem;
-        }
-
-        .form-group input:focus {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 15px var(--primary-glow);
+            gap: 15px;
         }
 
         .form-actions {
-            margin-top: 50px;
-            display: flex;
-            align-items: center;
-            gap: 25px;
+            flex-direction: column;
+            width: 100%;
         }
 
-        .btn-save {
-            background: linear-gradient(135deg, var(--primary-color), #e05e00);
-            color: #fff;
-            padding: 14px 40px;
-            border-radius: var(--radius-pill);
-            border: none;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2);
+        .btn-save, .btn-cancel {
+            width: 100%;
+            text-align: center;
         }
+    }
+</style>
+{% endblock %}
 
-        .btn-save:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4);
-        }
+{% block content %}
+<div class="content-center">
+    <div class="page-header">
+    <h1>Edit Profile</h1>
+    <p>Update your personal information and contact details.</p>
+</div>
 
-        .btn-cancel {
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: var(--transition);
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
-        }
+<div class="edit-form-card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
 
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-        }
-
-        /* Mobile Header Toggle */
-        .mobile-header {
-            display: none;
-            background-color: var(--sidebar-color);
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .menu-toggle {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: var(--transition);
-        }
-
-        .menu-toggle:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1024px) {
-            .sidebar {
-                left: auto;
-                right: 0;
-                transform: translateX(100%) !important;
-                border-left: 1px solid var(--border-color);
-                border-right: none;
-                width: 300px !important;
-            }
-
-            .sidebar.active {
-                transform: translateX(0) !important;
-            }
-
-            .main-content {
-                padding: 30px 20px !important;
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-
-            .mobile-header {
-                display: flex !important;
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(8px);
-                z-index: 1000;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .edit-form-card {
-                padding: 35px 25px;
-            }
-
-            .avatar-edit-section {
-                flex-direction: column;
-                text-align: center;
-                gap: 25px;
-            }
-
-            .avatar-actions {
-                align-items: center;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .form-actions {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn-save {
-                width: 100%;
-            }
-
-            .btn-cancel {
-                width: 100%;
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
-
-        .btn-cancel:hover {
-            color: var(--text-muted);
-        }
-
-        /* Mobile Header Toggle */
-        .mobile-header {
-            display: none;
-            background-color: var(--sidebar-color);
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .menu-toggle {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1024px) {
-            .sidebar {
-                left: auto;
-                right: 0;
-                transform: translateX(100%) !important;
-                border-left: 1px solid var(--border-color);
-                border-right: none;
-                width: 80% !important;
-                max-width: 300px;
-            }
-
-            .sidebar.active {
-                transform: translateX(0) !important;
-            }
-
-            .main-content {
-                padding: 20px !important;
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-
-            .mobile-header {
-                display: flex !important;
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
-                z-index: 1000;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .edit-form-card {
-                padding: 30px 20px;
-            }
-
-            .avatar-edit-section {
-                flex-direction: column;
-                text-align: center;
-                gap: 20px;
-            }
-
-            .avatar-actions {
-                align-items: center;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .form-actions {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn-save {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .main-content {
-                padding: 20px;
-            }
-
-            .page-header h1 {
-                font-size: 1.6rem;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Mobile Header -->
-    <div class="mobile-header">
-        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
-            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
-            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
-        </div>
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </div>
-    </div>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <i class="fas fa-clock"></i>
-            <span>TimeHub</span>
-        </div>
-
-        <div class="sidebar-scroll">
-            <div class="user-brief">
-                <div class="avatar">
-                    {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
-                    {% else %}
-                        {{ user.email|slice:":1"|upper }}
-                    {% endif %}
-                </div>
-                <div class="info">
-                    <h4>{{ user.first_name|default:user.email }}</h4>
-                    <p>Premium Member</p>
-                </div>
+        <div class="avatar-edit-section">
+            <div class="large-avatar">
+                {% if user.avatar %}
+                <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
+                {% else %}
+                <span id="avatar-preview-text">{{ user.email|slice:":1"|upper }}</span>
+                <!-- Hidden img for preview -->
+                <img id="avatar-preview" src=""
+                    style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                {% endif %}
             </div>
-
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'user_dashboard' %}"><i class="fas fa-th-large" style="width: 20px"></i>
-                        Dashboard</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-shopping-bag" style="width: 20px"></i> My Orders</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-heart" style="width: 20px"></i> Wishlist</a></li>
-                <li class="nav-item"><a href="{% url 'address_list' %}"><i class="fas fa-map-marker-alt"
-                            style="width: 20px"></i> Saved Addresses</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-credit-card" style="width: 20px"></i> Payment Methods</a>
-                </li>
-                <li class="nav-item"><a href="#"><i class="fas fa-exchange-alt" style="width: 20px"></i> Compare Watches</a>
-                </li>
-                <li class="nav-item"><a href="#"><i class="fas fa-bell" style="width: 20px"></i> Notifications</a></li>
-                <li class="nav-item"><a href="{% url 'edit_profile' %}"><i class="fas fa-cog" style="width: 20px"></i>
-                        Account Settings</a></li>
-
-                <li class="nav-item logout"><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"
-                            style="width: 20px"></i> Logout</a></li>
-            </ul>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-
-        <div class="page-header">
-            <h1>Edit Profile</h1>
-            <p>Update your personal information and contact details.</p>
+            <div class="avatar-actions">
+                <label class="btn-change-avatar">
+                    Change Avatar
+                    <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;"
+                        onchange="previewImage(event)">
+                </label>
+                <span class="avatar-hint">JPG, GIF or PNG. Max size of 800K</span>
+            </div>
         </div>
 
-        <div class="edit-form-card">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="avatar-edit-section">
-                    <div class="large-avatar">
-                        {% if user.avatar %}
-                        <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
-                        {% else %}
-                        <span id="avatar-preview-text">{{ user.email|slice:":1"|upper }}</span>
-                        <!-- Hidden img for preview -->
-                        <img id="avatar-preview" src=""
-                            style="display: none; width: 100%; height: 100%; object-fit: cover;">
-                        {% endif %}
-                    </div>
-                    <div class="avatar-actions">
-                        <label class="btn-change-avatar">
-                            Change Avatar
-                            <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;"
-                                onchange="previewImage(event)">
-                        </label>
-                        <span class="avatar-hint">JPG, GIF or PNG. Max size of 800K</span>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="{{ form.first_name.id_for_label }}">First Name</label>
-                        {{ form.first_name }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ form.last_name.id_for_label }}">Last Name</label>
-                        {{ form.last_name }}
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="{{ form.email.id_for_label }}">Email Address</label>
-                        {{ form.email }}
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
-                        {{ form.phone_number }}
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-save">Save Changes</button>
-                    <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
-                </div>
-            </form>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                {{ form.first_name }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                {{ form.last_name }}
+            </div>
         </div>
-    </main>
 
-    <script>
-        function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function () {
-                var output = document.getElementById('avatar-preview');
-                var text = document.getElementById('avatar-preview-text');
-                if (text) text.style.display = 'none';
-                output.style.display = 'block';
-                output.src = reader.result;
-            };
-            if (event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                {{ form.email }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                {{ form.phone_number }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-save">Save Changes</button>
+            <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function () {
+            var output = document.getElementById('avatar-preview');
+            var text = document.getElementById('avatar-preview-text');
+            if (text) text.style.display = 'none';
+            output.style.display = 'block';
+            output.src = reader.result;
+        };
+        if (event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+
+    // Add form control classes to django inputs programmatically if needed
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputs = document.querySelectorAll('.form-group input');
+        inputs.forEach(input => {
+            input.removeAttribute('required'); // Match typical behavior; django handles validation
+            if (!input.placeholder && input.name === 'phone_number') {
+                input.placeholder = "+1 (555) 234-5678";
             }
-        }
-
-        // Add form control classes to django inputs programmatically if needed
-        document.addEventListener('DOMContentLoaded', function () {
-            const inputs = document.querySelectorAll('.form-group input');
-            inputs.forEach(input => {
-                input.removeAttribute('required'); // Match typical behavior; django handles validation
-                if (!input.placeholder && input.name === 'phone_number') {
-                    input.placeholder = "+1 (555) 234-5678";
-                }
-            });
         });
-
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
-        if (overlay) overlay.addEventListener('click', toggleSidebar);
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

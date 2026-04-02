@@ -1,869 +1,481 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_user.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - TimeHub</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-color: #0b0b0e;
-            --sidebar-color: #111115;
-            --card-bg: rgba(21, 21, 26, 0.7);
-            --card-hover: rgba(28, 28, 35, 0.9);
-            --primary-color: #ff6a00;
-            --primary-glow: rgba(255, 106, 0, 0.2);
-            --accent-gold: #e2b04a;
-            --text-main: #ffffff;
-            --text-muted: #9ca3af;
-            --border-color: rgba(39, 39, 42, 0.6);
-            --success: #10b981;
-            --processing: #3b82f6;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-pill: 30px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --glass: blur(12px);
-        }
+{% block title %}Dashboard - TimeHub{% endblock %}
 
-        html,
-        body {
-            overflow-x: hidden;
-            width: 100%;
-        }
+{% block nav_dashboard %}active{% endblock %}
 
-        body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 106, 0, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(226, 176, 74, 0.03) 0%, transparent 40%);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-        }
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
 
-        /* Sidebar Styling */
-        .sidebar {
-            width: 280px;
-            background-color: var(--sidebar-color);
-            display: flex;
+    .page-header h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: linear-gradient(to right, #fff, #9ca3af);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .referral-box {
+        background: rgba(226, 176, 74, 0.05);
+        backdrop-filter: var(--glass);
+        border: 1px solid rgba(226, 176, 74, 0.2);
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: var(--transition);
+    }
+
+    .referral-box:hover {
+        background: rgba(226, 176, 74, 0.08);
+        border-color: rgba(226, 176, 74, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .referral-box span {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .referral-code {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+
+    .copy-btn {
+        background: rgba(226, 176, 74, 1);
+        color: #000;
+        border: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.7rem;
+    }
+
+    .copy-btn:hover {
+        transform: scale(1.1);
+        background: var(--text-main);
+    }
+
+    .copy-btn i {
+        transition: var(--transition);
+    }
+
+    .copy-btn.copied {
+        background: var(--success);
+        color: #fff;
+    }
+
+    .copy-btn.copied i {
+        transform: rotate(360deg);
+    }
+
+    /* Profile Card */
+    .profile-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        transition: var(--transition);
+    }
+
+    .profile-card:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+
+    .profile-avatar {
+        width: 90px;
+        height: 90px;
+        background: linear-gradient(135deg, var(--accent-gold), #b38a2d);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #000;
+        box-shadow: 0 10px 20px rgba(226, 176, 74, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    .profile-details h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+
+    .profile-contact {
+        display: flex;
+        gap: 20px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .profile-contact i {
+        color: var(--accent-gold);
+        margin-right: 5px;
+    }
+
+    .member-since {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-style: italic;
+        margin: 0;
+    }
+
+    .edit-profile-btn {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: var(--radius-pill);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+    }
+
+    .edit-profile-btn:hover {
+        background: var(--text-main);
+        color: #000;
+        transform: scale(1.05);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        padding: 30px;
+        border-radius: 20px;
+        text-align: left;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, transparent 50%, rgba(255, 106, 0, 0.03) 100%);
+        border-radius: 0 0 0 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 106, 0, 0.3);
+        background: var(--card-hover);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 106, 0, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Recent Orders */
+    .recent-orders {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 30px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .section-header h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .view-all {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .view-all:hover {
+        text-decoration: underline;
+    }
+
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .orders-table th {
+        text-align: left;
+        padding: 15px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .orders-table td {
+        padding: 20px 15px;
+        font-size: 0.95rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-delivered {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .status-processing {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--processing);
+    }
+
+    @media (max-width: 1024px) {
+        .page-header {
             flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            overflow: hidden;
-            z-index: 1001;
-            transform: translateX(0);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            align-items: flex-start;
+            gap: 20px;
         }
+    }
 
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            padding: 40px 20px 30px 25px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--sidebar-color);
-            z-index: 2;
-        }
-
-        .sidebar-logo i {
-            color: var(--primary-color);
-            filter: drop-shadow(0 0 8px var(--primary-glow));
-        }
-
-        .sidebar-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 20px 40px 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .user-brief {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .user-brief:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .user-brief .avatar {
-            width: 44px;
-            height: 44px;
-            background: var(--accent-gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 0 15px rgba(226, 176, 74, 0.2);
-        }
-
-        .user-brief .info h4 {
-            font-size: 0.9rem;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-
-        .user-brief .info p {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .nav-menu {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            color: var(--text-muted);
-            text-decoration: none;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: var(--transition);
-            border: 1px solid transparent;
-        }
-
-        .nav-item a:hover {
-            background-color: rgba(255, 106, 0, 0.05);
-            color: var(--primary-color);
-            padding-left: 22px;
-        }
-
-        .nav-item.active a {
-            background: linear-gradient(90deg, rgba(255, 106, 0, 0.15) 0%, transparent 100%);
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            font-weight: 600;
-        }
-
-        .nav-item.logout {
-            margin-top: 30px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .nav-item.logout a:hover {
-            background-color: rgba(239, 68, 68, 0.05);
-            color: #ef4444;
-        }
-
-        /* Main Content Styling */
-        .main-content {
-            flex: 1;
-            padding: 40px 60px;
-            margin-left: 280px;
-            min-height: 100vh;
-            background-color: transparent;
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-
-        .welcome-msg h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(to right, #fff, #9ca3af);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .welcome-msg p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .referral-box {
-            background: rgba(226, 176, 74, 0.05);
-            backdrop-filter: var(--glass);
-            border: 1px solid rgba(226, 176, 74, 0.2);
-            padding: 10px 24px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: var(--transition);
-        }
-
-        .referral-box:hover {
-            background: rgba(226, 176, 74, 0.08);
-            border-color: rgba(226, 176, 74, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .referral-box span {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--accent-gold);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        .referral-code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1rem;
-            color: var(--text-main);
-            letter-spacing: 2px;
-            font-weight: 700;
-        }
-
-        /* Profile Card */
+    @media (max-width: 768px) {
         .profile-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--glass);
-            border-radius: var(--radius-lg);
-            padding: 35px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-        }
-
-        .profile-card:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            flex-direction: column;
+            gap: 25px;
+            text-align: center;
+            padding: 30px 20px;
         }
 
         .profile-info {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            background: var(--accent-gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 2rem;
-            box-shadow: 0 10px 20px rgba(226, 176, 74, 0.2);
-            overflow: hidden;
-        }
-
-        .profile-details h2 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 8px;
+            flex-direction: column;
         }
 
         .profile-contact {
-            display: flex;
-            gap: 20px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .profile-contact span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .profile-contact i {
-            color: var(--primary-color);
-            font-size: 0.8rem;
-        }
-
-        .member-since {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            opacity: 0.6;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .edit-profile-btn {
-            background: linear-gradient(135deg, var(--primary-color), #e05e00);
-            color: #fff;
-            padding: 14px 32px;
-            border-radius: var(--radius-pill);
-            font-weight: 700;
-            text-decoration: none;
-            transition: var(--transition);
-            box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2);
-            font-size: 0.9rem;
-        }
-
-        .edit-profile-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--glass);
-            padding: 30px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at top right, rgba(255, 106, 0, 0.1), transparent 70%);
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            border-color: rgba(255, 106, 0, 0.3);
-            background: var(--card-hover);
-            transform: translateY(-5px);
-        }
-
-        .stat-card:hover::after {
-            opacity: 1;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 106, 0, 0.1);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            margin-bottom: 24px;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover .stat-icon {
-            transform: scale(1.1) rotate(5deg);
-            background: var(--primary-color);
-            color: #fff;
-            box-shadow: 0 8px 16px rgba(255, 106, 0, 0.3);
-        }
-
-        .stat-value {
-            font-size: 2.4rem;
-            font-weight: 800;
-            margin-bottom: 6px;
-            letter-spacing: -1px;
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Recent Orders */
-        .recent-orders {
-            margin-top: 60px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .section-header h3 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .view-all {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        .view-all:hover {
-            gap: 12px;
-            opacity: 0.8;
-        }
-
-        .order-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--glass);
-            padding: 24px 30px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            transition: var(--transition);
-        }
-
-        .order-card:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-            background: var(--card-hover);
-            transform: translateX(8px);
-        }
-
-        .order-meta {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .order-status-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: var(--transition);
-        }
-
-        .order-card:hover .order-status-icon {
-            transform: scale(1.1);
-        }
-
-        .order-status-icon.delivered {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .order-status-icon.processing {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--processing);
-        }
-
-        .order-id h4 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .order-id p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .order-amount {
-            text-align: right;
-            display: flex;
             flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
+            gap: 10px;
         }
 
-        .order-price {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #fff;
+        .stats-grid {
+            grid-template-columns: 1fr;
         }
 
-        .status-pill {
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-pill.delivered {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .status-pill.processing {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--processing);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        /* Mobile Header Toggle */
-        .mobile-header {
+        .orders-table th:nth-child(3),
+        .orders-table td:nth-child(3) {
             display: none;
-            background-color: var(--sidebar-color);
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
+    }
+</style>
+{% endblock %}
 
-        .menu-toggle {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: var(--transition);
-        }
-
-        .menu-toggle:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1024px) {
-            .sidebar {
-                left: auto;
-                right: 0;
-                transform: translateX(100%) !important;
-                border-left: 1px solid var(--border-color);
-                border-right: none;
-                width: 300px !important;
-            }
-
-            .sidebar.active {
-                transform: translateX(0) !important;
-            }
-
-            .main-content {
-                padding: 30px 20px !important;
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-
-            .mobile-header {
-                display: flex !important;
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(8px);
-                z-index: 1000;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
-            }
-
-            .referral-box {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .profile-card {
-                flex-direction: column;
-                gap: 30px;
-                text-align: center;
-                padding: 30px 20px;
-            }
-
-            .profile-info {
-                flex-direction: column;
-            }
-
-            .profile-contact {
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .edit-profile-btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .order-card {
-                flex-direction: column;
-                gap: 20px;
-                align-items: flex-start;
-                padding: 25px;
-            }
-
-            .order-amount {
-                text-align: left;
-                width: 100%;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                border-top: 1px solid var(--border-color);
-                padding-top: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .welcome-msg h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
-
-</head>
-
-<body>
-
-    <!-- Mobile Header -->
-    <div class="mobile-header">
-        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
-            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
-            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
-        </div>
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </div>
+{% block content %}
+<div class="page-header">
+    <div class="welcome-msg">
+        <h1>Welcome back {{ user.first_name|default:"Collector" }}</h1>
+        <p>Manage your collection, track orders, and discover new timepieces.</p>
     </div>
 
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="referral-box">
+        <span>Referral Code</span>
+        <div class="referral-code" id="referralCode">{{ referral_code }}</div>
+        <button class="copy-btn" id="copyReferralBtn" title="Copy Code">
+            <i class="fas fa-copy"></i>
+        </button>
+    </div>
+</div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <i class="fas fa-clock"></i>
-            <span>TimeHub</span>
+<!-- User Profile Card -->
+<section class="profile-card">
+    <div class="profile-info">
+        <div class="profile-avatar">
+            {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}"
+                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
+            {% else %}
+            {{ user.email|slice:":1"|upper }}
+            {% endif %}
         </div>
-
-        <div class="sidebar-scroll">
-            <div class="user-brief">
-                <div class="avatar">
-                    {% if user.avatar %}
-                    <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}"
-                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
-                    {% else %}
-                    {{ user.email|slice:":1"|upper }}
-                    {% endif %}
-                </div>
-                <div class="info">
-                    <h4>{{ user.first_name|default:user.email }}</h4>
-                    <p>Premium Member</p>
-                </div>
+        <div class="profile-details">
+            <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+            <div class="profile-contact">
+                <span><i class="far fa-envelope"></i> {{ user.email }}</span>
+                <span><i class="fas fa-phone"></i> {{ user.phone_number|default:"+1 (555) 234-5678" }}</span>
             </div>
-
-            <ul class="nav-menu">
-                <li class="nav-item active"><a href="#"><i class="fas fa-th-large"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-shopping-bag"></i> My Orders</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-heart"></i> Wishlist</a></li>
-                <li class="nav-item"><a href="{% url 'address_list' %}"><i class="fas fa-map-marker-alt"></i> Saved
-                        Addresses</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-credit-card"></i> Payment Methods</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-exchange-alt"></i> Compare Watches</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-bell"></i> Notifications</a></li>
-                <li class="nav-item"><a href="{% url 'edit_profile' %}"><i class="fas fa-user-cog"></i> Account
-                        Settings</a>
-                </li>
-                <li class="nav-item"><a href="#"><i class="fas fa-wallet"></i> Wallet</a></li>
-
-                <li class="nav-item logout"><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </li>
-            </ul>
+            <p class="member-since">Member since {{ user.created_at|date:"F Y" }}</p>
         </div>
-    </aside>
+    </div>
+    <a href="{% url 'edit_profile' %}" class="edit-profile-btn">Edit Profile</a>
+</section>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="header-top">
-            <div class="welcome-msg">
-                <h1>Welcome back {{ user.first_name|default:"Collector" }}</h1>
-                <p>Manage your collection, track orders, and discover new timepieces.</p>
-            </div>
+<!-- Stats Grid -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="stat-value">{{ stats.total_orders }}</div>
+        <div class="stat-label">Total Orders</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-heart"></i></div>
+        <div class="stat-value">{{ stats.saved_items }}</div>
+        <div class="stat-label">Saved Items</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-award"></i></div>
+        <div class="stat-value">{{ stats.reward_points }}</div>
+        <div class="stat-label">Reward Points</div>
+    </div>
+</section>
 
-            <div class="referral-box">
-                <span>Referral Code</span>
-                <div class="referral-code">{{ referral_code }}</div>
-            </div>
-        </div>
+<!-- Recent Orders -->
+<section class="recent-orders">
+    <div class="section-header">
+        <h3>Recent Orders</h3>
+        <a href="#" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#TH-8829</td>
+                    <td>Oct 12, 2023</td>
+                    <td>$1,240.00</td>
+                    <td><span class="status-badge status-delivered">Delivered</span></td>
+                </tr>
+                <tr>
+                    <td>#TH-8742</td>
+                    <td>Sep 28, 2023</td>
+                    <td>$540.00</td>
+                    <td><span class="status-badge status-delivered">Delivered</span></td>
+                </tr>
+                <tr>
+                    <td>#TH-8911</td>
+                    <td>Nov 02, 2023</td>
+                    <td>$890.00</td>
+                    <td><span class="status-badge status-processing">Processing</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
 
-        <!-- User Profile Card -->
-        <section class="profile-card">
-            <div class="profile-info">
-                <div class="profile-avatar">
-                    {% if user.avatar %}
-                    <img src="{{ user.avatar.url }}" alt="{{ user.first_name }}"
-                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;">
-                    {% else %}
-                    {{ user.email|slice:":1"|upper }}
-                    {% endif %}
-                </div>
-                <div class="profile-details">
-                    <h2>{{ user.first_name }} {{ user.last_name }}</h2>
-                    <div class="profile-contact">
-                        <span><i class="far fa-envelope"></i> {{ user.email }}</span>
-                        <span><i class="fas fa-phone"></i> {{ user.phone_number|default:"+1 (555) 234-5678" }}</span>
-                    </div>
-                    <p class="member-since">Member since {{ user.created_at|date:"F Y" }}</p>
-                </div>
-            </div>
-            <a href="{% url 'edit_profile' %}" class="edit-profile-btn">Edit Profile</a>
-        </section>
+{% block extra_js %}
+<script>
+    const copyBtn = document.getElementById('copyReferralBtn');
+    const referralCode = document.getElementById('referralCode').innerText;
 
-        <!-- Stats Grid -->
-        <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                <div class="stat-value">{{ stats.total_orders }}</div>
-                <div class="stat-label">Total Orders</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-heart"></i></div>
-                <div class="stat-value">{{ stats.saved_items }}</div>
-                <div class="stat-label">Saved Items</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-award"></i></div>
-                <div class="stat-value">{{ stats.reward_points }}</div>
-                <div class="stat-label">Reward Points</div>
-            </div>
-        </section>
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(referralCode).then(() => {
+                copyBtn.classList.add('copied');
+                const icon = copyBtn.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
 
-        <!-- Recent Orders -->
-        <section class="recent-orders">
-            <div class="section-header">
-                <h3>Recent Orders</h3>
-                <a href="#" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
-            </div>
-
-            {% for order in recent_orders %}
-            <div class="order-card">
-                <div class="order-meta">
-                    <div class="order-status-icon {{ order.status|lower }}">
-                        {% if order.status == 'Delivered' %}
-                        <i class="fas fa-check-circle"></i>
-                        {% else %}
-                        <i class="fas fa-clock"></i>
-                        {% endif %}
-                    </div>
-                    <div class="order-id">
-                        <h4>{{ order.id }}</h4>
-                        <p>{{ order.date }} • {{ order.items }} Item{% if order.items > 1 %}s{% endif %}</p>
-                    </div>
-                </div>
-                <div class="order-amount">
-                    <span class="order-price">${{ order.amount }}</span>
-                    <span class="status-pill {{ order.status|lower }}">{{ order.status }}</span>
-                </div>
-            </div>
-            {% empty %}
-            <div class="order-card">
-                <p>No recent orders found.</p>
-            </div>
-            {% endfor %}
-        </section>
-    </main>
-
-    <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
-        if (overlay) overlay.addEventListener('click', toggleSidebar);
-    </script>
-
-</body>
-
-</html>
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                }, 2000);
+            });
+        });
+    }
+</script>
+{% endblock %}

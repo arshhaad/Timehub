@@ -19,14 +19,42 @@ class Color(models.Model):
         return self.name
 
 class Product(models.Model):
+    GENDER_CHOICES = (
+        ('Men', 'Men'),
+        ('Women', 'Women'),
+        ('Unisex', 'Unisex'),
+    )
+    OCCASION_CHOICES = (
+        ('Casual', 'Casual'),
+        ('Formal', 'Formal'),
+        ('Sport', 'Sport'),
+        ('Luxury', 'Luxury'),
+    )
+    FUNCTION_CHOICES = (
+        ('Analog', 'Analog'),
+        ('Digital', 'Digital'),
+        ('Chronograph', 'Chronograph'),
+        ('Automatic', 'Automatic'),
+    )
+
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=200)
+    brand = models.CharField(max_length=100, default="TimeHub")
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='Unisex')
+    occasion = models.CharField(max_length=50, choices=OCCASION_CHOICES, default='Casual')
+    strap_material = models.CharField(max_length=100, blank=True)
+    strap_color = models.CharField(max_length=100, blank=True)
+    dial_color = models.CharField(max_length=100, blank=True)
+    function = models.CharField(max_length=50, choices=FUNCTION_CHOICES, default='Analog')
+    
     colors = models.ManyToManyField(Color, related_name='products', blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to='products/', null=True, blank=True)
     description = models.TextField(blank=True)
+    rating = models.FloatField(default=0.0)
+    features = models.TextField(blank=True, help_text="Comma-separated key features")
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -76,3 +104,15 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.email} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+class ComparisonHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comparison_history')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Comparison Histories'
+
+    def __str__(self):
+        return f"{self.user.email} compared {self.product.name}"
