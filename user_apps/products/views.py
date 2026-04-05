@@ -53,17 +53,17 @@ def product_list(request):
     if occasion:
         products = products.filter(occasion=occasion)
         
-    strap_material = request.GET.get('strap_material')
-    if strap_material:
-        products = products.filter(strap_material__icontains=strap_material)
+    strap_materials_list = request.GET.getlist('strap_material')
+    if strap_materials_list:
+        products = products.filter(strap_material__in=strap_materials_list)
         
-    strap_color = request.GET.get('strap_color')
-    if strap_color:
-        products = products.filter(strap_color__icontains=strap_color)
+    strap_colors_list = request.GET.getlist('strap_color')
+    if strap_colors_list:
+        products = products.filter(strap_color__in=strap_colors_list)
         
-    dial_color = request.GET.get('dial_color')
-    if dial_color:
-        products = products.filter(dial_color__icontains=dial_color)
+    dial_colors_list = request.GET.getlist('dial_color')
+    if dial_colors_list:
+        products = products.filter(dial_color__in=dial_colors_list)
         
     function_type = request.GET.get('function')
     if function_type:
@@ -97,9 +97,9 @@ def product_list(request):
     occasions = ['Casual', 'Formal', 'Sport', 'Luxury']
     genders = ['Men', 'Women', 'Unisex']
     functions = ['Analog', 'Digital', 'Chronograph', 'Automatic']
-    strap_materials = ['Leather', 'Steel', 'Silicon', 'Fabric']
-    strap_colors = ['Black', 'Brown', 'Silver', 'Gold', 'Blue']
-    dial_colors = ['Black', 'White', 'Blue', 'Green', 'Silver']
+    strap_materials_options = ['Leather', 'Steel', 'Silicon', 'Fabric']
+    strap_colors_options = ['Black', 'Brown', 'Silver', 'Gold', 'Blue']
+    dial_colors_options = ['Black', 'White', 'Blue', 'Green', 'Silver']
     
     # Pass current compare list from session to context
     compare_ids = request.session.get('compare_list', [])
@@ -126,16 +126,16 @@ def product_list(request):
         'selected_brand': brand,
         'selected_gender': gender,
         'selected_occasion': occasion,
-        'selected_strap_material': strap_material,
-        'selected_strap_color': strap_color,
-        'selected_dial_color': dial_color,
+        'selected_strap_material': strap_materials_list,
+        'selected_strap_color': strap_colors_list,
+        'selected_dial_color': dial_colors_list,
         'selected_function': function_type,
         'occasions': occasions,
         'genders': genders,
         'functions': functions,
-        'strap_materials': strap_materials,
-        'strap_colors': strap_colors,
-        'dial_colors': dial_colors,
+        'strap_materials': strap_materials_options,
+        'strap_colors': strap_colors_options,
+        'dial_colors': dial_colors_options,
         'current_compare_ids': [int(pid) for pid in compare_ids if str(pid).isdigit()],
         'current_compare_products': compare_products,
     }

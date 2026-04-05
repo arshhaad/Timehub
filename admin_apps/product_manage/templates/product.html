@@ -12,7 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- No Cropper.js - Logic moved to Python (Pillow) -->
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
         :root {
@@ -669,7 +671,7 @@
             background: #f9fafb;
         }
 
-        .color-checkbox:checked + .color-chip {
+        .color-checkbox:checked+.color-chip {
             background: #f9fafb;
             border-color: #000;
         }
@@ -678,7 +680,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
 
@@ -695,7 +697,7 @@
             display: none;
         }
 
-        .color-checkbox:checked + .color-chip .check-mark {
+        .color-checkbox:checked+.color-chip .check-mark {
             display: block;
         }
 
@@ -709,7 +711,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         /* Responsive Media Queries */
@@ -742,7 +744,8 @@
             }
 
             .search-bar {
-                display: none; /* Hide search on very small mobile if space is tight, or adapt */
+                display: none;
+                /* Hide search on very small mobile if space is tight, or adapt */
             }
 
             .content {
@@ -782,7 +785,8 @@
         }
 
         .prod-table {
-            min-width: 800px; /* Force scroll on mobile */
+            min-width: 800px;
+            /* Force scroll on mobile */
         }
     </style>
 </head>
@@ -969,8 +973,7 @@
                                             {% endif %}
                                             <div>
                                                 <div style="font-weight:700;">{{ prod.name }}</div>
-                                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}
-                                                </div>
+                                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -980,7 +983,8 @@
                                     <td>
                                         <div class="color-dots">
                                             {% for c in prod.colors.all %}
-                                            <div class="color-dot" style="background: {{ c.hex_code }};" title="{{ c.name }}"></div>
+                                            <div class="color-dot" style="background: {{ c.hex_code }};"
+                                                title="{{ c.name }}"></div>
                                             {% empty %}
                                             <span style="font-size: 0.75rem; color: var(--text-muted);">None</span>
                                             {% endfor %}
@@ -989,14 +993,18 @@
                                     <td style="font-weight:600;">
                                         {% if prod.discount_price %}
                                         <div style="color: var(--text-main);">₹{{ prod.discount_price }}</div>
-                                        <div style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">₹{{ prod.price }}</div>
+                                        <div
+                                            style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">
+                                            ₹{{ prod.price }}</div>
                                         {% else %}
                                         ₹{{ prod.price }}
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if prod.stock <= 5 %}
-                                        <span class="badge" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;">{{ prod.stock }} Low</span>
+                                        <div style="color: #ef4444; font-size: 0.75rem; font-weight: 700;">
+                                            <i class="fas fa-exclamation-circle" style="margin-right: 4px;"></i>{{ prod.stock }} Low
+                                        </div>
                                         {% else %}
                                         <span style="font-weight: 600; color: var(--text-main);">{{ prod.stock }}</span>
                                         {% endif %}
@@ -1031,7 +1039,6 @@
                             </tbody>
                         </table>
                     </div>
-able>
 
                     <!-- Pagination -->
                     {% if products.paginator.num_pages > 1 %}
@@ -1103,7 +1110,8 @@ able>
                     <div class="color-grid">
                         {% for color in all_colors %}
                         <div class="color-item">
-                            <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}" class="color-checkbox">
+                            <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}"
+                                class="color-checkbox">
                             <label for="color_{{ color.id }}" class="color-chip">
                                 <span class="color-indicator" style="background: {{ color.hex_code }};"></span>
                                 <span class="color-name">{{ color.name }}</span>
@@ -1121,9 +1129,10 @@ able>
                             step="0.01" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Discount Price (₹) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
-                        <input type="number" name="discount_price" id="formDiscountPrice" class="form-input" placeholder="0.00"
-                            step="0.01">
+                        <label class="form-label">Discount Price (₹) <span
+                                style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
+                        <input type="number" name="discount_price" id="formDiscountPrice" class="form-input"
+                            placeholder="0.00" step="0.01">
                     </div>
                 </div>
 
@@ -1185,7 +1194,29 @@ able>
         </div>
     </div>
 
-    <!-- Removed Cropper Modal for Python Processing -->
+
+    <!-- Cropper Modal -->
+    <div class="modal-overlay" id="cropModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Crop Product Image</h2>
+                <span class="modal-close" onclick="cancelCrop()">&times;</span>
+            </div>
+            <div style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.85rem;">
+                Adjust image to fit the square aspect ratio.
+            </div>
+            
+            <div style="width: 100%; height: 400px; background: #000; border-radius: var(--radius-md); overflow: hidden;">
+                <img id="cropImage" src="" style="max-width: 100%; display: block;">
+            </div>
+
+            <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+                <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);"
+                    onclick="cancelCrop()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="applyCrop()" style="background: var(--primary-bg);">Crop & Save</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Delete Modal -->
     <div class="modal-overlay" id="deleteModal">
@@ -1226,16 +1257,85 @@ able>
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+        // --- Image Cropping Logic ---
+        let currentCropper = null;
+        let currentSlot = null;
+        const croppedBlobs = new Map();
+
         function previewImage(input, slot) {
-            const preview = document.getElementById(`preview-${slot}`);
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    preview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; border-radius:10px;">`;
+                    currentSlot = slot;
+                    const cropImg = document.getElementById('cropImage');
+                    cropImg.src = e.target.result;
+                    
+                    openModal('cropModal');
+                    
+                    if (currentCropper) currentCropper.destroy();
+                    currentCropper = new Cropper(cropImg, {
+                        aspectRatio: 1,
+                        viewMode: 2,
+                        autoCropArea: 1,
+                    });
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        function applyCrop() {
+            if (!currentCropper) return;
+            
+            const canvas = currentCropper.getCroppedCanvas({
+                width: 800,
+                height: 800,
+            });
+            
+            canvas.toBlob((blob) => {
+                croppedBlobs.set(currentSlot, blob);
+                const preview = document.getElementById(`preview-${currentSlot}`);
+                const url = URL.createObjectURL(blob);
+                preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; border-radius:10px;">`;
+                
+                closeModal('cropModal');
+            }, 'image/jpeg', 0.9);
+        }
+
+        function cancelCrop() {
+            const fileInput = document.getElementById(`product_image_${currentSlot}`);
+            if (fileInput) fileInput.value = ''; // Reset file input if cancelled
+            closeModal('cropModal');
+        }
+
+        // --- Form Submission Handling ---
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Replace file inputs with cropped blobs
+            croppedBlobs.forEach((blob, slot) => {
+                formData.set(`product_image_${slot}`, blob, `cropped_${slot}.jpg`);
+            });
+
+            // Submit via standard fetch to keep page life if needed, or re-submit normally
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            }).then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    window.location.reload();
+                }
+            }).catch(error => {
+                console.error("Submission error:", error);
+                alert("An error occurred during submission.");
+            });
+        });
 
         function openProductModal(mode) {
             document.getElementById('productForm').reset();
@@ -1250,6 +1350,7 @@ able>
             for (let i = 1; i <= 3; i++) {
                 document.getElementById(`preview-${i}`).innerHTML = '';
             }
+            croppedBlobs.clear(); // Clear cached crops
 
             openModal('productModal');
         }
@@ -1262,7 +1363,7 @@ able>
             document.getElementById('formProductId').value = id;
             document.getElementById('formName').value = name;
             document.getElementById('formCategory').value = catId;
-            
+
             // Set colors
             if (colorIds && colorIds.length > 2) {
                 try {

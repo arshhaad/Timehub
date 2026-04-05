@@ -169,8 +169,7 @@
         .acc-header { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 16px 0; background: none; border: none; color: #fff; cursor: pointer; text-align: left; transition: var(--transition); }
         .acc-header h4 { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.5px; }
         .acc-header i { font-size: 0.85rem; transition: var(--transition); color: var(--text-muted); }
-        .filter-accordion.active .acc-header i { transform: rotate(0); color: #ff6a00; content: "\f00d"; }
-        .filter-accordion.active .acc-header i::before { content: "\f00d"; } /* FontAwesome Times (X) */
+        .filter-accordion.active .acc-header i { color: #ff6a00; }
         
         .acc-content { max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; }
         .filter-accordion.active .acc-content { max-height: 500px; padding-bottom: 25px; opacity: 1; }
@@ -392,6 +391,8 @@
 
         <div class="drawer-scroll">
             <form id="unifiedFilterForm" method="GET" action="{% url 'product_listing' %}">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
                 
                 <!-- Sorting (Pinned to top) -->
                 <div class="filter-accordion active">
@@ -609,7 +610,7 @@
         {% endif %}
         
         <button class="filters-trigger-btn" id="openDrawer">
-            <i class="fas fa-sliders-h"></i> Refine Selection
+            <i class="fas fa-sliders-h"></i> Filter
         </button>
     </div>
 
@@ -625,9 +626,13 @@
                             {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
                             {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
                             {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
-                            {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand }}">{% endif %}
                             {% if selected_gender %}<input type="hidden" name="gender" value="{{ selected_gender }}">{% endif %}
                             {% if selected_occasion %}<input type="hidden" name="occasion" value="{{ selected_occasion }}">{% endif %}
+                            {% if selected_function %}<input type="hidden" name="function" value="{{ selected_function }}">{% endif %}
+                            
+                            {% for mat in selected_strap_material %}<input type="hidden" name="strap_material" value="{{ mat }}">{% endfor %}
+                            {% for col in selected_strap_color %}<input type="hidden" name="strap_color" value="{{ col }}">{% endfor %}
+                            {% for dial in selected_dial_color %}<input type="hidden" name="dial_color" value="{{ dial }}">{% endfor %}
                             
                             <div class="search-input-wrap">
                                 <i class="fas fa-search"></i>
@@ -652,7 +657,7 @@
                         <p style="color: var(--text-muted); font-size: 0.9rem;">
                             {% if query %}
                                 Found {{ products.paginator.count }} matches for "{{ query }}"
-                            {% elif selected_category %}
+{% elif selected_category %}
                                 Viewing {{ products.paginator.count }} timepieces in collection
                             {% else %}
                                 Exploring our full catalog of premium watches
@@ -760,8 +765,12 @@
     </script>
 
     <script>
-        const openDrawer = () => { drawer.classList.add('active'); overlay.classList.add('active'); };
-        const closeAll = () => { [drawer, overlay, navLinks].forEach(el => el.classList.remove('active')); };
+        const sidebarDrawer = document.getElementById('sidebarDrawer');
+        const overlay = document.getElementById('overlay');
+        const navLinks = document.getElementById('navLinks');
+
+        const openDrawer = () => { sidebarDrawer.classList.add('active'); overlay.classList.add('active'); };
+        const closeAll = () => { [sidebarDrawer, overlay, navLinks].forEach(el => el.classList.remove('active')); };
         
         document.getElementById('openDrawer')?.addEventListener('click', openDrawer);
         overlay.addEventListener('click', closeAll);
@@ -864,6 +873,34 @@
         // --- Master Mode (Session Persisted) ---
         document.getElementById('masterCompareToggle').addEventListener('change', e => {
             fetch(`/compare/mode/?active=${e.target.checked}`).then(r => r.json()).then(d => document.body.classList.toggle('compare-mode-active', d.mode));
+        });
+
+        // --- Accordion Logic ---
+        document.querySelectorAll('.acc-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const accordion = header.parentElement;
+                const icon = header.querySelector('i');
+                const isActive = accordion.classList.toggle('active');
+                
+                // Toggle between plus and times icon
+                if (isActive) {
+                    icon.classList.replace('fa-plus', 'fa-times');
+                } else {
+                    icon.classList.replace('fa-times', 'fa-plus');
+                }
+            });
+        });
+
+        // Initialize active headers based on selections and update their icons
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-accordion').forEach(acc => {
+                const hasChecked = acc.querySelector('input:checked');
+                if (hasChecked || acc.classList.contains('active')) {
+                    acc.classList.add('active');
+                    const icon = acc.querySelector('.acc-header i');
+                    if (icon) icon.classList.replace('fa-plus', 'fa-times');
+                }
+            });
         });
     </script>
 
