@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from ..models import CustomUser, EmailOTP
 from django.utils import timezone
+from datetime import timedelta
 from django.views.decorators.cache import never_cache
 
 
@@ -56,10 +57,11 @@ def verify_otp(request):
 
 @never_cache
 def resend_otp(request):
-    email = request.session.get('verify_email')
+    email = request.session.get('verify_email') or request.session.get('reset_email')
+    is_reset = 'reset_email' in request.session
 
     if not email:
-        return redirect('signup')
+        return redirect('signup') if not is_reset else redirect('forgot-password')
 
     try:
         user = CustomUser.objects.get(email=email)
@@ -84,7 +86,7 @@ We received a request to verify your OTP.
 
 🔐 Your One-Time Password (OTP) is: {otp_obj.otp}
 
-This OTP is valid for 2 minutes. Please do not share it with anyone for security reasons.
+This OTP is valid for 1 minute. Please do not share it with anyone for security reasons.
 ---
 🌟 About TimeHub
 
@@ -103,7 +105,7 @@ The TimeHub Team""",
     )
 
     messages.success(request, "OTP resent successfully!")
-    return redirect("verify-otp")
+    return redirect("verify-otp") if not is_reset else redirect("verify-otp-reset")
 
 
 @never_cache
@@ -142,4 +144,17 @@ def verify_otp_reset(request):
             messages.error(request, 'No OTP found. Please request a new one.')
             return redirect('forgot-password')
 
-    return render(request, 'accounts/verify_otp_reset.html', {'email': email})
+    # Get latest OTP for timer
+    seconds_left = 0
+    try:
+        user = CustomUser.objects.get(email=email)
+        otp_obj = user.otps.latest('created_at')
+        expiry_time = otp_obj.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        seconds_left = max(0, int((expiry_time - timezone.now()).total_seconds()))
+    except (CustomUser.DoesNotExist, EmailOTP.DoesNotExist):
+        pass
+
+    return render(request, 'accounts/verify_otp_reset.html', {
+        'email': email,
+        'seconds_left': seconds_left
+    })

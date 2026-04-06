@@ -995,12 +995,12 @@
             </nav>
             <div class="nav-actions">
                 <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-                <div class="icon-btn"><i class="fas fa-shopping-cart"></i></div>
+                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit;"><i class="fas fa-shopping-cart"></i></a>
                 <div class="mobile-toggle" id="mobileToggle">
                     <i class="fas fa-bars"></i>
                 </div>
                 {% if user.is_authenticated %}
-                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"></i></a>
+                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle" style="color: var(--primary-color);"></i></a>
                 {% else %}
                 <a href="{% url 'login' %}" class="btn btn-outline"
                     style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
@@ -1124,74 +1124,38 @@
                 <p>The most loved timepieces by our global community.</p>
             </div>
             <div class="card-grid">
-                <div class="product-card">
-                    <span class="card-badge">Best Seller</span>
-                    <div class="wish-btn"><i class="far fa-heart"></i></div>
+                {% for p in products %}
+                <a href="{% url 'product_details' p.id %}" class="product-card" style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
+                    {% if p.stock == 0 %}
+                    <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+                    {% elif p.discount_price %}
+                    <span class="card-badge">Sale</span>
+                    {% endif %}
+                    <div class="wish-btn" onclick="event.preventDefault();"><i class="far fa-heart"></i></div>
                     <div class="card-top">
-                        <img src="{% static 'images/rolex_submariner.png' %}" alt="Rolex Submariner">
+                        {% if p.image %}
+                        <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                        {% else %}
+                        <img src="{% static 'images/placeholder.png' %}" alt="No Image">
+                        {% endif %}
                     </div>
                     <div class="rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                        <!-- Simplified star rating -->
+                        <i class="fas fa-star" style="color:var(--primary-color);"></i>
+                        <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
                     </div>
-                    <h3>Rolex Submariner</h3>
+                    <h3>{{ p.name }}</h3>
                     <div class="price-wrap">
-                        <span class="price">₹12,49,999</span>
-                        <span class="old-price">₹14,00,000</span>
+                        {% if p.discount_price %}
+                        <span class="price">₹{{ p.discount_price }}</span>
+                        <span class="old-price">₹{{ p.price }}</span>
+                        {% else %}
+                        <span class="price">₹{{ p.price }}</span>
+                        {% endif %}
                     </div>
-                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-                </div>
-
-                <div class="product-card">
-                    <span class="card-badge">New Arrival</span>
-                    <div class="wish-btn"><i class="far fa-heart"></i></div>
-                    <div class="card-top">
-                        <img src="{% static 'images/omega_speedmaster.png' %}" alt="Omega Speedmaster">
-                    </div>
-                    <div class="rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-                    </div>
-                    <h3>Omega Speedmaster</h3>
-                    <div class="price-wrap">
-                        <span class="price">₹5,49,999</span>
-                    </div>
-                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-                </div>
-
-                <div class="product-card">
-                    <span class="card-badge">Limited Stock</span>
-                    <div class="wish-btn"><i class="far fa-heart"></i></div>
-                    <div class="card-top">
-                        <img src="{% static 'images/tag_watch.png' %}" alt="Tag Heuer Carrera">
-                    </div>
-                    <div class="rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="far fa-star"></i>
-                    </div>
-                    <h3>Tag Heuer Carrera</h3>
-                    <div class="price-wrap">
-                        <span class="price">₹4,20,000</span>
-                        <span class="old-price">₹5,00,000</span>
-                    </div>
-                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-                </div>
-
-                <div class="product-card">
-                    <div class="wish-btn"><i class="far fa-heart"></i></div>
-                    <div class="card-top">
-                        <img src="{% static 'images/omega_watch.png' %}" alt="Omega Seamaster">
-                    </div>
-                    <div class="rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star"></i>
-                    </div>
-                    <h3>Omega Seamaster</h3>
-                    <div class="price-wrap">
-                        <span class="price">₹3,90,000</span>
-                    </div>
-                    <button class="btn btn-primary add-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-                </div>
+                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault();"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                </a>
+                {% endfor %}
             </div>
         </div>
         <div style="text-align: center; margin-top: 50px;">

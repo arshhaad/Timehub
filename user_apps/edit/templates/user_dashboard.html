@@ -406,7 +406,7 @@
     <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-heart"></i></div>
         <div class="stat-value">{{ stats.saved_items }}</div>
-        <div class="stat-label">Saved Items</div>
+        <div class="stat-label">Wishlisted Items</div>
     </div>
     <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-award"></i></div>
@@ -432,24 +432,25 @@
                 </tr>
             </thead>
             <tbody>
+                {% for order in recent_orders %}
                 <tr>
-                    <td>#TH-8829</td>
-                    <td>Oct 12, 2023</td>
-                    <td>$1,240.00</td>
-                    <td><span class="status-badge status-delivered">Delivered</span></td>
+                    <td>#TH-{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>${{ order.total_amount }}</td>
+                    <td>
+                        <span class="status-badge status-{{ order.status|lower }}">
+                            {{ order.status }}
+                        </span>
+                    </td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>#TH-8742</td>
-                    <td>Sep 28, 2023</td>
-                    <td>$540.00</td>
-                    <td><span class="status-badge status-delivered">Delivered</span></td>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                        No orders found. <a href="{% url 'product_listing' %}"
+                            style="color: var(--primary-color);">Start Shopping</a>
+                    </td>
                 </tr>
-                <tr>
-                    <td>#TH-8911</td>
-                    <td>Nov 02, 2023</td>
-                    <td>$890.00</td>
-                    <td><span class="status-badge status-processing">Processing</span></td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

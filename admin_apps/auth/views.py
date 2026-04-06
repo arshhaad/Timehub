@@ -4,10 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.views.decorators.cache import never_cache
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from datetime import timedelta
 from .forms import AdminProfileForm, AdminLoginForm
 from user_apps.accounts.models import CustomUser, EmailOTP
 from user_apps.core.models import Product, Order, OrderItem, Collection
@@ -47,27 +48,62 @@ def admin_login(request):
 def dashboard(request):
     if not request.user.is_superuser:
         return redirect("home")
-    
-    total_revenue = Order.objects.filter(status='Delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_orders = Order.objects.count()
-    total_customers = User.objects.filter(is_superuser=False, is_staff=False).count()
-    total_products = Product.objects.count()
 
-    recent_orders = Order.objects.all().order_by("-created_at")[:10]
-    
-    top_selling = Product.objects.all().order_by("-created_at")[:4]
-    
-    low_stock = Product.objects.filter(stock__lt=5).order_by("stock")[:3]
+    now = timezone.now()
+    last_30_start = now - timedelta(days=30)
+    prev_30_start = now - timedelta(days=60)
+
+    def pct_change(current, previous):
+        if previous == 0:
+            return 100.0 if current > 0 else 0.0
+        return round((current - previous) / previous * 100, 1)
+
+    # --- Revenue ---
+    total_revenue = Order.objects.filter(status='Delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    last_30_revenue = Order.objects.filter(status='Delivered', created_at__gte=last_30_start).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    prev_30_revenue = Order.objects.filter(status='Delivered', created_at__gte=prev_30_start, created_at__lt=last_30_start).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    revenue_change = pct_change(last_30_revenue, prev_30_revenue)
+
+    # --- Orders ---
+    total_orders = Order.objects.count()
+    last_30_orders = Order.objects.filter(created_at__gte=last_30_start).count()
+    prev_30_orders = Order.objects.filter(created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
+    orders_change = pct_change(last_30_orders, prev_30_orders)
+
+    # --- Customers ---
+    total_customers = User.objects.filter(is_superuser=False, is_staff=False).count()
+    last_30_customers = User.objects.filter(is_superuser=False, is_staff=False, created_at__gte=last_30_start).count()
+    prev_30_customers = User.objects.filter(is_superuser=False, is_staff=False, created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
+    customers_change = pct_change(last_30_customers, prev_30_customers)
+
+    # --- Products ---
+    total_products = Product.objects.count()
+    last_30_products = Product.objects.filter(created_at__gte=last_30_start).count()
+    prev_30_products = Product.objects.filter(created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
+    products_change = pct_change(last_30_products, prev_30_products)
+
+    recent_orders = Order.objects.select_related('user').prefetch_related('items__product').order_by("-created_at")[:10]
+
+    # Top selling = products with most order items
+    top_selling = Product.objects.annotate(
+        order_count=Count('orderitem')
+    ).order_by('-order_count')[:4]
+
+    low_stock = Product.objects.filter(stock__lt=5).order_by("stock")[:5]
 
     context = {
         "total_revenue": total_revenue,
         "total_orders": total_orders,
         "total_customers": total_customers,
         "total_products": total_products,
+        "revenue_change": revenue_change,
+        "orders_change": orders_change,
+        "customers_change": customers_change,
+        "products_change": products_change,
         "recent_orders": recent_orders,
         "top_selling": top_selling,
         "low_stock": low_stock,
-        "now": timezone.now(),
+        "now": now,
         "user": request.user,
     }
     return render(request, "dashboard.html", context)
@@ -102,18 +138,18 @@ def admin_forgot_password(request):
                 subject='TimeHub Admin — Password Reset OTP',
                 message=f"""Hello {user.first_name if user.first_name else 'Admin'} ⏱
 
-You requested a password reset for the TimeHub Admin Panel.
+                        You requested a password reset for the TimeHub Admin Panel.
 
-🔐 YOUR ONE-TIME PASSWORD:
+                        🔐 YOUR ONE-TIME PASSWORD:
 
-                  {otp_obj.otp}   
-                
-⏳ Valid for 5 minutes only.
-🚫 Do not share it with anyone.
+                                        {otp_obj.otp}   
+                                        
+                        ⏳ Valid for 5 minutes only.
+                        🚫 Do not share it with anyone.
 
-If you did not request this, please ignore this email.
+                        If you did not request this, please ignore this email.
 
-— The TimeHub Admin System 🚀""",
+                        — The TimeHub Admin System 🚀""",
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[email],
             )

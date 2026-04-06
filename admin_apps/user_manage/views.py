@@ -96,6 +96,15 @@ def user_profiles(request, user_id):
                 messages.success(request, f"Notification sent to {customer.first_name}: \"{msg_text}\"")
                 return redirect("user_profiles", user_id=user_id)
 
+        elif action == "delete_user":
+            if customer.is_superuser:
+                messages.error(request, "Cannot delete a superuser account.")
+                return redirect("user_profiles", user_id=user_id)
+            email = customer.email
+            customer.delete()
+            messages.success(request, f"User {email} has been permanently deleted.")
+            return redirect("user_list")
+
         elif action == "toggle_status":
             customer.is_active = not customer.is_active
             customer.save()

@@ -78,7 +78,7 @@ def login_view(request):
                     subject='Your OTP Code',
                     message=f"""Hello from TimeHub ⏱
                                 Your OTP is: {otp_obj.otp}
-                                Valid for 5 minutes.
+                                Valid for 1 minute.
                                 Do not share it with anyone.
                                 - TimeHub Team 🚀
                                 """,
@@ -132,7 +132,7 @@ def forgot_password(request):
 
                     {otp_obj.otp}   
                     
-            ⏳ Valid for 5 minutes only.
+            ⏳ Valid for 1 minute only.
             🚫 Do not share it with anyone.
             If you did not request this, please ignore this email.
              — The TimeHub Team 🚀""",

@@ -221,6 +221,20 @@
                         </button>
                     </th>
                     {% endfor %}
+                    
+                    {% if products|length == 1 %}
+                    <th class="product-head">
+                        <div class="compare-img-wrap" style="background: rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; border: 1px dashed var(--border-color);">
+                            <i class="fas fa-plus" style="font-size: 2rem; color: var(--text-muted);"></i>
+                        </div>
+                        <h3 class="text-muted">Select Item</h3>
+                        <span class="text-muted" style="font-size:0.8rem">Waiting for selection...</span>
+                        <br>
+                        <a href="{% url 'product_listing' %}" class="btn-remove" style="color:var(--primary-color); opacity:1;">
+                            Browse Collection
+                        </a>
+                    </th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -236,12 +250,18 @@
                         {% endif %}
                     </td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Collection</td>
                     {% for product in products %}
                     <td>{{ product.collection.name }}</td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Rating</td>
@@ -253,18 +273,27 @@
                         </div>
                     </td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Function</td>
                     {% for product in products %}
                     <td>{{ product.function }}</td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Material</td>
                     {% for product in products %}
                     <td>{{ product.strap_material }}</td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Dial & Strap</td>
@@ -274,6 +303,9 @@
                         <span style="display:block; font-size:0.85rem">Strap: {{ product.strap_color }}</span>
                     </td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name">Key Features</td>
@@ -288,6 +320,9 @@
                         </ul>
                     </td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td class="attr-name"></td>
@@ -298,6 +333,9 @@
                         </button>
                     </td>
                     {% endfor %}
+                    {% if products|length == 1 %}
+                    <td class="text-muted">-</td>
+                    {% endif %}
                 </tr>
             </tbody>
         </table>

@@ -2,8 +2,9 @@ from django.http import JsonResponse
 from django.db.models import Q, Count, Max
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
-from django.shortcuts import render
-from user_apps.core.models import Product, Collection, ComparisonHistory
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage
 
 def product_list(request):
     # Base queryset: Active and not deleted
@@ -140,6 +141,12 @@ def product_list(request):
         'current_compare_products': compare_products,
     }
     
+    # Add wishlist items if user is authenticated
+    if request.user.is_authenticated:
+        from user_apps.core.models import WishlistItem
+        wishlist_product_ids = WishlistItem.objects.filter(wishlist__user=request.user).values_list('product_id', flat=True)
+        context['wishlist_product_ids'] = list(wishlist_product_ids)
+    
     return render(request, 'product_listing.html', context)
 
 def compare_products(request):
@@ -159,8 +166,8 @@ def compare_products(request):
             history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
         return render(request, 'compare.html', {'products': [], 'history': history})
         
-    # Get products, limit to 5
-    products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:5]
+    # Get products, limit to 2
+    products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:2]
     
     # Save to history if logged in
     if request.user.is_authenticated and products.exists():
@@ -189,7 +196,7 @@ def compare_products(request):
     }
     return render(request, 'compare.html', context)
 
-def toggle_compare_ajax(request):
+def toggle_compare(request):
     product_id = request.GET.get('id')
     if not product_id:
         return JsonResponse({'success': False, 'error': 'No ID provided'})
@@ -199,8 +206,8 @@ def toggle_compare_ajax(request):
     if str(product_id) in compare_list:
         compare_list.remove(str(product_id))
     else:
-        if len(compare_list) >= 5:
-            return JsonResponse({'success': False, 'error': 'Maximum 5 products allowed'})
+        if len(compare_list) >= 2:
+            return JsonResponse({'success': False, 'error': 'Maximum 2 products allowed'})
         compare_list.append(str(product_id))
     
     request.session['compare_list'] = compare_list
@@ -223,13 +230,57 @@ def toggle_compare_ajax(request):
         'products': products_data
     })
 
-def clear_compare_ajax(request):
+def clear_compare(request):
     request.session['compare_list'] = []
     request.session.modified = True
     return JsonResponse({'success': True, 'count': 0, 'products': []})
 
-def toggle_compare_mode_ajax(request):
+def toggle_compare_mode(request):
     is_active = request.GET.get('active') == 'true'
     request.session['compare_mode_active'] = is_active
     request.session.modified = True
     return JsonResponse({'success': True, 'mode': is_active})
+
+def product_details(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Check if the product is active or if its collection/itself is deleted
+    if not product.is_active or product.is_deleted or (product.collection and product.collection.is_deleted):
+        messages.error(request, "This product is currently unavailable or has been removed.")
+        return redirect('product_listing')
+        
+    # Get additional images
+    images = product.images.all()
+    
+    # Process features for the specifications tab
+    features_list = []
+    if product.features:
+        features_list = [f.strip() for f in product.features.split(',')]
+        
+    # Get related products (same collection or same brand, active and not deleted, max 4)
+    related_products = Product.objects.filter(
+        Q(collection=product.collection) | Q(brand=product.brand),
+        is_active=True, is_deleted=False
+    ).exclude(id=product.id).distinct()[:4]
+    
+    MAX_QTY = 10
+    savings = 0
+    if product.discount_price:
+        savings = product.price - product.discount_price
+    
+    context = {
+        'product': product,
+        'images': images,
+        'features_list': features_list,
+        'related_products': related_products,
+        'MAX_QTY': MAX_QTY,
+        'savings': savings,
+    }
+
+    # Add wishlist status
+    if request.user.is_authenticated:
+        from user_apps.core.models import WishlistItem
+        is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
+        context['is_in_wishlist'] = is_in_wishlist
+
+    return render(request, 'product_details.html', context)

@@ -76,7 +76,7 @@
         /* SEARCH & SORT HEADER */
         .tools-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; gap: 20px; flex-wrap: wrap; }
         
-        .search-wrapper { flex: 1; min-width: 300px; position: relative; }
+        .search-wrapper { flex: 1 1 300px; position: relative; }
         .search-wrapper input { width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 14px 25px; padding-right: 100px; color: #fff; outline: none; transition: var(--transition); }
         .search-wrapper input:focus { border-color: var(--primary-color); box-shadow: 0 0 15px rgba(255, 106, 0, 0.1); }
         .search-btns { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 5px; }
@@ -91,18 +91,42 @@
         
         @media (max-width: 1400px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 991px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
-        @media (max-width: 576px) { .product-grid { grid-template-columns: 1fr; } .container { padding: 0 20px; } }
+        @media (max-width: 576px) { 
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } 
+            .container { padding: 0 12px; } 
+            .product-card { padding: 12px; }
+            .card-image-wrap { height: 160px; margin-bottom: 12px; }
+            .product-card h3 { font-size: 0.9rem; margin-bottom: 4px; }
+            .badge { top: 6px; left: 6px; font-size: 0.6rem; padding: 3px 6px; }
+            .wishlist-btn { top: 6px; right: 6px; width: 28px; height: 28px; font-size: 0.8rem; }
+            .curr-price { font-size: 1rem; }
+            .disc-price { font-size: 0.8rem; }
+            .category-label { margin-bottom: 4px; font-size: 0.72rem; }
+            .price-row { gap: 8px; margin-bottom: 10px; }
+            .action-buttons-row { gap: 6px; margin-top: 6px; }
+            .action-buttons-row button, .action-buttons-row .btn { font-size: 0.78rem; padding: 8px 4px; }
+        }
+        @media (max-width: 400px) {
+            .card-image-wrap { height: 130px; }
+            .product-card h3 { font-size: 0.8rem; }
+            .curr-price { font-size: 0.9rem; }
+            .action-buttons-row { flex-direction: column; gap: 4px; }
+            .action-buttons-row button, .action-buttons-row .btn { width: 100%; font-size: 0.75rem; padding: 7px 4px; }
+        }
+        
+        .card-info-wrap { display: flex; flex-direction: column; flex: 1; }
 
         .product-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 25px; border: 1px solid var(--border-color); transition: var(--transition); position: relative; display: flex; flex-direction: column; }
         .product-card:hover { transform: translateY(-10px); border-color: var(--primary-color); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
         
         .card-image-wrap { position: relative; height: 260px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border-radius: var(--radius-md); margin-bottom: 25px; overflow: hidden; }
-        .product-card img { max-width: 80%; transition: var(--transition); }
+        .product-card img { width: 100%; height: 100%; object-fit: contain; transition: var(--transition); }
         .product-card:hover img { transform: scale(1.08); }
         
         .badge { position: absolute; top: 15px; left: 15px; background: var(--primary-color); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-        .wishlist-btn { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: var(--transition); border: none; }
-        .wishlist-btn:hover { background: #ff4757; color: #fff; }
+        .wishlist-btn { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: var(--transition); border: 1px solid transparent; }
+        .wishlist-btn:hover { border-color: #ff4757; color: #ff4757; background: rgba(255, 71, 87, 0.1); }
+        .wishlist-btn.active { background: #ff4757; color: #fff; }
 
         .product-card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; color: #fff; }
         .category-label { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; display: block; }
@@ -114,7 +138,7 @@
         .add-cart { width: 100%; }
 
         /* PAGINATION */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 60px; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 60px; flex-wrap: wrap; }
         .page-link { width: 45px; height: 45px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-weight: 600; transition: var(--transition); }
         .page-link:hover, .page-link.active { border-color: var(--primary-color); color: var(--primary-color); background: rgba(255, 106, 0, 0.05); }
 
@@ -143,8 +167,8 @@
         .range-slider-track { position: absolute; top: 50%; width: 100%; height: 4px; background: #374151; transform: translateY(-50%); border-radius: 2px; }
         .range-slider-progress { position: absolute; top: 50%; height: 4px; background: var(--primary-color); transform: translateY(-50%); border-radius: 2px; }
         
-        .range-input { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); background: none; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; }
-        .range-input::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--primary-color); pointer-events: auto; -webkit-appearance: none; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+        .range-input { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); background: none; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .range-input::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--primary-color); pointer-events: auto; -webkit-appearance: none; appearance: none; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
         .range-input::-webkit-slider-thumb:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 106, 0, 0.3); }
         
         .price-display { display: flex; justify-content: space-between; margin-top: 15px; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
@@ -226,29 +250,28 @@
             .sidebar-drawer { width: 100vw; left: -100vw; }
         }
         /* FIXED DISCOVERY CONTROLS */
-        .discovery-hub { position: fixed; bottom: 40px; right: 40px; z-index: 1000; display: flex; align-items: center; gap: 15px; }
-
-        .fixed-compare-toggle { 
+        .compact-compare-toggle { 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
-            background: var(--primary-color); 
-            padding: 12px 22px; 
+            gap: 10px; 
+            background: #15151a; 
+            padding: 8px 18px; 
             border-radius: var(--radius-pill); 
-            border: none; 
-            box-shadow: 0 10px 30px rgba(255, 106, 0, 0.4); 
+            border: 1px solid var(--border-color); 
             transition: var(--transition);
         }
-        .fixed-compare-toggle:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 40px rgba(255, 106, 0, 0.5);
-            background: var(--primary-hover);
+        .compact-compare-toggle:hover {
+            border-color: var(--primary-color);
         }
-        .fixed-compare-toggle span { 
-            font-size: 0.85rem; 
+        .compact-compare-toggle span { 
+            font-size: 0.75rem; 
             font-weight: 700; 
-            color: #fff; 
-            text-transform: none;
+            color: var(--text-muted); 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .compact-compare-toggle input:checked ~ span {
+            color: var(--primary-color);
         }
 
         /* TOGGLE SWITCH - IMAGE MATCH */
@@ -295,6 +318,8 @@
             background-color: var(--primary-color);
         }
 
+        .discovery-hub { position: fixed; bottom: 40px; right: 40px; z-index: 1000; display: flex; align-items: center; gap: 15px; }
+
         .filters-trigger-btn { display: flex; align-items: center; gap: 10px; padding: 14px 28px; background: var(--primary-color); border: none; border-radius: var(--radius-pill); cursor: pointer; transition: var(--transition); font-weight: 700; color: #fff; box-shadow: 0 10px 30px rgba(255, 106, 0, 0.4); font-size: 0.85rem; }
         .filters-trigger-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 40px rgba(255, 106, 0, 0.5); background: var(--primary-hover); }
         
@@ -302,7 +327,9 @@
         .refresh-btn:hover { transform: translateY(-5px) rotate(180deg); border-color: var(--primary-color); color: var(--primary-color); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
 
         @media (max-width: 768px) {
-            .discovery-hub { bottom: 25px; right: 50%; transform: translateX(50%); width: auto; white-space: nowrap; }
+            .discovery-hub { bottom: 25px; right: 25px; transform: none; width: auto; }
+            .listing-header { gap: 15px; }
+            .header-tools { width: 100%; justify-content: space-between; }
             .filters-trigger-btn { padding: 12px 22px; font-size: 0.8rem; }
             .refresh-btn { width: 45px; height: 45px; font-size: 1rem; }
             .sidebar-drawer { width: 100%; left: -100%; border-radius: 0; }
@@ -333,8 +360,8 @@
         }
 
         /* SEARCH BAR & GRID HEADER */
-        .listing-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
-        .search-container { position: relative; flex: 1; max-width: 500px; }
+        .listing-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; }
+        .search-container { position: relative; flex: 1; min-width: 300px; }
         .search-input-wrap { position: relative; width: 100%; }
         .search-input-wrap i.fa-search { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem; }
         .search-field { width: 100%; background: #111115; border: 1px solid var(--border-color); border-radius: var(--radius-pill); padding: 14px 45px 14px 45px; color: #fff; font-size: 0.9rem; transition: var(--transition); outline: none; }
@@ -342,12 +369,16 @@
         .search-clear { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; transition: var(--transition); padding: 5px; opacity: 0.6; }
         .search-clear:hover { color: #ef4444; opacity: 1; }
         
+        .header-tools { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .results-meta { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
         .results-meta span { color: #fff; margin-right: 5px; }
 
         @media (max-width: 768px) {
-            .listing-header { flex-direction: column; align-items: stretch; }
-            .search-container { max-width: 100%; }
+            .listing-header { flex-direction: column; align-items: stretch; gap: 15px; }
+            .search-container { min-width: 100%; width: 100%; }
+            .header-tools { width: 100%; flex-direction: column; align-items: stretch; gap: 12px; }
+            .compact-compare-toggle { justify-content: space-between; padding: 10px 18px; }
+            .results-meta { text-align: center; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -366,9 +397,9 @@
                 <a href="#">Contact</a>
             </div>
             <div class="nav-actions">
-                <a href="#" class="icon-btn"><i class="fas fa-search"></i></a>
-                <a href="#" class="icon-btn"><i class="fas fa-shopping-cart"></i></a>
-                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"></i></a>
+                <a href="#searchBox" onclick="event.preventDefault(); document.getElementById('searchBox').focus(); document.getElementById('searchBox').scrollIntoView({behavior:'smooth', block:'center'});" class="icon-btn"><i class="fas fa-search"></i></a>
+                <a href="{% url 'cart_view' %}" class="icon-btn"><i class="fas fa-shopping-cart"></i></a>
+                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle" style="color: var(--primary-color);"></i></a>
                 <div class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
                 </div>
@@ -594,15 +625,6 @@
 
     <!-- Fixed Discovery Hub -->
     <div class="discovery-hub">
-        <!-- FIXED MASTER COMPARE TOGGLE -->
-        <div class="fixed-compare-toggle">
-            <span>Compare</span>
-            <label class="switch">
-                <input type="checkbox" id="masterCompareToggle" {% if request.session.compare_mode_active %}checked{% endif %}>
-                <span class="slider-toggle"></span>
-            </label>
-        </div>
-
         {% if query or selected_category or min_price != 0 or max_price != max_price_limit %}
         <a href="{% url 'product_listing' %}" class="refresh-btn" title="Clear Filters">
             <i class="fas fa-redo-alt"></i>
@@ -645,8 +667,17 @@
                             </div>
                         </form>
                     </div>
-                    <div class="results-meta">
-                        <span>Showing</span> {{ products.start_index }} - {{ products.end_index }} of {{ products.paginator.count }} items
+                    <div class="header-tools">
+                        <div class="compact-compare-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="masterCompareToggle" {% if request.session.compare_mode_active %}checked{% endif %}>
+                                <span class="slider-toggle"></span>
+                            </label>
+                            <span>Compare</span>
+                        </div>
+                        <div class="results-meta">
+                            <span>Showing</span> {{ products.start_index }} - {{ products.end_index }} of {{ products.paginator.count }} items
+                        </div>
                     </div>
                 </div>
 
@@ -657,8 +688,8 @@
                         <p style="color: var(--text-muted); font-size: 0.9rem;">
                             {% if query %}
                                 Found {{ products.paginator.count }} matches for "{{ query }}"
-{% elif selected_category %}
-                                Viewing {{ products.paginator.count }} timepieces in collection
+                            {% elif selected_category %}
+                                {% for cat in categories %}{% if cat.id|stringformat:'i' == selected_category %}Viewing {{ products.paginator.count }} timepieces in <strong style="color:#fff;">{{ cat.name }}</strong>{% endif %}{% endfor %}
                             {% else %}
                                 Exploring our full catalog of premium watches
                             {% endif %}
@@ -669,7 +700,7 @@
                 {% if products %}
                 <div class="product-grid">
                     {% for product in products %}
-                    <div class="product-card">
+                    <a href="{% url 'product_details' product.id %}" class="product-card" style="text-decoration:none; color:inherit;">
                         <div class="card-image-wrap">
                             {% if product.stock == 0 %}
                             <span class="badge" style="background: #333; color: #fff;">Sold Out</span>
@@ -677,7 +708,9 @@
                             <span class="badge">Sale</span>
                             {% endif %}
                             
-                            <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                             <button class="wishlist-btn {% if product.id in wishlist_product_ids %}active{% endif %}" onclick="toggleWishlist(event, {{ product.id }}, this)">
+                                <i class="{% if product.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+                            </button>
                             
                             {% if product.image %}
                             <img src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -685,34 +718,48 @@
                             <img src="{% static 'images/placeholder.png' %}" alt="No Image">
                             {% endif %}
                         </div>
-                        <span class="category-label">{{ product.collection.name }}</span>
-                        <h3>{{ product.name }}</h3>
-                        
-                        <div class="price-row">
-                            {% if product.discount_price %}
-                            <span class="curr-price">${{ product.discount_price }}</span>
-                            <span class="disc-price">${{ product.price }}</span>
-                            {% else %}
-                            <span class="curr-price">${{ product.price }}</span>
-                            {% endif %}
+                        <div class="card-info-wrap">
+                            <span class="category-label">{{ product.collection.name }}</span>
+                            <h3>{{ product.name }}</h3>
+                            
+                            <div class="price-row">
+                                {% if product.discount_price %}
+                                <span class="curr-price">₹{{ product.discount_price }}</span>
+                                <span class="disc-price">₹{{ product.price }}</span>
+                                {% else %}
+                                <span class="curr-price">₹{{ product.price }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="action-buttons-row" style="display:flex; gap:10px; margin-top:10px;">
+                                {% if product.stock > 0 %}
+                                <button class="btn btn-primary add-cart" onclick="event.preventDefault(); window.addToCart({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px;">
+                                    <i class="fas fa-shopping-bag"></i> Cart
+                                </button>
+                                {% else %}
+                                <button class="btn btn-primary add-cart out-of-stock" disabled style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px; background:#374151; color:#9ca3af; cursor:not-allowed;">
+                                    <i class="fas fa-exclamation-triangle"></i> Out
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-outline buy-now" onclick="event.preventDefault(); window.location.href='{% url 'product_details' product.id %}';" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
+                                    Buy Now
+                                </button>
+                            </div>
+                            
+                            <!-- ADD TO COMPARE TOGGLE -->
+                            <div class="compare-toggle" onclick="event.preventDefault();" style="margin-top:10px;">
+                                <label class="switch">
+                                    <input type="checkbox" class="compare-checkbox" 
+                                        data-id="{{ product.id }}" 
+                                        data-name="{{ product.name }}" 
+                                        {% if product.image %}data-image="{{ product.image.url }}"{% endif %}
+                                        onclick="this.checked = !this.checked; event.stopPropagation();">
+                                    <span class="slider-toggle"></span>
+                                </label>
+                                <span class="compare-label">Add to Compare</span>
+                            </div>
                         </div>
-                        
-                        <button class="btn btn-primary add-cart">
-                            <i class="fas fa-shopping-bag"></i> Add to Cart
-                        </button>
-                        
-                        <!-- ADD TO COMPARE TOGGLE -->
-                        <div class="compare-toggle">
-                            <label class="switch">
-                                <input type="checkbox" class="compare-checkbox" 
-                                       data-id="{{ product.id }}" 
-                                       data-name="{{ product.name }}" 
-                                       {% if product.image %}data-image="{{ product.image.url }}"{% endif %}>
-                                <span class="slider-toggle"></span>
-                            </label>
-                            <span class="compare-label">Add to Compare</span>
-                        </div>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
 
@@ -871,9 +918,64 @@
         document.querySelectorAll('.compare-checkbox').forEach(cb => cb.addEventListener('change', () => toggleCompare(cb.dataset.id)));
 
         // --- Master Mode (Session Persisted) ---
-        document.getElementById('masterCompareToggle').addEventListener('change', e => {
+        document.getElementById('masterCompareToggle')?.addEventListener('change', e => {
             fetch(`/compare/mode/?active=${e.target.checked}`).then(r => r.json()).then(d => document.body.classList.toggle('compare-mode-active', d.mode));
         });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // --- Cart Functionality ---
+        window.addToCart = function(productId, btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.style.pointerEvents = 'none';
+
+            fetch(`/user/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    btn.innerHTML = `<i class="fas fa-check"></i> Added`;
+                    btn.style.background = '#22c55e';
+                    btn.style.borderColor = '#22c55e';
+                    btn.style.color = '#fff';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                        btn.style.pointerEvents = 'auto';
+                    }, 2000);
+                } else {
+                    alert(data.error || 'Failed to add item to cart');
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(err => {
+                alert('Please login to add items to your cart.');
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+            });
+        };
 
         // --- Accordion Logic ---
         document.querySelectorAll('.acc-header').forEach(header => {
@@ -902,6 +1004,36 @@
                 }
             });
         });
+
+        // --- Wishlist Toggle Logic ---
+        window.toggleWishlist = function(event, productId, btnElement) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            fetch(`/user/wishlist/toggle/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const icon = btnElement.querySelector('i');
+                    if (data.action === 'added') {
+                        btnElement.classList.add('active');
+                        icon.classList.replace('far', 'fas');
+                    } else {
+                        btnElement.classList.remove('active');
+                        icon.classList.replace('fas', 'far');
+                    }
+                } else {
+                    alert(data.error || 'Please login to modify your wishlist.');
+                }
+            })
+            .catch(err => alert('Please login to modify your wishlist.'));
+        };
     </script>
 
 </body>

@@ -1038,7 +1038,7 @@
                     <span
                         style="font-weight: 500; font-size: 0.9rem; opacity: 0.9; cursor: pointer; transition: opacity 0.3s;"
                         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
-                        <i class="fa-regular fa-user" style="margin-right: 5px;"></i> {{ user.first_name }}
+                        <i class="fa-regular fa-user" style="margin-right: 5px; color: var(--primary-color);"></i> {{ user.first_name }}
                     </span>
                 </a>
                 <a href="{% url 'logout' %}" class="btn btn-outline"
@@ -1170,40 +1170,35 @@
             <p>Hand-picked masterpieces for the discerning collector.</p>
         </div>
         <div class="cards-grid">
-            <!-- Card 1 -->
-            <div class="product-card">
+            {% for p in products|slice:":3" %}
+            <a href="{% url 'product_details' p.id %}" class="product-card" style="text-decoration:none; color:inherit; display:block;">
+                {% if forloop.counter == 1 %}
                 <div class="card-badge">Top Choice</div>
-                <div class="product-img-wrap">
-                    <img src="{% static 'images/omega_watch.png' %}" alt="Omega Speedmaster">
-                </div>
-                <div class="product-info">
-                    <h3>Omega Speedmaster</h3>
-                    <div class="product-price">From $6,500</div>
-                </div>
-            </div>
-            <!-- Card 2 -->
-            <div class="product-card">
+                {% elif forloop.counter == 2 %}
                 <div class="card-badge">Top Reviews</div>
-                <div class="product-img-wrap">
-                    <img src="{% static 'images/tag_watch.png' %}" alt="Tag Heuer Carrera">
-                </div>
-                <div class="product-info">
-                    <h3>Tag Heuer Carrera</h3>
-                    <div class="product-price">From $5,200</div>
-                </div>
-            </div>
-            <!-- Card 3 -->
-            <div class="product-card">
+                {% else %}
                 <div class="card-badge">Exclusive</div>
+                {% endif %}
+                
                 <div class="product-img-wrap">
-                    <img src="{% static 'images/tag_watch.png' %}" alt="Breitling Navitimer"
-                        style="filter: hue-rotate(20deg);">
+                    {% if p.image %}
+                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                    {% else %}
+                    <img src="{% static 'images/placeholder.png' %}" alt="No Image">
+                    {% endif %}
                 </div>
                 <div class="product-info">
-                    <h3>Breitling Navitimer</h3>
-                    <div class="product-price">From $8,400</div>
+                    <h3>{{ p.name }}</h3>
+                    <div class="product-price">
+                        {% if p.discount_price %}
+                        From ₹{{ p.discount_price }}
+                        {% else %}
+                        From ₹{{ p.price }}
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
+            </a>
+            {% endfor %}
         </div>
         <div style="text-align: center; margin-top: 50px;">
             <a href="{% url 'product_listing' %}" class="btn btn-outline" style="padding: 15px 40px; font-size: 1rem; border-radius: 30px;">

@@ -104,9 +104,11 @@ def product_list(request):
             name = request.POST.get("name")
             collection_id = request.POST.get("collection_id")
             price = request.POST.get("price")
+            discount_price = request.POST.get("discount_price")
             colors = request.POST.getlist("colors")
             stock = request.POST.get("stock")
             description = request.POST.get("description", "")
+            is_active = request.POST.get("is_active") == "on"
             
             # Robust sanitization
             try:
@@ -121,7 +123,8 @@ def product_list(request):
             product = Product.objects.create(
                 name=name, collection=collection, price=price,
                 discount_price=discount_price,
-                stock=stock, description=description
+                stock=stock, description=description,
+                is_active=is_active
             )
             
             if colors:

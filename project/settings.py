@@ -188,7 +188,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-OTP_EXPIRY_MINUTES = 2
+OTP_EXPIRY_MINUTES = 1
 RESET_OTP_COOLDWON_SEC = 30
 
 

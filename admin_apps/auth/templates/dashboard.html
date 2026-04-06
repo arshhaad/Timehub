@@ -995,19 +995,25 @@
                     <a href="{% url 'admin_profile' %}" class="admin-profile"
                         style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
                         <div class="admin-info" style="text-align: right;">
-                            <span class="admin-name" style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; line-height: 1.2;">
+                            <span class="admin-name"
+                                style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; line-height: 1.2;">
                                 {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}
                             </span>
-                            <span class="admin-role" style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); display: block;">Super admin</span>
+                            <span class="admin-role" style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); display: block;">{% if user.is_superuser %}Super Admin{% elif user.is_staff %}Staff{% else %}Admin{% endif %}</span>
                         </div>
-                        <div class="brand-icon" style="width: 40px; height: 40px; font-size: 0.9rem; margin-bottom: 0; box-shadow: none; flex-shrink: 0;">
+                        <div class="brand-icon"
+                            style="width: 40px; height: 40px; font-size: 0.9rem; margin-bottom: 0; box-shadow: none; flex-shrink: 0;">
                             {% if user.profile and user.profile.image %}
-                            <img src="{{ user.profile.image.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            <img src="{{ user.profile.image.url }}" alt="Admin"
+                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                             {% elif user.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                            <img src="{{ user.avatar.url }}" alt="Admin"
+                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                             {% else %}
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f3f4f6; color: #4b5563; font-weight: 700;">
-                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                            <div
+                                style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f3f4f6; color: #4b5563; font-weight: 700;">
+                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{
+                                user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
                             </div>
                             {% endif %}
                         </div>
@@ -1032,17 +1038,23 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                            <div class="stat-change change-positive">+12.5%</div>
+                            <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                            <div
+                                class="stat-change {% if revenue_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                                {% if revenue_change >= 0 %}+{% endif %}{{ revenue_change }}%
+                            </div>
                         </div>
                         <div class="stat-title">Total Revenue</div>
-                        <div class="stat-value">${{ total_revenue|floatformat:2 }}</div>
+                        <div class="stat-value">₹{{ total_revenue|floatformat:2 }}</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-                            <div class="stat-change change-positive">+5.2%</div>
+                            <div
+                                class="stat-change {% if orders_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                                {% if orders_change >= 0 %}+{% endif %}{{ orders_change }}%
+                            </div>
                         </div>
                         <div class="stat-title">Total Orders</div>
                         <div class="stat-value">{{ total_orders }}</div>
@@ -1051,7 +1063,10 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
-                            <div class="stat-change change-positive">+18.1%</div>
+                            <div
+                                class="stat-change {% if customers_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                                {% if customers_change >= 0 %}+{% endif %}{{ customers_change }}%
+                            </div>
                         </div>
                         <div class="stat-title">Total Customers</div>
                         <div class="stat-value">{{ total_customers }}</div>
@@ -1060,7 +1075,10 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                            <div class="stat-change change-negative">-2.4%</div>
+                            <div
+                                class="stat-change {% if products_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                                {% if products_change >= 0 %}+{% endif %}{{ products_change }}%
+                            </div>
                         </div>
                         <div class="stat-title">Total Products</div>
                         <div class="stat-value">{{ total_products }}</div>
@@ -1074,22 +1092,24 @@
                     <div class="note-card note-orders">
                         <div class="note-header">
                             <div class="note-title"><i class="fas fa-shopping-cart"></i> Recent Orders</div>
-                            <a href="#" class="panel-action">View All Detailed</a>
+                            <a href="#" class="panel-action">View All →</a>
                         </div>
                         <div class="step-list">
                             {% for order in recent_orders %}
                             <div class="step-item">
                                 <div class="step-dot"></div>
                                 <div class="step-content">
-                                    <div class="step-user">OR.NO-{{ order.id }} - {{ order.user.first_name|default:order.user.email }}</div>
+                                    <div class="step-user">OR.NO-{{ order.id }} - {{
+                                        order.user.first_name|default:order.user.email }}</div>
                                     <div class="step-info">
                                         {% with first_item=order.items.first %}
-                                        {{ first_item.product.name }}{% if order.items.count > 1 %} + {{ order.items.count|add:"-1" }} more {% endif %}
+                                        {{ first_item.product.name }}{% if order.items.count > 1 %} + {{
+                                        order.items.count|add:"-1" }} more {% endif %}
                                         {% endwith %}
                                     </div>
                                     <div class="step-status"
                                         style="color: {% if order.status|lower == 'delivered' %}#166534{% elif order.status|lower == 'processing' %}#0369a1{% else %}#c2410c{% endif %};">
-                                        {{ order.status }} • ${{ order.total_amount|floatformat:2 }}
+                                        {{ order.status }} • ₹{{ order.total_amount|floatformat:2 }}
                                     </div>
                                 </div>
                             </div>
@@ -1122,10 +1142,11 @@
                                         </div>
                                     </div>
                                     <div class="item-stats" style="text-align: right;">
-                                        <span class="item-price" style="font-size: 0.95rem; font-weight: 700;">${{ product.price|floatformat:0 }}</span>
+                                        <span class="item-price" style="font-size: 0.95rem; font-weight: 700;">₹{{
+                                            product.discount_price|default:product.price|floatformat:0 }}</span>
                                         <span class="item-sales"
-                                            style="font-size: 0.75rem; color: var(--text-muted);">{{ product.stock }} in
-                                            stock</span>
+                                            style="font-size: 0.75rem; color: var(--text-muted);">{{ product.order_count
+                                            }} sold</span>
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -1143,7 +1164,8 @@
                                 <div class="alert-item" style="padding: 12px 0;">
                                     <div class="item-info">
                                         <div class="item-name" style="font-size: 0.9rem;">{{ alert.name }}</div>
-                                        <div class="item-cat" style="font-size: 0.75rem;">SKU: {{ alert.id|stringformat:"04d" }}</div>
+                                        <div class="item-cat" style="font-size: 0.75rem;">SKU: {{
+                                            alert.id|stringformat:"04d" }}</div>
                                     </div>
                                     <div class="alert-stock" style="font-size: 0.8rem; padding: 6px 14px;">
                                         <span class="alert-dot"></span> {{ alert.stock }} left

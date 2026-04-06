@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from user_apps.core.models import Product
 
 User = get_user_model()
 
@@ -13,3 +14,4 @@ class Address(models.Model):
     country = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
     is_default = models.BooleanField(default=False)
+

@@ -255,10 +255,10 @@
 
     <!-- Mobile Header -->
     <header class="mobile-header">
-        <div class="sidebar-logo" style="padding:0; border:none; background:transparent;">
+        <a href="/" class="sidebar-logo" style="padding:0; border:none; background:transparent; text-decoration:none;">
             <i class="fas fa-clock" style="color:var(--primary-color);"></i>
             <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
-        </div>
+        </a>
         <div class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </div>
@@ -269,10 +269,10 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
+        <a href="/" class="sidebar-logo" style="text-decoration:none;">
             <i class="fas fa-clock"></i>
             <span>TimeHub</span>
-        </div>
+        </a>
 
         <div class="sidebar-scroll">
             <div class="user-panel">
@@ -293,11 +293,14 @@
                 <li class="nav-item {% block nav_dashboard %}{% endblock %}">
                     <a href="{% url 'user_dashboard' %}"><i class="fas fa-grid-2"></i> Dashboard</a>
                 </li>
+                <li class="nav-item {% block nav_cart %}{% endblock %}">
+                    <a href="{% url 'cart_view' %}"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                </li>
                 <li class="nav-item {% block nav_orders %}{% endblock %}">
                     <a href="#"><i class="fas fa-shopping-bag"></i> My Orders</a>
                 </li>
                 <li class="nav-item {% block nav_wishlist %}{% endblock %}">
-                    <a href="#"><i class="fas fa-heart"></i> Wishlist</a>
+                    <a href="{% url 'wishlist_view' %}"><i class="fas fa-heart"></i> Wishlist</a>
                 </li>
                 <li class="nav-item {% block nav_address %}{% endblock %}">
                     <a href="{% url 'address_list' %}"><i class="fas fa-map-location-dot"></i> Saved Addresses</a>
