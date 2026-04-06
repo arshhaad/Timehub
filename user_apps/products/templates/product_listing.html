@@ -200,12 +200,12 @@
 
         /* PRICE SLIDER IMAGE MATCH */
         .price-controls { margin-bottom: 20px; }
-        .price-inputs { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; position: relative; }
-        .price-field { position: relative; flex: 1; }
-        .price-field span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; }
-        .price-field input { width: 100%; background: #111115; border: 1.5px solid var(--border-color); border-radius: 8px; padding: 10px 8px 10px 30px; color: #fff; font-weight: 700; font-size: 0.85rem; outline: none; transition: var(--transition); }
-        .price-field input:focus { border-color: var(--primary-color); background: #15151a; }
-        .price-separator { color: #fff; font-weight: 700; font-size: 0.8rem; margin: 0 2px; opacity: 0.8; }
+        .price-inputs { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 20px; position: relative; flex-wrap: nowrap; }
+        .price-field { position: relative; flex: 1; min-width: 80px; }
+        .price-field span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; pointer-events: none; }
+        .price-field input { width: 100%; background: #111115; border: 1.5px solid var(--border-color); border-radius: 8px; padding: 10px 8px 10px 30px; color: #fff; font-weight: 700; font-size: 0.85rem; outline: none; transition: var(--transition); text-align: left; }
+        .price-field input:focus { border-color: var(--primary-color); background: #15151a; box-shadow: 0 0 10px rgba(255, 106, 0, 0.1); }
+        .price-separator { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; flex-shrink: 0; }
 
         .slider-track-wrap { position: relative; padding: 20px 10px; margin-top: 10px; }
         .modern-slider { position: relative; height: 4px; width: 100%; cursor: pointer; }
@@ -492,11 +492,11 @@
                         </div>
 
                         <div class="slider-track-wrap">
-                            <div class="modern-slider">
+                            <div class="modern-slider" id="priceSlider">
                                 <div class="slider-rail"></div>
                                 <div id="sliderInfill" class="slider-fill"></div>
-                                <div id="minThumb" class="slider-handle"></div>
-                                <div id="maxThumb" class="slider-handle"></div>
+                                <div id="minThumb" class="slider-handle" style="left: {{ min_percent|default:0 }}%;"></div>
+                                <div id="maxThumb" class="slider-handle" style="left: {{ max_percent|default:100 }}%;"></div>
                             </div>
                         </div>
                     </div>
@@ -823,33 +823,84 @@
         overlay.addEventListener('click', closeAll);
         document.getElementById('menuToggle')?.addEventListener('click', () => { navLinks.classList.toggle('active'); overlay.classList.toggle('active'); });
 
-        // --- Price Slider (Python Initialized) ---
+        // --- Price Slider (Corrected & Enhanced) ---
         const minThumb = document.getElementById('minThumb'), maxThumb = document.getElementById('maxThumb');
         const minInput = document.getElementById('minPriceInput'), maxInput = document.getElementById('maxPriceInput');
-        const rail = document.querySelector('.modern-slider'), infill = document.getElementById('sliderInfill');
-        const maxLimit = parseFloat("{{ max_price_limit|default:10000 }}");
+        const rail = document.getElementById('priceSlider'), infill = document.getElementById('sliderInfill');
+        const maxLimit = parseFloat("{{ max_price_limit|default:10000 }}") || 10000;
 
         const updateSlider = () => {
-            const minP = (parseFloat(minInput.value) / maxLimit) * 100, maxP = (parseFloat(maxInput.value) / maxLimit) * 100;
-            minThumb.style.left = minP + '%'; maxThumb.style.left = maxP + '%';
-            infill.style.left = minP + '%'; infill.style.width = (maxP - minP) + '%';
+            const minVal = parseFloat(minInput.value) || 0;
+            const maxVal = parseFloat(maxInput.value) || maxLimit;
+            
+            const minP = (minVal / maxLimit) * 100;
+            const maxP = (maxVal / maxLimit) * 100;
+            
+            minThumb.style.left = minP + '%';
+            maxThumb.style.left = maxP + '%';
+            infill.style.left = minP + '%';
+            infill.style.width = (maxP - minP) + '%';
         };
 
         const handleDrag = (thumb, isMin) => {
             const move = (e) => {
                 const rect = rail.getBoundingClientRect();
-                let p = Math.max(0, Math.min(100, (( (e.touches ? e.touches[0].clientX : e.clientX) - rect.left) / rect.width) * 100));
-                if (isMin) { p = Math.min(p, (maxInput.value/maxLimit)*100 - 5); minInput.value = Math.round((p/100)*maxLimit); }
-                else { p = Math.max(p, (minInput.value/maxLimit)*100 + 5); maxInput.value = Math.round((minInput.value/maxLimit)*100 + 5); } 
+                let p = (( (e.touches ? e.touches[0].clientX : e.clientX) - rect.left) / rect.width) * 100;
+                p = Math.max(0, Math.min(100, p));
+                
+                if (isMin) {
+                    const maxP = (parseFloat(maxInput.value) / maxLimit) * 100;
+                    if (p > maxP - 2) p = maxP - 2; // Keep a small gap
+                    minInput.value = Math.round((p / 100) * maxLimit);
+                } else {
+                    const minP = (parseFloat(minInput.value) / maxLimit) * 100;
+                    if (p < minP + 2) p = minP + 2; // Keep a small gap
+                    maxInput.value = Math.round((p / 100) * maxLimit);
+                }
                 updateSlider();
             };
-            const stop = () => { document.onmousemove = document.ontouchmove = document.onmouseup = document.ontouchend = null; };
-            thumb.onmousedown = thumb.ontouchstart = (e) => { e.preventDefault(); document.onmousemove = document.ontouchmove = move; document.onmouseup = document.ontouchend = stop; };
+            
+            const stop = () => {
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('touchmove', move);
+                document.removeEventListener('mouseup', stop);
+                document.removeEventListener('touchend', stop);
+                rail.style.cursor = 'default';
+            };
+
+            thumb.onmousedown = thumb.ontouchstart = (e) => {
+                e.preventDefault();
+                document.addEventListener('mousemove', move);
+                document.addEventListener('touchmove', move);
+                document.addEventListener('mouseup', stop);
+                document.addEventListener('touchend', stop);
+                rail.style.cursor = 'grabbing';
+            };
         };
 
-        [ [minThumb, true], [maxThumb, false] ].forEach(([t, m]) => handleDrag(t, m));
-        [minInput, maxInput].forEach(i => i.addEventListener('input', updateSlider));
-        updateSlider(); // Uses Python values on load
+        if (minThumb && maxThumb && rail) {
+            handleDrag(minThumb, true);
+            handleDrag(maxThumb, false);
+            [minInput, maxInput].forEach(i => i.addEventListener('input', updateSlider));
+            
+            // Allow clicking on rail to move nearest thumb
+            rail.onclick = (e) => {
+                if (e.target.classList.contains('slider-handle')) return;
+                const rect = rail.getBoundingClientRect();
+                const p = ((e.clientX - rect.left) / rect.width) * 100;
+                const minP = (parseFloat(minInput.value) / maxLimit) * 100;
+                const maxP = (parseFloat(maxInput.value) / maxLimit) * 100;
+                
+                if (Math.abs(p - minP) < Math.abs(p - maxP)) {
+                    minInput.value = Math.round(Math.min(maxP - 2, Math.max(0, p)) / 100 * maxLimit);
+                } else {
+                    maxInput.value = Math.round(Math.max(minP + 2, Math.min(100, p)) / 100 * maxLimit);
+                }
+                updateSlider();
+            };
+            
+            updateSlider(); // Initial sync
+        }
 
         // --- Comparison System (JS Rendered) ---
         const syncCompareUI = (data) => {

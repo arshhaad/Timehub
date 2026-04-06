@@ -1,5 +1,6 @@
 from django.http import JsonResponse
-from django.db.models import Q, Count, Max
+from django.db.models import Q, Count, Max, DecimalField
+from django.db.models.functions import Coalesce
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
@@ -8,7 +9,9 @@ from user_apps.core.models import Product, Collection, ComparisonHistory, Produc
 
 def product_list(request):
     # Base queryset: Active and not deleted
-    products = Product.objects.filter(is_active=True, is_deleted=False)
+    products = Product.objects.filter(is_active=True, is_deleted=False).annotate(
+        effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
+    )
     
     # Get all categories and annotate with product count (only active/not deleted)
     categories = Collection.objects.filter(is_deleted=False).annotate(
@@ -37,9 +40,9 @@ def product_list(request):
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     if min_price:
-        products = products.filter(price__gte=min_price)
+        products = products.filter(effective_price__gte=min_price)
     if max_price:
-        products = products.filter(price__lte=max_price)
+        products = products.filter(effective_price__lte=max_price)
     
     # Advanced Filters
     brand = request.GET.get('brand')
@@ -73,9 +76,9 @@ def product_list(request):
     # Sorting
     sort = request.GET.get('sort', 'newest')
     if sort == 'price_low':
-        products = products.order_by('price')
+        products = products.order_by('effective_price')
     elif sort == 'price_high':
-        products = products.order_by('-price')
+        products = products.order_by('-effective_price')
     elif sort == 'name_az':
         products = products.order_by('name')
     elif sort == 'name_za':
@@ -92,7 +95,10 @@ def product_list(request):
     total_products = Product.objects.filter(is_active=True, is_deleted=False).count()
     
     # Get Max Price for the slider
-    max_price_db = Product.objects.filter(is_active=True, is_deleted=False).aggregate(Max('price'))['price__max'] or 1000
+    # Get Max Price for the slider based on effective price
+    max_price_db = Product.objects.filter(is_active=True, is_deleted=False).annotate(
+        effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
+    ).aggregate(Max('effective_price'))['effective_price__max'] or 1000
     
     # Filter Options for UI
     occasions = ['Casual', 'Formal', 'Sport', 'Luxury']
