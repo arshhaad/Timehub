@@ -137,11 +137,11 @@ def product_list(request):
                     processed_file = process_product_image(img_file)
                     if processed_file:
                         is_main = (i == 1)
-                        ProductImage.objects.create(
+                        img_obj = ProductImage.objects.create(
                             product=product, image=processed_file, is_main=is_main
                         )
                         if is_main:
-                            product.image = processed_file
+                            product.image = img_obj.image
                             product.save()
 
             messages.success(request, f"Product '{name}' created successfully.")
@@ -178,12 +178,14 @@ def product_list(request):
                         if is_main:
                             # If new main image uploaded, sync with Product model
                             ProductImage.objects.filter(product=product, is_main=True).update(is_main=False)
-                            product.image = processed_file
-                            product.save()
                         
-                        ProductImage.objects.create(
+                        img_obj = ProductImage.objects.create(
                             product=product, image=processed_file, is_main=is_main
                         )
+
+                        if is_main:
+                            product.image = img_obj.image
+                            product.save()
 
             messages.success(request, f"Product '{product.name}' updated successfully.")
             return redirect("product_list")
