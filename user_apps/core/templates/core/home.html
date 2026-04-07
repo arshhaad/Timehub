@@ -974,8 +974,7 @@
     </style>
 </head>
 
-<body>
-
+    {% csrf_token %}
     <!-- SEARCH OVERLAY -->
     <div class="search-overlay" id="searchOverlay">
         <div class="search-container">
@@ -1002,8 +1001,10 @@
             </nav>
             <div class="nav-actions">
                 <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit;"><i
-                        class="fas fa-shopping-cart"></i></a>
+                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit; position:relative;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartBadge" style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{ cart_count }}</span>
+                </a>
                 <div class="mobile-toggle" id="mobileToggle">
                     <i class="fas fa-bars"></i>
                 </div>
@@ -1166,8 +1167,9 @@
                         <span class="price">₹{{ p.price }}</span>
                         {% endif %}
                     </div>
-                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault();"><i
-                            class="fas fa-cart-plus"></i> Add to Cart</button>
+                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault(); event.stopPropagation(); addToCart({{ p.id }}, this);">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
                 </a>
                 {% endfor %}
             </div>
@@ -1481,6 +1483,54 @@
                     }
                 })
                 .catch(err => alert('Please login to modify your wishlist.'));
+        };
+
+        // --- Cart Functionality ---
+        window.addToCart = function (productId, btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            btn.style.pointerEvents = 'none';
+
+            fetch(`/user/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        btn.innerHTML = `<i class="fas fa-check"></i> Added`;
+                        btn.style.background = '#22c55e';
+                        btn.style.borderColor = '#22c55e';
+                        btn.style.color = '#fff';
+                        
+                        // Update cart count badge
+                        const badge = document.getElementById('cartBadge');
+                        if (badge && data.cart_count !== undefined) {
+                            badge.innerText = data.cart_count;
+                            badge.style.display = 'flex';
+                        }
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.style.background = '';
+                            btn.style.borderColor = '';
+                            btn.style.color = '';
+                            btn.style.pointerEvents = 'auto';
+                        }, 2000);
+                    } else {
+                        alert(data.error || 'Failed to add item to cart');
+                        btn.innerHTML = originalHtml;
+                        btn.style.pointerEvents = 'auto';
+                    }
+                })
+                .catch(err => {
+                    alert('Please login to add items to your cart.');
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                });
         };
     </script>
 </body>
