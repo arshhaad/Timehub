@@ -305,12 +305,9 @@ def toggle_wishlist(request, product_id):
             wishlist_item.delete()
             action = 'removed'
         else:
-            # Only check possibility when ADDING
+            # Only check availability when ADDING (stock is okay for wishlist)
             if not product.is_active or product.is_deleted or product.collection.is_deleted:
                 return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
-                
-            if product.stock <= 0:
-                return JsonResponse({'success': False, 'error': 'Product is out of stock'})
                 
             WishlistItem.objects.create(wishlist=wishlist, product=product)
             action = 'added'

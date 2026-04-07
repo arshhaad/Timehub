@@ -396,6 +396,7 @@
             font-weight: 800;
             background: var(--primary-color);
             color: #000;
+            z-index: 20;
         }
 
         .wish-btn {
@@ -411,6 +412,7 @@
             justify-content: center;
             cursor: pointer;
             transition: var(--transition);
+            z-index: 20;
         }
 
         .wish-btn:hover {
@@ -422,6 +424,11 @@
             color: #f1c40f;
             font-size: 0.8rem;
             margin-bottom: 8px;
+        }
+
+        .wish-btn.active {
+            background: #ff4757;
+            color: #fff;
         }
 
         .product-card h3 {
@@ -995,12 +1002,14 @@
             </nav>
             <div class="nav-actions">
                 <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit;"><i class="fas fa-shopping-cart"></i></a>
+                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit;"><i
+                        class="fas fa-shopping-cart"></i></a>
                 <div class="mobile-toggle" id="mobileToggle">
                     <i class="fas fa-bars"></i>
                 </div>
                 {% if user.is_authenticated %}
-                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle" style="color: var(--primary-color);"></i></a>
+                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"
+                        style="color: var(--primary-color);"></i></a>
                 {% else %}
                 <a href="{% url 'login' %}" class="btn btn-outline"
                     style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
@@ -1125,14 +1134,18 @@
             </div>
             <div class="card-grid">
                 {% for p in products %}
-                <a href="{% url 'product_details' p.id %}" class="product-card" style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
-                    {% if p.stock == 0 %}
-                    <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
-                    {% elif p.discount_price %}
-                    <span class="card-badge">Sale</span>
-                    {% endif %}
-                    <div class="wish-btn" onclick="event.preventDefault();"><i class="far fa-heart"></i></div>
+                <a href="{% url 'product_details' p.id %}" class="product-card"
+                    style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
                     <div class="card-top">
+                        {% if p.stock == 0 %}
+                        <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+                        {% elif p.discount_price %}
+                        <span class="card-badge">Sale</span>
+                        {% endif %}
+                        <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
+                            onclick="toggleWishlist(event, {{ p.id }}, this)" style="border:none; color:inherit;">
+                            <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+                        </button>
                         {% if p.image %}
                         <img src="{{ p.image.url }}" alt="{{ p.name }}">
                         {% else %}
@@ -1153,7 +1166,8 @@
                         <span class="price">₹{{ p.price }}</span>
                         {% endif %}
                     </div>
-                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault();"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault();"><i
+                            class="fas fa-cart-plus"></i> Add to Cart</button>
                 </a>
                 {% endfor %}
             </div>
@@ -1424,6 +1438,50 @@
                 document.body.style.overflow = 'auto';
             });
         });
+        // --- Wishlist Toggle Logic ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        window.toggleWishlist = function (event, productId, btnElement) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            fetch(`/user/wishlist/toggle/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const icon = btnElement.querySelector('i');
+                        if (data.action === 'added') {
+                            btnElement.classList.add('active');
+                            icon.classList.replace('far', 'fas');
+                        } else {
+                            btnElement.classList.remove('active');
+                            icon.classList.replace('fas', 'far');
+                        }
+                    } else {
+                        alert(data.error || 'Please login to modify your wishlist.');
+                    }
+                })
+                .catch(err => alert('Please login to modify your wishlist.'));
+        };
     </script>
 </body>
 

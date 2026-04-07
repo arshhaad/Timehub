@@ -10,10 +10,25 @@ def landing_view(request):
     if request.user.is_authenticated:
         return redirect("home")
     products = Product.objects.filter(is_active=True, is_deleted=False)[:4]
-    return render(request, "core/landing.html", {'products': products})
+    
+    context = {'products': products}
+    if request.user.is_authenticated:
+        from user_apps.core.models import WishlistItem
+        wishlist_product_ids = WishlistItem.objects.filter(wishlist__user=request.user).values_list('product_id', flat=True)
+        context['wishlist_product_ids'] = list(wishlist_product_ids)
+        
+    return render(request, "core/landing.html", context)
+
 
 # authenticated home dashboard
 @never_cache
 def home_view(request):
     products = Product.objects.filter(is_active=True, is_deleted=False)[:4]
-    return render(request, 'core/home.html', {'products': products})
+    
+    context = {'products': products}
+    if request.user.is_authenticated:
+        from user_apps.core.models import WishlistItem
+        wishlist_product_ids = WishlistItem.objects.filter(wishlist__user=request.user).values_list('product_id', flat=True)
+        context['wishlist_product_ids'] = list(wishlist_product_ids)
+        
+    return render(request, 'core/home.html', context)
