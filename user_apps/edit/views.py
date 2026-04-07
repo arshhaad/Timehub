@@ -27,7 +27,7 @@ def dashboard(request):
     stats = {
         'total_orders': total_orders,
         'saved_items': saved_items,
-        'reward_points': 0, # Model not existing yet
+        'reward_points': 0, # Model not create 
     }
     
     recent_orders = user.orders.order_by('-created_at')[:5]
@@ -36,7 +36,7 @@ def dashboard(request):
         'user': user,
         'stats': stats,
         'recent_orders': recent_orders,
-        'referral_code': 'TIMEHUB-JS2024', # Mock value
+        'referral_code': 'TIMEHUB-JS2024', # test value
     }
     
     return render(request, 'user_dashboard.html', context)
@@ -58,7 +58,7 @@ def add_address(request):
             address = form.save(commit=False)
             address.user = request.user
 
-            # ✅ Handle default address
+            # default address
             if address.is_default:
                 Address.objects.filter(user=request.user).update(is_default=False)
 
@@ -109,7 +109,7 @@ def toggle_default_address(request, id):
         address.is_default = True
         address.save()
     else:
-        # Toggle off
+        # off
         address.is_default = False
         address.save()
         
@@ -137,7 +137,7 @@ def account_edit(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important!
+            update_session_auth_hash(request, user)  
             messages.success(request, 'Your password was successfully updated!')
             return redirect('user_dashboard')
         else:
@@ -154,7 +154,7 @@ def cart_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product').all()
     subtotal = sum(item.total_price for item in items)
-    tax = subtotal * Decimal('0.05') # assuming 5% tax
+    tax = subtotal * Decimal('0.05') # 5% tax
     total = subtotal + tax
     
     has_stock_issues = False

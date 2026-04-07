@@ -618,7 +618,7 @@
             return cookieValue;
         }
 
-        const thumbnails = document.querySelectorAll('.thumbnail-img');
+        const thumbnails = document.querySelectorAll('.thumb-card');
         let currentImageIndex = 0;
 
         function updateCarousel(index) {
@@ -634,10 +634,10 @@
             const activeThumb = thumbnails[currentImageIndex];
             const imgSrc = activeThumb.querySelector('img').src;
             
-            swapImage(imgSrc, activeThumb);
+            renderSwap(imgSrc, activeThumb);
         }
 
-        function swapImage(imgSrc, thumb) {
+        function renderSwap(imgSrc, thumb) {
             const mainImg = document.getElementById('mainProductImage');
             const zoomLens = document.getElementById('zoomLens');
             
@@ -645,7 +645,7 @@
             mainImg.style.opacity = '0.5';
             setTimeout(() => {
                 mainImg.src = imgSrc;
-                zoomLens.style.backgroundImage = `url(${imgSrc})`;
+                if(zoomLens) zoomLens.style.backgroundImage = `url(${imgSrc})`;
                 mainImg.style.opacity = '1';
             }, 150);
 
@@ -665,8 +665,8 @@
         });
 
         function swapImage(src, element) {
-            const index = Array.from(thumbnails).indexOf(element);
-            updateCarousel(index);
+            renderSwap(src, element);
+            currentImageIndex = Array.from(thumbnails).indexOf(element);
         }
 
         // Quantity controls
