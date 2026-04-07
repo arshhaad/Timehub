@@ -110,7 +110,7 @@ def product_list(request):
             description = request.POST.get("description", "")
             is_active = request.POST.get("is_active") == "on"
             
-            # Robust sanitization
+            # stocks and discount 
             try:
                 price = float(price) if price else 0.0
                 discount_price = float(discount_price) if discount_price else None
