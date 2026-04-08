@@ -1,0 +1,275 @@
+{% extends "order_manage/base.html" %}
+{% load static %}
+
+{% block title %}Manage Orders - TimeHub Admin{% endblock %}
+{% block meta_description %}TimeHub admin order management — view, filter, sort, and update order statuses.{% endblock %}
+
+{% block extra_css %}
+/* ── Toolbar ── */
+.toolbar {
+    background: #fff; border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 18px 24px; display: flex; flex-wrap: wrap;
+    gap: 12px; align-items: center; justify-content: space-between;
+}
+.toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.toolbar-search {
+    display: flex; align-items: center; background: #f3f4f6;
+    border-radius: var(--radius-md); padding: 9px 16px; gap: 10px; min-width: 260px;
+}
+.toolbar-search input { border: none; background: transparent; outline: none; font-size: .875rem; color: var(--text-main); width: 100%; }
+.toolbar-search input::placeholder { color: #9ca3af; }
+.select-filter {
+    padding: 9px 36px 9px 14px; border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); font-size: .875rem; font-weight: 500;
+    color: var(--text-main); appearance: none; outline: none; cursor: pointer;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;
+    transition: var(--transition);
+}
+.select-filter:focus { border-color: var(--primary-bg); box-shadow: 0 0 0 3px rgba(255,107,0,.1); }
+
+/* ── Filter tabs ── */
+.filter-tabs-row {
+    background: #fff; border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color); padding: 0 24px;
+    display: flex; border-bottom: 1px solid var(--border-color); overflow-x: auto;
+}
+.filter-tab {
+    font-size: .85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;
+    padding: 13px 16px; border-bottom: 2px solid transparent;
+    transition: var(--transition); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+}
+.filter-tab:hover { color: var(--text-main); }
+.filter-tab.active { color: var(--text-main); border-bottom-color: #000; }
+.tab-count { background: #f3f4f6; color: var(--text-muted); font-size: .72rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); }
+.filter-tab.active .tab-count { background: #000; color: #fff; }
+
+/* ── Table panel ── */
+.table-panel {
+    background: #fff; border: 1px solid var(--border-color);
+    border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden;
+}
+.table-responsive { overflow-x: auto; width: 100%; }
+.order-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 900px; }
+.order-table th {
+    background: #fafbfc; padding: 14px 20px; font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color); white-space: nowrap;
+}
+.order-table td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: .875rem; }
+.order-table tbody tr:last-child td { border-bottom: none; }
+.order-table tbody tr { transition: background .15s; }
+.order-table tbody tr:hover { background: #fafbfc; }
+
+/* ── Cells ── */
+.order-id-badge { font-weight: 800; font-size: .9rem; color: var(--text-main); }
+.order-id-sub   { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+.user-cell { display: flex; align-items: center; gap: 11px; }
+.user-initials { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-bg); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.user-name  { font-weight: 700; font-size: .875rem; display: block; line-height: 1.3; }
+.user-email { font-size: .75rem; color: var(--text-muted); display: block; }
+.amount-cell { font-weight: 800; font-size: .9rem; }
+
+/* ── Status select ── */
+.status-select {
+    padding: 6px 28px 6px 10px; border-radius: 8px; font-size: .8rem; font-weight: 600;
+    color: var(--text-main); border: 1px solid var(--border-color);
+    outline: none; cursor: pointer; appearance: none; transition: var(--transition);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7280' d='M1 1l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center;
+}
+.status-select:focus { border-color: var(--primary-bg); box-shadow: 0 0 0 3px rgba(255,107,0,.1); }
+
+/* ── Action button ── */
+.action-col { display: flex; gap: 6px; justify-content: flex-end; }
+.action-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border-color); background: #fff; color: var(--text-muted); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: var(--transition); font-size: .85rem; }
+.action-btn:hover { color: var(--text-main); border-color: #d1d5db; background: #f9fafb; transform: translateY(-2px); }
+.action-btn.view-btn:hover { border-color: var(--primary-bg); color: var(--primary-bg); }
+
+/* ── Empty state ── */
+.empty-state { text-align: center; padding: 70px 20px; }
+.empty-icon { width: 72px; height: 72px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; color: #d1d5db; }
+.empty-state h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+.empty-state p { font-size: .875rem; color: var(--text-muted); }
+
+/* ── Pagination ── */
+.pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; }
+.pagination-info { font-size: .85rem; color: var(--text-muted); font-weight: 500; }
+.pagination-info span { color: var(--text-main); font-weight: 700; }
+.pagination-controls { display: flex; align-items: center; gap: 8px; }
+.page-btn { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border-color); background: #fff; color: var(--text-main); font-size: .85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: var(--transition); }
+.page-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+.page-btn.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.page-indicator { font-weight: 700; font-size: .875rem; background: #f3f4f6; padding: 8px 16px; border-radius: 9px; min-width: 80px; text-align: center; }
+.page-indicator span { color: #9ca3af; font-weight: 400; }
+
+@media (max-width: 768px) {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-left { flex-direction: column; }
+    .toolbar-search { min-width: auto; }
+}
+{% endblock %}
+
+{% block topbar_left %}
+<form action="{% url 'admin_order_list' %}" method="GET" class="search-bar">
+    <i class="fas fa-search" style="color:#9ca3af;"></i>
+    <input type="text" name="q" placeholder="Search orders, users…" value="{{ query|default:'' }}">
+    {% if status_filter and status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+    {% if sort and sort != 'newest' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h1 style="font-size:1.8rem; font-weight:800; letter-spacing:-.5px; margin-bottom:4px;">Orders</h1>
+        <p style="color:var(--text-muted); font-size:.95rem;">Track, manage, and update the status of all customer orders.</p>
+    </div>
+</div>
+
+<!-- Toolbar + Filter Tabs -->
+<form method="GET" action="{% url 'admin_order_list' %}" id="filterForm">
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="toolbar-search">
+                <i class="fas fa-search" style="color:#9ca3af; font-size:.85rem; flex-shrink:0;"></i>
+                <input type="text" name="q" placeholder="Order ID, name or email…" value="{{ query|default:'' }}">
+            </div>
+            <select name="sort" class="select-filter" onchange="document.getElementById('filterForm').submit()">
+                <option value="newest"      {% if sort == 'newest' or not sort %}selected{% endif %}>Newest First</option>
+                <option value="oldest"      {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                <option value="amount_high" {% if sort == 'amount_high' %}selected{% endif %}>Amount: High → Low</option>
+                <option value="amount_low"  {% if sort == 'amount_low'  %}selected{% endif %}>Amount: Low → High</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button type="submit" class="btn btn-primary" style="padding:9px 20px;">
+                <i class="fas fa-search"></i> Search
+            </button>
+            {% if query or status_filter and status_filter != 'all' or sort and sort != 'newest' %}
+            <a href="{% url 'admin_order_list' %}" class="btn-clear"><i class="fas fa-times"></i> Clear</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="filter-tabs-row">
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort and sort != 'newest' %}sort={{ sort }}&{% endif %}status=all"
+           class="filter-tab {% if not status_filter or status_filter == 'all' %}active{% endif %}">
+            All <span class="tab-count">{{ orders.paginator.count }}</span>
+        </a>
+        {% for val, label in status_choices %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort and sort != 'newest' %}sort={{ sort }}&{% endif %}status={{ val }}"
+           class="filter-tab {% if status_filter == val %}active{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+</form>
+
+<!-- Table -->
+<div class="table-panel">
+    <div class="table-responsive">
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <div class="order-id-badge">#{{ order.id|stringformat:"05d" }}</div>
+                        <div class="order-id-sub">{{ order.items.count }} item{{ order.items.count|pluralize }}</div>
+                    </td>
+                    <td>
+                        <a href="{% url 'user_profiles' order.user.id %}" class="user-cell" style="text-decoration:none; color:inherit;">
+                            {% if order.user.avatar %}
+                                <img src="{{ order.user.avatar.url }}" class="user-avatar" alt="">
+                            {% else %}
+                                <div class="user-initials">
+                                    {% if order.user.first_name %}{{ order.user.first_name|slice:":1"|upper }}{{ order.user.last_name|slice:":1"|upper }}{% else %}{{ order.user.email|slice:":1"|upper }}{% endif %}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <span class="user-name">{% if order.user.first_name %}{{ order.user.first_name }} {{ order.user.last_name }}{% else %}{{ order.user.email }}{% endif %}</span>
+                                <span class="user-email">{{ order.user.email }}</span>
+                            </div>
+                        </a>
+                    </td>
+                    <td>
+                        <div style="font-weight:500;">{{ order.created_at|date:"M d, Y" }}</div>
+                        <div style="font-size:.75rem; color:var(--text-muted);">{{ order.created_at|time:"g:i A" }}</div>
+                    </td>
+                    <td><span class="amount-cell">₹{{ order.total_amount|floatformat:2 }}</span></td>
+                    <td>
+                        <span style="font-size:.8rem; font-weight:600; color:var(--text-muted);">
+                            {% if order.payment_method == 'cod' %}<i class="fas fa-money-bill-wave" style="color:#16a34a;"></i> COD
+                            {% elif order.payment_method == 'razorpay' %}<i class="fas fa-credit-card" style="color:#3b82f6;"></i> Razorpay
+                            {% else %}<i class="fas fa-wallet" style="color:#f59e0b;"></i> Wallet{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="status" class="status-select" onchange="this.form.submit()">
+                                {% for val, label in status_choices %}
+                                <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <div class="action-col">
+                            <a href="{% url 'order_detail' order.id %}" class="action-btn view-btn" title="View Order Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-shopping-bag"></i></div>
+                        <h3>No orders found</h3>
+                        <p>
+                            {% if query or status_filter and status_filter != 'all' %}
+                                Try adjusting your filters.
+                                <a href="{% url 'admin_order_list' %}" style="color:var(--primary-bg); font-weight:600; text-decoration:none;">Clear filters</a>
+                            {% else %}No orders placed yet.{% endif %}
+                        </p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if orders.paginator.num_pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <span>{{ orders.start_index }}</span>–<span>{{ orders.end_index }}</span>
+            of <span>{{ orders.paginator.count }}</span> orders
+        </div>
+        <div class="pagination-controls">
+            {% if orders.has_previous %}
+            <a href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort and sort != 'newest' %}&sort={{ sort }}{% endif %}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+            {% else %}<span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>{% endif %}
+
+            <div class="page-indicator">{{ orders.number }} <span>/</span> {{ orders.paginator.num_pages }}</div>
+
+            {% if orders.has_next %}
+            <a href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort and sort != 'newest' %}&sort={{ sort }}{% endif %}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+            {% else %}<span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

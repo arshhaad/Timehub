@@ -328,7 +328,7 @@
                     <td class="attr-name"></td>
                     {% for product in products %}
                     <td>
-                        <button class="btn btn-primary" style="padding:10px 20px; font-size:0.85rem">
+                        <button class="btn btn-primary" onclick="buyNow({{ product.id }}, this)" style="padding:10px 20px; font-size:0.85rem">
                             Buy Now
                         </button>
                     </td>
@@ -375,6 +375,17 @@
 </div>
 
 <script>
+    function getCookie(name) {
+        let val = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) val = decodeURIComponent(c.slice(name.length + 1));
+            });
+        }
+        return val;
+    }
+
     // Remove from current comparison view
     function removeFromCompare(id) {
         fetch(`/compare/toggle/?id=${id}`)
@@ -384,6 +395,36 @@
                     window.location.reload();
                 }
             });
+    }
+
+    function buyNow(productId, btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.style.pointerEvents = 'none';
+
+        fetch(`/user/cart/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ quantity: 1 })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{% url 'checkout_page' %}";
+            } else {
+                alert(data.error || 'Please login to continue.');
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+            }
+        })
+        .catch(() => {
+            alert('Please login to continue.');
+            btn.innerHTML = originalHtml;
+            btn.style.pointerEvents = 'auto';
+        });
     }
 
     document.addEventListener('DOMContentLoaded', () => {

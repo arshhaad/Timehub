@@ -437,7 +437,7 @@
                     </button>
                 </div>
 
-                <button class="buy-now-btn" {% if product.stock == 0 %}disabled{% endif %}>
+                <button class="buy-now-btn" onclick="window.buyNow({{ product.id }});" {% if product.stock == 0 %}disabled{% endif %}>
                     {% if product.stock > 0 %}Buy Now{% else %}Unavailable{% endif %}
                 </button>
 
@@ -790,6 +790,41 @@
                     }, 2000);
                 } else {
                     alert(data.error || 'Failed to add item to cart');
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Connection error');
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+            });
+        };
+
+        // --- Buy Now Logic ---
+        window.buyNow = function(productId) {
+            const btn = document.querySelector('.buy-now-btn');
+            const originalHtml = btn.innerHTML;
+            const quantity = document.getElementById('qtyInput')?.value || 1;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.style.pointerEvents = 'none';
+
+            fetch(`/user/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.href = "{% url 'checkout_page' %}";
+                } else {
+                    alert(data.error || 'Failed to process Buy Now');
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
                 }

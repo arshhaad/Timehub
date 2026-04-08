@@ -284,7 +284,7 @@
                     {% endif %}
                 </div>
                 <div class="info">
-                    <h4>{{ user.first_name|default:user.email }}</h4>
+                    <h4>{{ user.get_short_name }}</h4>
                     <div class="badge"><i class="fas fa-crown"></i> Premium</div>
                 </div>
             </div>
@@ -297,7 +297,7 @@
                     <a href="{% url 'cart_view' %}"><i class="fas fa-shopping-cart"></i> My Cart</a>
                 </li>
                 <li class="nav-item {% block nav_orders %}{% endblock %}">
-                    <a href="#"><i class="fas fa-shopping-bag"></i> My Orders</a>
+                    <a href="{% url 'order_history' %}"><i class="fas fa-shopping-bag"></i> My Orders</a>
                 </li>
                 <li class="nav-item {% block nav_wishlist %}{% endblock %}">
                     <a href="{% url 'wishlist_view' %}"><i class="fas fa-heart"></i> Wishlist</a>

@@ -1,0 +1,156 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}TimeHub – My Orders{% endblock %}
+
+{% block nav_orders %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* HERO SECTION */
+    .page-header-alt { padding: 20px 0 40px; }
+    .page-header-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .page-header-alt p { color: var(--text-muted); font-size: 1rem; }
+
+    /* SEARCH BAR */
+    .search-container { margin-bottom: 40px; position: relative; max-width: 600px; }
+    .search-input { width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px 50px 15px 20px; color: #fff; font-size: 0.95rem; transition: var(--transition); backdrop-filter: var(--glass); }
+    .search-input:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+    .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+    /* ORDER CARD */
+    .order-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 30px; margin-bottom: 25px; transition: var(--transition); backdrop-filter: var(--glass); }
+    .order-card:hover { border-color: rgba(255, 255, 255, 0.1); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    
+    .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .order-meta { display: flex; gap: 30px; }
+    .meta-item .label { display: block; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600; }
+    .meta-item .val { font-weight: 700; font-size: 1rem; color: #fff; }
+
+    .status-badge { padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+    .status-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .status-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .status-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .status-Cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-Return { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
+
+    .order-items { display: flex; flex-direction: column; gap: 20px; }
+    .item-row { display: flex; align-items: center; gap: 20px; }
+    .item-img { width: 70px; height: 70px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; }
+    .item-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: 600; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+    .item-qty { font-size: 0.8rem; color: var(--text-muted); }
+
+    .order-actions { display: flex; gap: 15px; margin-top: 30px; }
+    .btn-action { padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: var(--transition); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .btn-primary-alt { background: var(--primary-color); color: #000; }
+    .btn-primary-alt:hover { background: var(--primary-hover); transform: scale(1.02); }
+    .btn-outline-alt { background: transparent; border: 1px solid var(--border-color); color: #fff; }
+    .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 100px 0; background: var(--card-bg); border-radius: 24px; border: 1px dashed var(--border-color); }
+    .empty-state i { font-size: 3.5rem; color: var(--border-color); margin-bottom: 20px; }
+    .empty-state h2 { font-size: 1.5rem; margin-bottom: 10px; }
+    .empty-state p { color: var(--text-muted); margin-bottom: 25px; }
+
+    /* ALERT MESSAGES */
+    .alert { padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
+    .alert-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+    .alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-alt">
+    <h1>My Orders</h1>
+    <p>Track, manage and view your previous timepieces acquisitions.</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="search-container">
+    <form method="GET" action="{% url 'order_history' %}">
+        <input type="text" name="q" class="search-input" placeholder="Search by Order ID or Product name..." value="{{ query }}">
+        <i class="fas fa-search search-icon"></i>
+    </form>
+</div>
+
+{% if orders %}
+    {% for order in orders %}
+    <div class="order-card">
+        <div class="order-header">
+            <div class="order-meta">
+                <div class="meta-item">
+                    <span class="label">Order ID</span>
+                    <span class="val">ORD-{{ order.id }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Date</span>
+                    <span class="val">{{ order.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">Total</span>
+                    <span class="val">₹{{ order.total_amount|floatformat:0 }}</span>
+                </div>
+            </div>
+            <div class="status-badge status-{{ order.status|cut:' ' }}">
+                {{ order.status }}
+            </div>
+        </div>
+
+        <div class="order-items">
+            {% for item in order.items.all|slice:":3" %}
+            <div class="item-row">
+                <div class="item-img">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                        <i class="fas fa-clock" style="color:var(--text-muted);"></i>
+                    {% endif %}
+                </div>
+                <div class="item-info">
+                    <div class="item-name">{{ item.product.name }}</div>
+                    <div class="item-qty">Quantity: {{ item.quantity }}</div>
+                </div>
+                {% if item.is_cancelled %}
+                    <span style="color:#ef4444; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">CANCELLED</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% if order.items.count > 3 %}
+                <p style="color:var(--text-muted); font-size:0.8rem; margin-top:5px;">+ {{ order.items.count|add:"-3" }} more item{{ order.items.count|add:"-3"|pluralize }}</p>
+            {% endif %}
+        </div>
+
+        <div class="order-actions">
+            <a href="{% url 'order_detail' order.id %}" class="btn-action btn-primary-alt">View Details</a>
+            <a href="{% url 'download_invoice' order.id %}" class="btn-action btn-outline-alt" target="_blank">
+                <i class="fas fa-file-invoice"></i> Invoice
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h2>No orders found</h2>
+        {% if query %}
+            <p>We couldn't find any orders matching "{{ query }}".</p>
+            <a href="{% url 'order_history' %}" class="btn-action btn-primary-alt" style="display:inline-flex;">Clear Search</a>
+        {% else %}
+            <p>You haven't placed any orders yet.</p>
+            <a href="/" class="btn-action btn-primary-alt" style="display:inline-flex;">Start Shopping</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -385,7 +385,7 @@
             {% endif %}
         </div>
         <div class="profile-details">
-            <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+            <h2>{{ user.get_full_name|default:user.email }}</h2>
             <div class="profile-contact">
                 <span><i class="far fa-envelope"></i> {{ user.email }}</span>
                 <span><i class="fas fa-phone"></i> {{ user.phone_number|default:"+1 (555) 234-5678" }}</span>
@@ -419,7 +419,7 @@
 <section class="recent-orders">
     <div class="section-header">
         <h3>Recent Orders</h3>
-        <a href="#" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
+        <a href="{% url 'order_history' %}" class="view-all">View All <i class="fas fa-chevron-right"></i></a>
     </div>
     <div style="overflow-x: auto;">
         <table class="orders-table">
@@ -434,7 +434,7 @@
             <tbody>
                 {% for order in recent_orders %}
                 <tr>
-                    <td>#TH-{{ order.id }}</td>
+                    <td>ORD-{{ order.id }}</td>
                     <td>{{ order.created_at|date:"M d, Y" }}</td>
                     <td>${{ order.total_amount }}</td>
                     <td>

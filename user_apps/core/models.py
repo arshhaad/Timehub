@@ -71,17 +71,62 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.name}"
 
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    strap_material = models.CharField(max_length=100, blank=True)
+    strap_color = models.CharField(max_length=100, blank=True)
+    dial_color = models.CharField(max_length=100, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    stock = models.PositiveIntegerField(default=0)
+    sku = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        parts = [self.product.name]
+        if self.strap_color:
+            parts.append(self.strap_color)
+        if self.dial_color:
+            parts.append(self.dial_color)
+        return ' — '.join(parts)
+
+    @property
+    def effective_price(self):
+        return self.price if self.price else self.product.price
+
+    @property
+    def effective_discount_price(self):
+        return self.discount_price if self.discount_price else self.product.discount_price
+
 class Order(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Processing', 'Processing'),
         ('Shipped', 'Shipped'),
+        ('Out for Delivery', 'Out for Delivery'),
         ('Delivered', 'Delivered'),
         ('Cancelled', 'Cancelled'),
+        ('Returned', 'Returned'),
+        ('Return Requested', 'Return Requested'),
+    )
+    PAYMENT_CHOICES = (
+        ('cod', 'Cash on Delivery'),
+        ('razorpay', 'Razorpay'),
+        ('wallet', 'TimeHub Wallet'),
     )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
+    address_snapshot = models.TextField(blank=True, help_text='JSON snapshot of address at time of order')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    cancel_reason = models.TextField(blank=True, null=True)
+    return_reason = models.TextField(blank=True, null=True)
+    scheduled_delivery_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -92,6 +137,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_cancelled = models.BooleanField(default=False)
+    cancel_reason = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"

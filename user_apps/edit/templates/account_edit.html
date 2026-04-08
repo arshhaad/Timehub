@@ -11,6 +11,7 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
+        padding-bottom: 60px;
     }
 
     .page-header {
@@ -41,6 +42,7 @@
         border: 1px solid var(--border-color);
         border-radius: 24px;
         padding: 50px;
+        width: 100%;
         max-width: 600px;
         transition: var(--transition);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -54,6 +56,9 @@
         font-size: 1.5rem;
         font-weight: 700;
         margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
     .form-group {
@@ -64,16 +69,30 @@
     }
 
     .form-group label {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
     }
 
-    .form-group input {
+    .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrap i.input-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .input-wrap input {
         width: 100%;
-        padding: 14px 20px;
+        padding: 14px 20px 14px 42px;
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
@@ -81,13 +100,44 @@
         outline: none;
         transition: var(--transition);
         font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
     }
 
-    .form-group input:focus {
+    .input-wrap input:focus {
         background: rgba(255, 255, 255, 0.04);
         border-color: var(--primary-color);
-        box-shadow: 0 0 15px var(--primary-glow);
+        box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.1);
     }
+
+    .input-wrap input:focus + i.input-icon,
+    .input-wrap:focus-within i.input-icon {
+        color: var(--primary-color);
+    }
+
+    /* Toggle Password Button */
+    .toggle-password {
+        position: absolute;
+        right: 14px;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px;
+        font-size: 0.9rem;
+    }
+    .toggle-password:hover { color: #fff; }
+
+    /* VALID / ERROR STATES */
+    .input-wrap.is-invalid input { border-color: #ef4444; }
+    .input-wrap.is-invalid i.input-icon { color: #ef4444; }
+
+    .field-msg {
+        font-size: 0.75rem;
+        font-weight: 600;
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .field-msg.error { color: #ef4444; }
 
     .form-actions {
         margin-top: 40px;
@@ -98,35 +148,40 @@
 
     .btn-update {
         background: linear-gradient(135deg, var(--primary-color), #e05e00);
-        color: #fff;
-        padding: 14px 40px;
+        color: #000;
+        padding: 15px 45px;
         border-radius: var(--radius-pill);
         border: none;
-        font-weight: 700;
+        font-weight: 800;
         font-size: 0.95rem;
         cursor: pointer;
         transition: var(--transition);
-        box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2);
+        box-shadow: 0 8px 24px rgba(255, 106, 0, 0.25);
+        display: flex; align-items: center; gap: 10px;
     }
 
     .btn-update:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(255, 106, 0, 0.4);
     }
 
+    .btn-update:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .btn-cancel {
-        color: #fff;
+        color: var(--text-muted);
         text-decoration: none;
         font-size: 0.95rem;
         font-weight: 600;
         transition: var(--transition);
-        padding: 10px 20px;
+        padding: 12px 24px;
         border-radius: var(--radius-md);
+        border: 1px solid transparent;
     }
 
     .btn-cancel:hover {
         background: rgba(255, 255, 255, 0.05);
-        color: var(--text-muted);
+        border-color: var(--border-color);
+        color: #fff;
     }
 
     .alert {
@@ -134,45 +189,19 @@
         border-radius: var(--radius-md);
         margin-bottom: 30px;
         font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .alert-error {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ff5f5f;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .error-msg {
-        color: #ff5f5f;
-        font-size: 0.8rem;
-        margin-top: 5px;
+        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 12px;
     }
 
+    .alert-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
     @media (max-width: 600px) {
-        .security-card {
-            padding: 30px 20px;
-            border-radius: 20px;
-        }
-
-        .form-actions {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .btn-update, .btn-cancel {
-            width: 100%;
-            text-align: center;
-        }
+        .security-card { padding: 30px 20px; border-radius: 20px; }
+        .form-actions { flex-direction: column; width: 100%; }
+        .btn-update, .btn-cancel { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}
@@ -180,50 +209,91 @@
 {% block content %}
 <div class="content-center">
     <div class="page-header">
-    <h1>Account Security</h1>
-    <p>Update your password to keep your account secure.</p>
-</div>
+        <h1>Account Security</h1>
+        <p>Keep your account protected by regularly updating your password.</p>
+    </div>
 
-<div class="security-card">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                <i class="fas fa-circle-info"></i> {{ message }}
+    <div class="security-card">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <i class="fas fa-circle-info"></i> {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h2><i class="fas fa-shield-halved" style="color: var(--primary-color);"></i> Change Password</h2>
+
+        <form method="post" id="securityForm" novalidate>
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="input-wrap {% if field.errors %}is-invalid{% endif %}" id="wrap_{{ field.name }}">
+                        <input type="password" name="{{ field.name }}" id="{{ field.id_for_label }}" placeholder="••••••••">
+                        <i class="fas fa-lock input-icon"></i>
+                        <span class="toggle-password" onclick="togglePasswordVisibility(event, '{{ field.id_for_label }}')">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="field-msg {% if field.errors %}error{% endif %}" id="msg_{{ field.name }}">
+                        {% if field.errors %}
+                            <i class="fas fa-exclamation-circle"></i> {{ field.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn-update" id="submitBtn">
+                    <i class="fas fa-key"></i> Update Password
+                </button>
+                <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
             </div>
-        {% endfor %}
-    {% endif %}
-
-    <form method="post">
-        {% csrf_token %}
-        
-        {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="error-msg"><i class="fas fa-circle-exclamation"></i> {{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        {% endfor %}
-
-        <div class="form-actions">
-            <button type="submit" class="btn-update">Update Password</button>
-            <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Add necessary classes to standard django form inputs
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('.form-group input');
-        inputs.forEach(input => {
-            // placeholder if needed
+    function togglePasswordVisibility(event, inputId) {
+        const input = document.getElementById(inputId);
+        const icon = event.currentTarget.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('securityForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('input', function() {
+                const wrap = this.closest('.input-wrap');
+                const group = this.closest('.form-group');
+                const msg = group ? group.querySelector('.field-msg') : null;
+                
+                if (wrap) wrap.classList.remove('is-invalid');
+                if (msg) {
+                    msg.textContent = '';
+                    msg.classList.remove('error');
+                }
+            });
         });
     });
 </script>

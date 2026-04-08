@@ -786,8 +786,37 @@
 
         .prod-table {
             min-width: 800px;
-            /* Force scroll on mobile */
         }
+
+        /* ── Modal Tabs ── */
+        .modal-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border-color); margin-bottom: 24px; }
+        .modal-tab { padding: 12px 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: var(--transition); white-space: nowrap; }
+        .modal-tab:hover { color: var(--text-main); }
+        .modal-tab.active { color: var(--text-main); border-bottom-color: #000; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeTab 0.25s ease; }
+        @keyframes fadeTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Variant Table ── */
+        .variant-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 12px; }
+        .variant-table th { background: #f9fafb; padding: 10px 12px; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border-color); }
+        .variant-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .variant-table input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; transition: var(--transition); }
+        .variant-table input:focus { border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,0.04); }
+        .variant-remove { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #fecaca; background: #fef2f2; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
+        .variant-remove:hover { background: #fee2e2; transform: scale(1.08); }
+        .add-variant-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #f3f4f6; border: 1px dashed #d1d5db; border-radius: 10px; font-weight: 600; font-size: 0.82rem; cursor: pointer; color: var(--text-muted); transition: var(--transition); margin-top: 12px; }
+        .add-variant-btn:hover { border-color: #000; color: #000; background: #fff; }
+
+        /* ── Image Slot Enhancements ── */
+        .image-slot .existing-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .image-slot .delete-img-btn { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; background: rgba(239,68,68,0.9); color: #fff; border: none; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; opacity: 0; transition: opacity 0.2s; }
+        .image-slot:hover .delete-img-btn { opacity: 1; }
+        .image-slot .replace-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; text-align: center; font-size: 0.7rem; padding: 4px; opacity: 0; transition: opacity 0.2s; border-radius: 0 0 10px 10px; }
+        .image-slot:hover .replace-label { opacity: 1; }
+
+        /* ── Variants count badge in table ── */
+        .variant-count { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #f0f9ff; color: #0369a1; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
     </style>
 </head>
 
@@ -833,6 +862,12 @@
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_order_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_inventory_list' %}"><i class="fas fa-boxes"></i> Inventory</a>
                     </li>
                 </ul>
 
@@ -954,6 +989,7 @@
                                     <th>Color</th>
                                     <th>Pricing</th>
                                     <th>Stock</th>
+                                    <th>Variants</th>
                                     <th>Status</th>
                                     <th style="text-align:right">Actions</th>
                                 </tr>
@@ -1010,6 +1046,15 @@
                                         {% endif %}
                                     </td>
                                     <td>
+                                        {% with vc=prod.variants.count %}
+                                        {% if vc > 0 %}
+                                        <span class="variant-count"><i class="fas fa-layer-group"></i> {{ vc }}</span>
+                                        {% else %}
+                                        <span style="font-size:0.75rem; color:var(--text-muted);">—</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
                                         {% if prod.is_active %}
                                         <span class="badge badge-success">Active</span>
                                         {% else %}
@@ -1018,7 +1063,7 @@
                                     </td>
                                     <td class="action-btns">
                                         <button class="action-btn"
-                                            onclick="openEditModal('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}', '{{ prod.collection.id|escapejs }}', '{{ prod.price|escapejs }}', '{{ prod.discount_price|default:''|escapejs }}', '[{% for c in prod.colors.all %}{{ c.id }}{% if not forloop.last %},{% endif %}{% endfor %}]', '{{ prod.stock|escapejs }}', '{{ prod.description|escapejs }}', '{% if prod.is_active %}true{% else %}false{% endif %}')"
+                                            onclick="openEditModal('{{ prod.id }}')"
                                             title="Edit">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
@@ -1031,7 +1076,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" style="text-align:center; padding: 60px; color:var(--text-muted);">
+                                    <td colspan="8" style="text-align:center; padding: 60px; color:var(--text-muted);">
                                         No products found. Start by adding a luxury timepiece!
                                     </td>
                                 </tr>
@@ -1072,130 +1117,206 @@
     <!-- Modals -->
     <!-- Add/Edit Product Modal -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal-content">
+        <div class="modal-content" style="width:900px;">
             <div class="modal-header">
                 <h2 id="modalTitle">Add New Product</h2>
                 <span class="modal-close" onclick="closeModal('productModal')">&times;</span>
             </div>
+
+            <!-- Tabs -->
+            <div class="modal-tabs">
+                <div class="modal-tab active" onclick="switchTab('general')"><i class="fas fa-info-circle" style="margin-right:6px;"></i>General</div>
+                <div class="modal-tab" onclick="switchTab('specs')"><i class="fas fa-cogs" style="margin-right:6px;"></i>Specifications</div>
+                <div class="modal-tab" onclick="switchTab('inventory')"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Inventory & Variants</div>
+                <div class="modal-tab" onclick="switchTab('media')"><i class="fas fa-images" style="margin-right:6px;"></i>Media</div>
+            </div>
+
             <form method="POST" id="productForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action" id="formAction" value="add_product">
                 <input type="hidden" name="product_id" id="formProductId">
 
-                <div class="form-group">
-                    <label class="form-label">Product Name</label>
-                    <input type="text" name="name" id="formName" class="form-input" placeholder="e.g., Rolex Submariner"
-                        required>
-                </div>
-
-                <div class="grid-2">
+                <!-- TAB 1: General Info -->
+                <div class="tab-panel active" id="tab-general">
                     <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select name="collection_id" id="formCategory" class="form-input" required
-                            style="appearance:none; background: #fff url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236b7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E') no-repeat right 16px center; background-size: 18px;">
-                            <option value="">Select Category</option>
-                            {% for cat in all_categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        <label class="form-label">Product Name</label>
+                        <input type="text" name="name" id="formName" class="form-input" placeholder="e.g., Rolex Submariner" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Brand</label>
+                            <input type="text" name="brand" id="formBrand" class="form-input" placeholder="TimeHub" value="TimeHub">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select name="collection_id" id="formCategory" class="form-input" required style="appearance:none;">
+                                <option value="">Select Category</option>
+                                {% for cat in all_categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Regular Price (₹)</label>
+                            <input type="number" name="price" id="formPrice" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Discount Price (₹) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
+                            <input type="number" name="discount_price" id="formDiscountPrice" class="form-input" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" id="formDesc" class="form-input" style="height:100px; resize:none;" placeholder="Provide details about the watch..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Key Features <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Comma-separated)</span></label>
+                        <input type="text" name="features" id="formFeatures" class="form-input" placeholder="Water Resistant, Sapphire Crystal, Swiss Made">
+                    </div>
+                    <div class="color-section" style="margin-top:16px; margin-bottom:0;">
+                        <div class="color-section-header"><h3>Available Colors</h3><p>Select all colors this watch is available in.</p></div>
+                        <div class="color-grid">
+                            {% for color in all_colors %}
+                            <div class="color-item">
+                                <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}" class="color-checkbox">
+                                <label for="color_{{ color.id }}" class="color-chip">
+                                    <span class="color-indicator" style="background: {{ color.hex_code }};"></span>
+                                    <span class="color-name">{{ color.name }}</span>
+                                    <i class="fas fa-check check-mark"></i>
+                                </label>
+                            </div>
                             {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="color-section">
-                    <div class="color-section-header">
-                        <h3>Available Colors</h3>
-                        <p>Select all colors this watch is available in.</p>
-                    </div>
-                    <div class="color-grid">
-                        {% for color in all_colors %}
-                        <div class="color-item">
-                            <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}"
-                                class="color-checkbox">
-                            <label for="color_{{ color.id }}" class="color-chip">
-                                <span class="color-indicator" style="background: {{ color.hex_code }};"></span>
-                                <span class="color-name">{{ color.name }}</span>
-                                <i class="fas fa-check check-mark"></i>
-                            </label>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Regular Price (₹)</label>
-                        <input type="number" name="price" id="formPrice" class="form-input" placeholder="0.00"
-                            step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Discount Price (₹) <span
-                                style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
-                        <input type="number" name="discount_price" id="formDiscountPrice" class="form-input"
-                            placeholder="0.00" step="0.01">
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Stock Quantity</label>
-                        <input type="number" name="stock" id="formStock" class="form-input" placeholder="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <div style="display:flex; align-items:center; gap:10px; height:46px;">
-                            <input type="checkbox" name="is_active" id="formActive" checked
-                                style="width:20px; height:20px; accent-color:#000;">
-                            <span style="font-size:0.9rem; font-weight:500;">Product is Active</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" id="formDesc" class="form-input" style="height: 100px; resize: none;"
-                        placeholder="Provide details about the watch..."></textarea>
+                <!-- TAB 2: Specifications -->
+                <div class="tab-panel" id="tab-specs">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" id="formGender" class="form-input" style="appearance:none;">
+                                <option value="Unisex">Unisex</option>
+                                <option value="Men">Men</option>
+                                <option value="Women">Women</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Occasion</label>
+                            <select name="occasion" id="formOccasion" class="form-input" style="appearance:none;">
+                                <option value="Casual">Casual</option>
+                                <option value="Formal">Formal</option>
+                                <option value="Sport">Sport</option>
+                                <option value="Luxury">Luxury</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Function / Movement</label>
+                            <select name="function" id="formFunction" class="form-input" style="appearance:none;">
+                                <option value="Analog">Analog</option>
+                                <option value="Digital">Digital</option>
+                                <option value="Chronograph">Chronograph</option>
+                                <option value="Automatic">Automatic</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Strap Material</label>
+                            <input type="text" name="strap_material" id="formStrapMaterial" class="form-input" placeholder="e.g., Stainless Steel, Leather">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Strap Color</label>
+                            <input type="text" name="strap_color" id="formStrapColor" class="form-input" placeholder="e.g., Silver, Brown">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Dial Color</label>
+                            <input type="text" name="dial_color" id="formDialColor" class="form-input" placeholder="e.g., Black, Blue">
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Product Images (Pillow handle cropping in backend) -->
-                <div class="form-group">
-                    <label class="form-label">Product Images (Upload 3 images)</label>
+                <!-- TAB 3: Inventory & Variants -->
+                <div class="tab-panel" id="tab-inventory">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Base Stock Quantity</label>
+                            <input type="number" name="stock" id="formStock" class="form-input" placeholder="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <div style="display:flex; align-items:center; gap:10px; height:46px;">
+                                <input type="checkbox" name="is_active" id="formActive" checked style="width:20px; height:20px; accent-color:#000;">
+                                <span style="font-size:0.9rem; font-weight:500;">Product is Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:700; margin-bottom:2px;">Product Variants</h3>
+                                <p style="font-size:0.82rem; color:var(--text-muted);">Add variants for different strap/dial combinations with individual stock.</p>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="variant-table" id="variantTable">
+                                <thead>
+                                    <tr>
+                                        <th>Strap Material</th>
+                                        <th>Strap Color</th>
+                                        <th>Dial Color</th>
+                                        <th style="width:40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="variantBody"></tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="add-variant-btn" onclick="addVariantRow()">
+                            <i class="fas fa-plus"></i> Add Variant
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Media -->
+                <div class="tab-panel" id="tab-media">
+                    <label class="form-label">Product Images (Upload up to 3 images)</label>
                     <div class="image-upload-grid">
-                        <label class="image-slot" for="product_image_1">
-                            <i class="fas fa-camera"></i>
-                            <p>Main Image</p>
-                            <input type="file" name="product_image_1" id="product_image_1" class="file-input-hidden"
-                                accept="image/*" onchange="previewImage(this, 1)">
+                        <label class="image-slot" for="product_image_1" id="slot-1">
+                            <i class="fas fa-camera" id="icon-1"></i>
+                            <p id="label-1">Main Image</p>
+                            <input type="file" name="product_image_1" id="product_image_1" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 1)">
                             <div id="preview-1" class="slot-preview"></div>
                         </label>
-                        <label class="image-slot" for="product_image_2">
-                            <i class="fas fa-camera"></i>
-                            <p>Side View</p>
-                            <input type="file" name="product_image_2" id="product_image_2" class="file-input-hidden"
-                                accept="image/*" onchange="previewImage(this, 2)">
+                        <label class="image-slot" for="product_image_2" id="slot-2">
+                            <i class="fas fa-camera" id="icon-2"></i>
+                            <p id="label-2">Side View</p>
+                            <input type="file" name="product_image_2" id="product_image_2" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 2)">
                             <div id="preview-2" class="slot-preview"></div>
                         </label>
-                        <label class="image-slot" for="product_image_3">
-                            <i class="fas fa-camera"></i>
-                            <p>Back/Box</p>
-                            <input type="file" name="product_image_3" id="product_image_3" class="file-input-hidden"
-                                accept="image/*" onchange="previewImage(this, 3)">
+                        <label class="image-slot" for="product_image_3" id="slot-3">
+                            <i class="fas fa-camera" id="icon-3"></i>
+                            <p id="label-3">Back/Box</p>
+                            <input type="file" name="product_image_3" id="product_image_3" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 3)">
                             <div id="preview-3" class="slot-preview"></div>
                         </label>
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
-                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);"
-                        onclick="closeModal('productModal')">Cancel</button>
+                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; padding-top:20px; border-top:1px solid var(--border-color);">
+                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="closeModal('productModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="submitBtn">Create Product</button>
                 </div>
             </form>
         </div>
     </div>
 
-
     <!-- Cropper Modal -->
-    <div class="modal-overlay" id="cropModal">
+    <div class="modal-overlay" id="cropModal" style="z-index:1100;">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h2>Crop Product Image</h2>
@@ -1204,14 +1325,11 @@
             <div style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.85rem;">
                 Adjust image to fit the square aspect ratio.
             </div>
-            
             <div style="width: 100%; height: 400px; background: #000; border-radius: var(--radius-md); overflow: hidden;">
                 <img id="cropImage" src="" style="max-width: 100%; display: block;">
             </div>
-
             <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
-                <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);"
-                    onclick="cancelCrop()">Cancel</button>
+                <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="cancelCrop()">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="applyCrop()" style="background: var(--primary-bg);">Crop & Save</button>
             </div>
         </div>
@@ -1220,20 +1338,17 @@
     <!-- Delete Modal -->
     <div class="modal-overlay" id="deleteModal">
         <div class="modal-content" style="text-align:center;">
-            <div
-                style="width:64px; height:64px; background:var(--danger-bg); color:var(--danger-text); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin: 0 auto 24px;">
+            <div style="width:64px; height:64px; background:var(--danger-bg); color:var(--danger-text); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin: 0 auto 24px;">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <h2 style="font-weight: 800; margin-bottom: 12px;">Delete Product?</h2>
-            <p style="color:var(--text-muted); margin-bottom: 32px;">Delete <strong id="del_prod_name"></strong>? This
-                will archive the product but historical orders will remain.</p>
+            <p style="color:var(--text-muted); margin-bottom: 32px;">Delete <strong id="del_prod_name"></strong>? This will archive the product but historical orders will remain.</p>
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete_product">
                 <input type="hidden" name="product_id" id="del_prod_id">
                 <div style="display:flex; justify-content: center; gap: 12px;">
-                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);"
-                        onclick="closeModal('deleteModal')">Cancel</button>
+                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="closeModal('deleteModal')">Cancel</button>
                     <button type="submit" class="btn" style="background:#ef4444; color:#fff;">Yes, Delete</button>
                 </div>
             </form>
@@ -1244,22 +1359,27 @@
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.querySelector('.sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-
+        function toggleSidebar() { sidebar.classList.toggle('active'); sidebarOverlay.classList.toggle('active'); }
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- Image Cropping Logic ---
-        let currentCropper = null;
-        let currentSlot = null;
+        // ── Tab Switching ──
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // ── Image Cropping ──
+        let currentCropper = null, currentSlot = null;
         const croppedBlobs = new Map();
+        const existingImageIds = new Map(); // slot -> image DB id
 
         function previewImage(input, slot) {
             if (input.files && input.files[0]) {
@@ -1268,15 +1388,9 @@
                     currentSlot = slot;
                     const cropImg = document.getElementById('cropImage');
                     cropImg.src = e.target.result;
-                    
                     openModal('cropModal');
-                    
                     if (currentCropper) currentCropper.destroy();
-                    currentCropper = new Cropper(cropImg, {
-                        aspectRatio: 1,
-                        viewMode: 2,
-                        autoCropArea: 1,
-                    });
+                    currentCropper = new Cropper(cropImg, { aspectRatio: 1, viewMode: 2, autoCropArea: 1 });
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -1284,103 +1398,152 @@
 
         function applyCrop() {
             if (!currentCropper) return;
-            
-            const canvas = currentCropper.getCroppedCanvas({
-                width: 800,
-                height: 800,
-            });
-            
+            const canvas = currentCropper.getCroppedCanvas({ width: 800, height: 800 });
             canvas.toBlob((blob) => {
                 croppedBlobs.set(currentSlot, blob);
-                const preview = document.getElementById(`preview-${currentSlot}`);
                 const url = URL.createObjectURL(blob);
-                preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; border-radius:10px;">`;
-                
+                showSlotPreview(currentSlot, url, null);
                 closeModal('cropModal');
             }, 'image/jpeg', 0.9);
         }
 
         function cancelCrop() {
             const fileInput = document.getElementById(`product_image_${currentSlot}`);
-            if (fileInput) fileInput.value = ''; // Reset file input if cancelled
+            if (fileInput) fileInput.value = '';
             closeModal('cropModal');
         }
 
-        // --- Form Submission Handling ---
+        function showSlotPreview(slot, url, imgDbId) {
+            const preview = document.getElementById(`preview-${slot}`);
+            const icon = document.getElementById(`icon-${slot}`);
+            const label = document.getElementById(`label-${slot}`);
+            if (icon) icon.style.display = 'none';
+            if (label) label.style.display = 'none';
+
+            let deleteBtn = '';
+            if (imgDbId) {
+                existingImageIds.set(slot, imgDbId);
+                deleteBtn = `<button type="button" class="delete-img-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteExistingImage(${imgDbId}, ${slot})"><i class="fas fa-times"></i></button>`;
+            }
+            preview.innerHTML = `<img src="${url}" class="existing-preview">${deleteBtn}<div class="replace-label">Click to replace</div>`;
+        }
+
+        function clearSlotPreview(slot) {
+            const preview = document.getElementById(`preview-${slot}`);
+            const icon = document.getElementById(`icon-${slot}`);
+            const label = document.getElementById(`label-${slot}`);
+            preview.innerHTML = '';
+            if (icon) icon.style.display = '';
+            if (label) label.style.display = '';
+            existingImageIds.delete(slot);
+        }
+
+        function deleteExistingImage(imgId, slot) {
+            if (!confirm('Remove this image?')) return;
+            fetch(`/adminpanel/products/image/${imgId}/delete/`, {
+                method: 'POST', headers: { 'X-CSRFToken': csrfToken }
+            }).then(r => r.json()).then(d => {
+                if (d.status === 'ok') clearSlotPreview(slot);
+            });
+        }
+
+        // ── Variant Rows ──
+        function addVariantRow(data) {
+            const body = document.getElementById('variantBody');
+            const d = data || {};
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="variant_strap_material[]" value="${d.strap_material || ''}" placeholder="Leather"></td>
+                <td><input type="text" name="variant_strap_color[]" value="${d.strap_color || ''}" placeholder="Brown"></td>
+                <td><input type="text" name="variant_dial_color[]" value="${d.dial_color || ''}" placeholder="Black">
+                    <input type="hidden" name="variant_id[]" value="${d.id || ''}">
+                </td>
+                <td><button type="button" class="variant-remove" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+            `;
+            body.appendChild(row);
+        }
+
+        // ── Form Submit ──
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const formData = new FormData(this);
-            
-            // Replace file inputs with cropped blobs
             croppedBlobs.forEach((blob, slot) => {
                 formData.set(`product_image_${slot}`, blob, `cropped_${slot}.jpg`);
             });
-
-            // Submit via standard fetch to keep page life if needed, or re-submit normally
             fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            }).then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    window.location.reload();
-                }
-            }).catch(error => {
-                console.error("Submission error:", error);
-                alert("An error occurred during submission.");
-            });
+                method: 'POST', body: formData,
+                headers: { 'X-CSRFToken': csrfToken }
+            }).then(r => { if (r.redirected) window.location.href = r.url; else window.location.reload(); })
+              .catch(err => { console.error(err); alert("Submission error."); });
         });
 
-        function openProductModal(mode) {
+        // ── Open Add Modal ──
+        function openProductModal() {
             document.getElementById('productForm').reset();
             document.getElementById('formAction').value = 'add_product';
             document.getElementById('modalTitle').innerText = 'Add New Product';
             document.getElementById('submitBtn').innerText = 'Create Product';
-
-            // Clear checkboxes
+            document.getElementById('formBrand').value = 'TimeHub';
             document.querySelectorAll('.color-checkbox').forEach(cb => cb.checked = false);
-
-            // Re-bind previews
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById(`preview-${i}`).innerHTML = '';
-            }
-            croppedBlobs.clear(); // Clear cached crops
-
+            for (let i = 1; i <= 3; i++) clearSlotPreview(i);
+            croppedBlobs.clear();
+            existingImageIds.clear();
+            document.getElementById('variantBody').innerHTML = '';
+            // Reset tabs to first
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-general').classList.add('active');
+            document.querySelector('.modal-tab').classList.add('active');
             openModal('productModal');
         }
 
-        function openEditModal(id, name, catId, price, discPrice, colorIds, stock, desc, isActive) {
-            openProductModal('edit');
+        // ── Open Edit Modal (AJAX) ──
+        function openEditModal(productId) {
+            openProductModal();
             document.getElementById('formAction').value = 'edit_product';
             document.getElementById('modalTitle').innerText = 'Edit Product';
             document.getElementById('submitBtn').innerText = 'Save Changes';
-            document.getElementById('formProductId').value = id;
-            document.getElementById('formName').value = name;
-            document.getElementById('formCategory').value = catId;
+            document.getElementById('formProductId').value = productId;
 
-            // Set colors
-            if (colorIds && colorIds.length > 2) {
-                try {
-                    const colors = JSON.parse(colorIds);
-                    colors.forEach(cid => {
-                        const cb = document.getElementById(`color_${cid}`);
-                        if (cb) cb.checked = true;
-                    });
-                } catch (e) {
-                    console.error("Error parsing color IDs:", e);
-                }
-            }
-
-            document.getElementById('formPrice').value = price;
-            document.getElementById('formDiscountPrice').value = discPrice;
-            document.getElementById('formStock').value = stock;
-            document.getElementById('formDesc').value = desc;
-            document.getElementById('formActive').checked = isActive === 'true';
+            fetch(`/adminpanel/products/${productId}/detail/`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('formName').value = data.name || '';
+                    document.getElementById('formBrand').value = data.brand || 'TimeHub';
+                    document.getElementById('formCategory').value = data.collection_id || '';
+                    document.getElementById('formPrice').value = data.price || '';
+                    document.getElementById('formDiscountPrice').value = data.discount_price || '';
+                    document.getElementById('formStock').value = data.stock || 0;
+                    document.getElementById('formDesc').value = data.description || '';
+                    document.getElementById('formFeatures').value = data.features || '';
+                    document.getElementById('formActive').checked = data.is_active;
+                    // Specs
+                    document.getElementById('formGender').value = data.gender || 'Unisex';
+                    document.getElementById('formOccasion').value = data.occasion || 'Casual';
+                    document.getElementById('formFunction').value = data.function || 'Analog';
+                    document.getElementById('formStrapMaterial').value = data.strap_material || '';
+                    document.getElementById('formStrapColor').value = data.strap_color || '';
+                    document.getElementById('formDialColor').value = data.dial_color || '';
+                    // Colors
+                    if (data.colors) {
+                        data.colors.forEach(cid => {
+                            const cb = document.getElementById(`color_${cid}`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+                    // Images
+                    if (data.images) {
+                        data.images.forEach((img, idx) => {
+                            if (idx < 3) showSlotPreview(idx + 1, img.url, img.id);
+                        });
+                    }
+                    // Variants
+                    document.getElementById('variantBody').innerHTML = '';
+                    if (data.variants) {
+                        data.variants.forEach(v => addVariantRow(v));
+                    }
+                })
+                .catch(err => console.error('Failed to load product:', err));
         }
 
         function confirmDelete(id, name) {

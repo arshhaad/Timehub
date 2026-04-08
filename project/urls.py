@@ -26,12 +26,10 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('user/', include('user_apps.edit.urls')),
     path('user/', include('user_apps.products.urls')),
+    path('checkout/', include('user_apps.orders.urls')),
     path('adminpanel/', include('admin_apps.auth.urls')),
     path('adminpanel/', include('admin_apps.user_manage.urls')),
     path('adminpanel/', include('admin_apps.product_manage.urls')),
-    
+    path('adminpanel/', include('admin_apps.order_manage.urls')),
+
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

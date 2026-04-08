@@ -1,0 +1,323 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Order Details - ORD-{{ order.id }}{% endblock %}
+
+{% block nav_orders %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb-alt { padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted); }
+    .breadcrumb-alt a { text-decoration: none; color: inherit; transition: var(--transition); }
+    .breadcrumb-alt a:hover { color: #fff; }
+
+    /* HERO */
+    .order-hero-alt { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
+    .order-hero-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .order-hero-alt p { color: var(--text-muted); font-size: 0.95rem; }
+
+    /* STATUS TRACKER */
+    .status-tracker-alt { 
+        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 40px; margin-bottom: 40px;
+        display: flex; justify-content: space-between; position: relative; backdrop-filter: var(--glass);
+    }
+    .status-tracker-alt::after {
+        content: ''; position: absolute; top: 55px; left: 10%; right: 10%; height: 2px; background: var(--border-color); z-index: 1;
+    }
+    .status-step-alt { position: relative; z-index: 2; text-align: center; width: 100px; }
+    .step-icon-alt { 
+        width: 32px; height: 32px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 50%;
+        margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted);
+        transition: var(--transition);
+    }
+    .step-label-alt { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .status-step-alt.active .step-icon-alt { border-color: var(--primary-color); background: var(--primary-color); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
+    .status-step-alt.active .step-label-alt { color: #fff; }
+    .status-step-alt.completed .step-icon-alt { border-color: var(--primary-color); color: var(--primary-color); }
+
+    /* GRID */
+    .detail-grid-alt { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-bottom: 80px; }
+
+    .section-card-alt { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 30px; margin-bottom: 25px; backdrop-filter: var(--glass); }
+    .section-title-alt { font-size: 1rem; font-weight: 700; margin-bottom: 20px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ITEMS TABLE */
+    .items-list-alt { display: flex; flex-direction: column; gap: 20px; }
+    .item-row-alt { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .item-row-alt:last-child { border: none; padding-bottom: 0; }
+    .item-img-alt { width: 65px; height: 65px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .item-img-alt img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .item-info-alt { flex: 1; }
+    .item-name-alt { font-weight: 600; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+    .item-price-alt { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* SIDEBAR INFO */
+    .info-group-alt { margin-bottom: 20px; }
+    .info-group-alt:last-child { margin-bottom: 0; }
+    .info-label-alt { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; font-weight: 700; }
+    .info-val-alt { font-size: 0.9rem; color: #fff; font-weight: 500; line-height: 1.5; }
+
+    .price-summary-alt { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+    .price-row-alt { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); }
+    .price-row-alt.total-alt { color: var(--primary-color); font-weight: 800; font-size: 1.1rem; margin-top: 5px; }
+
+    /* BUTTONS */
+    .btn-action-alt { padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; justify-content: center; }
+    .btn-danger-alt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .btn-danger-alt:hover { background: #ef4444; color: #fff; }
+    .btn-primary-alt { background: var(--primary-color); color: #000; }
+    .btn-primary-alt:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    .btn-outline-alt { background: transparent; border: 1px solid var(--border-color); color: #fff; }
+    .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+
+    /* MODAL */
+    .modal-overlay-alt { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-overlay-alt.active { display: flex; }
+    .modal-box-alt { background: var(--sidebar-color); border: 1px solid var(--border-color); border-radius: 24px; padding: 35px; width: 90%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .modal-box-alt h3 { margin-bottom: 15px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; }
+    .modal-box-alt textarea { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 20px; font-family: inherit; resize: none; outline: none; transition: var(--transition); }
+    .modal-box-alt textarea:focus { border-color: var(--primary-color); }
+    .modal-footer-alt { display: flex; gap: 15px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-alt">
+    <a href="{% url 'order_history' %}"><i class="fas fa-chevron-left"></i> Back to Orders</a>
+</div>
+
+<div class="order-hero-alt">
+    <div>
+        <h1>Order ORD-{{ order.id }}</h1>
+        <p>Placed on {{ order.created_at|date:"F d, Y at H:i" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'download_invoice' order.id %}" target="_blank" class="btn-action-alt btn-primary-alt">
+            <i class="fas fa-file-invoice"></i> Download Invoice
+        </a>
+    </div>
+</div>
+
+{% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
+<div class="status-tracker-alt">
+    <div class="status-step-alt {% if order.status == 'Pending' %}active{% elif order.status != 'Pending' %}completed{% endif %}">
+        <div class="step-icon-alt">1</div>
+        <div class="step-label-alt">Pending</div>
+    </div>
+    <div class="status-step-alt {% if order.status == 'Processing' %}active{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
+        <div class="step-icon-alt">2</div>
+        <div class="step-label-alt">Processing</div>
+    </div>
+    <div class="status-step-alt {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
+        <div class="step-icon-alt">3</div>
+        <div class="step-label-alt">Shipped</div>
+    </div>
+    <div class="status-step-alt {% if order.status == 'Delivered' %}active{% endif %}">
+        <div class="step-icon-alt">4</div>
+        <div class="step-label-alt">Delivered</div>
+    </div>
+</div>
+{% else %}
+<div class="section-card-alt" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+    <h3 style="color:#ef4444; margin-bottom:10px;"><i class="fas fa-info-circle"></i> This order was {{ order.status }}</h3>
+    {% if order.cancel_reason %} <p style="font-size:0.9rem; color:var(--text-muted);">Reason: {{ order.cancel_reason }}</p> {% endif %}
+    {% if order.return_reason %} <p style="font-size:0.9rem; color:var(--text-muted);">Reason: {{ order.return_reason }}</p> {% endif %}
+</div>
+{% endif %}
+
+<div class="detail-grid-alt">
+    <div class="grid-left-alt">
+        <div class="section-card-alt">
+            <h2 class="section-title-alt">Order Items</h2>
+            <div class="items-list-alt">
+                {% for item in items %}
+                <div class="item-row-alt">
+                    <div class="item-img-alt">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                            <i class="fas fa-clock" style="color:var(--text-muted);"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-info-alt">
+                        <div class="item-name-alt">{{ item.product.name }}</div>
+                        <div class="item-price-alt">₹{{ item.price|floatformat:0 }} × {{ item.quantity }}</div>
+                        {% if item.is_cancelled %}
+                            <div style="color:#ef4444; font-size:0.75rem; font-weight:800; margin-top:5px; text-transform:uppercase; letter-spacing:0.5px;">Cancelled: {{ item.cancel_reason }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="item-action-alt">
+                        {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
+                            <button class="btn-action-alt btn-danger-alt" onclick="openCancelItemModal({{ item.id }}, '{{ item.product.name|escapejs }}')">Cancel Item</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if order.status in 'Pending,Processing' %}
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-action-alt btn-primary-alt" onclick="openRescheduleModal()" style="flex:1;">
+                <i class="fas fa-calendar-alt"></i> Reschedule Delivery
+            </button>
+            <button class="btn-action-alt btn-danger-alt" onclick="openCancelOrderModal()" style="flex:1;">
+                <i class="fas fa-times"></i> Cancel Entire Order
+            </button>
+        </div>
+        {% endif %}
+
+        {% if order.status == 'Delivered' %}
+        <button class="btn-action-alt btn-primary-alt" onclick="openReturnModal()" style="width:100%; background: #fff; color: #000;">
+            <i class="fas fa-undo"></i> Return Order
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="grid-right-alt">
+        <div class="section-card-alt">
+            <h2 class="section-title-alt">Delivery Info</h2>
+            <div class="info-group-alt">
+                <span class="info-label-alt">Status</span>
+                <div class="info-val-alt">{{ order.status }}</div>
+            </div>
+            <div class="info-group-alt">
+                <span class="info-label-alt">Scheduled Date</span>
+                <div class="info-val-alt">
+                    {% if order.scheduled_delivery_date %}
+                        {{ order.scheduled_delivery_date|date:"F d, Y" }}
+                    {% else %}
+                        Not scheduled yet
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card-alt">
+            <h2 class="section-title-alt">Shipping Address</h2>
+            <div class="info-group-alt">
+                <span class="info-label-alt">Customer</span>
+                <div class="info-val-alt">{{ address.full_name }}</div>
+            </div>
+            <div class="info-group-alt">
+                <span class="info-label-alt">Address</span>
+                <div class="info-val-alt">
+                    {{ address.street }}<br>
+                    {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                    {{ address.country }}<br>
+                    Ph: {{ address.phone }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card-alt">
+            <h2 class="section-title-alt">Payment Info</h2>
+            <div class="info-group-alt">
+                <span class="info-label-alt">Method</span>
+                <div class="info-val-alt">{{ order.get_payment_method_display }}</div>
+            </div>
+            
+            <div class="price-summary-alt">
+                <div class="price-row-alt">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="price-row-alt">
+                    <span>Tax (5%)</span>
+                    <span>₹{{ order.tax|floatformat:0 }}</span>
+                </div>
+                <div class="price-row-alt">
+                    <span>Shipping</span>
+                    <span>₹{{ order.shipping_charge|floatformat:0 }}</span>
+                </div>
+                <div class="price-row-alt total-alt">
+                    <span>Total</span>
+                    <span>₹{{ order.total_amount|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay-alt" id="cancelOrderModal">
+    <div class="modal-box-alt">
+        <h3>Cancel Entire Order?</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Are you sure you want to cancel this entire order? This action cannot be undone.</p>
+        <form action="{% url 'cancel_order' order.id %}" method="POST">
+            {% csrf_token %}
+            <textarea name="reason" placeholder="Reason for cancellation (optional)..." rows="3"></textarea>
+            <div class="modal-footer-alt">
+                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
+                <button type="submit" class="btn-action-alt btn-danger-alt" style="flex:1;">Yes, Cancel Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay-alt" id="cancelItemModal">
+    <div class="modal-box-alt">
+        <h3>Cancel <span id="cancelItemName"></span>?</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Remove this item from your order.</p>
+        <form id="cancelItemForm" method="POST">
+            {% csrf_token %}
+            <textarea name="reason" placeholder="Reason for cancellation (optional)..." rows="3"></textarea>
+            <div class="modal-footer-alt">
+                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
+                <button type="submit" class="btn-action-alt btn-danger-alt" style="flex:1;">Cancel Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay-alt" id="returnModal">
+    <div class="modal-box-alt">
+        <h3>Return Order</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Please provide a reason for the return. Our team will contact you for pickup.</p>
+        <form action="{% url 'return_order' order.id %}" method="POST">
+            {% csrf_token %}
+            <textarea name="reason" placeholder="Mandatory reason for return..." rows="3" required></textarea>
+            <div class="modal-footer-alt">
+                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
+                <button type="submit" class="btn-action-alt btn-primary-alt" style="flex:1; background:#fff; color:#000;">Submit Return</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay-alt" id="rescheduleModal">
+    <div class="modal-box-alt">
+        <h3>Reschedule Delivery</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Select a new preferred date for your delivery.</p>
+        <form action="{% url 'reschedule_order' order.id %}" method="POST">
+            {% csrf_token %}
+            <input type="date" name="scheduled_date" 
+                   style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-bottom: 20px; box-sizing: border-box;" 
+                   required min="{{ today|date:'Y-m-d' }}">
+            <div class="modal-footer-alt">
+                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
+                <button type="submit" class="btn-action-alt btn-primary-alt" style="flex:1;">Confirm Date</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openCancelOrderModal() { document.getElementById('cancelOrderModal').classList.add('active'); }
+    function openCancelItemModal(itemId, itemName) {
+        document.getElementById('cancelItemName').textContent = itemName;
+        document.getElementById('cancelItemForm').action = `/orders/cancel-item/${itemId}/`;
+        document.getElementById('cancelItemModal').classList.add('active');
+    }
+    function openRescheduleModal() { document.getElementById('rescheduleModal').classList.add('active'); }
+    function openReturnModal() { document.getElementById('returnModal').classList.add('active'); }
+    function closeModals() { document.querySelectorAll('.modal-overlay-alt').forEach(m => m.classList.remove('active')); }
+    
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay-alt')) closeModals();
+    }
+</script>
+{% endblock %}

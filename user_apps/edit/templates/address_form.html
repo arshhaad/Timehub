@@ -1,6 +1,6 @@
 {% extends 'base_user.html' %}
 
-{% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Address - TimeHub{% endblock %}
+{% block title %}{% if form.instance.id %}Edit{% else %}Add New{% endif %} Address - TimeHub{% endblock %}
 
 {% block nav_address %}active{% endblock %}
 
@@ -11,146 +11,546 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
+        padding: 20px 0 60px;
     }
 
-    .form-container { 
-        width: 100%; 
-        max-width: 600px; 
-        background: var(--card-bg); 
+    /* BACK LINK */
+    .back-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 30px;
+        align-self: flex-start;
+        transition: var(--transition);
+        max-width: 680px;
+        width: 100%;
+    }
+    .back-link:hover { color: #fff; }
+
+    /* CARD */
+    .form-container {
+        width: 100%;
+        max-width: 680px;
+        background: var(--card-bg);
         backdrop-filter: var(--glass);
-        padding: 45px; 
-        border-radius: 24px; 
+        padding: 48px;
+        border-radius: 24px;
         border: 1px solid var(--border-color);
         transition: var(--transition);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
+    .form-container:hover { border-color: rgba(255, 255, 255, 0.08); }
 
-    .form-container:hover {
-        border-color: rgba(255, 255, 255, 0.1);
+    /* HEADER */
+    .form-header { margin-bottom: 36px; }
+    .form-header-icon {
+        width: 52px; height: 52px; border-radius: 14px;
+        background: rgba(255, 106, 0, 0.12);
+        border: 1px solid rgba(255, 106, 0, 0.25);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; color: var(--primary-color); margin-bottom: 18px;
     }
-
-    .form-container h1 { 
-        margin-bottom: 35px; 
-        font-size: 2rem; 
+    .form-header h1 {
+        font-size: 1.9rem;
         font-weight: 800;
-        margin-top: 0;
-        background: linear-gradient(to right, #fff, #9ca3af);
+        background: linear-gradient(to right, #fff 40%, #9ca3af);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
+        margin-bottom: 6px;
     }
+    .form-header p { color: var(--text-muted); font-size: 0.9rem; }
 
-    .form-group { margin-bottom: 24px; }
-    .form-group label { 
-        display: block; 
-        margin-bottom: 10px; 
-        font-size: 0.85rem; 
-        color: var(--text-muted); 
-        font-weight: 600;
+    /* FORM GRID */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    /* LABEL */
+    .form-group label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .form-group input, .form-group select, .form-group textarea {
-        width: 100%;
-        padding: 14px 20px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        color: #fff;
-        outline: none;
-        transition: var(--transition);
-        font-size: 0.95rem;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
-        background: rgba(255, 255, 255, 0.04);
-        border-color: var(--primary-color); 
-        box-shadow: 0 0 15px var(--primary-glow); 
-    }
-
-    .form-actions { 
-        display: flex; 
-        gap: 20px; 
-        margin-top: 40px; 
-    }
-    .btn { 
-        padding: 14px 28px; 
-        border-radius: var(--radius-pill); 
-        font-weight: 700; 
-        cursor: pointer; 
-        border: none; 
-        transition: var(--transition); 
-        text-decoration: none; 
-        text-align: center; 
-        flex: 1; 
-        font-size: 0.9rem;
-    }
-    .btn-save { 
-        background: linear-gradient(135deg, var(--primary-color), #e05e00); 
-        color: #fff; 
-        box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2); 
-    }
-    .btn-save:hover { 
-        transform: translateY(-3px) scale(1.02); 
-        box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4); 
-    }
-    .btn-cancel { 
-        background: rgba(255, 255, 255, 0.05); 
-        color: #fff; 
-        border: 1px solid var(--border-color);
+        letter-spacing: 0.7px;
         display: flex;
         align-items: center;
+        gap: 5px;
+    }
+    .label-required { color: #ef4444; font-size: 0.7rem; }
+
+    /* INPUT WRAPPER */
+    .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .input-wrap i.input-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        pointer-events: none;
+        transition: color 0.3s;
+    }
+    .input-wrap input,
+    .input-wrap select {
+        width: 100%;
+        padding: 13px 14px 13px 38px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1.5px solid var(--border-color);
+        border-radius: 10px;
+        color: #fff;
+        outline: none;
+        font-size: 0.9rem;
+        font-family: 'Inter', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    }
+    .input-wrap input::placeholder { color: #4b5563; }
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+        border-color: var(--primary-color);
+        background: rgba(255, 106, 0, 0.04);
+        box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.1);
+    }
+    .input-wrap input:focus + i.input-icon,
+    .input-wrap:focus-within i.input-icon { color: var(--primary-color); }
+
+    /* VALID / ERROR STATES */
+    .input-wrap.is-invalid input,
+    .input-wrap.is-invalid select { border-color: #ef4444; background: rgba(239,68,68,0.04); }
+    .input-wrap.is-invalid .input-icon { color: #ef4444; }
+
+    .field-msg {
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 18px;
+    }
+    .field-msg.error   { color: #ef4444; }
+    .field-msg i { font-size: 0.72rem; }
+
+    /* SELECT styling fix */
+    .input-wrap select {
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+    .input-wrap select option {
+        background-color: var(--sidebar-color);
+        color: #fff;
+    }
+    .select-arrow {
+        position: absolute;
+        right: 14px;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        pointer-events: none;
+    }
+
+    /* SERVER-SIDE ERRORS */
+    .server-errors {
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 24px;
+        grid-column: 1 / -1;
+    }
+    .server-errors li {
+        color: #ef4444;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+    }
+
+    /* DEFAULT CHECKBOX */
+    .checkbox-group {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 106, 0, 0.04);
+        border: 1px solid rgba(255, 106, 0, 0.15);
+        border-radius: 10px;
+        padding: 14px 18px;
+        cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] {
+        width: 18px; height: 18px;
+        accent-color: var(--primary-color);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .checkbox-group label {
+        cursor: pointer;
+        margin: 0;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .checkbox-group label strong { color: #fff; font-weight: 700; }
+
+    /* DIVIDER */
+    .form-divider {
+        grid-column: 1 / -1;
+        height: 1px;
+        background: var(--border-color);
+        margin: 4px 0;
+    }
+
+    /* ACTIONS */
+    .form-actions {
+        display: flex;
+        gap: 14px;
+        margin-top: 36px;
+    }
+    .btn {
+        padding: 15px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: none;
+        transition: var(--transition);
+        text-decoration: none;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
+        gap: 9px;
     }
-    .btn-cancel:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
+    .btn-save {
+        flex: 2;
+        background: var(--primary-color);
+        color: #000;
+        box-shadow: 0 8px 20px rgba(255, 106, 0, 0.25);
     }
+    .btn-save:hover { background: #e05e00; transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255, 106, 0, 0.4); }
+    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-cancel {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        border: 1px solid var(--border-color);
+    }
+    .btn-cancel:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255,255,255,0.2); }
 
-    @media (max-width: 600px) {
-        .form-container {
-            padding: 25px;
-        }
+    /* SPINNER */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fa-spin { animation: spin 0.8s linear infinite; }
 
-        .form-container h1 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        .form-actions {
-            flex-direction: column;
-        }
-
-        .btn {
-            width: 100%;
-        }
+    @media (max-width: 700px) {
+        .form-container { padding: 28px 20px; }
+        .form-grid { grid-template-columns: 1fr; }
+        .form-group.full { grid-column: 1; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="content-center">
-    <div class="form-container">
-    <h1>{% if form.instance.id %}Edit{% else %}Add{% endif %} Address</h1>
-    <form method="post">
-        {% csrf_token %}
-        
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-                {% for error in field.errors %}
-                    <p style="color: #ef4444; font-size: 0.8rem; margin-top: 5px;">{{ error }}</p>
-                {% endfor %}
-            {% endif %}
-        </div>
-        {% endfor %}
 
-        <div class="form-actions">
-            <button type="submit" class="btn btn-save">Save Address</button>
-            <a href="{% url 'address_list' %}" class="btn btn-cancel">Cancel</a>
+    <a href="{% url 'address_list' %}" class="back-link">
+        <i class="fas fa-chevron-left"></i> Back to Addresses
+    </a>
+
+    <div class="form-container">
+
+        <div class="form-header">
+            <div class="form-header-icon">
+                <i class="fas fa-{% if form.instance.id %}pen{% else %}map-marker-alt{% endif %}"></i>
+            </div>
+            <h1>{% if form.instance.id %}Edit Address{% else %}Add New Address{% endif %}</h1>
+            <p>{% if form.instance.id %}Update your saved delivery address.{% else %}Add a new delivery address to your account.{% endif %}</p>
         </div>
-    </form>
+
+        <form method="post" id="addressForm" novalidate>
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <!-- Server-side errors (non-field) -->
+                {% if form.non_field_errors %}
+                <div class="server-errors">
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                        <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Full Name -->
+                <div class="form-group full">
+                    <label for="id_full_name">
+                        <i class="fas fa-user" style="font-size:0.75rem;"></i>
+                        Full Name <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.full_name.errors %}is-invalid{% endif %}" id="wrap_full_name">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="id_full_name" name="full_name"
+                               value="{{ form.full_name.value|default:'' }}"
+                               placeholder="e.g. Arsh Ahmed"
+                               maxlength="255">
+                    </div>
+                    <div class="field-msg {% if form.full_name.errors %}error{% endif %}" id="msg_full_name">
+                        {% if form.full_name.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.full_name.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Street -->
+                <div class="form-group full">
+                    <label for="id_street">
+                        <i class="fas fa-road" style="font-size:0.75rem;"></i>
+                        Street Address <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.street.errors %}is-invalid{% endif %}" id="wrap_street">
+                        <i class="fas fa-road input-icon"></i>
+                        <input type="text" id="id_street" name="street"
+                               value="{{ form.street.value|default:'' }}"
+                               placeholder="e.g. 123 MG Road, Apt 4B"
+                               maxlength="255">
+                    </div>
+                    <div class="field-msg {% if form.street.errors %}error{% endif %}" id="msg_street">
+                        {% if form.street.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.street.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- City -->
+                <div class="form-group">
+                    <label for="id_city">
+                        City <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.city.errors %}is-invalid{% endif %}" id="wrap_city">
+                        <i class="fas fa-city input-icon"></i>
+                        <input type="text" id="id_city" name="city"
+                               value="{{ form.city.value|default:'' }}"
+                               placeholder="e.g. Mumbai"
+                               maxlength="100">
+                    </div>
+                    <div class="field-msg {% if form.city.errors %}error{% endif %}" id="msg_city">
+                        {% if form.city.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.city.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- State -->
+                <div class="form-group">
+                    <label for="id_state">
+                        State / Province <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.state.errors %}is-invalid{% endif %}" id="wrap_state">
+                        <i class="fas fa-map input-icon"></i>
+                        <input type="text" id="id_state" name="state"
+                               value="{{ form.state.value|default:'' }}"
+                               placeholder="e.g. Maharashtra"
+                               maxlength="100">
+                    </div>
+                    <div class="field-msg {% if form.state.errors %}error{% endif %}" id="msg_state">
+                        {% if form.state.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.state.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Postal Code -->
+                <div class="form-group">
+                    <label for="id_postal_code">
+                        Postal / PIN Code <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.postal_code.errors %}is-invalid{% endif %}" id="wrap_postal_code">
+                        <i class="fas fa-hashtag input-icon"></i>
+                        <input type="text" id="id_postal_code" name="postal_code"
+                               value="{{ form.postal_code.value|default:'' }}"
+                               placeholder="e.g. 400001"
+                               maxlength="20">
+                    </div>
+                    <div class="field-msg {% if form.postal_code.errors %}error{% endif %}" id="msg_postal_code">
+                        {% if form.postal_code.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.postal_code.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="id_phone">
+                        Phone Number <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.phone.errors %}is-invalid{% endif %}" id="wrap_phone">
+                        <i class="fas fa-phone input-icon"></i>
+                        <input type="tel" id="id_phone" name="phone"
+                               value="{{ form.phone.value|default:'' }}"
+                               placeholder="e.g. +91 98765 43210"
+                               maxlength="15">
+                    </div>
+                    <div class="field-msg {% if form.phone.errors %}error{% endif %}" id="msg_phone">
+                        {% if form.phone.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.phone.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Country -->
+                <div class="form-group">
+                    <label for="id_country_select">
+                        Country <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap {% if form.country.errors %}is-invalid{% endif %}" id="wrap_country_select">
+                        <i class="fas fa-globe input-icon"></i>
+                        <select id="id_country_select">
+                            <!-- Main curated countries -->
+                            {% with "India United_States United_Kingdom Canada Australia UAE Singapore Germany France Other" as main_list %}
+                            {% for c in main_list.split %}
+                            <option value="{{ c|cut:'_' }}" {% if form.country.value == c|cut:'_' %}selected{% elif not form.country.value and c == 'India' %}selected{% endif %}>
+                                {{ c|add:""|cut:"_" }}
+                            </option>
+                            {% endfor %}
+                            {% endwith %}
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                </div>
+
+                <!-- Country Manual Input (shown if "Other" is selected) -->
+                <div class="form-group" id="group_country_manual" style="display: none;">
+                    <label for="id_country_manual">
+                        Enter Country Name <span class="label-required">*</span>
+                    </label>
+                    <div class="input-wrap" id="wrap_country_manual">
+                        <i class="fas fa-pen-nib input-icon"></i>
+                        <input type="text" id="id_country_manual" placeholder="e.g. Switzerland">
+                    </div>
+                </div>
+
+                <!-- Hidden actual input to store the final value -->
+                <input type="hidden" name="country" id="id_country" value="{{ form.country.value|default:'' }}">
+                    <div class="field-msg {% if form.country.errors %}error{% endif %}" id="msg_country">
+                        {% if form.country.errors %}
+                        <i class="fas fa-times-circle"></i> {{ form.country.errors|first }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Set as Default Checkbox -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="id_is_default" name="is_default"
+                           {% if form.is_default.value %}checked{% endif %}>
+                    <label for="id_is_default">
+                        <strong>Set as default address</strong> — This will be pre-selected at checkout
+                    </label>
+                </div>
+
+            </div><!-- /form-grid -->
+
+            <div class="form-actions">
+                <a href="{% url 'address_list' %}" class="btn btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-save" id="submitBtn">
+                    <i class="fas fa-save"></i>
+                    {% if form.instance.id %}Update Address{% else %}Save Address{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('addressForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const countrySelect = document.getElementById('id_country_select');
+        const countryManual = document.getElementById('id_country_manual');
+        const countryHidden = document.getElementById('id_country');
+        const manualGroup = document.getElementById('group_country_manual');
+
+        const mainCountries = ["India", "UnitedStates", "UnitedKingdom", "Canada", "Australia", "UAE", "Singapore", "Germany", "France"];
+
+        function toggleManualCountry() {
+            if (countrySelect.value === 'Other') {
+                manualGroup.style.display = 'flex';
+                countryManual.required = true;
+                // If it was already populated (e.g. on Edit), keep it
+            } else {
+                manualGroup.style.display = 'none';
+                countryManual.required = false;
+                countryHidden.value = countrySelect.value;
+            }
+        }
+
+        // Initialize state (especially for Edit)
+        const currentVal = countryHidden.value;
+        if (currentVal && !mainCountries.includes(currentVal.replace(/\s+/g, ''))) {
+            countrySelect.value = 'Other';
+            countryManual.value = currentVal;
+            manualGroup.style.display = 'flex';
+        } else if (currentVal) {
+            countrySelect.value = currentVal;
+        }
+
+        countrySelect.addEventListener('change', toggleManualCountry);
+
+        form.addEventListener('submit', function (e) {
+            // Update hidden value if manual is used
+            if (countrySelect.value === 'Other') {
+                countryHidden.value = countryManual.value.trim();
+            } else {
+                countryHidden.value = countrySelect.value;
+            }
+
+            // Small frontend check
+            if (!countryHidden.value) {
+                // Let backend handle it mostly, but prevent empty "Other"
+                if (countrySelect.value === 'Other') {
+                    e.preventDefault();
+                    countryManual.focus();
+                    alert("Please enter your country name.");
+                    return;
+                }
+            }
+
+            // Loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', function() {
+                const wrap = this.closest('.input-wrap');
+                const group = this.closest('.form-group');
+                const msg = group ? group.querySelector('.field-msg') : null;
+                
+                if (wrap) wrap.classList.remove('is-invalid');
+                if (msg) {
+                    msg.textContent = '';
+                    msg.classList.remove('error');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

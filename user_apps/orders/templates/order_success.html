@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeHub – Order Confirmed!</title>
+    <meta name="description" content="Your TimeHub order has been placed successfully. Thank you for shopping with us.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --bg-card: #15151a;
+            --bg-card-hover: #1c1c23;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --primary-color: #ff6a00;
+            --primary-hover: #e05e00;
+            --border-color: #27272a;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-pill: 50px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; overflow-x: hidden; min-height: 100vh; display: flex; flex-direction: column; }
+        h1, h2, h3, h4, .logo { font-family: 'Outfit', sans-serif; }
+        ul { list-style: none; }
+        a { text-decoration: none; color: inherit; transition: var(--transition); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+
+        /* HEADER */
+        header { padding: 25px 0; border-bottom: 1px solid var(--border-color); background: rgba(11, 11, 14, 0.95); backdrop-filter: blur(15px); }
+        .nav-wrap { display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 1.6rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .logo-icon { width: 30px; height: 30px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 1.2rem; }
+        .logo-dot { color: var(--primary-color); }
+        .nav-links { display: flex; gap: 35px; }
+        .nav-links a { font-size: 0.9rem; font-weight: 600; color: #fff; }
+        .nav-links a:hover { color: var(--primary-color); }
+
+        /* MAIN */
+        main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
+
+        /* SUCCESS WRAPPER */
+        .success-wrapper {
+            max-width: 680px; width: 100%; text-align: center;
+        }
+
+        /* ANIMATION RING */
+        .success-ring-wrap {
+            position: relative; display: inline-flex; align-items: center; justify-content: center;
+            margin-bottom: 36px;
+        }
+        .success-ring {
+            width: 130px; height: 130px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,106,0,0.15), transparent 70%);
+            border: 2px solid rgba(255,106,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            animation: pulseRing 2.5s ease infinite;
+            position: relative;
+        }
+        .success-ring::before {
+            content: '';
+            position: absolute; inset: -12px; border-radius: 50%;
+            border: 1px solid rgba(255,106,0,0.12);
+            animation: pulseRing 2.5s ease 0.3s infinite;
+        }
+        .success-ring::after {
+            content: '';
+            position: absolute; inset: -24px; border-radius: 50%;
+            border: 1px solid rgba(255,106,0,0.06);
+            animation: pulseRing 2.5s ease 0.6s infinite;
+        }
+        @keyframes pulseRing {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.04); opacity: 0.8; }
+        }
+        .success-icon {
+            font-size: 3rem; color: var(--primary-color);
+            animation: bounceIn 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            80% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* CONFETTI DOTS */
+        .confetti-dots { position: absolute; inset: 0; pointer-events: none; }
+        .cdot { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: floatDot 3s ease infinite; }
+        @keyframes floatDot { 0%, 100% { transform: translateY(0) scale(1); opacity:0.8; } 50% { transform: translateY(-18px) scale(1.2); opacity:0.4; } }
+
+        /* TEXT */
+        .success-eyebrow { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--primary-color); margin-bottom: 14px; }
+        .success-headline { font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
+        .success-sub { color: var(--text-muted); font-size: 1rem; max-width: 480px; margin: 0 auto 36px; line-height: 1.7; }
+
+        /* ORDER CARD */
+        .order-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); padding: 28px 32px; text-align: left;
+            margin-bottom: 32px; animation: fadeSlideUp 0.6s ease 0.4s both;
+        }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; }
+        .order-num { font-size: 1.1rem; font-weight: 700; }
+        .order-num span { color: var(--primary-color); }
+        .order-status { display: flex; align-items: center; gap: 8px; background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.82rem; font-weight: 700; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse-dot 1.5s ease infinite; }
+        @keyframes pulse-dot { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.5);opacity:0.6;} }
+
+        /* ORDER DETAILS GRID */
+        .order-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .detail-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 5px; }
+        .detail-value { font-size: 0.9rem; font-weight: 600; color: #fff; line-height: 1.5; }
+
+        /* ORDER ITEMS */
+        .order-items-divider { border-top: 1px solid var(--border-color); padding-top: 18px; margin-top: 4px; }
+        .order-items-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+        .order-item-list { display: flex; flex-direction: column; gap: 12px; }
+        .oi-row { display: flex; align-items: center; gap: 14px; }
+        .oi-img { width: 50px; height: 50px; background: #1c1c23; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .oi-img img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        .oi-img .no-img { color: var(--text-muted); font-size: 1.1rem; }
+        .oi-details { flex: 1; min-width: 0; }
+        .oi-brand { font-size: 0.7rem; color: var(--primary-color); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .oi-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .oi-qty { font-size: 0.78rem; color: var(--text-muted); }
+        .oi-price { font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+
+        /* TOTAL ROW */
+        .total-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+        .total-label { font-weight: 700; font-size: 0.95rem; }
+        .total-value { font-size: 1.4rem; font-weight: 800; color: var(--primary-color); font-family: 'Outfit', sans-serif; }
+
+        /* BUTTONS */
+        .action-buttons { display: flex; gap: 14px; justify-content: center; animation: fadeSlideUp 0.6s ease 0.7s both; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 28px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.95rem; cursor: pointer; border: none; transition: var(--transition); }
+        .btn-primary { background: var(--primary-color); color: #000; box-shadow: 0 8px 24px rgba(255,106,0,0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,106,0,0.4); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: #fff; }
+        .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.04); }
+
+        /* TRUST STRIP */
+        .trust-strip { display: flex; gap: 30px; justify-content: center; margin-top: 40px; flex-wrap: wrap; animation: fadeSlideUp 0.6s ease 0.9s both; }
+        .trust-item { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
+        .trust-item i { font-size: 1.4rem; color: var(--primary-color); }
+
+        /* FOOTER */
+        footer { padding: 40px 0 24px; background: #08080a; border-top: 1px solid var(--border-color); }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.8rem; flex-wrap: wrap; gap: 12px; }
+        .footer-bottom-links { display: flex; gap: 20px; }
+        .footer-bottom-links a { color: var(--text-muted); }
+        .footer-bottom-links a:hover { color: var(--primary-color); }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .nav-links { display: none; }
+            .success-headline { font-size: 1.8rem; }
+            .order-details-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container nav-wrap">
+            <a href="/" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+                <div class="logo-icon">T</div>
+                <span class="logo">TimeHub <span class="logo-dot">.</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="#">New Arrivals</a>
+                <a href="#">Brands</a>
+                <a href="{% url 'product_listing' %}">Collections</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main>
+        <div class="success-wrapper">
+
+            <!-- ICON -->
+            <div class="success-ring-wrap">
+                <div class="confetti-dots" id="confettiDots"></div>
+                <div class="success-ring">
+                    <i class="fas fa-check success-icon" id="successIcon"></i>
+                </div>
+            </div>
+
+            <!-- HEADLINE -->
+            <div class="success-eyebrow">Order Confirmed</div>
+            <h1 class="success-headline">Thank You for Your Order!</h1>
+            <p class="success-sub">
+                Your order <strong style="color:#fff;">#{{ order.id }}</strong> has been placed successfully.
+                You'll receive a confirmation once your timepiece is on its way.
+            </p>
+
+            <!-- ORDER DETAILS CARD -->
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-num">Order <span>#{{ order.id }}</span></div>
+                    <div class="order-status">
+                        <div class="status-dot"></div>
+                        {{ order.status }}
+                    </div>
+                </div>
+
+                <div class="order-details-grid">
+                    <div class="detail-block">
+                        <div class="detail-label"><i class="fas fa-calendar-alt" style="margin-right:5px;"></i>Order Date</div>
+                        <div class="detail-value">{{ order.created_at|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-label"><i class="fas fa-money-bill-wave" style="margin-right:5px;"></i>Payment</div>
+                        <div class="detail-value">{{ order.get_payment_method_display }}</div>
+                    </div>
+                    {% if address %}
+                    <div class="detail-block" style="grid-column: 1 / -1;">
+                        <div class="detail-label"><i class="fas fa-map-marker-alt" style="margin-right:5px;"></i>Delivering To</div>
+                        <div class="detail-value">
+                            {{ address.full_name }}<br>
+                            {{ address.street }},
+                            {{ address.city }}, {{ address.state }} {{ address.postal_code }},
+                            {{ address.country }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Items -->
+                <div class="order-items-divider">
+                    <div class="order-items-label">Items in Your Order</div>
+                    <div class="order-item-list">
+                        {% for item in order_items %}
+                        <div class="oi-row">
+                            <div class="oi-img">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                <span class="no-img"><i class="fas fa-clock"></i></span>
+                                {% endif %}
+                            </div>
+                            <div class="oi-details">
+                                <div class="oi-brand">{{ item.product.brand|default:"TimeHub" }}</div>
+                                <div class="oi-name">{{ item.product.name }}</div>
+                                <div class="oi-qty">Qty: {{ item.quantity }}</div>
+                            </div>
+                            <div class="oi-price">₹{{ item.price|floatformat:0 }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Price Summary -->
+                    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
+                            <span>Subtotal</span><span style="color:#fff; font-weight:600;">₹{{ order.subtotal|floatformat:0 }}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
+                            <span>Shipping</span>
+                            {% if order.shipping_charge == 0 %}
+                            <span style="color:#22c55e; font-weight:700;">FREE</span>
+                            {% else %}
+                            <span style="color:#fff; font-weight:600;">₹{{ order.shipping_charge|floatformat:0 }}</span>
+                            {% endif %}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
+                            <span>Tax (5% GST)</span><span style="color:#fff; font-weight:600;">₹{{ order.tax|floatformat:0 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="total-row">
+                        <span class="total-label">Total Paid</span>
+                        <span class="total-value">₹{{ order.total_amount|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+                <a href="{% url 'user_dashboard' %}" class="btn btn-outline" id="viewOrderBtn">
+                    <i class="fas fa-receipt"></i> View Order Details
+                </a>
+                <a href="{% url 'product_listing' %}" class="btn btn-primary" id="continueShoppingBtn">
+                    <i class="fas fa-shopping-bag"></i> Continue Shopping
+                </a>
+            </div>
+
+            <!-- TRUST STRIP -->
+            <div class="trust-strip">
+                <div class="trust-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>5 Year<br>Warranty</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Insured<br>Shipping</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-undo-alt"></i>
+                    <span>30-Day<br>Returns</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-headset"></i>
+                    <span>24/7<br>Support</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <div>© 2026 TimeHub. All rights reserved.</div>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Confetti dots decoration
+        const colors = ['#ff6a00', '#ffaa00', '#22c55e', '#3b82f6', '#f43f5e'];
+        const dotsWrap = document.getElementById('confettiDots');
+        for (let i = 0; i < 8; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'cdot';
+            dot.style.cssText = `
+                background: ${colors[i % colors.length]};
+                top: ${Math.random() * 100}%;
+                left: ${Math.random() * 100}%;
+                animation-delay: ${Math.random() * 2}s;
+                animation-duration: ${2.5 + Math.random() * 1.5}s;
+            `;
+            dotsWrap.appendChild(dot);
+        }
+    </script>
+</body>
+</html>

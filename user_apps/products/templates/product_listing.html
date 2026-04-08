@@ -969,7 +969,7 @@
                                     <i class="fas fa-exclamation-triangle"></i> Out
                                 </button>
                                 {% endif %}
-                                <button class="btn btn-outline buy-now" onclick="event.preventDefault(); window.location.href='{% url 'product_details' product.id %}';" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
+                                <button class="btn btn-outline buy-now" onclick="event.preventDefault(); window.buyNow({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
                                     Buy Now
                                 </button>
                             </div>
@@ -1310,6 +1310,38 @@
             })
             .catch(err => {
                 alert('Please login to add items to your cart.');
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+            });
+        };
+
+        // --- Buy Now Functionality ---
+        window.buyNow = function(productId, btnElement) {
+            const btn = btnElement || document.querySelector('.buy-now');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.style.pointerEvents = 'none';
+
+            fetch(`/user/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: 1 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.href = "{% url 'checkout_page' %}";
+                } else {
+                    alert(data.error || 'Failed to process Buy Now');
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(err => {
+                alert('Please login to continue.');
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
             });

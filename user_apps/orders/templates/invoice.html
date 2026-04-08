@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - Order #{{ order.id }}</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; color: #333; line-height: 1.6; margin: 40px; }
+        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); font-size: 16px; color: #555; }
+        .invoice-box table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
+        .invoice-box table td { padding: 5px; vertical-align: top; }
+        .invoice-box table tr td:nth-child(2) { text-align: right; }
+        .invoice-box table tr.top table td { padding-bottom: 20px; }
+        .invoice-box table tr.top table td.title { font-size: 45px; line-height: 45px; color: #333; }
+        .invoice-box table tr.information table td { padding-bottom: 40px; }
+        .invoice-box table tr.heading td { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .invoice-box table tr.details td { padding-bottom: 20px; }
+        .invoice-box table tr.item td { border-bottom: 1px solid #eee; }
+        .invoice-box table tr.item.last td { border-bottom: none; }
+        .invoice-box table tr.total td:nth-child(2) { border-top: 2px solid #eee; font-weight: bold; }
+        .print-btn { background: #ff6a00; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+        @media print { .print-btn { display: none; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+
+    <div class="invoice-box">
+        <table cellpadding="0" cellspacing="0">
+            <tr class="top">
+                <td colspan="2">
+                    <table>
+                        <tr>
+                            <td class="title">TimeHub.</td>
+                            <td>
+                                Invoice #: ORD-{{ order.id }}<br>
+                                Created: {{ order.created_at|date:"F d, Y" }}<br>
+                                Status: {{ order.status }}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="information">
+                <td colspan="2">
+                    <table>
+                        <tr>
+                            <td>
+                                <strong>Billed To:</strong><br>
+                                {{ address.full_name }}<br>
+                                {{ address.street }}<br>
+                                {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                                {{ address.country }}
+                            </td>
+                            <td>
+                                <strong>Payment Method:</strong><br>
+                                {{ order.get_payment_method_display }}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <tr class="heading">
+                <td>Item</td>
+                <td>Price</td>
+            </tr>
+
+            {% for item in items %}
+            <tr class="item">
+                <td>{{ item.product.name }} (x{{ item.quantity }})</td>
+                <td>₹{{ item.price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+
+            <tr class="total">
+                <td></td>
+                <td>
+                   Subtotal: ₹{{ order.subtotal|floatformat:2 }}<br>
+                   Tax (5%): ₹{{ order.tax|floatformat:2 }}<br>
+                   Shipping: ₹{{ order.shipping_charge|floatformat:2 }}<br>
+                   <strong>Total: ₹{{ order.total_amount|floatformat:2 }}</strong>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

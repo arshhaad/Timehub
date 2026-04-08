@@ -11,6 +11,7 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
+        padding-bottom: 60px;
     }
 
     .page-header {
@@ -41,6 +42,7 @@
         border: 1px solid var(--border-color);
         border-radius: 24px;
         padding: 50px;
+        width: 100%;
         max-width: 800px;
         transition: var(--transition);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -56,6 +58,8 @@
         align-items: center;
         gap: 40px;
         margin-bottom: 50px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .large-avatar {
@@ -72,6 +76,7 @@
         overflow: hidden;
         box-shadow: 0 10px 20px rgba(226, 176, 74, 0.2);
         border: 4px solid rgba(255, 255, 255, 0.05);
+        position: relative;
     }
 
     .large-avatar img {
@@ -116,27 +121,41 @@
     .form-row {
         display: flex;
         gap: 25px;
-        margin-bottom: 30px;
+        margin-bottom: 24px;
     }
 
     .form-group {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
 
     .form-group label {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
     }
 
-    .form-group input {
+    .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrap i.input-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .input-wrap input {
         width: 100%;
-        padding: 14px 20px;
+        padding: 14px 20px 14px 42px;
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
@@ -144,84 +163,92 @@
         outline: none;
         transition: var(--transition);
         font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
     }
 
-    .form-group input:focus {
+    .input-wrap input:focus {
         background: rgba(255, 255, 255, 0.04);
         border-color: var(--primary-color);
-        box-shadow: 0 0 15px var(--primary-glow);
+        box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.1);
     }
+
+    .input-wrap input:focus + i.input-icon,
+    .input-wrap:focus-within i.input-icon {
+        color: var(--primary-color);
+    }
+
+    /* VALID / ERROR STATES */
+    .input-wrap.is-invalid input { border-color: #ef4444; }
+    .input-wrap.is-invalid i.input-icon { color: #ef4444; }
+
+    .field-msg {
+        font-size: 0.75rem;
+        font-weight: 600;
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .field-msg.error { color: #ef4444; }
 
     .form-actions {
         margin-top: 50px;
         display: flex;
         align-items: center;
-        gap: 25px;
+        gap: 20px;
     }
 
     .btn-save {
         background: linear-gradient(135deg, var(--primary-color), #e05e00);
-        color: #fff;
-        padding: 14px 40px;
+        color: #000;
+        padding: 15px 45px;
         border-radius: var(--radius-pill);
         border: none;
-        font-weight: 700;
-        font-size: 0.95rem;
+        font-weight: 800;
+        font-size: 1rem;
         cursor: pointer;
         transition: var(--transition);
-        box-shadow: 0 8px 16px rgba(255, 106, 0, 0.2);
+        box-shadow: 0 8px 24px rgba(255, 106, 0, 0.25);
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .btn-save:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 24px rgba(255, 106, 0, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(255, 106, 0, 0.4);
+    }
+
+    .btn-save:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
     }
 
     .btn-cancel {
-        color: #fff;
+        color: var(--text-muted);
         text-decoration: none;
         font-size: 0.95rem;
         font-weight: 600;
         transition: var(--transition);
-        padding: 10px 20px;
+        padding: 12px 24px;
         border-radius: var(--radius-md);
+        border: 1px solid transparent;
     }
 
     .btn-cancel:hover {
         background: rgba(255, 255, 255, 0.05);
-        color: var(--text-muted);
+        border-color: var(--border-color);
+        color: #fff;
     }
 
     @media (max-width: 768px) {
-        .edit-form-card {
-            padding: 30px 20px;
-            border-radius: 20px;
-        }
-
-        .avatar-edit-section {
-            flex-direction: column;
-            text-align: center;
-            gap: 20px;
-        }
-
-        .avatar-actions {
-            align-items: center;
-        }
-
-        .form-row {
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-actions {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .btn-save, .btn-cancel {
-            width: 100%;
-            text-align: center;
-        }
+        .edit-form-card { padding: 30px 20px; border-radius: 20px; }
+        .avatar-edit-section { flex-direction: column; text-align: center; gap: 20px; }
+        .avatar-actions { align-items: center; }
+        .form-row { flex-direction: column; gap: 20px; }
+        .form-actions { flex-direction: column; width: 100%; }
+        .btn-save, .btn-cancel { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}
@@ -229,76 +256,103 @@
 {% block content %}
 <div class="content-center">
     <div class="page-header">
-    <h1>Edit Profile</h1>
-    <p>Update your personal information and contact details.</p>
-</div>
+        <h1>Edit Profile</h1>
+        <p>Your personal information is kept secure and used only for order processing.</p>
+    </div>
 
-<div class="edit-form-card">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+    <div class="edit-form-card">
+        <form method="post" enctype="multipart/form-data" id="profileForm" novalidate>
+            {% csrf_token %}
 
-        <div class="avatar-edit-section">
-            <div class="large-avatar">
-                {% if user.avatar %}
-                <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
-                {% else %}
-                <span id="avatar-preview-text">{{ user.email|slice:":1"|upper }}</span>
-                <!-- Hidden img for preview -->
-                <img id="avatar-preview" src=""
-                    style="display: none; width: 100%; height: 100%; object-fit: cover;">
-                {% endif %}
+            <!-- AVATAR SECTION -->
+            <div class="avatar-edit-section">
+                <div class="large-avatar">
+                    {% if user.avatar %}
+                    <img id="avatar-preview" src="{{ user.avatar.url }}" alt="User Avatar">
+                    {% else %}
+                    <span id="avatar-preview-text">{{ user.email|slice:":1"|upper }}</span>
+                    <img id="avatar-preview" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="avatar-actions">
+                    <label class="btn-change-avatar">
+                        <i class="fas fa-camera" style="margin-right: 8px;"></i> Change Avatar
+                        <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;" onchange="previewImage(event)">
+                    </label>
+                    <span class="avatar-hint">JPG, PNG or WEBP. Recommended size: 400x400px.</span>
+                </div>
             </div>
-            <div class="avatar-actions">
-                <label class="btn-change-avatar">
-                    Change Avatar
-                    <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;"
-                        onchange="previewImage(event)">
-                </label>
-                <span class="avatar-hint">JPG, GIF or PNG. Max size of 800K</span>
-            </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="{{ form.first_name.id_for_label }}">First Name</label>
-                {{ form.first_name }}
+            <!-- NAME ROW -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">First Name</label>
+                    <div class="input-wrap {% if form.first_name.errors %}is-invalid{% endif %}" id="wrap_first_name">
+                        <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default:'' }}" placeholder="Enter first name" maxlength="150">
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                    <div class="field-msg {% if form.first_name.errors %}error{% endif %}" id="msg_first_name">
+                        {% if form.first_name.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.first_name.errors|first }} {% endif %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Last Name</label>
+                    <div class="input-wrap {% if form.last_name.errors %}is-invalid{% endif %}" id="wrap_last_name">
+                        <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Enter last name" maxlength="150">
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                    <div class="field-msg {% if form.last_name.errors %}error{% endif %}" id="msg_last_name">
+                        {% if form.last_name.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.last_name.errors|first }} {% endif %}
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="{{ form.last_name.id_for_label }}">Last Name</label>
-                {{ form.last_name }}
-            </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="{{ form.email.id_for_label }}">Email Address</label>
-                {{ form.email }}
+            <!-- EMAIL ROW -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_email">Email Address</label>
+                    <div class="input-wrap {% if form.email.errors %}is-invalid{% endif %}" id="wrap_email">
+                        <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" placeholder="email@example.com" {% if user.is_social_login %}readonly{% endif %}>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                    <div class="field-msg {% if form.email.errors %}error{% endif %}" id="msg_email">
+                        {% if form.email.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.email.errors|first }} {% endif %}
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
-                {{ form.phone_number }}
+            <!-- PHONE ROW -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_phone_number">Phone Number</label>
+                    <div class="input-wrap {% if form.phone_number.errors %}is-invalid{% endif %}" id="wrap_phone_number">
+                        <input type="tel" name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}" placeholder="+91 00000 00000">
+                        <i class="fas fa-phone input-icon"></i>
+                    </div>
+                    <div class="field-msg {% if form.phone_number.errors %}error{% endif %}" id="msg_phone_number">
+                        {% if form.phone_number.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.phone_number.errors|first }} {% endif %}
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-save">Save Changes</button>
-            <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
-        </div>
-    </form>
-</div>
+            <div class="form-actions">
+                <button type="submit" class="btn-save" id="submitBtn">
+                    <i class="fas fa-check"></i> Save Changes
+                </button>
+                <a href="{% url 'user_dashboard' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     function previewImage(event) {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function () {
-            var output = document.getElementById('avatar-preview');
-            var text = document.getElementById('avatar-preview-text');
+            const output = document.getElementById('avatar-preview');
+            const text = document.getElementById('avatar-preview-text');
             if (text) text.style.display = 'none';
             output.style.display = 'block';
             output.src = reader.result;
@@ -308,14 +362,28 @@
         }
     }
 
-    // Add form control classes to django inputs programmatically if needed
     document.addEventListener('DOMContentLoaded', function () {
-        const inputs = document.querySelectorAll('.form-group input');
-        inputs.forEach(input => {
-            input.removeAttribute('required'); // Match typical behavior; django handles validation
-            if (!input.placeholder && input.name === 'phone_number') {
-                input.placeholder = "+1 (555) 234-5678";
-            }
+        const form = document.getElementById('profileForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('input', function() {
+                const wrap = this.closest('.input-wrap');
+                const group = this.closest('.form-group');
+                const msg = group ? group.querySelector('.field-msg') : null;
+                
+                if (wrap) wrap.classList.remove('is-invalid');
+                if (msg) {
+                    msg.textContent = '';
+                    msg.classList.remove('error');
+                }
+            });
         });
     });
 </script>
