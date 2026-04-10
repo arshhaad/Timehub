@@ -1,0 +1,122 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Reschedule Order - ORD-{{ order.id }}{% endblock %}
+
+{% block nav_orders %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header-alt { padding: 40px 0; text-align: center; }
+    .page-header-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .page-header-alt p { color: var(--text-muted); font-size: 1rem; }
+
+    .form-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        max-width: 600px;
+        margin: 0 auto 60px auto;
+        backdrop-filter: var(--glass);
+    }
+
+    input[type="date"] {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        color: #fff;
+        margin-bottom: 25px;
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition);
+        box-sizing: border-box;
+    }
+
+    input[type="date"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 15px;
+    }
+
+    .btn-action-alt {
+        padding: 15px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .btn-primary-alt {
+        background: var(--primary-color);
+        color: #000;
+        box-shadow: 0 4px 15px var(--primary-glow);
+    }
+    .btn-primary-alt:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-alt {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: #fff;
+    }
+    .btn-outline-alt:hover {
+        border-color: #fff;
+        background: rgba(255,255,255,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
+    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+</div>
+
+<div class="page-header-alt">
+    <h1>Reschedule Delivery</h1>
+    <p>Order ID: ORD-{{ order.id }}</p>
+</div>
+
+<div class="form-container">
+    <div style="background: rgba(255, 106, 0, 0.1); border: 1px solid rgba(255, 106, 0, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 12px;">
+        <i class="fas fa-info-circle" style="color: var(--primary-color); margin-top: 3px;"></i>
+        <p style="color: #fff; font-size: 0.9rem; margin: 0; line-height: 1.5;">
+            <strong style="color: var(--primary-color);">Important Note:</strong> The reason for rescheduling must be valid. The TimeHub team will review and approve your request only based on the validity of the reason provided.
+        </p>
+    </div>
+
+    <form action="{% url 'reschedule_order' order.id %}" method="POST">
+        {% csrf_token %}
+        <label for="scheduled_date" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Date</label>
+        <input type="date" name="scheduled_date" id="scheduled_date" required min="{{ today|date:'Y-m-d' }}">
+        
+        <label for="scheduled_time" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Time</label>
+        <input type="time" name="scheduled_time" id="scheduled_time" required style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box;">
+        
+        <label for="reschedule_reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Reason for Rescheduling</label>
+        <textarea name="reschedule_reason" id="reschedule_reason" required minlength="15" placeholder="Please provide a valid and detailed reason for your request..." rows="3" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box; resize:vertical;"></textarea>
+
+        
+        <div class="btn-group">
+            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">Cancel</a>
+            <button type="submit" class="btn-action-alt btn-primary-alt">Confirm Date</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

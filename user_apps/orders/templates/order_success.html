@@ -291,8 +291,11 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-                <a href="{% url 'user_dashboard' %}" class="btn btn-outline" id="viewOrderBtn">
+                <a href="{% url 'order_detail' order.id %}" class="btn btn-outline" id="viewDetailBtn">
                     <i class="fas fa-receipt"></i> View Order Details
+                </a>
+                <a href="{% url 'track_order' order.id %}" class="btn btn-outline" id="trackOrderBtn">
+                    <i class="fas fa-map-marker-alt"></i> Track Order
                 </a>
                 <a href="{% url 'product_listing' %}" class="btn btn-primary" id="continueShoppingBtn">
                     <i class="fas fa-shopping-bag"></i> Continue Shopping

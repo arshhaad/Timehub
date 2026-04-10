@@ -128,8 +128,8 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = 'home'
 
-# Admin login redirect
-LOGIN_URL = '/adminpanel/login/'
+# Default login redirect for standard users
+LOGIN_URL = '/accounts/login/'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 SOCIALACCOUNT_PROVIDERS = {

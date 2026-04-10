@@ -825,7 +825,13 @@
             <!-- Topbar -->
             <header class="topbar">
                 <form action="{% url 'user_list' %}" method="GET" class="search-bar">
+                    {% if query %}
+                    <a href="{% url 'user_list' %}" style="text-decoration: none; display: flex; align-items: center;">
+                        <i class="fas fa-times" style="color: #ef4444;"></i>
+                    </a>
+                    {% else %}
                     <i class="fas fa-search"></i>
+                    {% endif %}
                     <input type="text" name="q" placeholder="Search orders, products, or users..."
                         value="{{ query|default:'' }}">
                     {% if status %}

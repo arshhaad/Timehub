@@ -733,12 +733,14 @@
         <div class="main-wrapper">
             <header class="topbar">
                 <form action="{% url 'category_list' %}" method="GET" class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search categories...">
                     {% if query %}
-                    <a href="{% url 'category_list' %}" style="color:#6b7280; text-decoration:none;"><i
-                            class="fas fa-times-circle"></i></a>
+                    <a href="{% url 'category_list' %}" style="text-decoration: none; display: flex; align-items: center;">
+                        <i class="fas fa-times" style="color: #ef4444;"></i>
+                    </a>
+                    {% else %}
+                    <i class="fas fa-search"></i>
                     {% endif %}
+                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search categories...">
                 </form>
 
                 <div class="topbar-right">

@@ -111,8 +111,14 @@
 {% endblock %}
 
 {% block topbar_left %}
-<form action="{% url 'admin_order_list' %}" method="GET" class="search-bar">
-    <i class="fas fa-search" style="color:#9ca3af;"></i>
+<form action="{% url 'admin_order_list' %}" method="GET" class="search-bar" id="admin-search-top">
+    {% if query %}
+        <a href="{% url 'admin_order_list' %}" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+            <i class="fas fa-times" style="color:#ef4444; cursor: pointer;"></i>
+        </a>
+    {% else %}
+        <i class="fas fa-search" style="color:#9ca3af; cursor: pointer;" onclick="document.getElementById('admin-search-top').submit()"></i>
+    {% endif %}
     <input type="text" name="q" placeholder="Search orders, users…" value="{{ query|default:'' }}">
     {% if status_filter and status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
     {% if sort and sort != 'newest' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
@@ -132,7 +138,13 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <div class="toolbar-search">
-                <i class="fas fa-search" style="color:#9ca3af; font-size:.85rem; flex-shrink:0;"></i>
+                {% if query %}
+                    <a href="{% url 'admin_order_list' %}" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                        <i class="fas fa-times" style="color:#ef4444; cursor: pointer; font-size:.85rem;"></i>
+                    </a>
+                {% else %}
+                    <i class="fas fa-search" style="color:#9ca3af; font-size:.85rem; flex-shrink:0; cursor: pointer;" onclick="document.getElementById('filterForm').submit()"></i>
+                {% endif %}
                 <input type="text" name="q" placeholder="Order ID, name or email…" value="{{ query|default:'' }}">
             </div>
             <select name="sort" class="select-filter" onchange="document.getElementById('filterForm').submit()">
@@ -228,7 +240,7 @@
                     </td>
                     <td>
                         <div class="action-col">
-                            <a href="{% url 'order_detail' order.id %}" class="action-btn view-btn" title="View Order Details">
+                            <a href="{% url 'admin_order_detail' order.id %}" class="action-btn view-btn" title="View Order Details">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </div>

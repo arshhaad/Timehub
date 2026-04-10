@@ -31,9 +31,11 @@
     .status-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
     .status-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
     .status-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .status-OutforDelivery { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
     .status-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
     .status-Cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .status-Return { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
+    .status-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
+    .status-Returned { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
 
     .order-items { display: flex; flex-direction: column; gap: 20px; }
     .item-row { display: flex; align-items: center; gap: 20px; }
@@ -45,10 +47,10 @@
 
     .order-actions { display: flex; gap: 15px; margin-top: 30px; }
     .btn-action { padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: var(--transition); display: flex; align-items: center; gap: 8px; text-decoration: none; }
-    .btn-primary-alt { background: var(--primary-color); color: #000; }
-    .btn-primary-alt:hover { background: var(--primary-hover); transform: scale(1.02); }
+    .btn-primary-alt { background: var(--primary-color); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+    .btn-primary-alt:hover { background: #e65f00; transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
     .btn-outline-alt { background: transparent; border: 1px solid var(--border-color); color: #fff; }
-    .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+    .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); transform: translateY(-2px); }
 
     /* EMPTY STATE */
     .empty-state { text-align: center; padding: 100px 0; background: var(--card-bg); border-radius: 24px; border: 1px dashed var(--border-color); }
@@ -60,10 +62,32 @@
     .alert { padding: 16px 20px; border-radius: var(--radius-md); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
     .alert-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
     .alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    /* MINI TRACKER */
+    .mini-tracker {
+        display: flex; justify-content: space-between; align-items: center;
+        margin: 25px 0 10px; padding: 15px 20px;
+        background: rgba(255,255,255,0.02); border-radius: 12px;
+        border: 1px solid var(--border-color); position: relative; overflow: hidden;
+    }
+    .mini-tracker-line {
+        position: absolute; top: 21px; left: 10%; right: 10%; height: 2px;
+        background: var(--border-color); z-index: 1;
+    }
+    .mini-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 80px; text-align: center; }
+    .mini-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--border-color); transition: var(--transition); }
+    .mini-step.completed .mini-dot { background: var(--primary-color); border-color: var(--primary-color); box-shadow: 0 0 10px rgba(255,106,0,0.5); }
+    .mini-step.active .mini-dot { background: var(--card-bg); border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255,106,0,0.2); }
+    .mini-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mini-step.completed .mini-label, .mini-step.active .mini-label { color: #fff; }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
+    <a href="{% url 'user_dashboard' %}" style="text-decoration: none; color: inherit;"><i class="fas fa-chevron-left"></i> Back to Dashboard</a>
+</div>
+
 <div class="page-header-alt">
     <h1>My Orders</h1>
     <p>Track, manage and view your previous timepieces acquisitions.</p>
@@ -79,20 +103,26 @@
 {% endif %}
 
 <div class="search-container">
-    <form method="GET" action="{% url 'order_history' %}">
+    <form method="GET" action="{% url 'order_history' %}" id="search-form">
         <input type="text" name="q" class="search-input" placeholder="Search by Order ID or Product name..." value="{{ query }}">
-        <i class="fas fa-search search-icon"></i>
+        {% if query %}
+            <a href="{% url 'order_history' %}" class="search-icon" style="text-decoration: none; color: inherit;">
+                <i class="fas fa-times" style="color: #ef4444; cursor: pointer;"></i>
+            </a>
+        {% else %}
+            <i class="fas fa-search search-icon" onclick="document.getElementById('search-form').submit();" style="cursor: pointer;"></i>
+        {% endif %}
     </form>
 </div>
 
 {% if orders %}
     {% for order in orders %}
     <div class="order-card">
-        <div class="order-header">
+        <a href="{% url 'order_detail' order.id %}" class="order-header" style="text-decoration: none; color: inherit;">
             <div class="order-meta">
                 <div class="meta-item">
                     <span class="label">Order ID</span>
-                    <span class="val">ORD-{{ order.id }}</span>
+                    <span class="val">#{{ order.id|stringformat:"05d" }}</span>
                 </div>
                 <div class="meta-item">
                     <span class="label">Date</span>
@@ -106,20 +136,26 @@
             <div class="status-badge status-{{ order.status|cut:' ' }}">
                 {{ order.status }}
             </div>
-        </div>
+        </a>
 
         <div class="order-items">
             {% for item in order.items.all|slice:":3" %}
             <div class="item-row">
                 <div class="item-img">
-                    {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-                    {% else %}
-                        <i class="fas fa-clock" style="color:var(--text-muted);"></i>
-                    {% endif %}
+                    <a href="{% url 'order_detail' order.id %}" style="display: block; width: 100%; height: 100%;">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                            <i class="fas fa-clock" style="color:var(--text-muted);"></i>
+                        {% endif %}
+                    </a>
                 </div>
                 <div class="item-info">
-                    <div class="item-name">{{ item.product.name }}</div>
+                    <div class="item-name">
+                        <a href="{% url 'order_detail' order.id %}" style="color: inherit; text-decoration: none;">
+                            {{ item.product.name }}
+                        </a>
+                    </div>
                     <div class="item-qty">Quantity: {{ item.quantity }}</div>
                 </div>
                 {% if item.is_cancelled %}
@@ -132,11 +168,43 @@
             {% endif %}
         </div>
 
+        {% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
+        <div class="mini-tracker">
+            <div class="mini-tracker-line"></div>
+            <div class="mini-step {% if order.status == 'Pending' %}active{% elif order.status != 'Pending' %}completed{% endif %}">
+                <div class="mini-dot"></div>
+                <div class="mini-label">Pending</div>
+            </div>
+            <div class="mini-step {% if order.status == 'Processing' %}active{% elif order.status == 'Shipped' or order.status == 'Out for Delivery' or order.status == 'Delivered' %}completed{% endif %}">
+                <div class="mini-dot"></div>
+                <div class="mini-label">Processing</div>
+            </div>
+            <div class="mini-step {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
+                <div class="mini-dot"></div>
+                <div class="mini-label">Shipped</div>
+            </div>
+            <div class="mini-step {% if order.status == 'Out for Delivery' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
+                <div class="mini-dot"></div>
+                <div class="mini-label">Out for Delivery</div>
+            </div>
+            <div class="mini-step {% if order.status == 'Delivered' %}active completed{% endif %}">
+                <div class="mini-dot"></div>
+                <div class="mini-label">Delivered</div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="order-actions">
             <a href="{% url 'order_detail' order.id %}" class="btn-action btn-primary-alt">View Details</a>
-            <a href="{% url 'download_invoice' order.id %}" class="btn-action btn-outline-alt" target="_blank">
-                <i class="fas fa-file-invoice"></i> Invoice
+            <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
+                <i class="fas fa-map-marker-alt"></i> Track Order
             </a>
+
+            {% if order.status in 'Pending,Processing' %}
+            <a href="{% url 'reschedule_order' order.id %}" class="btn-action btn-outline-alt" style="border-color:var(--primary-color); color:var(--primary-color);">
+                <i class="fas fa-calendar-alt"></i> Reschedule
+            </a>
+            {% endif %}
         </div>
     </div>
     {% endfor %}

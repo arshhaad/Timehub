@@ -126,7 +126,14 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     cancel_reason = models.TextField(blank=True, null=True)
     return_reason = models.TextField(blank=True, null=True)
+    reschedule_reason = models.TextField(blank=True, null=True)
+    requested_reschedule_date = models.DateField(blank=True, null=True)
+    requested_reschedule_time = models.TimeField(blank=True, null=True)
+    reschedule_status = models.CharField(max_length=20, choices=[('None', 'None'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='None')
     scheduled_delivery_date = models.DateField(blank=True, null=True)
+    scheduled_delivery_time = models.TimeField(blank=True, null=True)
+    refund_processed_at = models.DateTimeField(blank=True, null=True)
+    refund_method = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

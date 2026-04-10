@@ -1,0 +1,124 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Cancel Order - ORD-{{ order.id }}{% endblock %}
+
+{% block nav_orders %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header-alt { padding: 40px 0; text-align: center; }
+    .page-header-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; color: #ef4444; }
+    .page-header-alt p { color: var(--text-muted); font-size: 1rem; }
+
+    .form-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        max-width: 600px;
+        margin: 0 auto 60px auto;
+        backdrop-filter: var(--glass);
+    }
+
+    .form-container p.warning {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        padding: 15px;
+        border-radius: var(--radius-md);
+        margin-bottom: 25px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    textarea {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        color: #fff;
+        margin-bottom: 25px;
+        font-family: inherit;
+        resize: none;
+        outline: none;
+        transition: var(--transition);
+        box-sizing: border-box;
+    }
+
+    textarea:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 15px;
+    }
+
+    .btn-action-alt {
+        padding: 15px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .btn-danger-alt {
+        background: #ef4444;
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger-alt:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-alt {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: #fff;
+    }
+    .btn-outline-alt:hover {
+        border-color: #fff;
+        background: rgba(255,255,255,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
+    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+</div>
+
+<div class="page-header-alt">
+    <h1>Cancel Order</h1>
+    <p>Order ID: ORD-{{ order.id }}</p>
+</div>
+
+<div class="form-container">
+    <p class="warning">
+        <i class="fas fa-exclamation-triangle"></i> Are you sure you want to cancel this entire order? This action cannot be undone.
+    </p>
+
+    <form action="{% url 'cancel_order' order.id %}" method="POST">
+        {% csrf_token %}
+        <label for="reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Reason for Cancellation</label>
+        <textarea name="reason" id="reason" placeholder="Please tell us why you are cancelling..." rows="4" required></textarea>
+        
+        <div class="btn-group">
+            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">Go Back</a>
+            <button type="submit" class="btn-action-alt btn-danger-alt">Yes, Cancel Order</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

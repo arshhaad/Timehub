@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from user_apps.core.models import Order, Product, ProductVariant
+from user_apps.core.models import Order, Product, ProductVariant, OrderItem
 import json
 from django.http import JsonResponse
 
@@ -75,12 +75,16 @@ def order_detail(request, order_id):
         new_status = request.POST.get('status')
         valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
         if new_status in valid_statuses:
+            if new_status == 'Returned' and order.status != 'Returned':
+                from django.utils import timezone
+                order.refund_processed_at = timezone.now()
+                order.refund_method = request.POST.get('refund_method')
             order.status = new_status
             order.save()
             messages.success(request, f'Order #{order.id} status updated to {new_status}.')
         else:
             messages.error(request, 'Invalid status.')
-        return redirect('order_detail', order_id=order.id)
+        return redirect('admin_order_detail', order_id=order.id)
 
     timeline_steps = [
         ('Pending',          'Order received'),
@@ -97,7 +101,7 @@ def order_detail(request, order_id):
         'status_choices': Order.STATUS_CHOICES,
         'timeline_steps': timeline_steps,
     }
-    return render(request, 'order_manage/order_detail.html', context)
+    return render(request, 'order_manage/user_order_detail.html', context)
 
 
 @login_required
@@ -107,6 +111,10 @@ def update_order_status(request, order_id):
     new_status = request.POST.get('status')
     valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
     if new_status in valid_statuses:
+        if new_status == 'Returned' and order.status != 'Returned':
+            from django.utils import timezone
+            order.refund_processed_at = timezone.now()
+            order.refund_method = request.POST.get('refund_method')
         order.status = new_status
         order.save()
         messages.success(request, f'Order #{order.id} status updated to {new_status}.')
@@ -117,6 +125,34 @@ def update_order_status(request, order_id):
     if next_url:
         return redirect(next_url)
     return redirect('admin_order_list')
+    
+
+@login_required
+@require_POST
+def cancel_order_item(request, item_id):
+    item = get_object_or_404(OrderItem, id=item_id)
+    order = item.order
+    
+    if not item.is_cancelled:
+        from django.db import transaction
+        with transaction.atomic():
+            item.is_cancelled = True
+            item.cancel_reason = request.POST.get('reason', 'Cancelled by Admin')
+            item.save()
+            
+            # Restore stock
+            product = item.product
+            product.stock += item.quantity
+            product.save()
+            
+            # We don't automatically cancel the order here 
+            # as per the new granular management plan.
+            
+        messages.success(request, f'Item "{item.product.name}" in Order #{order.id} has been cancelled.')
+    else:
+        messages.error(request, 'This item is already cancelled.')
+        
+    return redirect('admin_order_detail', order_id=order.id)
 
 
 @login_required
@@ -202,3 +238,90 @@ def inventory_update(request):
         return JsonResponse({'success': True, 'message': 'Stock updated successfully.', 'new_stock': item.stock})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def user_requests(request):
+    search_query = request.GET.get('q', '').strip()
+    
+    # We show generic return requests or orders with cancel reasons 
+    orders = Order.objects.filter(
+        Q(status='Return Requested') | 
+        Q(cancel_reason__isnull=False, cancel_reason__gt='')
+    ).order_by('-created_at')
+    
+    if search_query:
+        orders = orders.filter(
+            Q(id__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__first_name__icontains=search_query)
+        )
+
+    # We also show item-level cancellations if desired, but for now we focus on the order level.
+    # The UI can aggregate or list them.
+    
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'orders': page_obj,
+        'query': search_query,
+        'active_menu': 'user_requests'
+    }
+    return render(request, 'order_manage/user_Request.html', context)
+
+
+@login_required
+def user_reschedule(request):
+    search_query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', 'Pending')
+
+    orders = Order.objects.filter(
+        reschedule_reason__isnull=False, 
+        reschedule_reason__gt=''
+    ).order_by('-created_at')
+    
+    if status_filter != 'All':
+        orders = orders.filter(reschedule_status=status_filter)
+
+    if search_query:
+        orders = orders.filter(
+            Q(id__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__first_name__icontains=search_query)
+        )
+
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'orders': page_obj,
+        'query': search_query,
+        'status_filter': status_filter,
+        'active_menu': 'reschedule'
+    }
+    return render(request, 'order_manage/user_reschedule.html', context)
+
+
+@login_required
+@require_POST
+def process_reschedule(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    action = request.POST.get('action') 
+    
+    if action == 'approve':
+        order.reschedule_status = 'Approved'
+        order.scheduled_delivery_date = order.requested_reschedule_date
+        order.scheduled_delivery_time = order.requested_reschedule_time
+        order.save()
+        messages.success(request, f"Reschedule request for Order #{order.id} approved.")
+    elif action == 'reject':
+        order.reschedule_status = 'Rejected'
+        order.save()
+        messages.success(request, f"Reschedule request for Order #{order.id} rejected.")
+    else:
+        messages.error(request, "Invalid action.")
+        
+    return redirect('admin_user_reschedule')

@@ -1,0 +1,280 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Track Order - ORD-{{ order.id }}{% endblock %}
+
+{% block nav_orders %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* HERO */
+    .page-header-alt { padding: 40px 0; text-align: center; }
+    .page-header-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .page-header-alt p { color: var(--text-muted); font-size: 1rem; }
+
+    .track-container {
+        max-width: 1000px;
+        margin: 0 auto 60px auto;
+    }
+
+    /* COD BANNER */
+    .cod-banner {
+        background: linear-gradient(135deg, rgba(255,170,0,0.1), rgba(255,170,0,0.05));
+        border: 1px solid rgba(255,170,0,0.3);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    .cod-banner-content h3 { color: #ffaa00; font-size: 1.1rem; margin-bottom: 5px; }
+    .cod-banner-content p { color: var(--text-muted); font-size: 0.9rem; }
+    
+    .btn-pay-online {
+        background: #ffaa00; color: #000; padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; text-decoration: none; transition: var(--transition); font-size: 0.9rem;
+    }
+    .btn-pay-online:hover { background: #e69900; transform: translateY(-2px); }
+
+    /* STATUS TRACKER (IMAGE STYLE) */
+    .status-tracker-box {
+        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 50px 30px; margin-bottom: 40px; backdrop-filter: var(--glass);
+        display: flex; justify-content: space-between; position: relative; width: 100%; box-sizing: border-box;
+    }
+
+    .tracker-line {
+        position: absolute;
+        top: 66px; left: 10%; right: 10%; height: 3px;
+        background: rgba(255,255,255,0.1);
+        z-index: 1;
+    }
+
+    .tracker-line-fill {
+        position: absolute;
+        top: 0; left: 0; height: 100%;
+        background: var(--primary-color);
+        width: 0%; /* we will set inline style */
+        transition: width 0.5s ease;
+    }
+
+    .status-step-alt { position: relative; z-index: 2; text-align: center; flex: 1; }
+    
+    .step-icon-outer {
+        width: 36px; height: 36px; background: var(--card-bg); border: 3px solid rgba(255,255,255,0.1); border-radius: 50%;
+        margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: rgba(255,255,255,0.4);
+        transition: var(--transition); position: relative;
+    }
+
+    /* Outer glowing ring for active state like the image */
+    .status-step-alt.active .step-icon-outer::before {
+        content: ''; position: absolute; top: -7px; left: -7px; right: -7px; bottom: -7px;
+        border: 2px solid var(--primary-color); border-radius: 50%; opacity: 0.5;
+    }
+
+    .step-title { font-size: 0.95rem; font-weight: 700; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+    .step-desc { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+
+    /* states */
+    .status-step-alt.active .step-icon-outer,
+    .status-step-alt.completed .step-icon-outer {
+        border-color: var(--primary-color); color: var(--primary-color);
+    }
+    
+    .status-step-alt.active .step-icon-outer {
+        background: var(--primary-color); color: #000;
+    }
+
+    .status-step-alt.active .step-title,
+    .status-step-alt.completed .step-title { color: #fff; }
+
+    .status-step-alt.active .step-desc,
+    .status-step-alt.completed .step-desc { color: var(--text-muted); }
+
+    /* ERROR TRACKER */
+    .status-tracker-error {
+        background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-lg); padding: 40px; margin-bottom: 30px; text-align: center;
+    }
+    .status-tracker-error h2 { color: #ef4444; font-size: 1.5rem; margin-bottom: 15px; }
+
+    /* TWO COLUMNS UNDERNEATH */
+    .bottom-sections { display: grid; grid-template-columns: 2fr 1.5fr; gap: 20px; }
+    .col-left-alt { display: flex; flex-direction: column; gap: 20px; }
+    @media(max-width: 991px) { .bottom-sections { grid-template-columns: 1fr; } }
+    
+    .section-card-alt { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 25px; backdrop-filter: var(--glass); display: flex; flex-direction: column; }
+    .section-title-alt { font-size: 0.95rem; font-weight: 700; margin-bottom: 20px; color: #fff; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+
+    /* ITEMS LIST */
+    .item-row-alt { display: flex; align-items: center; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+    .item-row-alt:last-child { border: none; margin-bottom: 0; padding-bottom: 0; }
+    .item-img-alt { width: 55px; height: 55px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .item-img-alt img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .item-info-alt { flex: 1; }
+    .item-name-alt { font-weight: 600; font-size: 0.9rem; color: #fff; margin-bottom: 4px; }
+    .item-qty-alt { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* PRICE SUMMARY */
+    .price-row-alt { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+    .price-row-alt.total-alt { color: var(--primary-color); font-weight: 800; font-size: 1.1rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 0; }
+
+    /* ADDRESS */
+    .address-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+    .address-name { font-size: 0.95rem; color: #fff; font-weight: 600; margin-bottom: 5px; display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
+    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+</div>
+
+<div class="page-header-alt">
+    <h1>Track Order</h1>
+    <p>Order ID: ORD-{{ order.id }}</p>
+</div>
+
+<div class="track-container">
+
+    <!-- COD BANNER -->
+    {% if order.payment_method|lower == 'cod' %}
+    <div class="cod-banner">
+        <div class="cod-banner-content">
+            <h3><i class="fas fa-wallet"></i> Cash on Delivery Selected</h3>
+            <p>Pay online now via Credit Card, UPI, or Net Banking to get an instant <strong>10% off</strong> your total.</p>
+        </div>
+        <div>
+            <!-- Placeholder for actual payment gateway link -->
+            <a href="#" class="btn-pay-online">Pay Online & Get 10% Off</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TRACKER TIMELINE (IMAGE STYLE) -->
+    {% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
+    <div class="status-tracker-box">
+        
+        <div class="tracker-line">
+            <div class="tracker-line-fill" 
+                {% if order.status == 'Pending' %} style="width: 0%;"
+                {% elif order.status == 'Processing' %} style="width: 25%;"
+                {% elif order.status == 'Shipped' %} style="width: 50%;"
+                {% elif order.status == 'Out for Delivery' %} style="width: 75%;"
+                {% elif order.status == 'Delivered' %} style="width: 100%;"
+                {% else %} style="width: 0%;" {% endif %}>
+            </div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Pending' %}active{% elif order.status in 'Processing,Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-clipboard-list"></i></div>
+            <div class="step-title">Pending</div>
+            <div class="step-desc">Order received</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Processing' %}active{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-box"></i></div>
+            <div class="step-title">Processing</div>
+            <div class="step-desc">Being prepared</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-truck-moving"></i></div>
+            <div class="step-title">Shipped</div>
+            <div class="step-desc">On the way</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Out for Delivery' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-shuttle-van"></i></div>
+            <div class="step-title">Out for Delivery</div>
+            <div class="step-desc">Out for delivery</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Delivered' %}active{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-check"></i></div>
+            <div class="step-title">Delivered</div>
+            <div class="step-desc">Delivered to customer</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="status-tracker-error">
+        <h2><i class="fas fa-times-circle"></i> Order {{ order.status }}</h2>
+        <p>
+            {% if order.cancel_reason %} Reason: {{ order.cancel_reason }} {% endif %}
+            {% if order.return_reason %} Reason: {{ order.return_reason }} {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- 2 SECTIONS -->
+    <div class="bottom-sections">
+        <div class="col-left-alt">
+            <!-- ORDER ITEMS -->
+            <div class="section-card-alt">
+                <h2 class="section-title-alt">Order Items</h2>
+                <div style="overflow-y:auto; max-height: 250px; padding-right:10px;">
+                    {% for item in items %}
+                    <div class="item-row-alt">
+                        <div class="item-img-alt">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                                <i class="fas fa-clock" style="color:rgba(255,255,255,0.1);"></i>
+                            {% endif %}
+                        </div>
+                        <div class="item-info-alt">
+                            <div class="item-name-alt">{{ item.product.name }}</div>
+                            <div class="item-qty-alt">Qty: {{ item.quantity }} | ₹{{ item.price|floatformat:0 }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--text-muted); font-size:0.85rem;">No items found in this order.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- PRICE SUMMARY INSIDE SAME CARD -->
+                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                    <h2 class="section-title-alt" style="margin-bottom: 15px;">Price Summary</h2>
+                    <div style="flex:1;">
+                        <div class="price-row-alt">
+                            <span>Subtotal</span>
+                            <span>₹{{ order.subtotal|floatformat:0 }}</span>
+                        </div>
+                        <div class="price-row-alt">
+                            <span>Tax (5%)</span>
+                            <span>₹{{ order.tax|floatformat:0 }}</span>
+                        </div>
+                        <div class="price-row-alt">
+                            <span>Shipping</span>
+                            <span>₹{{ order.shipping_charge|floatformat:0 }}</span>
+                        </div>
+                        <div class="price-row-alt total-alt">
+                            <span>Total Amount</span>
+                            <span>₹{{ order.total_amount|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+                        Method: <strong>{{ order.get_payment_method_display }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DELIVERY ADDRESS -->
+        <div class="section-card-alt">
+            <h2 class="section-title-alt">Delivery Address</h2>
+            <div class="address-text" style="flex:1;">
+                {% if address %}
+                    <span class="address-name">{{ address.full_name }}</span>
+                    {{ address.street }}<br>
+                    {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                    {{ address.country }}<br>
+                    <span style="color:#fff; display:inline-block; margin-top:10px;">Ph: {{ address.phone }}</span>
+                {% else %}
+                    <span style="color:var(--text-muted);">Address information not available for this legacy order.</span>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

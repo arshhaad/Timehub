@@ -885,13 +885,14 @@
                             {% for dial in selected_dial_color %}<input type="hidden" name="dial_color" value="{{ dial }}">{% endfor %}
                             
                             <div class="search-input-wrap">
-                                <i class="fas fa-search"></i>
-                                <input type="text" name="q" class="search-field" placeholder="Search for timepieces..." value="{{ query }}" id="searchBox">
                                 {% if query %}
-                                <a href="?{% for k,v in request.GET.items %}{% if k != 'q' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="search-clear" id="clearSearch">
-                                    <i class="fas fa-times"></i>
-                                </a>
+                                    <a href="?{% for k,v in request.GET.items %}{% if k != 'q' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}" class="search-clear" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; text-decoration: none;">
+                                        <i class="fas fa-times" style="color:#ef4444;"></i>
+                                    </a>
+                                {% else %}
+                                    <i class="fas fa-search" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer;" onclick="document.forms[0].submit()"></i>
                                 {% endif %}
+                                <input type="text" name="q" class="search-field" placeholder="Search for timepieces..." value="{{ query }}" id="searchBox" style="padding-left: 45px;">
                             </div>
                         </form>
                     </div>

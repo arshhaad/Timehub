@@ -126,13 +126,30 @@
             {{ order.status }}
         </span>
 
-        <form method="POST" action="{% url 'order_detail' order.id %}" style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+        <form method="POST" action="{% url 'admin_order_detail' order.id %}" style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
             {% csrf_token %}
-            <select name="status" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px; min-width:180px;">
+            <select name="status" id="status-select" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px; min-width:180px;">
                 {% for val, label in status_choices %}
                 <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
+            <div id="refund-method-container" style="display:{% if order.status == 'Returned' %}flex{% else %}none{% endif %}; align-items:center; gap:8px;">
+                <select name="refund_method" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px;">
+                    <option value="Cash" {% if order.refund_method == 'Cash' %}selected{% endif %}>Paid Cash</option>
+                    <option value="Wallet" {% if order.refund_method == 'Wallet' %}selected{% endif %}>Wallet Refund</option>
+                    <option value="Bank Transfer" {% if order.refund_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                </select>
+            </div>
+            <script>
+                document.getElementById('status-select').addEventListener('change', function() {
+                    const container = document.getElementById('refund-method-container');
+                    if (this.value === 'Returned') {
+                        container.style.display = 'flex';
+                    } else {
+                        container.style.display = 'none';
+                    }
+                });
+            </script>
             <button type="submit" class="btn-save" style="width:auto; margin-top:0; padding:9px 18px;">
                 <i class="fas fa-check"></i> Update
             </button>
@@ -197,10 +214,11 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th style="width:50%;">Product</th>
+                            <th style="width:40%;">Product</th>
                             <th style="text-align:center;">Qty</th>
                             <th style="text-align:right;">Unit Price</th>
-                            <th style="text-align:right;">Total</th>
+                            <th style="text-align:center;">Status</th>
+                            <th style="text-align:right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -222,7 +240,25 @@
                             </td>
                             <td style="text-align:center; font-weight:600;">{{ item.quantity }}</td>
                             <td class="item-price">₹{{ item.price|floatformat:2 }}</td>
-                            <td class="item-total">₹{{ item.price|floatformat:2 }}</td>
+                            <td style="text-align:center;">
+                                {% if item.is_cancelled %}
+                                    <span class="status-badge s-Cancelled" style="font-size: .65rem; padding: 2px 8px;">Cancelled</span>
+                                {% else %}
+                                    <span class="status-badge s-Delivered" style="font-size: .65rem; padding: 2px 8px; background: rgba(34, 197, 94, 0.1); color: #16a34a; border-color: rgba(34, 197, 94, 0.2);">Active</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:right;">
+                                {% if not item.is_cancelled and order.status != 'Cancelled' and order.status != 'Returned' %}
+                                    <form method="POST" action="{% url 'cancel_order_item' item.id %}" onsubmit="return confirm('Are you sure you want to cancel this item? Stock will be restored.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="action-btn" title="Cancel Item" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); margin-left: auto;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-size: .75rem;">—</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">No items found.</td></tr>
@@ -350,6 +386,18 @@
                         <label>Current Status</label>
                         <p><span class="status-badge s-{{ order.status }}">{{ order.status }}</span></p>
                     </div>
+                    {% if order.scheduled_delivery_date %}
+                    <div class="info-item">
+                        <label>Scheduled Delivery</label>
+                        <p>{{ order.scheduled_delivery_date|date:"M d, Y" }} {% if order.scheduled_delivery_time %}at {{ order.scheduled_delivery_time|time:"g:i A" }}{% endif %}</p>
+                    </div>
+                    {% endif %}
+                    {% if order.refund_processed_at %}
+                    <div class="info-item">
+                        <label>Refund Processed</label>
+                        <p>{{ order.refund_processed_at|date:"M d, Y g:i A" }} {% if order.refund_method %}({{ order.refund_method }}){% endif %}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

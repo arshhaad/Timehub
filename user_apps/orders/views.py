@@ -138,7 +138,10 @@ def order_history(request):
 
 @login_required
 def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(Order, id=order_id, user=request.user)
     items = order.items.select_related('product').all()
     try:
         address = json.loads(order.address_snapshot)
@@ -156,12 +159,15 @@ def order_detail(request, order_id):
 
 @login_required
 def cancel_order(request, order_id):
-    if request.method != 'POST':
-        return redirect('order_history')
-        
     order = get_object_or_404(Order, id=order_id, user=request.user)
     
-    if order.status in ['Pending', 'Processing']:
+    if request.method == 'GET':
+        if order.status not in ['Pending', 'Processing']:
+            messages.error(request, 'This order cannot be cancelled.')
+            return redirect('order_detail', order_id=order.id)
+        return render(request, 'cancel.html', {'order': order})
+        
+    if request.method == 'POST' and order.status in ['Pending', 'Processing']:
         reason = request.POST.get('reason', 'User cancelled')
         with transaction.atomic():
             order.status = 'Cancelled'
@@ -204,11 +210,8 @@ def cancel_order_item(request, item_id):
             product.stock += item.quantity
             product.save()
             
-            # If all items are cancelled, cancel the order
-            if not order.items.filter(is_cancelled=False).exists():
-                order.status = 'Cancelled'
-                order.cancel_reason = 'All items cancelled'
-                order.save()
+            # Note: We are no longer automatically cancelling the entire order 
+            # when all items are cancelled to allow for more granular control.
                 
         messages.success(request, f'Item "{item.product.name}" has been cancelled.')
     else:
@@ -257,30 +260,61 @@ def download_invoice(request, order_id):
 
 @login_required
 def reschedule_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    if order.status not in ['Pending', 'Processing']:
+        messages.error(request, f"Order cannot be rescheduled as it is currently {order.status}.")
+        return redirect('order_detail', order_id=order.id)
+
+    if request.method == 'GET':
+        from datetime import datetime
+        return render(request, 'Rq_reschedule.html', {
+            'order': order,
+            'today': datetime.now()
+        })
+
     if request.method == 'POST':
-        order = get_object_or_404(Order, id=order_id, user=request.user)
-        
-        # Only allow rescheduling if Pending or Processing
-        if order.status not in ['Pending', 'Processing']:
-            messages.error(request, f"Order cannot be rescheduled as it is currently {order.status}.")
-            return redirect('order_detail', order_id=order.id)
-            
         new_date = request.POST.get('scheduled_date')
-        if new_date:
+        new_time = request.POST.get('scheduled_time')
+        reason = request.POST.get('reschedule_reason', '').strip()
+        
+        if new_date and new_time and reason and len(reason) >= 15:
             from datetime import datetime
             try:
                 date_obj = datetime.strptime(new_date, '%Y-%m-%d').date()
+                time_obj = datetime.strptime(new_time, '%H:%M').time()
+                
                 if date_obj < datetime.now().date():
                     messages.error(request, "Delivery date cannot be in the past.")
                 else:
-                    order.scheduled_delivery_date = date_obj
+                    order.requested_reschedule_date = date_obj
+                    order.requested_reschedule_time = time_obj
+                    order.reschedule_reason = reason
+                    order.reschedule_status = 'Pending'
                     order.save()
-                    messages.success(request, f"Delivery rescheduled to {date_obj.strftime('%B %d, %Y')}.")
+                    messages.success(request, f"Reschedule request for {date_obj.strftime('%B %d, %Y')} submitted for approval.")
             except ValueError:
-                messages.error(request, "Invalid date format.")
+                messages.error(request, "Invalid date or time format.")
+        else:
+            messages.error(request, "A valid and detailed reason is required to reschedule.")
         
         return redirect('order_detail', order_id=order.id)
     return redirect('order_history')
+
+@login_required
+def track_order(request, order_id):
+    from django.shortcuts import get_object_or_404
+    if request.user.is_staff or request.user.is_superuser:
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+        
+    items = order.items.select_related('product').all()
+    try:
+        address = json.loads(order.address_snapshot)
+    except:
+        address = {}
+    return render(request, 'track_order.html', {'order': order, 'items': items, 'address': address})
 
 
 @login_required

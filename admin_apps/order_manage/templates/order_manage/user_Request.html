@@ -1,0 +1,156 @@
+{% extends 'order_manage/base.html' %}
+
+{% block title %}User Requests - TimeHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    }
+    .page-title {
+        font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;
+    }
+    .page-desc {
+        color: var(--text-muted); font-size: 0.95rem;
+    }
+    .table-panel {
+        background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+        box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;
+    }
+    .table-responsive {
+        width: 100%; overflow-x: auto;
+    }
+    .data-table {
+        width: 100%; border-collapse: collapse; text-align: left;
+    }
+    .data-table th {
+        background: #090808; color: #fff; padding: 16px 20px; font-size: 0.75rem;
+        text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .data-table td {
+        padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover { background: #fafbfc; }
+    
+    .status-badge {
+        padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+    }
+    .req-Return { background: #ffedd5; color: #c2410c; } /* Warning orange for Returns */
+    .req-Cancel { background: #fee2e2; color: #991b1b; } /* Danger red for Cancels */
+    
+    .btn-action {
+        padding: 8px 14px; background: #fff; border: 1px solid var(--border-color);
+        border-radius: 8px; color: var(--text-main); font-size: 0.8rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-action:hover {
+        background: #f3f4f6; border-color: #d1d5db;
+    }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-search">
+    <form method="GET" action="" class="search-bar">
+        {% if query %}
+        <a href="{% url 'admin_user_requests' %}" style="text-decoration: none; display: flex; align-items: center;">
+            <i class="fas fa-times" style="color: #ef4444;"></i>
+        </a>
+        {% else %}
+        <i class="fas fa-search"></i>
+        {% endif %}
+        <input type="text" name="q" placeholder="Search requests by ID, email..." value="{{ query|default:'' }}">
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">User Requests</h1>
+        <p class="page-desc">Manage return requests and view cancellation logs.</p>
+    </div>
+</div>
+
+<div class="table-panel">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Request Type</th>
+                    <th>Reason provided</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td style="font-weight: 700;">#{{ order.id }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ order.user.first_name }} {{ order.user.last_name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ order.user.email }}</div>
+                    </td>
+                    <td>
+                        {% if order.status == 'Return Requested' or order.return_reason %}
+                            <span class="status-badge req-Return"><i class="fas fa-undo"></i> Return</span>
+                        {% elif order.cancel_reason %}
+                            <span class="status-badge req-Cancel"><i class="fas fa-ban"></i> Cancel</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 250px;">
+                        {% if order.status == 'Return Requested' or order.return_reason %}
+                            <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ order.return_reason|default:'No reason provided' }}">
+                                {{ order.return_reason|default:'No reason provided' }}
+                            </span>
+                        {% elif order.cancel_reason %}
+                            <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ order.cancel_reason }}">
+                                {{ order.cancel_reason }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge s-{{ order.status|cut:' ' }}">{{ order.status }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_order_detail' order.id %}" class="btn-action">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        {% if query %}
+                        No requests found matching "{{ query }}".
+                        {% else %}
+                        There are no active user requests.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if orders.paginator.num_pages > 1 %}
+    <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ orders.start_index }} to {{ orders.end_index }} of {{ orders.paginator.count }} requests
+        </div>
+        <div style="display: flex; gap: 8px;">
+            {% if orders.has_previous %}
+            <a href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn" style="background:#f3f4f6; color:var(--text-main);">Previous</a>
+            {% endif %}
+            <div style="padding: 8px 12px; font-weight: 600;">{{ orders.number }} / {{ orders.paginator.num_pages }}</div>
+            {% if orders.has_next %}
+            <a href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn" style="background:#f3f4f6; color:var(--text-main);">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

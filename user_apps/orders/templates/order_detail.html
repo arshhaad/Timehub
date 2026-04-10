@@ -1,239 +1,354 @@
 {% extends 'base_user.html' %}
 {% load static %}
 
-{% block title %}Order Details - ORD-{{ order.id }}{% endblock %}
+{% block title %}Order #{{ order.id }} - TimeHub{% endblock %}
 
 {% block nav_orders %}active{% endblock %}
 
 {% block extra_css %}
 <style>
-    .breadcrumb-alt { padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted); }
-    .breadcrumb-alt a { text-decoration: none; color: inherit; transition: var(--transition); }
-    .breadcrumb-alt a:hover { color: #fff; }
+    /* Premium Styling - Adapted from Admin View */
+    .back-link { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:.875rem; font-weight:600; text-decoration:none; margin-bottom:24px; transition:var(--transition); }
+    .back-link:hover { color:#fff; }
+    
+    .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+    .page-header h1 { font-size:1.7rem; font-weight:800; letter-spacing:-.5px; margin-bottom:4px; }
+    .page-header p { color:var(--text-muted); font-size:.9rem; }
 
-    /* HERO */
-    .order-hero-alt { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
-    .order-hero-alt h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .order-hero-alt p { color: var(--text-muted); font-size: 0.95rem; }
+    /* Detail Grid */
+    .detail-grid { display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start; }
 
-    /* STATUS TRACKER */
-    .status-tracker-alt { 
-        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 40px; margin-bottom: 40px;
-        display: flex; justify-content: space-between; position: relative; backdrop-filter: var(--glass);
-    }
-    .status-tracker-alt::after {
-        content: ''; position: absolute; top: 55px; left: 10%; right: 10%; height: 2px; background: var(--border-color); z-index: 1;
-    }
-    .status-step-alt { position: relative; z-index: 2; text-align: center; width: 100px; }
-    .step-icon-alt { 
-        width: 32px; height: 32px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 50%;
-        margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted);
-        transition: var(--transition);
-    }
-    .step-label-alt { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Cards */
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; backdrop-filter: var(--glass); }
+    .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .card-title i { color: var(--primary-color); font-size: .9rem; }
+    .card-body { padding: 24px; }
 
-    .status-step-alt.active .step-icon-alt { border-color: var(--primary-color); background: var(--primary-color); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
-    .status-step-alt.active .step-label-alt { color: #fff; }
-    .status-step-alt.completed .step-icon-alt { border-color: var(--primary-color); color: var(--primary-color); }
+    /* Items Table */
+    .items-table { width:100%; border-collapse:collapse; }
+    .items-table th { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); padding:0 0 14px; border-bottom:1px solid var(--border-color); text-align: left; }
+    .items-table th:last-child { text-align:right; }
+    .items-table td { padding:16px 0; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.875rem; color: #fff; }
+    .items-table tbody tr:last-child td { border-bottom:none; }
+    
+    .item-product { display:flex; align-items:center; gap:14px; }
+    .item-thumb { width:52px; height:52px; border-radius:10px; background:rgba(255,255,255,0.03); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:1.2rem; border:1px solid var(--border-color); }
+    .item-name { font-weight:700; font-size:.875rem; display:block; color: #fff; }
+    .item-meta { font-size:.8rem; color:var(--text-muted); margin-top:2px; display:block; }
+    .item-price { font-weight:700; text-align:right; }
+    .item-total { font-weight:800; text-align:right; }
 
-    /* GRID */
-    .detail-grid-alt { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-bottom: 80px; }
+    /* Summary */
+    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:.875rem; }
+    .summary-row:last-child { border-bottom:none; padding-top:14px; margin-top:4px; }
+    .summary-label { color:var(--text-muted); font-weight:500; }
+    .summary-value { font-weight:600; color: #fff; }
+    .summary-total .summary-label,
+    .summary-total .summary-value { font-size:1.1rem; font-weight:800; color:var(--primary-color); }
+    .discount-value { color:#16a34a; }
 
-    .section-card-alt { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 30px; margin-bottom: 25px; backdrop-filter: var(--glass); }
-    .section-title-alt { font-size: 1rem; font-weight: 700; margin-bottom: 20px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+    /* Stepper */
+    .stepper { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:30px; background:var(--card-bg); padding:30px 20px; border-radius:var(--radius-lg); border:1px solid var(--border-color); backdrop-filter: var(--glass); }
+    .stepper-item { display:flex; flex-direction:column; align-items:center; flex:1; position:relative; text-align:center; z-index:1; }
+    .stepper-item:not(:last-child)::after { content:''; position:absolute; top:20px; left:calc(50% + 20px); right:calc(-50% + 20px); height:2px; background:var(--border-color); z-index:-1; }
+    .stepper-item.done:not(:last-child)::after { background: var(--primary-color); }
+    .stepper-icon { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; background:var(--bg-color); color:var(--text-muted); border:2px solid var(--border-color); margin-bottom:12px; transition:all 0.3s; }
+    .stepper-item.done .stepper-icon { background:var(--primary-color); color:#000; border-color:var(--primary-color); box-shadow: 0 0 15px var(--primary-glow); }
+    .stepper-item.current .stepper-icon { background:var(--bg-color); color:var(--primary-color); border-color:var(--primary-color); box-shadow:0 0 0 4px var(--primary-glow); }
+    .stepper-label { font-size:.8rem; font-weight:700; color: #fff; margin-bottom:4px; }
+    .stepper-item.pending .stepper-label { color:var(--text-muted); }
+    .stepper-desc { font-size:.7rem; color:var(--text-muted); max-width:110px; line-height:1.4; margin: 0 auto; }
 
-    /* ITEMS TABLE */
-    .items-list-alt { display: flex; flex-direction: column; gap: 20px; }
-    .item-row-alt { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
-    .item-row-alt:last-child { border: none; padding-bottom: 0; }
-    .item-img-alt { width: 65px; height: 65px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .item-img-alt img { max-width: 100%; max-height: 100%; object-fit: contain; }
-    .item-info-alt { flex: 1; }
-    .item-name-alt { font-weight: 600; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
-    .item-price-alt { font-size: 0.85rem; color: var(--text-muted); }
+    /* Status Badges */
+    .status-badge { padding: 5px 14px; border-radius: var(--radius-pill); font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .s-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+    .s-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .s-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .s-Cancelled, .s-Returned { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .s-Return-Requested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
 
-    /* SIDEBAR INFO */
-    .info-group-alt { margin-bottom: 20px; }
-    .info-group-alt:last-child { margin-bottom: 0; }
-    .info-label-alt { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; font-weight: 700; }
-    .info-val-alt { font-size: 0.9rem; color: #fff; font-weight: 500; line-height: 1.5; }
-
-    .price-summary-alt { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
-    .price-row-alt { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); }
-    .price-row-alt.total-alt { color: var(--primary-color); font-weight: 800; font-size: 1.1rem; margin-top: 5px; }
-
-    /* BUTTONS */
-    .btn-action-alt { padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; justify-content: center; }
-    .btn-danger-alt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-    .btn-danger-alt:hover { background: #ef4444; color: #fff; }
+    /* Action Buttons */
+    .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-action { padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; justify-content: center; flex: 1; }
     .btn-primary-alt { background: var(--primary-color); color: #000; }
     .btn-primary-alt:hover { background: var(--primary-hover); transform: translateY(-2px); }
     .btn-outline-alt { background: transparent; border: 1px solid var(--border-color); color: #fff; }
     .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+    .btn-danger-alt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .btn-danger-alt:hover { background: #ef4444; color: #fff; }
 
-    /* MODAL */
-    .modal-overlay-alt { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; }
-    .modal-overlay-alt.active { display: flex; }
-    .modal-box-alt { background: var(--sidebar-color); border: 1px solid var(--border-color); border-radius: 24px; padding: 35px; width: 90%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-    .modal-box-alt h3 { margin-bottom: 15px; font-family: 'Outfit', sans-serif; font-size: 1.3rem; }
-    .modal-box-alt textarea { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 20px; font-family: inherit; resize: none; outline: none; transition: var(--transition); }
-    .modal-box-alt textarea:focus { border-color: var(--primary-color); }
-    .modal-footer-alt { display: flex; gap: 15px; }
+    /* Modals - Adapted for Base User */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-box { background: var(--sidebar-color); border: 1px solid var(--border-color); border-radius: 24px; padding: 35px; width: 90%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .modal-box h3 { margin-bottom: 15px; font-size: 1.3rem; color: #fff; }
+    .modal-box textarea { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin: 20px 0; font-family: inherit; resize: none; outline: none; }
+    .modal-box textarea:focus { border-color: var(--primary-color); }
+
+    /* Info Grid */
+    .info-item label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); display:block; margin-bottom:4px; }
+    .info-item p { font-size:.9rem; font-weight:600; color:#fff; }
+
+    @media (max-width: 1100px) { .detail-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .stepper { flex-direction: column; gap: 20px; align-items: flex-start; padding: 30px; }
+        .stepper-item { flex-direction: row; text-align: left; gap: 16px; width: 100%; }
+        .stepper-item:not(:last-child)::after { top: 40px; left: 20px; right: auto; bottom: -24px; width: 2px; height: auto; }
+        .stepper-icon { margin-bottom: 0; }
+        .stepper-desc { margin: 0; max-width: none; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="breadcrumb-alt">
-    <a href="{% url 'order_history' %}"><i class="fas fa-chevron-left"></i> Back to Orders</a>
-</div>
+<a href="{% url 'order_history' %}" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Orders
+</a>
 
-<div class="order-hero-alt">
+<div class="page-header">
     <div>
-        <h1>Order ORD-{{ order.id }}</h1>
-        <p>Placed on {{ order.created_at|date:"F d, Y at H:i" }}</p>
+        <h1>Order #{{ order.id|stringformat:"05d" }}</h1>
+        <p>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
     </div>
-    <div>
-        <a href="{% url 'download_invoice' order.id %}" target="_blank" class="btn-action-alt btn-primary-alt">
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
+            <i class="fas fa-map-marker-alt"></i> Track Order
+        </a>
+        <a href="{% url 'download_invoice' order.id %}" target="_blank" class="btn-action btn-primary-alt">
             <i class="fas fa-file-invoice"></i> Download Invoice
         </a>
     </div>
 </div>
 
-{% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
-<div class="status-tracker-alt">
-    <div class="status-step-alt {% if order.status == 'Pending' %}active{% elif order.status != 'Pending' %}completed{% endif %}">
-        <div class="step-icon-alt">1</div>
-        <div class="step-label-alt">Pending</div>
-    </div>
-    <div class="status-step-alt {% if order.status == 'Processing' %}active{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
-        <div class="step-icon-alt">2</div>
-        <div class="step-label-alt">Processing</div>
-    </div>
-    <div class="status-step-alt {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
-        <div class="step-icon-alt">3</div>
-        <div class="step-label-alt">Shipped</div>
-    </div>
-    <div class="status-step-alt {% if order.status == 'Delivered' %}active{% endif %}">
-        <div class="step-icon-alt">4</div>
-        <div class="step-label-alt">Delivered</div>
+<!-- Stepper Container -->
+{% if order.status == 'Cancelled' or order.status == 'Returned' %}
+<div class="card" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+    <div class="card-body" style="text-align: center; padding: 40px;">
+        <div class="stepper-icon" style="margin: 0 auto 16px; background: #ef4444; color: #fff; border:none; width: 50px; height: 50px; font-size: 1.2rem;">
+            <i class="fas fa-times"></i>
+        </div>
+        <h2 style="color: #ef4444; margin-bottom: 8px;">Order {{ order.status }}</h2>
+        {% if order.cancel_reason %}<p style="color: var(--text-muted);">Reason: {{ order.cancel_reason }}</p>{% endif %}
+        {% if order.return_reason %}<p style="color: var(--text-muted);">Reason: {{ order.return_reason }}</p>{% endif %}
     </div>
 </div>
 {% else %}
-<div class="section-card-alt" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-    <h3 style="color:#ef4444; margin-bottom:10px;"><i class="fas fa-info-circle"></i> This order was {{ order.status }}</h3>
-    {% if order.cancel_reason %} <p style="font-size:0.9rem; color:var(--text-muted);">Reason: {{ order.cancel_reason }}</p> {% endif %}
-    {% if order.return_reason %} <p style="font-size:0.9rem; color:var(--text-muted);">Reason: {{ order.return_reason }}</p> {% endif %}
+<div class="stepper">
+    <!-- Step 1: Pending -->
+    <div class="stepper-item {% if order.status == 'Pending' %}current{% else %}done{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div>
+            <div class="stepper-label">Pending</div>
+            <div class="stepper-desc">Awaiting confirmation</div>
+        </div>
+    </div>
+    <!-- Step 2: Processing -->
+    <div class="stepper-item 
+        {% if order.status == 'Processing' %}current
+        {% elif order.status in 'Shipped,Out for Delivery,Delivered' %}done
+        {% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
+        <div>
+            <div class="stepper-label">Processing</div>
+            <div class="stepper-desc">Packing your items</div>
+        </div>
+    </div>
+    <!-- Step 3: Shipped -->
+    <div class="stepper-item 
+        {% if order.status == 'Shipped' %}current
+        {% elif order.status in 'Out for Delivery,Delivered' %}done
+        {% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-shipping-fast"></i></div>
+        <div>
+            <div class="stepper-label">Shipped</div>
+            <div class="stepper-desc">On its way</div>
+        </div>
+    </div>
+    <!-- Step 4: Out for Delivery -->
+    <div class="stepper-item 
+        {% if order.status == 'Out for Delivery' %}current
+        {% elif order.status == 'Delivered' %}done
+        {% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-truck-loading"></i></div>
+        <div>
+            <div class="stepper-label">Out for Delivery</div>
+            <div class="stepper-desc">Arriving today</div>
+        </div>
+    </div>
+    <!-- Step 5: Delivered -->
+    <div class="stepper-item {% if order.status == 'Delivered' %}done{% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-check"></i></div>
+        <div>
+            <div class="stepper-label">Delivered</div>
+            <div class="stepper-desc">Order completed</div>
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<div class="detail-grid-alt">
-    <div class="grid-left-alt">
-        <div class="section-card-alt">
-            <h2 class="section-title-alt">Order Items</h2>
-            <div class="items-list-alt">
-                {% for item in items %}
-                <div class="item-row-alt">
-                    <div class="item-img-alt">
-                        {% if item.product.image %}
-                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-                        {% else %}
-                            <i class="fas fa-clock" style="color:var(--text-muted);"></i>
-                        {% endif %}
-                    </div>
-                    <div class="item-info-alt">
-                        <div class="item-name-alt">{{ item.product.name }}</div>
-                        <div class="item-price-alt">₹{{ item.price|floatformat:0 }} × {{ item.quantity }}</div>
-                        {% if item.is_cancelled %}
-                            <div style="color:#ef4444; font-size:0.75rem; font-weight:800; margin-top:5px; text-transform:uppercase; letter-spacing:0.5px;">Cancelled: {{ item.cancel_reason }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="item-action-alt">
-                        {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
-                            <button class="btn-action-alt btn-danger-alt" onclick="openCancelItemModal({{ item.id }}, '{{ item.product.name|escapejs }}')">Cancel Item</button>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
+<div class="detail-grid">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- Order Items -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-shopping-bag"></i> Order Items</div>
+                <span style="font-size:.8rem; color:var(--text-muted); font-weight:600;">{{ items.count }} item{{ items.count|pluralize }}</span>
+            </div>
+            <div class="card-body">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50%;">Product</th>
+                            <th style="text-align:center;">Qty</th>
+                            <th style="text-align:right;">Price</th>
+                            <th style="text-align:right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <div class="item-product">
+                                    <div class="item-thumb">
+                                        {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+                                        {% else %}
+                                        <i class="fas fa-clock"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <span class="item-name">{{ item.product.name }}</span>
+                                        <span class="item-meta">{{ item.product.brand }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align:center; font-weight:700;">{{ item.quantity }}</td>
+                            <td class="item-total">₹{{ item.price|floatformat:0 }}</td>
+                            <td style="text-align:right;">
+                                {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
+                                <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item.id %}', '{{ item.product.name|escapejs }}')">Cancel</button>
+                                {% elif item.is_cancelled %}
+                                <span class="status-badge s-Cancelled" style="font-size: 0.65rem; padding: 2px 8px;">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        {% if order.status in 'Pending,Processing' %}
-        <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn-action-alt btn-primary-alt" onclick="openRescheduleModal()" style="flex:1;">
-                <i class="fas fa-calendar-alt"></i> Reschedule Delivery
-            </button>
-            <button class="btn-action-alt btn-danger-alt" onclick="openCancelOrderModal()" style="flex:1;">
-                <i class="fas fa-times"></i> Cancel Entire Order
-            </button>
-        </div>
-        {% endif %}
+        <!-- Order Information & Actions Highlighting -->
+        <div class="card" style="border-left: 4px solid var(--primary-color); background: linear-gradient(to right, rgba(230, 92, 0, 0.05), transparent);">
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; align-items: start;">
+                    
+                    <div class="info-item">
+                        <label style="font-size: 0.75rem; letter-spacing: 0.15em; font-weight: 700;">PAYMENT METHOD</label>
+                        <p style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-top: 6px;">{{ order.get_payment_method_display }}</p>
+                    </div>
 
-        {% if order.status == 'Delivered' %}
-        <button class="btn-action-alt btn-primary-alt" onclick="openReturnModal()" style="width:100%; background: #fff; color: #000;">
-            <i class="fas fa-undo"></i> Return Order
-        </button>
-        {% endif %}
+                    <div class="info-item">
+                        <label style="font-size: 0.75rem; letter-spacing: 0.15em; font-weight: 700;">CURRENT STATUS</label>
+                        <div style="margin-top: 8px;">
+                            <span class="status-badge s-{{ order.status|cut:' ' }}" style="font-size: 0.9rem; padding: 6px 18px; border-radius: 8px;">{{ order.status }}</span>
+                        </div>
+                    </div>
+
+                    {% if order.scheduled_delivery_date %}
+                    <div class="info-item" style="grid-column: 1 / -1; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px dashed rgba(230, 92, 0, 0.3);">
+                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: var(--primary-color);">SCHEDULED DELIVERY</label>
+                        <p style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 8px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-calendar-check" style="color: var(--primary-color);"></i>
+                            {{ order.scheduled_delivery_date|date:"F d, Y" }} <span style="font-weight: 500; font-size: 1rem; color: var(--text-muted);">at</span> {{ order.scheduled_delivery_time|time:"g:i A" }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if order.reschedule_status == 'Pending' and order.requested_reschedule_date %}
+                    <div class="info-item" style="grid-column: 1 / -1; padding: 20px; background: rgba(255, 170, 0, 0.05); border-radius: 16px; border: 1px dashed rgba(255, 170, 0, 0.3);">
+                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: #fbbf24;">PENDING RESCHEDULE REQUEST</label>
+                        <p style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-top: 8px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-history" style="color: #fbbf24;"></i>
+                            Requested for: {{ order.requested_reschedule_date|date:"F d, Y" }} at {{ order.requested_reschedule_time|time:"g:i A" }}
+                        </p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">Awaiting admin approval.</p>
+                    </div>
+                    {% endif %}
+
+                    {% if order.refund_processed_at %}
+                    <div class="info-item" style="grid-column: 1 / -1; margin-top: -10px;">
+                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: #ef4444;">REFUND PROCESSED</label>
+                        <p style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 4px;">
+                            {{ order.refund_processed_at|date:"F d, Y g:i A" }} <span style="font-weight: 400; color: var(--text-muted);">via</span> {{ order.refund_method|default:"Original Method" }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Integrated Action Buttons -->
+                    <div class="info-item" style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <div class="btn-group" style="margin-top: 0; gap: 16px;">
+                            {% if order.status in 'Pending,Processing' %}
+                                <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
+                                    <i class="fas fa-history"></i> Reschedule Delivery
+                                </button>
+                                <button class="btn-action btn-danger-alt" onclick="openCancelOrderModal()" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.08);">
+                                    <i class="fas fa-ban"></i> Cancel Order
+                                </button>
+                            {% elif order.status == 'Delivered' %}
+                                <button class="btn-action btn-primary-alt" onclick="openReturnModal()" style="border-radius: 10px; padding: 16px; width: 100%;">
+                                    <i class="fas fa-undo"></i> Request Order Return
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="grid-right-alt">
-        <div class="section-card-alt">
-            <h2 class="section-title-alt">Delivery Info</h2>
-            <div class="info-group-alt">
-                <span class="info-label-alt">Status</span>
-                <div class="info-val-alt">{{ order.status }}</div>
+    <!-- RIGHT COLUMN -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Order Stats (Summary) -->
+        <div class="card">
+            <div class="card-header" style="padding: 18px 24px;">
+                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-receipt"></i> ORDER SUMMARY</div>
             </div>
-            <div class="info-group-alt">
-                <span class="info-label-alt">Scheduled Date</span>
-                <div class="info-val-alt">
-                    {% if order.scheduled_delivery_date %}
-                        {{ order.scheduled_delivery_date|date:"F d, Y" }}
-                    {% else %}
-                        Not scheduled yet
-                    {% endif %}
+            <div class="card-body" style="padding: 20px 24px;">
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:0 }}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (5%)</span><span class="summary-value">₹{{ order.tax|floatformat:0 }}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:0 }}{% else %}Free{% endif %}</span></div>
+                {% if order.discount > 0 %}
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:0 }}</span></div>
+                {% endif %}
+                <div class="summary-row summary-total" style="padding-top: 18px; margin-top: 10px; border-top: 1px solid var(--border-color);">
+                    <span class="summary-label">Total Amount</span>
+                    <span class="summary-value" style="font-size: 1.25rem;">₹{{ order.total_amount|floatformat:0 }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="section-card-alt">
-            <h2 class="section-title-alt">Shipping Address</h2>
-            <div class="info-group-alt">
-                <span class="info-label-alt">Customer</span>
-                <div class="info-val-alt">{{ address.full_name }}</div>
+        <!-- Shipping Address -->
+        <div class="card">
+            <div class="card-header" style="padding: 18px 24px;">
+                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-map-marker-alt"></i> SHIPPING ADDRESS</div>
             </div>
-            <div class="info-group-alt">
-                <span class="info-label-alt">Address</span>
-                <div class="info-val-alt">
-                    {{ address.street }}<br>
-                    {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
-                    {{ address.country }}<br>
-                    Ph: {{ address.phone }}
-                </div>
-            </div>
-        </div>
-
-        <div class="section-card-alt">
-            <h2 class="section-title-alt">Payment Info</h2>
-            <div class="info-group-alt">
-                <span class="info-label-alt">Method</span>
-                <div class="info-val-alt">{{ order.get_payment_method_display }}</div>
-            </div>
-            
-            <div class="price-summary-alt">
-                <div class="price-row-alt">
-                    <span>Subtotal</span>
-                    <span>₹{{ order.subtotal|floatformat:0 }}</span>
-                </div>
-                <div class="price-row-alt">
-                    <span>Tax (5%)</span>
-                    <span>₹{{ order.tax|floatformat:0 }}</span>
-                </div>
-                <div class="price-row-alt">
-                    <span>Shipping</span>
-                    <span>₹{{ order.shipping_charge|floatformat:0 }}</span>
-                </div>
-                <div class="price-row-alt total-alt">
-                    <span>Total</span>
-                    <span>₹{{ order.total_amount|floatformat:0 }}</span>
+            <div class="card-body" style="padding: 24px;">
+                <p style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-user-circle" style="opacity: 0.5;"></i> {{ address.full_name }}
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                    <span>{{ address.street }}</span>
+                    <span>{{ address.city }}, {{ address.state }} {{ address.postal_code }}</span>
+                    <span style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-top: 4px;">{{ address.country }}</span>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); color: #fff; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-phone-alt" style="font-size: 0.8rem; color: var(--primary-color);"></i> {{ address.phone }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -241,83 +356,88 @@
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay-alt" id="cancelOrderModal">
-    <div class="modal-box-alt">
-        <h3>Cancel Entire Order?</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Are you sure you want to cancel this entire order? This action cannot be undone.</p>
+<div class="modal-overlay" id="cancelOrderModal">
+    <div class="modal-box">
+        <h3>Cancel Order?</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
         <form action="{% url 'cancel_order' order.id %}" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Reason for cancellation (optional)..." rows="3"></textarea>
-            <div class="modal-footer-alt">
-                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
-                <button type="submit" class="btn-action-alt btn-danger-alt" style="flex:1;">Yes, Cancel Order</button>
+            <textarea name="reason" placeholder="Reason for cancellation..." rows="3" required></textarea>
+            <div class="btn-group">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Go Back</button>
+                <button type="submit" class="btn-action btn-danger-alt">Confirm Cancellation</button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="modal-overlay-alt" id="cancelItemModal">
-    <div class="modal-box-alt">
+<div class="modal-overlay" id="cancelItemModal">
+    <div class="modal-box">
         <h3>Cancel <span id="cancelItemName"></span>?</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Remove this item from your order.</p>
+        <p style="color:var(--text-muted); font-size:0.9rem;">Remove this specifically from your order.</p>
         <form id="cancelItemForm" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Reason for cancellation (optional)..." rows="3"></textarea>
-            <div class="modal-footer-alt">
-                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
-                <button type="submit" class="btn-action-alt btn-danger-alt" style="flex:1;">Cancel Item</button>
+            <textarea name="reason" placeholder="Reason for cancellation..." rows="3" required></textarea>
+            <div class="btn-group">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-danger-alt">Cancel Item</button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="modal-overlay-alt" id="returnModal">
-    <div class="modal-box-alt">
+<div class="modal-overlay" id="returnModal">
+    <div class="modal-box">
         <h3>Return Order</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Please provide a reason for the return. Our team will contact you for pickup.</p>
+        <p style="color:var(--text-muted); font-size:0.9rem;">Provide a reason for return. Our team will contact you for pickup.</p>
         <form action="{% url 'return_order' order.id %}" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Mandatory reason for return..." rows="3" required></textarea>
-            <div class="modal-footer-alt">
-                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
-                <button type="submit" class="btn-action-alt btn-primary-alt" style="flex:1; background:#fff; color:#000;">Submit Return</button>
+            <textarea name="reason" placeholder="Why are you returning this?" rows="3" required></textarea>
+            <div class="btn-group">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-primary-alt">Submit Request</button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="modal-overlay-alt" id="rescheduleModal">
-    <div class="modal-box-alt">
+<div class="modal-overlay" id="rescheduleModal">
+    <div class="modal-box">
         <h3>Reschedule Delivery</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Select a new preferred date for your delivery.</p>
+        <p style="color:var(--text-muted); font-size:0.9rem;">Select a new date and provide a reason.</p>
         <form action="{% url 'reschedule_order' order.id %}" method="POST">
             {% csrf_token %}
-            <input type="date" name="scheduled_date" 
-                   style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-bottom: 20px; box-sizing: border-box;" 
-                   required min="{{ today|date:'Y-m-d' }}">
-            <div class="modal-footer-alt">
-                <button type="button" class="btn-action-alt btn-outline-alt" onclick="closeModals()" style="flex:1;">Back</button>
-                <button type="submit" class="btn-action-alt btn-primary-alt" style="flex:1;">Confirm Date</button>
+            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Select Delivery Date</label>
+            <input type="date" name="scheduled_date" required min="{{ today|date:'Y-m-d' }}" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-top: 5px;">
+            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Select Delivery Time</label>
+            <input type="time" name="scheduled_time" required style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-top: 5px;">
+            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Reason for Reschedule</label>
+            <textarea name="reschedule_reason" placeholder="Detailed reason (min 15 chars)..." rows="3" required style="margin-top: 5px;"></textarea>
+            <div class="btn-group">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-primary-alt">Confirm</button>
             </div>
         </form>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
     function openCancelOrderModal() { document.getElementById('cancelOrderModal').classList.add('active'); }
-    function openCancelItemModal(itemId, itemName) {
+    function openCancelItemModal(url, itemName) {
         document.getElementById('cancelItemName').textContent = itemName;
-        document.getElementById('cancelItemForm').action = `/orders/cancel-item/${itemId}/`;
+        document.getElementById('cancelItemForm').action = url;
         document.getElementById('cancelItemModal').classList.add('active');
     }
     function openRescheduleModal() { document.getElementById('rescheduleModal').classList.add('active'); }
     function openReturnModal() { document.getElementById('returnModal').classList.add('active'); }
-    function closeModals() { document.querySelectorAll('.modal-overlay-alt').forEach(m => m.classList.remove('active')); }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     
     window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay-alt')) closeModals();
+        if (event.target.classList.contains('modal-overlay')) closeModals();
     }
 </script>
 {% endblock %}
+
