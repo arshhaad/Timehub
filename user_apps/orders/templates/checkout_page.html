@@ -111,30 +111,108 @@
         .add-new-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 14px 20px; background: transparent; border: 2px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
         .add-new-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
-        /* ADD ADDRESS MODAL */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-overlay.active { display: flex; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 32px; width: 90%; max-width: 520px; animation: fadeInUp 0.3s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-        .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; transition: var(--transition); }
-        .modal-close:hover { color: #fff; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        /* Pro-Style Address Modal */
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(12px); 
+            z-index: 1000; 
+            align-items: center; 
+            justify-content: center; 
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-box { 
+            background: #111; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 28px; 
+            padding: 40px; 
+            width: 90%; 
+            max-width: 520px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05); 
+            transform: scale(0.95) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+
+        .modal-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+        .modal-brand-icon {
+            width: 22px;
+            height: 22px;
+            background: var(--primary-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 800;
+            font-size: 0.7rem;
+        }
+        .modal-brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+        .modal-header h3 { font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        
+        .modal-close { 
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 0;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; transform: rotate(90deg); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group.full { grid-column: 1 / -1; }
-        .form-group label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-control { background: #0b0b0e; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; color: #fff; font-size: 0.9rem; font-family: 'Inter', sans-serif; transition: var(--transition); }
-        .form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255,106,0,0.1); }
-        .form-control::placeholder { color: #4b5563; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 24px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.95rem; cursor: pointer; border: none; transition: var(--transition); }
-        .btn-primary { background: var(--primary-color); color: #000; width: 100%; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: #fff; }
-        .btn-outline:hover { border-color: #fff; }
-        .modal-footer { display: flex; gap: 12px; margin-top: 24px; }
-        .modal-footer .btn-outline { flex: 1; }
-        .modal-footer .btn-primary { flex: 2; }
+        .form-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .form-control { 
+            background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; 
+            padding: 14px 16px; 
+            color: #fff; 
+            font-size: 0.95rem; 
+            transition: all 0.3s;
+            outline: none;
+        }
+        .form-control:focus { 
+            border-color: var(--primary-color); 
+            background: rgba(255, 106, 0, 0.05);
+            box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.15);
+        }
+
+        .modal-footer { display: flex; gap: 16px; margin-top: 32px; }
+        .modal-footer .btn { flex: 1; padding: 16px; font-weight: 800; font-family: 'Outfit', sans-serif; }
+        .btn-primary { background: var(--primary-color); color: #000; box-shadow: 0 8px 20px rgba(255, 106, 0, 0.2); }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
 
         /* PAYMENT METHODS */
         .payment-list { display: flex; flex-direction: column; gap: 12px; }
@@ -222,21 +300,87 @@
         .footer-bottom { padding-top: 30px; border-top: 1px solid #1c1c23; display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.8rem; }
         .footer-bottom-links { display: flex; gap: 20px; }
 
-        /* RESPONSIVE */
-        @media (max-width: 1024px) {
-            .checkout-grid { grid-template-columns: 1fr; gap: 30px; }
-            .summary-card { position: static; }
+        /* Premium Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
         }
-        @media (max-width: 768px) {
-            .container { padding: 0 20px; }
-            .nav-links { display: none; }
-            .page-header h1 { font-size: 1.8rem; }
-            .form-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
-            .footer-bottom { flex-direction: column; gap: 15px; text-align: center; }
-            .promo-row { flex-direction: column; align-items: flex-start; }
-            .promo-input-wrap { width: 100%; }
-            .promo-input { flex: 1; }
+        .toast {
+            pointer-events: auto;
+            background: rgba(17, 17, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast.active { transform: translateX(0); }
+        .toast i { font-size: 1.2rem; flex-shrink: 0; }
+        
+        .toast-error { border-left: 4px solid #ef4444; }
+        .toast-error i { color: #ef4444; }
+        
+        .toast-success { border-left: 4px solid #22c55e; }
+        .toast-success i { color: #22c55e; }
+        
+        .toast-info { border-left: 4px solid var(--primary-color); }
+        .toast-info i { color: var(--primary-color); }
+
+        .toast::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            width: 100%;
+            transform-origin: left;
+            animation: toast-progress 4s linear forwards;
+        }
+        @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .toast-error::after { background: #ef4444; }
+        .toast-success::after { background: #22c55e; }
+        .toast-info::after { background: var(--primary-color); }
+
+        .modal-field.is-invalid .form-control { 
+            border-color: #ef4444; 
+            background: rgba(239, 68, 68, 0.05); 
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        .modal-field.is-invalid label { color: #ef4444; }
+        .field-error-msg { 
+            color: #ef4444; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            margin-top: 6px; 
+            display: none; 
+            align-items: center; 
+            gap: 4px;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
         /* MODAL VALIDATION */
@@ -258,7 +402,8 @@
                 <a href="#">Brands</a>
                 <a href="{% url 'product_listing' %}">Collections</a>
             </div>
-            <div class="nav-actions">
+            <div class="nav-actions" style="display:flex; align-items:center; gap:20px;">
+                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist" style="font-size:1.2rem; color:var(--text-muted); text-decoration:none;"><i class="far fa-heart"></i></a>
                 <div class="secure-badge"><i class="fas fa-lock"></i> Secure Checkout</div>
             </div>
         </div>
@@ -484,10 +629,15 @@
     <!-- ADD ADDRESS MODAL -->
     <div class="modal-overlay" id="addressModal">
         <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="modalTitle"><i class="fas fa-map-marker-alt" style="color:var(--primary-color); margin-right:8px;"></i>Add New Address</h3>
-                <button class="modal-close" id="closeAddressModal"><i class="fas fa-times"></i></button>
+            <button class="modal-close" id="closeAddressModal" type="button" style="position: absolute; top: 32px; right: 32px;"><i class="fas fa-times"></i></button>
+            <div class="modal-brand">
+                <div class="modal-brand-icon">T</div>
+                <span class="modal-brand-name">TimeHub Official</span>
             </div>
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Address</h3>
+            </div>
+
             <div class="form-grid" id="newAddressForm">
                 <div class="form-group full modal-field">
                     <label>Full Name</label>
@@ -535,6 +685,9 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- FOOTER -->
     <footer>
         <div class="container">
@@ -581,6 +734,31 @@
     </footer>
 
     <script>
+        // ─────────── Toast System ───────────
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'error' ? 'exclamation-circle' : (type === 'success' ? 'check-circle' : 'info-circle');
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div class="toast-message">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('active'), 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
         // ─────────── CSRF Helper ───────────
         function getCookie(name) {
             let val = null;
@@ -602,8 +780,8 @@
             if (parent) parent.classList.add('is-invalid');
             const errEl = parent ? parent.querySelector('.field-error-msg') : null;
             if (errEl) {
-                errEl.textContent = msg;
-                errEl.style.display = 'block';
+                errEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${msg}`;
+                errEl.style.display = 'flex';
             }
         }
 
@@ -770,7 +948,7 @@
             const code = input.value.trim().toUpperCase();
             if (!code) return;
             // Mock response
-            alert('Promo code "' + code + '" is not valid or has expired.');
+            showToast('Promo code "' + code + '" is not valid or has expired.', 'error');
         }
 
         // ─────────── Place Order – button loading state ───────────
@@ -779,7 +957,7 @@
             const anyChecked = Array.from(radios).some(r => r.checked);
             if (!anyChecked) {
                 e.preventDefault();
-                alert('Please select a delivery address to continue.');
+                showToast('Please select a delivery address to continue.', 'error');
                 return;
             }
             const btn = document.getElementById('placeOrderBtn');

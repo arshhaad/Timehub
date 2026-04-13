@@ -266,6 +266,14 @@ def reschedule_order(request, order_id):
         messages.error(request, f"Order cannot be rescheduled as it is currently {order.status}.")
         return redirect('order_detail', order_id=order.id)
 
+    if order.reschedule_count >= 1:
+        messages.error(request, "This order has already been successfully rescheduled once and cannot be changed again.")
+        return redirect('order_detail', order_id=order.id)
+
+    if order.reschedule_status == 'Pending':
+        messages.error(request, "A reschedule request is already pending for this order.")
+        return redirect('order_detail', order_id=order.id)
+
     if request.method == 'GET':
         from datetime import datetime
         return render(request, 'Rq_reschedule.html', {
@@ -278,21 +286,25 @@ def reschedule_order(request, order_id):
         new_time = request.POST.get('scheduled_time')
         reason = request.POST.get('reschedule_reason', '').strip()
         
-        if new_date and new_time and reason and len(reason) >= 15:
+        if reason and len(reason) >= 8:
             from datetime import datetime
             try:
-                date_obj = datetime.strptime(new_date, '%Y-%m-%d').date()
-                time_obj = datetime.strptime(new_time, '%H:%M').time()
-                
-                if date_obj < datetime.now().date():
-                    messages.error(request, "Delivery date cannot be in the past.")
-                else:
+                if new_date:
+                    date_obj = datetime.strptime(new_date, '%Y-%m-%d').date()
+                    if date_obj < datetime.now().date():
+                        messages.error(request, "Delivery date cannot be in the past.")
+                        return redirect('reschedule_order', order_id=order.id)
                     order.requested_reschedule_date = date_obj
+
+                if new_time:
+                    time_obj = datetime.strptime(new_time, '%H:%M').time()
                     order.requested_reschedule_time = time_obj
-                    order.reschedule_reason = reason
-                    order.reschedule_status = 'Pending'
-                    order.save()
-                    messages.success(request, f"Reschedule request for {date_obj.strftime('%B %d, %Y')} submitted for approval.")
+                
+                order.reschedule_reason = reason
+                order.reschedule_status = 'Pending'
+                order.save()
+                display_date = date_obj if new_date else order.requested_reschedule_date
+                messages.success(request, f"Reschedule request for {display_date.strftime('%B %d, %Y') if display_date else 'delivery'} submitted.")
             except ValueError:
                 messages.error(request, "Invalid date or time format.")
         else:

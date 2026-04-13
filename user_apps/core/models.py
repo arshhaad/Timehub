@@ -36,6 +36,16 @@ class Product(models.Model):
         ('Chronograph', 'Chronograph'),
         ('Automatic', 'Automatic'),
     )
+    BADGE_CHOICES = (
+        ('Sale', 'Sale'),
+        ('Limited Edition', 'Limited Edition'),
+        ('New Arrival', 'New Arrival'),
+        ('Exclusive', 'Exclusive'),
+        ('Luxury', 'Luxury'),
+        ('Premium', 'Premium'),
+        ('Signature Series', 'Signature Series'),
+        ('Best Seller', 'Best Seller'),
+    )
 
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=200)
@@ -55,6 +65,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     rating = models.FloatField(default=0.0)
     features = models.TextField(blank=True, help_text="Comma-separated key features")
+    badge = models.CharField(max_length=50, choices=BADGE_CHOICES, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -130,6 +141,7 @@ class Order(models.Model):
     requested_reschedule_date = models.DateField(blank=True, null=True)
     requested_reschedule_time = models.TimeField(blank=True, null=True)
     reschedule_status = models.CharField(max_length=20, choices=[('None', 'None'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='None')
+    reschedule_count = models.PositiveIntegerField(default=0)
     scheduled_delivery_date = models.DateField(blank=True, null=True)
     scheduled_delivery_time = models.TimeField(blank=True, null=True)
     refund_processed_at = models.DateTimeField(blank=True, null=True)

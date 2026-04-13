@@ -186,6 +186,10 @@
                 <a href="#">Brands</a>
                 <a href="{% url 'product_listing' %}">Collections</a>
             </div>
+            <div class="nav-actions" style="display:flex; align-items:center; gap:20px;">
+                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist" style="font-size:1.2rem; color:var(--text-muted);"><i class="far fa-heart"></i></a>
+                <a href="{% url 'cart_view' %}" class="icon-btn" title="Cart" style="font-size:1.2rem; color:var(--text-muted);"><i class="fas fa-shopping-cart"></i></a>
+            </div>
         </div>
     </header>
 

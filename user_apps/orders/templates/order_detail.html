@@ -80,12 +80,107 @@
     .btn-danger-alt:hover { background: #ef4444; color: #fff; }
 
     /* Modals - Adapted for Base User */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; }
-    .modal-overlay.active { display: flex; }
-    .modal-box { background: var(--sidebar-color); border: 1px solid var(--border-color); border-radius: 24px; padding: 35px; width: 90%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-    .modal-box h3 { margin-bottom: 15px; font-size: 1.3rem; color: #fff; }
-    .modal-box textarea { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin: 20px 0; font-family: inherit; resize: none; outline: none; }
-    .modal-box textarea:focus { border-color: var(--primary-color); }
+    /* Pro-Style Modals */
+    .modal-overlay { 
+        display: none; 
+        position: fixed; 
+        inset: 0; 
+        background: rgba(0, 0, 0, 0.7); 
+        backdrop-filter: blur(12px); 
+        z-index: 2000; 
+        align-items: center; 
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    
+    .modal-box { 
+        background: #111; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 28px; 
+        padding: 40px; 
+        width: 90%; 
+        max-width: 480px; 
+        box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05); 
+        transform: scale(0.95) translateY(20px);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+    }
+    .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+    
+    .modal-close-btn {
+        position: absolute;
+        top: 32px;
+        right: 32px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.03);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid rgba(255,255,255,0.05);
+        z-index: 10;
+    }
+    .modal-close-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: rotate(90deg); }
+
+    .modal-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        opacity: 0.8;
+    }
+    .modal-brand-icon {
+        width: 22px;
+        height: 22px;
+        background: var(--primary-color);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        font-weight: 800;
+        font-size: 0.7rem;
+    }
+    .modal-brand-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .modal-header { margin-bottom: 24px; }
+    .modal-box h3 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .modal-box p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+
+    .modal-box textarea, .modal-box input { 
+        width: 100%; 
+        background: rgba(255,255,255,0.02); 
+        border: 1px solid rgba(255,255,255,0.1); 
+        border-radius: 16px; 
+        padding: 18px; 
+        color: #fff; 
+        margin: 10px 0 20px 0; 
+        font-family: inherit; 
+        resize: none; 
+        outline: none; 
+        transition: all 0.3s;
+        box-sizing: border-box;
+    }
+    .modal-box textarea:focus, .modal-box input:focus { 
+        border-color: var(--primary-color); 
+        background: rgba(255, 106, 0, 0.05);
+        box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.15);
+    }
+    
+    .modal-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 20px; }
 
     /* Info Grid */
     .info-item label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); display:block; margin-bottom:4px; }
@@ -104,7 +199,21 @@
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'order_history' %}" class="back-link">
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+    <!-- MESSAGES BLOCK -->
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for message in messages %}
+        <div class="status-badge s-{% if 'error' in message.tags %}Cancelled{% elif 'success' in message.tags %}Delivered{% else %}Pending{% endif %}" 
+             style="width: 100%; padding: 16px 20px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
+            <i class="fas fa-{% if 'error' in message.tags %}exclamation-circle{% elif 'success' in message.tags %}check-circle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <a href="{% url 'order_history' %}" class="back-link">
     <i class="fas fa-arrow-left"></i> Back to Orders
 </a>
 
@@ -289,13 +398,18 @@
                     </div>
                     {% endif %}
 
-                    <!-- Integrated Action Buttons -->
                     <div class="info-item" style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--border-color);">
                         <div class="btn-group" style="margin-top: 0; gap: 16px;">
                             {% if order.status in 'Pending,Processing' %}
-                                <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
-                                    <i class="fas fa-history"></i> Reschedule Delivery
-                                </button>
+                                {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
+                                    <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
+                                        <i class="fas fa-history"></i> Reschedule Delivery
+                                    </button>
+                                {% elif order.reschedule_count >= 1 %}
+                                    <div class="btn-action btn-outline-alt" style="border-radius: 10px; padding: 14px; opacity: 0.7; cursor: default; border-style: dashed;">
+                                        <i class="fas fa-check-circle" style="color: var(--primary-color);"></i> Delivery Date Finalized
+                                    </div>
+                                {% endif %}
                                 <button class="btn-action btn-danger-alt" onclick="openCancelOrderModal()" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.08);">
                                     <i class="fas fa-ban"></i> Cancel Order
                                 </button>
@@ -358,13 +472,21 @@
 <!-- MODALS -->
 <div class="modal-overlay" id="cancelOrderModal">
     <div class="modal-box">
-        <h3>Cancel Order?</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
+        <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
+        <div class="modal-brand">
+            <div class="modal-brand-icon">T</div>
+            <span class="modal-brand-name">TimeHub Official</span>
+        </div>
+        <div class="modal-header">
+            <h3>Cancel Order?</h3>
+            <p>Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
+        </div>
         <form action="{% url 'cancel_order' order.id %}" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Reason for cancellation..." rows="3" required></textarea>
+            <span class="modal-label">Reason for cancellation</span>
+            <textarea name="reason" placeholder="Explain why you are cancelling..." rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Go Back</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Keep Order</button>
                 <button type="submit" class="btn-action btn-danger-alt">Confirm Cancellation</button>
             </div>
         </form>
@@ -373,14 +495,22 @@
 
 <div class="modal-overlay" id="cancelItemModal">
     <div class="modal-box">
-        <h3>Cancel <span id="cancelItemName"></span>?</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Remove this specifically from your order.</p>
+        <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
+        <div class="modal-brand">
+            <div class="modal-brand-icon">T</div>
+            <span class="modal-brand-name">TimeHub Official</span>
+        </div>
+        <div class="modal-header">
+            <h3>Cancel <span id="cancelItemName"></span></h3>
+            <p>Remove this item specifically from your order breakdown.</p>
+        </div>
         <form id="cancelItemForm" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Reason for cancellation..." rows="3" required></textarea>
+            <span class="modal-label">Reason for cancelling item</span>
+            <textarea name="reason" placeholder="Why remove this item?" rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
-                <button type="submit" class="btn-action btn-danger-alt">Cancel Item</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Keep Item</button>
+                <button type="submit" class="btn-action btn-danger-alt">Remove Item</button>
             </div>
         </form>
     </div>
@@ -388,13 +518,21 @@
 
 <div class="modal-overlay" id="returnModal">
     <div class="modal-box">
-        <h3>Return Order</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Provide a reason for return. Our team will contact you for pickup.</p>
+        <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
+        <div class="modal-brand">
+            <div class="modal-brand-icon">T</div>
+            <span class="modal-brand-name">TimeHub Official</span>
+        </div>
+        <div class="modal-header">
+            <h3>Return Order</h3>
+            <p>Provide a reason for return. Our specialized team will review and contact you within 24 hours.</p>
+        </div>
         <form action="{% url 'return_order' order.id %}" method="POST">
             {% csrf_token %}
-            <textarea name="reason" placeholder="Why are you returning this?" rows="3" required></textarea>
+            <span class="modal-label">Detailed Return Reason</span>
+            <textarea name="reason" placeholder="Describe the issue in detail..." rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Cancel</button>
                 <button type="submit" class="btn-action btn-primary-alt">Submit Request</button>
             </div>
         </form>
@@ -403,19 +541,34 @@
 
 <div class="modal-overlay" id="rescheduleModal">
     <div class="modal-box">
-        <h3>Reschedule Delivery</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Select a new date and provide a reason.</p>
+        <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
+        <div class="modal-brand">
+            <div class="modal-brand-icon">T</div>
+            <span class="modal-brand-name">TimeHub Official</span>
+        </div>
+        <div class="modal-header">
+            <h3>Reschedule Delivery</h3>
+            <p>Select your preferred delivery window and provide a valid reason.</p>
+        </div>
         <form action="{% url 'reschedule_order' order.id %}" method="POST">
             {% csrf_token %}
-            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Select Delivery Date</label>
-            <input type="date" name="scheduled_date" required min="{{ today|date:'Y-m-d' }}" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-top: 5px;">
-            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Select Delivery Time</label>
-            <input type="time" name="scheduled_time" required style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; margin-top: 5px;">
-            <label style="display:block; margin-top:15px; font-size:0.8rem; color:var(--text-muted);">Reason for Reschedule</label>
-            <textarea name="reschedule_reason" placeholder="Detailed reason (min 15 chars)..." rows="3" required style="margin-top: 5px;"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <span class="modal-label">Delivery Date</span>
+                    <input type="date" name="scheduled_date" min="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div>
+                    <span class="modal-label">Delivery Time</span>
+                    <input type="time" name="scheduled_time">
+                </div>
+            </div>
+            
+            <span class="modal-label">Reason for reschedule</span>
+            <textarea name="reschedule_reason" placeholder="Detailed reason (min 8 chars)..." rows="3" required></textarea>
+            
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
-                <button type="submit" class="btn-action btn-primary-alt">Confirm</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Go Back</button>
+                <button type="submit" class="btn-action btn-primary-alt">Confirm Change</button>
             </div>
         </form>
     </div>

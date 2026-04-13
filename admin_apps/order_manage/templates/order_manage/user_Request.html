@@ -5,13 +5,13 @@
 {% block extra_css %}
 <style>
     .page-header {
-        display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+        display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;
     }
     .page-title {
-        font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;
+        font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;
     }
     .page-desc {
-        color: var(--text-muted); font-size: 0.95rem;
+        color: var(--text-muted); font-size: 0.85rem;
     }
     .table-panel {
         background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
@@ -38,6 +38,7 @@
     }
     .req-Return { background: #ffedd5; color: #c2410c; } /* Warning orange for Returns */
     .req-Cancel { background: #fee2e2; color: #991b1b; } /* Danger red for Cancels */
+    .req-Reschedule { background: #dbeafe; color: #1e40af; } /* Blue for Reschedule */
     
     .btn-action {
         padding: 8px 14px; background: #fff; border: 1px solid var(--border-color);
@@ -69,7 +70,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">User Requests</h1>
-        <p class="page-desc">Manage return requests and view cancellation logs.</p>
+        <p class="page-desc">Manage return requests, reschedule applications, and view cancellation logs.</p>
     </div>
 </div>
 
@@ -97,6 +98,8 @@
                     <td>
                         {% if order.status == 'Return Requested' or order.return_reason %}
                             <span class="status-badge req-Return"><i class="fas fa-undo"></i> Return</span>
+                        {% elif order.reschedule_reason %}
+                            <span class="status-badge req-Reschedule"><i class="fas fa-calendar-alt"></i> Reschedule</span>
                         {% elif order.cancel_reason %}
                             <span class="status-badge req-Cancel"><i class="fas fa-ban"></i> Cancel</span>
                         {% endif %}
@@ -106,6 +109,13 @@
                             <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ order.return_reason|default:'No reason provided' }}">
                                 {{ order.return_reason|default:'No reason provided' }}
                             </span>
+                        {% elif order.reschedule_reason %}
+                            <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;" title="{{ order.reschedule_reason }}">
+                                {{ order.reschedule_reason }}
+                            </span>
+                            <span style="display: block; font-size: 0.75rem; color: #1e40af; font-weight: 600;">
+                                <i class="far fa-clock"></i> {{ order.requested_reschedule_date|date:"M d, Y" }} at {{ order.requested_reschedule_time|time:"g:i A" }}
+                            </span>
                         {% elif order.cancel_reason %}
                             <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ order.cancel_reason }}">
                                 {{ order.cancel_reason }}
@@ -113,12 +123,28 @@
                         {% endif %}
                     </td>
                     <td>
-                        <span class="status-badge s-{{ order.status|cut:' ' }}">{{ order.status }}</span>
+                        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                            {% if order.reschedule_reason %}
+                                <span class="status-badge" style="background: {% if order.reschedule_status == 'Pending' %}#fef3c7{% elif order.reschedule_status == 'Approved' %}#dcfce7{% else %}#fee2e2{% endif %}; color: {% if order.reschedule_status == 'Pending' %}#d97706{% elif order.reschedule_status == 'Approved' %}#166534{% else %}#991b1b{% endif %};">
+                                    {{ order.reschedule_status|default:"Pending" }}
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; padding: 0 4px;">Order: {{ order.status }}</span>
+                            {% else %}
+                                <span class="status-badge s-{{ order.status|cut:' ' }}">{{ order.status }}</span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
-                        <a href="{% url 'admin_order_detail' order.id %}" class="btn-action">
-                            View Details
-                        </a>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <a href="{% url 'admin_order_detail' order.id %}" class="btn-action" style="width: 100%; justify-content: center; background: #fff;">
+                                <i class="fas fa-eye"></i> Details
+                            </a>
+                            {% if order.reschedule_reason and order.reschedule_status == 'Pending' %}
+                            <a href="{% url 'process_reschedule' order.id %}?next={{ request.get_full_path|urlencode }}" class="btn-action" style="width: 100%; justify-content: center; background: #000; color: #fff; border-color: #000;">
+                                <i class="fas fa-edit"></i> Process
+                            </a>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

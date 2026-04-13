@@ -562,6 +562,56 @@
             .compact-compare-toggle { justify-content: space-between; padding: 10px 18px; }
             .results-meta { text-align: center; font-size: 0.9rem; }
         }
+
+        /* Premium Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            background: rgba(17, 17, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast.active { transform: translateX(0); }
+        .toast i { font-size: 1.2rem; flex-shrink: 0; }
+        .toast-error { border-left: 4px solid #ef4444; }
+        .toast-error i { color: #ef4444; }
+        .toast-success { border-left: 4px solid #22c55e; }
+        .toast-success i { color: #22c55e; }
+        .toast-info { border-left: 4px solid var(--primary-color); }
+        .toast-info i { color: var(--primary-color); }
+        .toast::after {
+            content: ''; position: absolute; bottom: 0; left: 0; height: 3px;
+            background: rgba(255,255,255,0.1); width: 100%;
+            transform-origin: left; animation: toast-progress 4s linear forwards;
+        }
+        @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .toast-error::after { background: #ef4444; }
+        .toast-success::after { background: #22c55e; }
+        .toast-info::after { background: var(--primary-color); }
     </style>
 </head>
 <body class="{% if request.session.compare_mode_active %}compare-mode-active{% endif %}">
@@ -591,6 +641,9 @@
             </nav>
             <div class="nav-actions">
                 <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
+                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
+                    <i class="far fa-heart"></i>
+                </a>
                 <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit; position:relative;">
                     <i class="fas fa-shopping-cart"></i>
                     <span id="cartBadge" style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{ cart_count }}</span>
@@ -619,6 +672,7 @@
         <nav class="mobile-nav-links">
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'product_listing' %}">Collection</a>
+            <a href="{% url 'wishlist_view' %}">Wishlist</a>
             <a href="#">About</a>
             <a href="#">Contact</a>
             {% if user.is_authenticated %}
@@ -636,6 +690,9 @@
 
 
     <div class="overlay" id="overlay"></div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- SIDEBAR DRAWER OVERHAUL -->
     <div class="sidebar-drawer" id="sidebarDrawer">
@@ -939,6 +996,8 @@
 
                             {% if product.stock == 0 %}
                             <span class="badge" style="background: #333; color: #fff;">Sold Out</span>
+                            {% elif product.badge %}
+                            <span class="badge">{{ product.badge }}</span>
                             {% elif product.discount_price %}
                             <span class="badge">Sale</span>
                             {% endif %}
@@ -1043,6 +1102,22 @@
     <script>
         const sidebarDrawer = document.getElementById('sidebarDrawer');
         const overlay = document.getElementById('overlay');
+        
+        // Global Toast System
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'error' ? 'exclamation-circle' : (type === 'success' ? 'check-circle' : 'info-circle');
+            toast.innerHTML = `<i class="fas fa-${icon}"></i><div class="toast-message">${message}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('active'), 10);
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 600);
+            }, 4000);
+        }
 
         const openDrawer = () => { sidebarDrawer.classList.add('active'); overlay.classList.add('active'); };
         const closeAll = () => { sidebarDrawer.classList.remove('active'); overlay.classList.remove('active'); };
@@ -1245,7 +1320,7 @@
         });
 
         window.toggleCompare = (id) => {
-            fetch(`/compare/toggle/?id=${id}`).then(r => r.json()).then(d => d.success ? syncCompareUI(d) : alert(d.error));
+            fetch(`/compare/toggle/?id=${id}`).then(r => r.json()).then(d => d.success ? syncCompareUI(d) : showToast(d.error, 'error'));
         };
 
         document.body.addEventListener('click', e => {
@@ -1304,13 +1379,13 @@
                         btn.style.pointerEvents = 'auto';
                     }, 2000);
                 } else {
-                    alert(data.error || 'Failed to add item to cart');
+                    showToast(data.error || 'Failed to add item to cart', 'error');
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(err => {
-                alert('Please login to add items to your cart.');
+                showToast('Please login to add items to your cart.', 'error');
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
             });
@@ -1336,13 +1411,13 @@
                 if(data.success) {
                     window.location.href = "{% url 'checkout_page' %}";
                 } else {
-                    alert(data.error || 'Failed to process Buy Now');
+                    showToast(data.error || 'Failed to process Buy Now', 'error');
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(err => {
-                alert('Please login to continue.');
+                showToast('Please login to continue.', 'error');
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
             });
@@ -1413,13 +1488,13 @@
                     }
                 } else {
                     icon.className = originalClass;
-                    alert(data.error || 'Please login to modify your wishlist.');
+                    showToast(data.error || 'Please login to modify your wishlist.', 'error');
                 }
             })
             .catch(err => {
                 btnElement.style.pointerEvents = 'auto';
                 icon.className = originalClass;
-                alert('Connection error. Please check your login status.');
+                showToast('Connection error. Please check your login status.', 'error');
             });
         };
     </script>

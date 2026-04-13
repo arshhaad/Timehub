@@ -384,12 +384,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         location.reload(); // Quick reload if it gets completely removed, although we set min 1 limit
                     }
                 } else {
-                    alert(data.error || 'An error occurred.');
+                    showToast(data.error || 'An error occurred.', 'error');
                 }
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("An error occurred updating the cart.");
+                showToast("An error occurred updating the cart.", 'error');
             });
         });
     });
@@ -435,14 +435,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         location.reload(); 
                     }, 800);
                 } else {
-                    alert(data.error || 'Failed to save for later');
+                    showToast(data.error || 'Failed to save for later', 'error');
                     this.innerHTML = originalHtml;
                     this.style.pointerEvents = 'auto';
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('Connection error');
+                showToast('Connection error', 'error');
                 this.innerHTML = originalHtml;
                 this.style.pointerEvents = 'auto';
             });

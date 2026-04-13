@@ -159,7 +159,7 @@ def cancel_order_item(request, item_id):
 def inventory_list(request):
     search_query = request.GET.get('search', '').strip()
     
-    products = Product.objects.all().order_by('-created_at')
+    products = Product.objects.filter(is_deleted=False).order_by('-created_at')
     if search_query:
         products = products.filter(name__icontains=search_query)
 
@@ -168,7 +168,7 @@ def inventory_list(request):
     total_out = 0
 
     for product in products:
-        variants = product.variants.all()
+        variants = product.variants.filter(is_active=True)
         if variants.exists():
             for v in variants:
                 inventory_items.append({
@@ -180,6 +180,7 @@ def inventory_list(request):
                     'stock': v.stock,
                     'image': product.image.url if product.image else None,
                     'price': v.price if v.price else product.price,
+                    'badge': product.badge,
                 })
                 if v.stock == 0:
                     total_out += 1
@@ -195,6 +196,7 @@ def inventory_list(request):
                 'stock': product.stock,
                 'image': product.image.url if product.image else None,
                 'price': product.price,
+                'badge': product.badge,
             })
             if product.stock == 0:
                 total_out += 1
@@ -208,6 +210,7 @@ def inventory_list(request):
         'total_low': total_low,
         'total_out': total_out,
         'search_query': search_query,
+        'badge_choices': Product._meta.get_field('badge').choices,
     }
     return render(request, 'order_manage/stocks.html', context)
 
@@ -219,23 +222,53 @@ def inventory_update(request):
         data = json.loads(request.body)
         item_type = data.get('type')
         item_id = data.get('id')
-        new_stock = int(data.get('stock'))
+        if 'stock' in data:
+            new_stock = int(data.get('stock'))
+            if new_stock < 0:
+                return JsonResponse({'success': False, 'message': 'Stock cannot be negative.'})
 
-        if new_stock < 0:
-            return JsonResponse({'success': False, 'message': 'Stock cannot be negative.'})
-
-        if item_type == 'variant':
-            item = ProductVariant.objects.get(id=item_id)
-            item.stock = new_stock
-            item.save()
-        elif item_type == 'product':
-            item = Product.objects.get(id=item_id)
-            item.stock = new_stock
-            item.save()
-        else:
-            return JsonResponse({'success': False, 'message': 'Invalid type.'})
+            if item_type == 'variant':
+                item = ProductVariant.objects.get(id=item_id)
+                item.stock = new_stock
+                item.save()
+            elif item_type == 'product':
+                item = Product.objects.get(id=item_id)
+                item.stock = new_stock
+                item.save()
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid type.'})
+            return JsonResponse({'success': True, 'message': 'Stock updated successfully.', 'new_stock': item.stock})
             
-        return JsonResponse({'success': True, 'message': 'Stock updated successfully.', 'new_stock': item.stock})
+        elif 'badge' in data:
+            new_badge = data.get('badge')
+            if not new_badge:
+                new_badge = None
+            if item_type == 'variant':
+                item = ProductVariant.objects.get(id=item_id)
+                item.product.badge = new_badge
+                item.product.save()
+            elif item_type == 'product':
+                item = Product.objects.get(id=item_id)
+                item.badge = new_badge
+                item.save()
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid type.'})
+            return JsonResponse({'success': True, 'message': 'Badge updated successfully.', 'badge': new_badge})
+
+        elif 'delete' in data and data['delete']:
+            if item_type == 'variant':
+                item = ProductVariant.objects.get(id=item_id)
+                item.is_active = False
+                item.save()
+            elif item_type == 'product':
+                item = Product.objects.get(id=item_id)
+                item.is_deleted = True
+                item.save()
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid type.'})
+            return JsonResponse({'success': True, 'message': 'Item deleted successfully.'})
+
+        return JsonResponse({'success': False, 'message': 'No valid data provided.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
 
@@ -247,7 +280,8 @@ def user_requests(request):
     # We show generic return requests or orders with cancel reasons 
     orders = Order.objects.filter(
         Q(status='Return Requested') | 
-        Q(cancel_reason__isnull=False, cancel_reason__gt='')
+        Q(cancel_reason__isnull=False, cancel_reason__gt='') |
+        Q(reschedule_reason__isnull=False, reschedule_reason__gt='')
     ).order_by('-created_at')
     
     if search_query:
@@ -302,19 +336,39 @@ def user_reschedule(request):
         'status_filter': status_filter,
         'active_menu': 'reschedule'
     }
-    return render(request, 'order_manage/user_reschedule.html', context)
+    return render(request, 'order_manage/user_reschedule_list.html', context)
 
 
 @login_required
-@require_POST
 def process_reschedule(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    
+    if request.method == 'GET':
+        return render(request, 'order_manage/user_reschedule.html', {'order': order, 'active_menu': 'reschedule', 'today': order.requested_reschedule_date})
+        
     action = request.POST.get('action') 
     
     if action == 'approve':
+        new_date = request.POST.get('reschedule_date')
+        new_time = request.POST.get('reschedule_time')
+        new_reason = request.POST.get('reschedule_reason')
+        
         order.reschedule_status = 'Approved'
-        order.scheduled_delivery_date = order.requested_reschedule_date
-        order.scheduled_delivery_time = order.requested_reschedule_time
+        order.reschedule_count += 1
+        
+        if new_date and new_date.strip():
+            order.scheduled_delivery_date = new_date
+        else:
+            order.scheduled_delivery_date = order.requested_reschedule_date
+            
+        if new_time and new_time.strip():
+            order.scheduled_delivery_time = new_time
+        else:
+            order.scheduled_delivery_time = order.requested_reschedule_time
+
+        if new_reason and new_reason.strip():
+            order.reschedule_reason = new_reason
+            
         order.save()
         messages.success(request, f"Reschedule request for Order #{order.id} approved.")
     elif action == 'reject':
@@ -323,5 +377,9 @@ def process_reschedule(request, order_id):
         messages.success(request, f"Reschedule request for Order #{order.id} rejected.")
     else:
         messages.error(request, "Invalid action.")
-        
+    
+    # If next is provided (e.g. from hub or order detail), go there, else go to the reschedule list.
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('admin_user_reschedule')

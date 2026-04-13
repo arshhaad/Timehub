@@ -324,6 +324,41 @@
 
     <!-- ── RIGHT COLUMN ── -->
     <div>
+        {% if order.reschedule_status == 'Pending' and order.requested_reschedule_date %}
+        <!-- Reschedule Request -->
+        <div class="card" style="border-color: #f59e0b; background: #fffbeb;">
+            <div class="card-header" style="border-bottom: 1px solid #fde68a;">
+                <div class="card-title" style="color: #d97706;"><i class="fas fa-calendar-alt" style="color: #d97706;"></i> Reschedule Request</div>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'process_reschedule' order.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'admin_order_detail' order.id %}">
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #92400e; margin-bottom: 6px; display: block;">Requested Date & Time (Edit to adjust):</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="date" name="reschedule_date" value="{{ order.requested_reschedule_date|date:'Y-m-d' }}" style="flex: 1; padding: 8px 12px; border: 1px solid #fde68a; border-radius: 6px; color: #b45309; font-weight: 600; background: #fff; width: 100%; outline: none;" required>
+                            <input type="time" name="reschedule_time" value="{{ order.requested_reschedule_time|time:'H:i' }}" style="flex: 1; padding: 8px 12px; border: 1px solid #fde68a; border-radius: 6px; color: #b45309; font-weight: 600; background: #fff; width: 100%; outline: none;" required>
+                        </div>
+                    </div>
+                
+                    <p style="font-size: 0.85rem; color: #92400e; margin-bottom: 20px; line-height: 1.5;">
+                        <strong>Reason:</strong> {{ order.reschedule_reason }}
+                    </p>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" name="action" value="approve" class="btn" style="flex: 1; background: #16a34a; color: #fff; justify-content: center; font-size: 0.8rem;">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn" style="flex: 1; background: #ef4444; color: #fff; justify-content: center; font-size: 0.8rem;">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Customer -->
         <div class="card">
             <div class="card-header">

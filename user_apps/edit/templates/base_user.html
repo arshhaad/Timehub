@@ -248,6 +248,56 @@
         @media (max-width: 480px) {
             .main-content { padding: 15px 10px; }
         }
+
+        /* Premium Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            background: rgba(17, 17, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast.active { transform: translateX(0); }
+        .toast i { font-size: 1.2rem; flex-shrink: 0; }
+        .toast-error { border-left: 4px solid #ef4444; }
+        .toast-error i { color: #ef4444; }
+        .toast-success { border-left: 4px solid #22c55e; }
+        .toast-success i { color: #22c55e; }
+        .toast-info { border-left: 4px solid var(--primary-color); }
+        .toast-info i { color: var(--primary-color); }
+        .toast::after {
+            content: ''; position: absolute; bottom: 0; left: 0; height: 3px;
+            background: rgba(255,255,255,0.1); width: 100%;
+            transform-origin: left; animation: toast-progress 4s linear forwards;
+        }
+        @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        .toast-error::after { background: #ef4444; }
+        .toast-success::after { background: #22c55e; }
+        .toast-info::after { background: var(--primary-color); }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -330,6 +380,9 @@
         </div>
     </aside>
 
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- Main Content Wrapper -->
     <div class="main-wrapper">
         <main class="main-content">
@@ -358,6 +411,29 @@
 
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
+
+        // Global Toast System
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'error' ? 'exclamation-circle' : (type === 'success' ? 'check-circle' : 'info-circle');
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div class="toast-message">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('active'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 600);
+            }, 4000);
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>

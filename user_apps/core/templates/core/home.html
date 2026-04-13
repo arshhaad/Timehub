@@ -1000,6 +1000,7 @@
                 <a href="#">Vintage</a>
             </nav>
             <div class="nav-actions">
+                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist"><i class="far fa-heart"></i></a>
                 <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
                 <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit; position:relative;">
                     <i class="fas fa-shopping-cart"></i>
@@ -1028,6 +1029,7 @@
         </div>
         <nav class="mobile-nav-links">
             <a href="/">Home</a>
+            <a href="{% url 'wishlist_view' %}">Wishlist</a>
             <a href="#">Luxury</a>
             <a href="#">Sport</a>
             <a href="#">Smart</a>
@@ -1140,6 +1142,8 @@
                     <div class="card-top">
                         {% if p.stock == 0 %}
                         <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+                        {% elif p.badge %}
+                        <span class="card-badge">{{ p.badge }}</span>
                         {% elif p.discount_price %}
                         <span class="card-badge">Sale</span>
                         {% endif %}

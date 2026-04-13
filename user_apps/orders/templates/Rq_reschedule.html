@@ -84,7 +84,19 @@
 {% endblock %}
 
 {% block content %}
-<div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
+<div class="container">
+    {% if messages %}
+    <div style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        {% for message in messages %}
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem;">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
     <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
 </div>
 
@@ -104,10 +116,10 @@
     <form action="{% url 'reschedule_order' order.id %}" method="POST">
         {% csrf_token %}
         <label for="scheduled_date" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Date</label>
-        <input type="date" name="scheduled_date" id="scheduled_date" required min="{{ today|date:'Y-m-d' }}">
+        <input type="date" name="scheduled_date" id="scheduled_date" min="{{ today|date:'Y-m-d' }}">
         
         <label for="scheduled_time" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Time</label>
-        <input type="time" name="scheduled_time" id="scheduled_time" required style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box;">
+        <input type="time" name="scheduled_time" id="scheduled_time" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box;">
         
         <label for="reschedule_reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Reason for Rescheduling</label>
         <textarea name="reschedule_reason" id="reschedule_reason" required minlength="15" placeholder="Please provide a valid and detailed reason for your request..." rows="3" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box; resize:vertical;"></textarea>
