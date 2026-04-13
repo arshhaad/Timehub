@@ -3,15 +3,22 @@
 {% block title %}User Requests - TimeHub{% endblock %}
 
 {% block extra_css %}
+<!-- Google Font for special text -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
     .page-header {
-        display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;
+        display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;
     }
     .page-title {
-        font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;
+        font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; letter-spacing: -0.02em;
     }
     .page-desc {
-        color: var(--text-muted); font-size: 0.85rem;
+        color: var(--text-muted); 
+        font-size: 0.95rem;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        line-height: 1.5;
     }
     .table-panel {
         background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
@@ -99,7 +106,7 @@
                         {% if order.status == 'Return Requested' or order.return_reason %}
                             <span class="status-badge req-Return"><i class="fas fa-undo"></i> Return</span>
                         {% elif order.reschedule_reason %}
-                            <span class="status-badge req-Reschedule"><i class="fas fa-calendar-alt"></i> Reschedule</span>
+                            <a href="{% url 'process_reschedule' order.id %}?next={{ request.get_full_path|urlencode }}" class="status-badge req-Reschedule" style="text-decoration: none; display: inline-block; cursor: pointer; transition: all 0.2s;"><i class="fas fa-calendar-alt"></i> Reschedule</a>
                         {% elif order.cancel_reason %}
                             <span class="status-badge req-Cancel"><i class="fas fa-ban"></i> Cancel</span>
                         {% endif %}
@@ -135,14 +142,20 @@
                         </div>
                     </td>
                     <td>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <a href="{% url 'admin_order_detail' order.id %}" class="btn-action" style="width: 100%; justify-content: center; background: #fff;">
-                                <i class="fas fa-eye"></i> Details
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="{% url 'admin_order_detail' order.id %}" class="btn-action" title="Details" style="width: 34px; height: 34px; padding: 0; display: inline-flex; justify-content: center; align-items: center; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                <i class="fas fa-eye"></i>
                             </a>
                             {% if order.reschedule_reason and order.reschedule_status == 'Pending' %}
-                            <a href="{% url 'process_reschedule' order.id %}?next={{ request.get_full_path|urlencode }}" class="btn-action" style="width: 100%; justify-content: center; background: #000; color: #fff; border-color: #000;">
-                                <i class="fas fa-edit"></i> Process
-                            </a>
+                            <form method="POST" action="{% url 'process_reschedule' order.id %}?next={{ request.get_full_path|urlencode }}" style="display: contents;">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="approve" class="btn-action" title="Approve" style="width: 34px; height: 34px; padding: 0; display: inline-flex; justify-content: center; align-items: center; background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn-action" title="Not Approve" style="width: 34px; height: 34px; padding: 0; display: inline-flex; justify-content: center; align-items: center; background: #fef2f2; color: #dc2626; border-color: #fecaca; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
                             {% endif %}
                         </div>
                     </td>

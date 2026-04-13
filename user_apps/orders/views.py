@@ -274,6 +274,10 @@ def reschedule_order(request, order_id):
         messages.error(request, "A reschedule request is already pending for this order.")
         return redirect('order_detail', order_id=order.id)
 
+    if order.reschedule_status == 'Rejected':
+        messages.error(request, "Your previous reschedule request was declined and cannot be resubmitted for this order.")
+        return redirect('order_detail', order_id=order.id)
+
     if request.method == 'GET':
         from datetime import datetime
         return render(request, 'Rq_reschedule.html', {

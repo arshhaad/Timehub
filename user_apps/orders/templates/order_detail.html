@@ -401,10 +401,14 @@
                     <div class="info-item" style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--border-color);">
                         <div class="btn-group" style="margin-top: 0; gap: 16px;">
                             {% if order.status in 'Pending,Processing' %}
-                                {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
+                                {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' and order.reschedule_status != 'Rejected' %}
                                     <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
                                         <i class="fas fa-history"></i> Reschedule Delivery
                                     </button>
+                                {% elif order.reschedule_status == 'Rejected' %}
+                                    <div class="btn-action" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.8rem; flex: 1.5; cursor: default;">
+                                        <i class="fas fa-exclamation-triangle"></i> Reschedule Request Rejected
+                                    </div>
                                 {% elif order.reschedule_count >= 1 %}
                                     <div class="btn-action btn-outline-alt" style="border-radius: 10px; padding: 14px; opacity: 0.7; cursor: default; border-style: dashed;">
                                         <i class="fas fa-check-circle" style="color: var(--primary-color);"></i> Delivery Date Finalized
