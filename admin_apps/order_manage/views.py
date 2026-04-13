@@ -66,6 +66,7 @@ def order_detail(request, order_id):
     import json
     address = {}
     try:
+        # Address stored as JSON snapshot at time of order
         address = json.loads(order.address_snapshot)
     except Exception:
         address = {}

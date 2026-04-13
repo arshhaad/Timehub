@@ -44,7 +44,7 @@ def superuser_required(view_func):
     return wrap
 
 
-# ─── AJAX: Product Detail Endpoint ───
+# Product Detail Endpoint
 @never_cache
 @superuser_required
 def product_detail_api(request, product_id):
@@ -101,7 +101,7 @@ def product_detail_api(request, product_id):
     return JsonResponse(data)
 
 
-# ─── AJAX: Delete Image Endpoint ───
+# Delete Image Endpoint
 @never_cache
 @superuser_required
 def delete_product_image(request, image_id):
@@ -126,6 +126,18 @@ def delete_product_image(request, image_id):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=405)
 
+
+# Delete Variant Endpoint
+@never_cache
+@superuser_required
+def delete_variant(request, variant_id):
+    """Soft-deletes a product variant via AJAX."""
+    if request.method == 'POST':
+        variant = get_object_or_404(ProductVariant, id=variant_id)
+        variant.is_active = False
+        variant.save()
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error'}, status=405)
 
 @never_cache
 @superuser_required
@@ -180,55 +192,69 @@ def category_list(request):
     return render(request, "Category.html", context)
 
 
-# def _save_variants(product, post_data):
-#     """Helper to create/update variants from form arrays."""
-#     strap_materials = post_data.getlist("variant_strap_material[]")
-#     strap_colors = post_data.getlist("variant_strap_color[]")
-#     dial_colors = post_data.getlist("variant_dial_color[]")
-#     variant_prices = post_data.getlist("variant_price[]")
-#     variant_disc_prices = post_data.getlist("variant_discount_price[]")
-#     variant_stocks = post_data.getlist("variant_stock[]")
-#     variant_skus = post_data.getlist("variant_sku[]")
-#     variant_ids = post_data.getlist("variant_id[]")
+def _save_variants(product, post_data):
+    """Helper to create/update variants from form arrays."""
+    strap_colors = post_data.getlist("variant_strap_color[]")
+    dial_colors = post_data.getlist("variant_dial_color[]")
+    variant_stocks = post_data.getlist("variant_stock[]")
+    variant_prices = post_data.getlist("variant_price[]")
+    variant_skus = post_data.getlist("variant_sku[]")
+    variant_ids = post_data.getlist("variant_id[]")
     
-#     # Track which existing variant IDs were submitted (for deletion of removed ones)
-#     submitted_ids = set()
+    # Track which existing variant IDs were submitted (for soft-deletion of removed ones)
+    submitted_ids = set()
     
-#     for idx in range(len(strap_colors)):
-#         v_id = variant_ids[idx] if idx < len(variant_ids) else ''
-#         v_strap_mat = strap_materials[idx] if idx < len(strap_materials) else ''
-#         v_strap_col = strap_colors[idx] if idx < len(strap_colors) else ''
-#         v_dial_col = dial_colors[idx] if idx < len(dial_colors) else ''
+    for idx in range(len(strap_colors)):
+        v_id = variant_ids[idx] if idx < len(variant_ids) else ''
+        v_strap_col = strap_colors[idx] if idx < len(strap_colors) else ''
+        v_dial_col = dial_colors[idx] if idx < len(dial_colors) else ''
+        v_stock_raw = variant_stocks[idx] if idx < len(variant_stocks) else '0'
+        v_price_raw = variant_prices[idx] if idx < len(variant_prices) else ''
+        v_sku = variant_skus[idx] if idx < len(variant_skus) else ''
         
-#         if v_id and v_id.isdigit():
-#             # Update existing variant
-#             try:
-#                 variant = ProductVariant.objects.get(id=int(v_id), product=product)
-#                 variant.strap_material = v_strap_mat
-#                 variant.strap_color = v_strap_col
-#                 variant.dial_color = v_dial_col
-#                 # Keep existing price/stock/sku as they are not in the form anymore
-#                 variant.save()
-#                 submitted_ids.add(variant.id)
-#             except ProductVariant.DoesNotExist:
-#                 pass
-#         else:
-#             # Create new variant
-#             variant = ProductVariant.objects.create(
-#                 product=product,
-#                 strap_material=v_strap_mat,
-#                 strap_color=v_strap_col,
-#                 dial_color=v_dial_col,
-#                 # New variants created without these fields get defaults (0 stock)
-#             )
-#             submitted_ids.add(variant.id)
+        # Parse numeric values
+        try:
+            v_stock = int(v_stock_raw) if v_stock_raw else 0
+        except ValueError:
+            v_stock = 0
+        try:
+            v_price = float(v_price_raw) if v_price_raw else None
+        except ValueError:
+            v_price = None
+        
+        if v_id and v_id.isdigit():
+            # Update existing variant
+            try:
+                variant = ProductVariant.objects.get(id=int(v_id), product=product)
+                variant.strap_color = v_strap_col
+                variant.dial_color = v_dial_col
+                variant.stock = v_stock
+                variant.price = v_price
+                variant.sku = v_sku
+                variant.is_active = True
+                variant.save()
+                submitted_ids.add(variant.id)
+            except ProductVariant.DoesNotExist:
+                pass
+        else:
+            # Create new variant
+            if v_strap_col or v_dial_col:
+                variant = ProductVariant.objects.create(
+                    product=product,
+                    strap_color=v_strap_col,
+                    dial_color=v_dial_col,
+                    stock=v_stock,
+                    price=v_price,
+                    sku=v_sku,
+                )
+                submitted_ids.add(variant.id)
     
-#     # Remove variants that were deleted from the form
-#     if submitted_ids:
-#         product.variants.exclude(id__in=submitted_ids).delete()
-#     elif len(strap_colors) == 0:
-#         # No variants submitted at all — don't delete existing ones unless explicitly cleared
-#         pass
+    # Soft-delete variants removed from the form
+    if submitted_ids:
+        product.variants.filter(is_active=True).exclude(id__in=submitted_ids).update(is_active=False)
+    elif len(strap_colors) == 0:
+        # No variants submitted — soft-delete all active ones
+        product.variants.filter(is_active=True).update(is_active=False)
 
 
 @never_cache
