@@ -74,15 +74,25 @@ def order_detail(request, order_id):
     # Handle status update from the detail page
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        new_date = request.POST.get('scheduled_delivery_date')
+        
         valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
         if new_status in valid_statuses:
             if new_status == 'Returned' and order.status != 'Returned':
                 from django.utils import timezone
                 order.refund_processed_at = timezone.now()
                 order.refund_method = request.POST.get('refund_method')
+            
             order.status = new_status
+            
+            # Update delivery date if provided
+            if new_date:
+                order.scheduled_delivery_date = new_date
+            elif new_date == '':
+                order.scheduled_delivery_date = None
+                
             order.save()
-            messages.success(request, f'Order #{order.id} status updated to {new_status}.')
+            messages.success(request, f'Order #{order.id} status and delivery info updated successfully.')
         else:
             messages.error(request, 'Invalid status.')
         return redirect('admin_order_detail', order_id=order.id)

@@ -145,9 +145,18 @@ def category_list(request):
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "add_category":
-            name = request.POST.get("name")
-            description = request.POST.get("description", "")
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
             parent_id = request.POST.get("parent_id")
+            
+            if not name:
+                messages.error(request, "Category name is required.")
+                return redirect("category_list")
+            
+            if Collection.objects.filter(name__iexact=name, is_deleted=False).exists():
+                messages.error(request, f"Category '{name}' already exists.")
+                return redirect("category_list")
+
             parent = Collection.objects.get(id=parent_id) if parent_id and parent_id != "" else None
             
             Collection.objects.create(name=name, description=description, parent=parent)
@@ -157,9 +166,20 @@ def category_list(request):
         elif action == "edit_category":
             cat_id = request.POST.get("category_id")
             cat = get_object_or_404(Collection, id=cat_id)
-            cat.name = request.POST.get("name")
-            cat.description = request.POST.get("description", "")
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
             parent_id = request.POST.get("parent_id")
+
+            if not name:
+                messages.error(request, "Category name cannot be empty.")
+                return redirect("category_list")
+            
+            if Collection.objects.filter(name__iexact=name, is_deleted=False).exclude(id=cat.id).exists():
+                messages.error(request, f"Another category with name '{name}' already exists.")
+                return redirect("category_list")
+
+            cat.name = name
+            cat.description = description
             cat.parent = Collection.objects.get(id=parent_id) if parent_id and parent_id != "" else None
             cat.save()
             messages.success(request, f"Category '{cat.name}' updated successfully.")
@@ -264,32 +284,52 @@ def product_list(request):
         action = request.POST.get("action")
         
         if action == "add_product":
-            name = request.POST.get("name")
+            name = request.POST.get("name", "").strip()
             collection_id = request.POST.get("collection_id")
-            price = request.POST.get("price")
-            discount_price = request.POST.get("discount_price")
+            price_raw = request.POST.get("price")
+            discount_price_raw = request.POST.get("discount_price")
             colors = request.POST.getlist("colors")
-            stock = request.POST.get("stock")
-            description = request.POST.get("description", "")
+            stock_raw = request.POST.get("stock")
+            description = request.POST.get("description", "").strip()
             is_active = request.POST.get("is_active") == "on"
             
             # Extra fields
-            brand = request.POST.get("brand", "TimeHub")
+            brand = request.POST.get("brand", "TimeHub").strip()
             gender = request.POST.get("gender", "Unisex")
             occasion = request.POST.get("occasion", "Casual")
-            strap_material = request.POST.get("strap_material", "")
-            strap_color = request.POST.get("strap_color", "")
-            dial_color = request.POST.get("dial_color", "")
+            strap_material = request.POST.get("strap_material", "").strip()
+            strap_color = request.POST.get("strap_color", "").strip()
+            dial_color = request.POST.get("dial_color", "").strip()
             function = request.POST.get("function", "Analog")
-            features = request.POST.get("features", "")
+            features = request.POST.get("features", "").strip()
+
+            # Validation
+            if not name:
+                messages.error(request, "Product name is required.")
+                return redirect("product_list")
             
-            # stocks and discount 
+            if not collection_id:
+                messages.error(request, "Please select a category.")
+                return redirect("product_list")
+            
             try:
-                price = float(price) if price else 0.0
-                discount_price = float(discount_price) if discount_price else None
-                stock = int(stock) if stock else 0
+                price = float(price_raw) if price_raw else 0.0
+                if price <= 0:
+                    messages.error(request, "Price must be greater than zero.")
+                    return redirect("product_list")
+                
+                discount_price = float(discount_price_raw) if discount_price_raw else None
+                if discount_price is not None and discount_price >= price:
+                    messages.error(request, "Discount price must be less than the original price.")
+                    return redirect("product_list")
+                    
+                stock = int(stock_raw) if stock_raw else 0
+                if stock < 0:
+                    messages.error(request, "Stock cannot be negative.")
+                    return redirect("product_list")
             except ValueError:
-                price, discount_price, stock = 0.0, None, 0
+                messages.error(request, "Invalid numeric values for price or stock.")
+                return redirect("product_list")
             
             collection = get_object_or_404(Collection, id=collection_id)
             
@@ -330,16 +370,40 @@ def product_list(request):
             prod_id = request.POST.get("product_id")
             product = get_object_or_404(Product, id=prod_id)
             
-            # Update fields
-            try:
-                product.price = float(request.POST.get("price", 0))
-                disc_price = request.POST.get("discount_price")
-                product.discount_price = float(disc_price) if disc_price else None
-                product.stock = int(request.POST.get("stock", 0))
-            except ValueError:
-                pass
+            name = request.POST.get("name", "").strip()
+            price_raw = request.POST.get("price")
+            discount_price_raw = request.POST.get("discount_price")
+            stock_raw = request.POST.get("stock")
+            collection_id = request.POST.get("collection_id")
 
-            product.name = request.POST.get("name")
+            # Validation
+            if not name:
+                messages.error(request, "Product name cannot be empty.")
+                return redirect("product_list")
+            
+            try:
+                price = float(price_raw) if price_raw else product.price
+                if price <= 0:
+                    messages.error(request, "Price must be greater than zero.")
+                    return redirect("product_list")
+
+                discount_price = float(discount_price_raw) if discount_price_raw else None
+                if discount_price is not None and discount_price >= price:
+                    messages.error(request, "Discount price must be less than the original price.")
+                    return redirect("product_list")
+
+                stock = int(stock_raw) if stock_raw else product.stock
+                if stock < 0:
+                    messages.error(request, "Stock cannot be negative.")
+                    return redirect("product_list")
+            except ValueError:
+                messages.error(request, "Invalid numeric values for price or stock.")
+                return redirect("product_list")
+
+            product.name = name
+            product.price = price
+            product.discount_price = discount_price
+            product.stock = stock
             colors = request.POST.getlist("colors")
             product.colors.set(colors)
             product.collection = get_object_or_404(Collection, id=request.POST.get("collection_id"))

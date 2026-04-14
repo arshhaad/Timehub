@@ -126,8 +126,13 @@
             {{ order.status }}
         </span>
 
-        <form method="POST" action="{% url 'admin_order_detail' order.id %}" style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+        <form method="POST" action="{% url 'admin_order_detail' order.id %}" style="display:flex; align-items:center; gap:8px; justify-content:flex-end; flex-wrap: wrap;">
             {% csrf_token %}
+            <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Est. Delivery</label>
+                <input type="date" name="scheduled_delivery_date" value="{{ order.scheduled_delivery_date|date:'Y-m-d' }}" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px; font-family: inherit;">
+            </div>
+            
             <select name="status" id="status-select" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px; min-width:180px;">
                 {% for val, label in status_choices %}
                 <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>

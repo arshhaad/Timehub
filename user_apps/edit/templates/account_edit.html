@@ -229,7 +229,14 @@
             
             {% for field in form %}
                 <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.name == 'old_password' %}
+                        <a href="{% url 'forgot-password' %}" style="color: var(--primary-color); text-decoration: none; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Forgot Password?
+                        </a>
+                        {% endif %}
+                    </div>
                     <div class="input-wrap {% if field.errors %}is-invalid{% endif %}" id="wrap_{{ field.name }}">
                         <input type="password" name="{{ field.name }}" id="{{ field.id_for_label }}" placeholder="••••••••">
                         <i class="fas fa-lock input-icon"></i>

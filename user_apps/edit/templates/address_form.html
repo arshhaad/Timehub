@@ -304,7 +304,7 @@
                         <input type="text" id="id_full_name" name="full_name"
                                value="{{ form.full_name.value|default:'' }}"
                                placeholder="e.g. Arsh Ahmed"
-                               maxlength="255">
+                               maxlength="255" required minlength="3">
                     </div>
                     <div class="field-msg {% if form.full_name.errors %}error{% endif %}" id="msg_full_name">
                         {% if form.full_name.errors %}
@@ -324,7 +324,7 @@
                         <input type="text" id="id_street" name="street"
                                value="{{ form.street.value|default:'' }}"
                                placeholder="e.g. 123 MG Road, Apt 4B"
-                               maxlength="255">
+                               maxlength="255" required minlength="5">
                     </div>
                     <div class="field-msg {% if form.street.errors %}error{% endif %}" id="msg_street">
                         {% if form.street.errors %}
@@ -343,7 +343,7 @@
                         <input type="text" id="id_city" name="city"
                                value="{{ form.city.value|default:'' }}"
                                placeholder="e.g. Mumbai"
-                               maxlength="100">
+                               maxlength="100" required minlength="2" pattern="^[a-zA-Z\s]+$">
                     </div>
                     <div class="field-msg {% if form.city.errors %}error{% endif %}" id="msg_city">
                         {% if form.city.errors %}
@@ -362,7 +362,7 @@
                         <input type="text" id="id_state" name="state"
                                value="{{ form.state.value|default:'' }}"
                                placeholder="e.g. Maharashtra"
-                               maxlength="100">
+                               maxlength="100" required minlength="2" pattern="^[a-zA-Z\s]+$">
                     </div>
                     <div class="field-msg {% if form.state.errors %}error{% endif %}" id="msg_state">
                         {% if form.state.errors %}
@@ -381,7 +381,7 @@
                         <input type="text" id="id_postal_code" name="postal_code"
                                value="{{ form.postal_code.value|default:'' }}"
                                placeholder="e.g. 400001"
-                               maxlength="20">
+                               maxlength="20" required minlength="4">
                     </div>
                     <div class="field-msg {% if form.postal_code.errors %}error{% endif %}" id="msg_postal_code">
                         {% if form.postal_code.errors %}
@@ -400,7 +400,7 @@
                         <input type="tel" id="id_phone" name="phone"
                                value="{{ form.phone.value|default:'' }}"
                                placeholder="e.g. +91 98765 43210"
-                               maxlength="15">
+                               maxlength="15" required pattern="^[\+]?[\d\s\-\(\)]{10,15}$">
                     </div>
                     <div class="field-msg {% if form.phone.errors %}error{% endif %}" id="msg_phone">
                         {% if form.phone.errors %}

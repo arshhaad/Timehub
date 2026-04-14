@@ -9,6 +9,8 @@ urlpatterns = [
     path('addresses/delete/<int:id>/', views.delete_address, name='delete_address'),
     path('addresses/toggle-default/<int:id>/', views.toggle_default_address, name='toggle_default_address'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('profile/verify-email/', views.verify_email_change, name='verify_email_change'),
+    path('profile/resend-otp/', views.resend_email_otp, name='resend_email_otp'),
     path('account/security/', views.account_edit, name='account_edit'),
     
     # Cart

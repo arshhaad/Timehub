@@ -1,5 +1,8 @@
 import json
 from decimal import Decimal
+import random
+from datetime import timedelta
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -59,6 +62,10 @@ def checkout_page(request):
         }
 
         with transaction.atomic():
+            # Generate estimated delivery date (3–7 days from now) and save it
+            days_to_delivery = random.randint(3, 7)
+            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
+
             order = Order.objects.create(
                 user=request.user,
                 address_snapshot=json.dumps(address_data),
@@ -69,6 +76,7 @@ def checkout_page(request):
                 discount=Decimal('0'),
                 total_amount=total,
                 status='Pending',
+                scheduled_delivery_date=estimated_delivery_date,
             )
 
             for item in items:
@@ -94,6 +102,10 @@ def checkout_page(request):
 
         return redirect('order_success', order_id=order.id)
 
+    # Provide an estimated delivery date (randomly 1-7 days from today) for display
+    days_to_add = random.randint(1, 7)
+    estimated_delivery = timezone.now() + timedelta(days=days_to_add)
+
     return render(request, 'checkout_page.html', {
         'items': items,
         'subtotal': subtotal,
@@ -102,7 +114,9 @@ def checkout_page(request):
         'total': total,
         'addresses': addresses,
         'default_address': default_address,
+        'estimated_delivery': estimated_delivery,
     })
+
 
 
 @login_required
@@ -182,6 +196,8 @@ def cancel_order(request, order_id):
                 item.is_cancelled = True
                 item.cancel_reason = 'Order cancelled'
                 item.save()
+            
+            order.update_totals()
                 
         messages.success(request, f'Order #{order.id} has been cancelled.')
     else:
@@ -212,6 +228,7 @@ def cancel_order_item(request, item_id):
             
             # Note: We are no longer automatically cancelling the entire order 
             # when all items are cancelled to allow for more granular control.
+            order.update_totals()
                 
         messages.success(request, f'Item "{item.product.name}" has been cancelled.')
     else:

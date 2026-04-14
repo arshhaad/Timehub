@@ -57,6 +57,33 @@ class AddressForm(forms.ModelForm):
             raise forms.ValidationError("Enter a valid phone number (10-15 digits).")
         return phone
 
+    def clean_street(self):
+        street = self.cleaned_data.get('street')
+        if street:
+            if len(street) < 5:
+                raise forms.ValidationError("Street address must be at least 5 characters.")
+            if street.isdigit():
+                raise forms.ValidationError("Street address cannot contain only numbers.")
+        return street
+
+    def clean_city(self):
+        city = self.cleaned_data.get('city')
+        if city:
+            if not re.match(r'^[a-zA-Z\s]+$', city):
+                raise forms.ValidationError("City name can only contain letters and spaces.")
+            if len(city) < 2:
+                raise forms.ValidationError("City name must be at least 2 characters.")
+        return city
+
+    def clean_state(self):
+        state = self.cleaned_data.get('state')
+        if state:
+            if not re.match(r'^[a-zA-Z\s]+$', state):
+                raise forms.ValidationError("State name can only contain letters and spaces.")
+            if len(state) < 2:
+                raise forms.ValidationError("State name must be at least 2 characters.")
+        return state
+
     def clean_postal_code(self):
         postal_code = self.cleaned_data.get('postal_code')
         if postal_code:

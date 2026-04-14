@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from decimal import Decimal
 
 class Collection(models.Model):
     name = models.CharField(max_length=100)
@@ -150,6 +151,18 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.email}"
+
+    def update_totals(self):
+        """Recalculate subtotal, tax, and total based on active items."""
+        active_items = self.items.filter(is_cancelled=False)
+        self.subtotal = sum(item.price * item.quantity for item in active_items)
+        
+        # 5% tax as per project standard
+        self.tax = round(self.subtotal * Decimal('0.05'), 2)
+        
+        # Total amount
+        self.total_amount = self.subtotal + self.tax + self.shipping_charge - self.discount
+        self.save()
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

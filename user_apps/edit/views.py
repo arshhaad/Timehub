@@ -12,6 +12,10 @@ from django.http import JsonResponse
 import json
 from decimal import Decimal
 from user_apps.core.models import Cart, CartItem, Product, WishlistItem, Wishlist, Order
+from user_apps.accounts.models import EmailOTP, CustomUser
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
 
 
 @login_required
@@ -122,12 +126,106 @@ def edit_profile(request):
     if request.method == 'POST':
         form = UserEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
+            new_email = form.cleaned_data.get('email')
+            
+            # Check if email is being changed
+            if new_email and new_email != request.user.email:
+                if CustomUser.objects.filter(email=new_email).exclude(id=request.user.id).exists():
+                    messages.error(request, 'This email is already in use by another account.')
+                    return render(request, 'edit_profile.html', {'form': form})
+
+                # Save everything except email first
+                user = form.save(commit=False)
+                # Keep original email for now
+                user.email = request.user.email
+                user.save()
+                # Save M2M (like colors if any, though User doesn't have them in Meta)
+                form.save_m2m()
+
+                # Store pending email in session
+                request.session['pending_email_change'] = new_email
+                
+                # Send OTP to NEW email
+                otp_obj = EmailOTP.objects.create(user=request.user)
+                
+                send_mail(
+                    "Verify Your New Email",
+                    f"Your OTP for changing email to {new_email} is: {otp_obj.otp}",
+                    settings.EMAIL_HOST_USER,
+                    [new_email],
+                )
+                
+                messages.info(request, f"Profile updated. Now please verify the OTP sent to {new_email} to complete your email change.")
+                return redirect('verify_email_change')
+            
             form.save()
+            messages.success(request, 'Profile updated successfully!')
             return redirect('user_dashboard')
     else:
         form = UserEditForm(instance=request.user)
 
     return render(request, 'edit_profile.html', {'form': form})
+
+
+@login_required
+@never_cache
+def verify_email_change(request):
+    new_email = request.session.get('pending_email_change')
+    if not new_email:
+        return redirect('edit_profile')
+        
+    if request.method == 'POST':
+        otp_input = request.POST.get('otp', '').strip()
+        try:
+            otp_obj = request.user.otps.latest('created_at')
+            
+            if otp_obj.is_expired:
+                messages.error(request, 'OTP expired. Please try changing your email again.')
+                return redirect('edit_profile')
+                
+            if otp_obj.otp == otp_input:
+                user = request.user
+                user.email = new_email
+                user.save()
+                
+                # Clean up session
+                if 'pending_email_change' in request.session:
+                    del request.session['pending_email_change']
+                
+                otp_obj.delete()
+                messages.success(request, 'Email updated successfully!')
+                return redirect('user_dashboard')
+            else:
+                messages.error(request, 'Invalid OTP. Please try again.')
+        except EmailOTP.DoesNotExist:
+            messages.error(request, 'No OTP found. Please try again.')
+            return redirect('edit_profile')
+            
+    return render(request, 'verify_email_otp.html', {'new_email': new_email})
+
+
+@login_required
+@never_cache
+def resend_email_otp(request):
+    new_email = request.session.get('pending_email_change')
+    if not new_email:
+        return redirect('edit_profile')
+        
+    # Optional Cooldown check (similar to accounts app)
+    # last_otp = request.user.otps.order_by('-created_at').first()
+    # if last_otp and ...
+
+    otp_obj = EmailOTP.objects.create(user=request.user)
+    
+    send_mail(
+        "Verify Your New Email (Resent)",
+        f"Your OTP for changing email to {new_email} is: {otp_obj.otp}",
+        settings.EMAIL_HOST_USER,
+        [new_email],
+    )
+    
+    messages.success(request, f"A new OTP has been sent to {new_email}.")
+    return redirect('verify_email_change')
 
 
 @login_required

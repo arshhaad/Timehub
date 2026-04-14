@@ -74,11 +74,12 @@
         position: absolute; top: 21px; left: 10%; right: 10%; height: 2px;
         background: var(--border-color); z-index: 1;
     }
-    .mini-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 80px; text-align: center; }
+    .mini-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-align: center; }
     .mini-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--border-color); transition: var(--transition); }
     .mini-step.completed .mini-dot { background: var(--primary-color); border-color: var(--primary-color); box-shadow: 0 0 10px rgba(255,106,0,0.5); }
     .mini-step.active .mini-dot { background: var(--card-bg); border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255,106,0,0.2); }
-    .mini-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mini-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .mini-date { font-size: 0.65rem; color: var(--primary-color); font-weight: 700; white-space: nowrap; }
     .mini-step.completed .mini-label, .mini-step.active .mini-label { color: #fff; }
 </style>
 {% endblock %}
@@ -185,11 +186,17 @@
             </div>
             <div class="mini-step {% if order.status == 'Out for Delivery' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
                 <div class="mini-dot"></div>
-                <div class="mini-label">Out for Delivery</div>
+                <div class="mini-label">Delivery</div>
+                {% if order.scheduled_delivery_date %}
+                <div class="mini-date">{{ order.scheduled_delivery_date|date:"M d" }}</div>
+                {% endif %}
             </div>
             <div class="mini-step {% if order.status == 'Delivered' %}active completed{% endif %}">
                 <div class="mini-dot"></div>
                 <div class="mini-label">Delivered</div>
+                {% if order.scheduled_delivery_date %}
+                <div class="mini-date" style="color: var(--text-muted);">by {{ order.scheduled_delivery_date|date:"M d" }}</div>
+                {% endif %}
             </div>
         </div>
         {% endif %}

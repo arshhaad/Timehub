@@ -284,7 +284,12 @@
         <div class="stepper-icon"><i class="fas fa-truck-loading"></i></div>
         <div>
             <div class="stepper-label">Out for Delivery</div>
-            <div class="stepper-desc">Arriving today</div>
+            <div class="stepper-desc">
+                Arriving today<br>
+                {% if order.scheduled_delivery_date %}
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Est. {{ order.scheduled_delivery_date|date:"b d, Y" }}</span>
+                {% endif %}
+            </div>
         </div>
     </div>
     <!-- Step 5: Delivered -->
@@ -292,7 +297,12 @@
         <div class="stepper-icon"><i class="fas fa-check"></i></div>
         <div>
             <div class="stepper-label">Delivered</div>
-            <div class="stepper-desc">Order completed</div>
+            <div class="stepper-desc">
+                Order completed<br>
+                {% if order.scheduled_delivery_date %}
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">by {{ order.scheduled_delivery_date|date:"b d, Y" }}</span>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -553,6 +563,11 @@
         <div class="modal-header">
             <h3>Reschedule Delivery</h3>
             <p>Select your preferred delivery window and provide a valid reason.</p>
+            {% if order.scheduled_delivery_date %}
+            <p style="color: var(--primary-color); font-weight: 700; margin-top: 12px; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                <i class="fas fa-truck"></i> Current Estimated Delivery: {{ order.scheduled_delivery_date|date:"F d, Y" }}
+            </p>
+            {% endif %}
         </div>
         <form action="{% url 'reschedule_order' order.id %}" method="POST">
             {% csrf_token %}

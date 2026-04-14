@@ -186,12 +186,18 @@
             <div class="step-icon-outer"><i class="fas fa-shuttle-van"></i></div>
             <div class="step-title">Out for Delivery</div>
             <div class="step-desc">Out for delivery</div>
+            {% if order.scheduled_delivery_date %}
+            <div class="step-desc" style="margin-top:4px; font-size:0.7rem; color: var(--primary-color); font-weight:700;">{{ order.scheduled_delivery_date|date:"M d, Y" }}</div>
+            {% endif %}
         </div>
 
         <div class="status-step-alt {% if order.status == 'Delivered' %}active{% endif %}">
             <div class="step-icon-outer"><i class="fas fa-check"></i></div>
             <div class="step-title">Delivered</div>
             <div class="step-desc">Delivered to customer</div>
+            {% if order.scheduled_delivery_date %}
+            <div class="step-desc" style="margin-top:4px; font-size:0.7rem; color: var(--text-muted); font-weight:600;">by {{ order.scheduled_delivery_date|date:"M d, Y" }}</div>
+            {% endif %}
         </div>
     </div>
     {% else %}
@@ -258,7 +264,6 @@
             </div>
         </div>
 
-        <!-- DELIVERY ADDRESS -->
         <div class="section-card-alt">
             <h2 class="section-title-alt">Delivery Address</h2>
             <div class="address-text" style="flex:1;">
@@ -272,6 +277,15 @@
                     <span style="color:var(--text-muted);">Address information not available for this legacy order.</span>
                 {% endif %}
             </div>
+            {% if order.scheduled_delivery_date %}
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed rgba(255,255,255,0.07);">
+                <div style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px;">Estimated Delivery</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-truck" style="color: var(--primary-color); font-size: 0.85rem;"></i>
+                    <span style="color: #fff; font-weight: 700; font-size: 0.9rem;">{{ order.scheduled_delivery_date|date:"D, M j, Y" }}</span>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
     </div>
