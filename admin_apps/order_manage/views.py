@@ -157,7 +157,7 @@ def cancel_order_item(request, item_id):
             product.save()
             
             # We don't automatically cancel the order here 
-            # as per the new granular management plan.
+            
             
         messages.success(request, f'Item "{item.product.name}" in Order #{order.id} has been cancelled.')
     else:
