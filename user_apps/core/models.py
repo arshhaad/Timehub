@@ -212,7 +212,10 @@ class CartItem(models.Model):
     
     @property
     def total_price(self):
-        price = self.product.discount_price if self.product.discount_price else self.product.price
+        if self.variant:
+            price = self.variant.effective_discount_price
+        else:
+            price = self.product.discount_price if self.product.discount_price else self.product.price
         return price * self.quantity
 
 class Wishlist(models.Model):

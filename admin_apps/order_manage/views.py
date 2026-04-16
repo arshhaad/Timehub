@@ -16,12 +16,12 @@ def order_list(request):
     # Search
     query = request.GET.get('q', '').strip()
     if query:
-        orders = orders.filter(
-            Q(id__icontains=query) |
-            Q(user__email__icontains=query) |
-            Q(user__first_name__icontains=query) |
-            Q(user__last_name__icontains=query)
-        )
+        search_filter = Q(user__email__icontains=query) | \
+                        Q(user__first_name__icontains=query) | \
+                        Q(user__last_name__icontains=query)
+        if query.isdigit():
+            search_filter |= Q(id=query)
+        orders = orders.filter(search_filter)
 
     # Status filter
     status_filter = request.GET.get('status', 'all')

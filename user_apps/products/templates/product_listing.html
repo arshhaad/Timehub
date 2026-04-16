@@ -408,17 +408,145 @@
         .check-item:hover .check-label { color: #fff; }
         .item-count { font-size: 0.7rem; color: #52525b; font-weight: 600; }
 
-        .compare-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        input:checked ~ .compare-label { color: var(--primary-color); }
-
-        /* CONDITIONAL COMPARE UI */
-        .product-card .compare-toggle { display: none; }
-        body.compare-mode-active .product-card .compare-toggle { display: flex; animation: slideUpFade 0.4s ease forwards; }
-
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* ─── COMPARE MODE: Card Selection ─── */
+        /* In compare mode, cards are selectable tiles */
+        body.compare-mode-active .product-card {
+            cursor: pointer;
+            user-select: none;
         }
+        body.compare-mode-active .product-card .card-image-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-md);
+            border: 2px solid transparent;
+            transition: var(--transition);
+            z-index: 25;
+        }
+        /* Selection overlay: checkmark circle */
+        .compare-select-indicator {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(11,11,14,0.7);
+            border: 2px solid rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            opacity: 0;
+            transform: scale(0.6);
+            transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        .compare-select-indicator i {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            transition: color 0.3s ease;
+        }
+        body.compare-mode-active .compare-select-indicator {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* PREMIUM TOGGLE SWITCH */
+        .compare-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.02);
+            transition: var(--transition);
+        }
+        .compare-toggle-wrapper:hover {
+            border-color: rgba(255, 106, 0, 0.3);
+            background: rgba(249, 136, 34, 0.02);
+        }
+        .compare-toggle-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transition);
+        }
+        body.compare-mode-active .compare-toggle-text {
+            color: var(--primary-color);
+        }
+        
+        .premium-switch {
+            position: relative;
+            width: 44px;
+            height: 22px;
+        }
+        .premium-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        input:checked + .switch-slider {
+            background-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(255, 106, 0, 0.4);
+        }
+        input:checked + .switch-slider:before {
+            transform: translateX(22px);
+        }
+        
+        .header-tools {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+            opacity: 1;
+            transform: scale(1);
+        }
+        /* Selected state */
+        .product-card.compare-selected {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 2px rgba(255,106,0,0.3), 0 15px 40px rgba(0,0,0,0.4) !important;
+            transform: translateY(-6px);
+        }
+        .product-card.compare-selected .compare-select-indicator {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .product-card.compare-selected .compare-select-indicator i {
+            color: #fff;
+        }
+        /* Hide action buttons while in compare mode */
+        body.compare-mode-active .product-card .action-buttons-row {
+            pointer-events: none;
+            opacity: 0.35;
+        }
+        body.compare-mode-active .product-card .wishlist-btn {
+            pointer-events: none;
+            opacity: 0.35;
+        }
+        /* Hide old toggle switch from cards */
+        .product-card .compare-toggle { display: none !important; }
 
         /* CUSTOM SELECT STYLING */
         .sort-select-wrap { position: relative; }
@@ -517,28 +645,177 @@
             .sidebar-drawer { width: 100%; left: -100%; border-radius: 0; }
         }
 
-        /* FLOATING COMPARE BAR */
-        .compare-bar { position: fixed; bottom: -120px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 900px; background: rgba(17, 17, 21, 0.95); backdrop-filter: blur(15px); border: 1px solid var(--border-color); border-radius: 20px 20px 0 0; z-index: 4000; padding: 20px 30px; transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -15px 50px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: space-between; gap: 30px; }
+        /* ─── FLOATING COMPARE BAR (Redesigned) ─── */
+        .compare-bar {
+            position: fixed;
+            bottom: -160px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 860px;
+            background: linear-gradient(135deg, rgba(21,21,26,0.98) 0%, rgba(11,11,14,0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,106,0,0.25);
+            border-bottom: none;
+            border-radius: 24px 24px 0 0;
+            z-index: 4000;
+            padding: 18px 28px;
+            transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,106,0,0.1);
+        }
         .compare-bar.active { bottom: 0; }
-        
-        .compare-items-box { flex: 1; display: flex; align-items: center; gap: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .compare-items-box::-webkit-scrollbar { height: 3px; }
-        .compare-item-thumb { position: relative; width: 60px; height: 60px; background: #15151a; border: 1px solid var(--border-color); border-radius: 12px; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .compare-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .remove-compare-item { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #111115; }
-
-        .compare-actions { display: flex; align-items: center; gap: 15px; }
-        .compare-count-info { text-align: right; }
-        .compare-count-info span { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .compare-count-info strong { font-size: 1.1rem; color: #fff; }
-
-        .btn-compare { padding: 12px 25px; border-radius: var(--radius-pill); font-weight: 700; background: var(--primary-color); color: #fff; border: none; cursor: pointer; transition: var(--transition); white-space: nowrap; }
-        .btn-compare:disabled { opacity: 0.5; background: #374151; cursor: not-allowed; }
-        .btn-compare:not(:disabled):hover { background: var(--primary-hover); transform: translateY(-2px); }
-
+        .compare-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .compare-bar-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .compare-items-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .compare-items-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 3px;
+        }
+        .compare-items-row::-webkit-scrollbar { height: 2px; }
+        .compare-card-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,106,0,0.2);
+            border-radius: 12px;
+            padding: 8px 12px;
+            min-width: 160px;
+            max-width: 200px;
+            position: relative;
+            flex-shrink: 0;
+            animation: slideChipIn 0.3s ease;
+        }
+        @keyframes slideChipIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .compare-card-chip-img {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #111;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .compare-card-chip-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .compare-card-chip-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+        .compare-chip-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.55rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #0b0b0e;
+            transition: transform 0.2s;
+        }
+        .compare-chip-remove:hover { transform: scale(1.2); }
+        .compare-empty-slot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 8px 14px;
+            min-width: 140px;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .compare-bar-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn-compare {
+            padding: 11px 24px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 0.88rem;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(255,106,0,0.35);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-compare:disabled {
+            opacity: 0.45;
+            background: #374151;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-compare:not(:disabled):hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,106,0,0.45); }
+        .btn-clear-compare {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-clear-compare:hover { color: #ef4444; }
         @media (max-width: 600px) {
-            .compare-bar { width: 100%; border-radius: 0; padding: 15px; flex-direction: column; gap: 15px; }
-            .compare-items-box { width: 100%; }
+            .compare-bar { width: 100%; border-radius: 0; padding: 14px 16px; }
+            .compare-bar-inner { flex-direction: column; align-items: stretch; gap: 12px; }
+            .compare-bar-actions { flex-direction: row; align-items: center; justify-content: space-between; }
         }
 
         /* SEARCH BAR & GRID HEADER */
@@ -614,7 +891,7 @@
         .toast-info::after { background: var(--primary-color); }
     </style>
 </head>
-<body class="{% if request.session.compare_mode_active %}compare-mode-active{% endif %}">
+<body class="{% if request.session.compare_mode_active %}compare-mode-active{% endif %}" id="pageBody">
 
     <!-- SEARCH OVERLAY -->
     <div class="search-overlay" id="searchOverlay">
@@ -954,12 +1231,12 @@
                         </form>
                     </div>
                     <div class="header-tools">
-                        <div class="compact-compare-toggle">
-                            <label class="switch">
-                                <input type="checkbox" id="masterCompareToggle" {% if request.session.compare_mode_active %}checked{% endif %}>
-                                <span class="slider-toggle"></span>
-                            </label>
-                            <span>Compare</span>
+                        <div class="compare-toggle-wrapper" id="masterCompareToggle">
+                            <span class="compare-toggle-text" id="compareToggleLabel">{% if request.session.compare_mode_active %}Compare: ON{% else %}Compare Mode{% endif %}</span>
+                            <div class="premium-switch">
+                                <input type="checkbox" id="compareSwitch" {% if request.session.compare_mode_active %}checked{% endif %}>
+                                <span class="switch-slider"></span>
+                            </div>
                         </div>
                         <div class="results-meta">
                             <span>Showing</span> {{ products.start_index }} - {{ products.end_index }} of {{ products.paginator.count }} items
@@ -984,10 +1261,21 @@
                 </div>
 
                 {% if products %}
-                <div class="product-grid">
+                <div class="product-grid" id="productGrid">
                     {% for product in products %}
-                    <a href="{% url 'product_details' product.id %}" class="product-card" style="text-decoration:none; color:inherit;">
+                    <a href="{% url 'product_details' product.id %}"
+                        class="product-card {% if product.id in current_compare_ids %}compare-selected{% endif %}"
+                        style="text-decoration:none; color:inherit;"
+                        data-id="{{ product.id }}"
+                        data-name="{{ product.name|escapejs }}"
+                        {% if product.image %}data-image="{{ product.image.url }}"{% endif %}
+                        id="product-card-{{ product.id }}">
                         <div class="card-image-wrap">
+                            <!-- Selection indicator overlay -->
+                            <div class="compare-select-indicator" id="indicator-{{ product.id }}">
+                                <i class="fas fa-check"></i>
+                            </div>
+
                             {% if product.image %}
                             <img src="{{ product.image.url }}" alt="{{ product.name }}">
                             {% else %}
@@ -1001,15 +1289,15 @@
                             {% elif product.discount_price %}
                             <span class="badge">Sale</span>
                             {% endif %}
-                            
-                             <button type="button" class="wishlist-btn {% if product.id in wishlist_product_ids %}active{% endif %}" onclick="toggleWishlist(event, {{ product.id }}, this)" aria-label="Toggle Wishlist">
+
+                            <button type="button" class="wishlist-btn {% if product.id in wishlist_product_ids %}active{% endif %}" onclick="toggleWishlist(event, {{ product.id }}, this)" aria-label="Toggle Wishlist">
                                 <i class="{% if product.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
                             </button>
                         </div>
                         <div class="card-info-wrap">
                             <span class="category-label">{{ product.collection.name }}</span>
                             <h3>{{ product.name }}</h3>
-                            
+
                             <div class="price-row">
                                 {% if product.discount_price %}
                                 <span class="curr-price">₹{{ product.discount_price }}</span>
@@ -1018,10 +1306,10 @@
                                 <span class="curr-price">₹{{ product.price }}</span>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="action-buttons-row" style="display:flex; gap:10px; margin-top:10px;">
                                 {% if product.stock > 0 %}
-                                <button class="btn btn-primary add-cart" onclick="event.preventDefault(); window.addToCart({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px;">
+                                <button class="btn btn-primary add-cart" onclick="event.preventDefault(); event.stopPropagation(); window.addToCart({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px;">
                                     <i class="fas fa-shopping-bag"></i> Cart
                                 </button>
                                 {% else %}
@@ -1029,22 +1317,9 @@
                                     <i class="fas fa-exclamation-triangle"></i> Out
                                 </button>
                                 {% endif %}
-                                <button class="btn btn-outline buy-now" onclick="event.preventDefault(); window.buyNow({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
+                                <button class="btn btn-outline buy-now" onclick="event.preventDefault(); event.stopPropagation(); window.buyNow({{ product.id }}, this);" style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
                                     Buy Now
                                 </button>
-                            </div>
-                            
-                            <!-- ADD TO COMPARE TOGGLE -->
-                            <div class="compare-toggle" onclick="event.preventDefault();" style="margin-top:10px;">
-                                <label class="switch">
-                                    <input type="checkbox" class="compare-checkbox" 
-                                        data-id="{{ product.id }}" 
-                                        data-name="{{ product.name }}" 
-                                        {% if product.image %}data-image="{{ product.image.url }}"{% endif %}
-                                        onclick="this.checked = !this.checked; event.stopPropagation();">
-                                    <span class="slider-toggle"></span>
-                                </label>
-                                <span class="compare-label">Add to Compare</span>
                             </div>
                         </div>
                     </a>
@@ -1087,7 +1362,22 @@
 
     <!-- Floating Comparison Bar -->
     <div class="compare-bar" id="compareBar">
-        <div class="container" style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:20px;" id="compareBarInner">
+        <div class="compare-bar-inner">
+            <div class="compare-items-box">
+                <div class="compare-bar-label">
+                    <i class="fas fa-balance-scale"></i> Compare Mode
+                    <span id="compareBarCountBadge" style="background:var(--primary-color); color:#fff; font-size:0.65rem; padding:1px 7px; border-radius:20px; font-weight:900;">0/3</span>
+                </div>
+                <div class="compare-items-row" id="compareItemsRow"></div>
+            </div>
+            <div class="compare-bar-actions">
+                <button id="btnCompareNow" class="btn-compare" disabled>
+                    <i class="fas fa-columns"></i> Compare Now
+                </button>
+                <button id="btnClearCompare" class="btn-clear-compare">
+                    <i class="fas fa-times"></i> Clear All
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1265,75 +1555,167 @@
             updateSlider(); // Initial sync
         }
 
-        // --- Comparison System (JS Rendered) ---
-        const syncCompareUI = (data) => {
-            const bar = document.getElementById('compareBar');
-            const inner = document.getElementById('compareBarInner');
-            if (!inner) return;
+        // ─── COMPARE SYSTEM (Fully Rewritten) ───
+        let compareMode = document.body.id === 'pageBody' && document.body.classList.contains('compare-mode-active');
+        let compareItems = []; // [{id, name, image}]
 
-            if (!data.products || data.products.length === 0) {
-                bar.classList.remove('active');
-                inner.innerHTML = '';
-            } else {
-                bar.classList.add('active');
-                let html = `<div class="compare-items-box">`;
-                data.products.forEach(p => {
-                    html += `
-                        <div class="compare-item-thumb">
-                            <img src="${p.image || '/static/images/placeholder.png'}" alt="${p.name}">
-                            <div class="remove-compare-item remove-trigger" data-id="${p.id}">
-                                <i class="fas fa-times"></i>
-                            </div>
-                        </div>`;
-                });
-                html += `</div>
-                    <div class="compare-actions">
-                        <div class="compare-count-info">
-                            <span>Selected Models</span>
-                            <strong>${data.count} / 5</strong>
-                        </div>
-                        <button id="btnClearCompare" class="icon-btn" style="color:#ef4444;" title="Clear All Selection">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                        <button id="btnCompareNow" class="btn-compare" ${data.count < 2 ? 'disabled' : ''}>
-                            Compare All <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
-                        </button>
-                    </div>`;
-                inner.innerHTML = html;
+        // Seed from server session
+        (() => {
+            const el = document.getElementById('compare-data');
+            if (el) {
+                try { compareItems = JSON.parse(el.textContent) || []; } catch(e) {}
+            }
+        })();
+
+        function renderCompareBar() {
+            const bar = document.getElementById('compareBar');
+            const row = document.getElementById('compareItemsRow');
+            const btnNow = document.getElementById('btnCompareNow');
+            const badge = document.getElementById('compareBarCountBadge');
+            if (!row) return;
+
+            row.innerHTML = '';
+            compareItems.forEach(p => {
+                const chip = document.createElement('div');
+                chip.className = 'compare-card-chip';
+                chip.dataset.id = p.id;
+                chip.innerHTML = `
+                    <div class="compare-card-chip-img">
+                        <img src="${p.image || '/static/images/placeholder.png'}" alt="" onerror="this.style.display='none'">
+                    </div>
+                    <span class="compare-card-chip-name" title="${p.name}">${p.name}</span>
+                    <div class="compare-chip-remove" data-id="${p.id}" title="Remove"><i class="fas fa-times"></i></div>`;
+                row.appendChild(chip);
+            });
+
+            // Empty slots
+            const slotsLeft = 3 - compareItems.length;
+            for (let i = 0; i < slotsLeft; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'compare-empty-slot';
+                slot.innerHTML = `<i class="fas fa-plus-circle" style="color:var(--primary-color); opacity:0.5;"></i><span>Select a product</span>`;
+                row.appendChild(slot);
             }
 
-            document.querySelectorAll('.compare-checkbox').forEach(cb => {
-                cb.checked = data.products && data.products.some(p => String(p.id) === String(cb.dataset.id));
+            if (badge) badge.textContent = `${compareItems.length}/3`;
+            if (btnNow) btnNow.disabled = compareItems.length < 2;
+            bar && bar.classList.toggle('active', compareItems.length > 0);
+
+            // Sync card visual states
+            document.querySelectorAll('.product-card').forEach(card => {
+                const id = card.dataset.id;
+                const isSelected = compareItems.some(p => String(p.id) === String(id));
+                card.classList.toggle('compare-selected', isSelected);
             });
-        };
+        }
+
+        function toggleCompareItem(id, name, image) {
+            const idx = compareItems.findIndex(p => String(p.id) === String(id));
+            if (idx > -1) {
+                // Deselect
+                compareItems.splice(idx, 1);
+                fetch(`{% url 'toggle_compare' %}?id=${id}`); // sync session
+                renderCompareBar();
+            } else {
+                if (compareItems.length >= 3) {
+                    showToast('You can only compare up to 3 products at a time.', 'error');
+                    // Shake the bar
+                    const bar = document.getElementById('compareBar');
+                    bar && bar.animate([{transform:'translateX(-50%) translateX(-6px)'},{transform:'translateX(-50%) translateX(6px)'},{transform:'translateX(-50%) translateX(-4px)'},{transform:'translateX(-50%) translateX(4px)'},{transform:'translateX(-50%)'}], {duration:350});
+                    return;
+                }
+                compareItems.push({ id: String(id), name, image: image || '' });
+                fetch(`{% url 'toggle_compare' %}?id=${id}`); // sync session
+                renderCompareBar();
+                showToast(`<strong>${name}</strong> added to comparison`, 'info');
+            }
+        }
+
+        function activateCompareMode() {
+            compareMode = true;
+            document.body.classList.add('compare-mode-active');
+            const lbl = document.getElementById('compareToggleLabel');
+            const toggle = document.getElementById('compareSwitch');
+            if (lbl) lbl.textContent = 'Compare: ON';
+            if (toggle) toggle.checked = true;
+            fetch(`{% url 'toggle_compare_mode' %}?active=true`);
+            renderCompareBar();
+        }
+
+        function deactivateCompareMode() {
+            compareMode = false;
+            document.body.classList.remove('compare-mode-active');
+            const lbl = document.getElementById('compareToggleLabel');
+            const toggle = document.getElementById('compareSwitch');
+            if (lbl) lbl.textContent = 'Compare Mode';
+            if (toggle) toggle.checked = false;
+            fetch(`{% url 'toggle_compare_mode' %}?active=false`);
+        }
+
+        // Master Toggle Change Handler
+        document.getElementById('compareSwitch')?.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                activateCompareMode();
+            } else {
+                deactivateCompareMode();
+            }
+        });
+
+        // Wrapper click fallback
+        document.getElementById('masterCompareToggle')?.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SPAN') {
+                const sw = document.getElementById('compareSwitch');
+                if (sw) {
+                    sw.checked = !sw.checked;
+                    sw.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+
+        // Product card click interception
+        document.getElementById('productGrid')?.addEventListener('click', e => {
+            if (!compareMode) return; // normal navigation
+
+            const card = e.target.closest('.product-card');
+            if (!card) return;
+
+            // If user clicks Cart/BuyNow buttons, let it bubble naturally (those have stopPropagation)
+            if (e.target.closest('.action-buttons-row') || e.target.closest('.wishlist-btn')) return;
+
+            e.preventDefault();
+            const { id, name } = card.dataset;
+            const image = card.dataset.image || '';
+            toggleCompareItem(id, name, image);
+        });
+
+        // Bar: chip remove
+        document.getElementById('compareItemsRow')?.addEventListener('click', e => {
+            const chip = e.target.closest('.compare-chip-remove');
+            if (chip) toggleCompareItem(chip.dataset.id);
+        });
+
+        // Bar: Compare Now
+        document.getElementById('btnCompareNow')?.addEventListener('click', () => {
+            window.location.href = "{% url 'compare_products' %}";
+        });
+
+        // Bar: Clear All
+        document.getElementById('btnClearCompare')?.addEventListener('click', () => {
+            compareItems = [];
+            fetch(`{% url 'clear_compare' %}`);
+            renderCompareBar();
+        });
 
         // Init on load
         document.addEventListener('DOMContentLoaded', () => {
-            const initDataElem = document.getElementById('compare-data');
-            if (initDataElem) {
-                const initData = JSON.parse(initDataElem.textContent);
-                syncCompareUI({
-                    count: initData.length,
-                    products: initData
-                });
+            renderCompareBar();
+            if (compareMode) {
+                const btn = document.getElementById('masterCompareToggle');
+                if (btn) {
+                    btn.style.borderColor = 'var(--primary-color)';
+                    btn.querySelector('.compare-mode-icon').style.background = 'rgba(255,106,0,0.2)';
+                }
             }
-        });
-
-        window.toggleCompare = (id) => {
-            fetch(`/compare/toggle/?id=${id}`).then(r => r.json()).then(d => d.success ? syncCompareUI(d) : showToast(d.error, 'error'));
-        };
-
-        document.body.addEventListener('click', e => {
-            if (e.target.closest('.remove-trigger')) toggleCompare(e.target.closest('.remove-trigger').dataset.id);
-            if (e.target.closest('#btnClearCompare')) fetch(`/compare/clear/`).then(r => r.json()).then(d => syncCompareUI(d));
-            if (e.target.closest('#btnCompareNow')) window.location.href = "{% url 'compare_products' %}";
-        });
-
-        document.querySelectorAll('.compare-checkbox').forEach(cb => cb.addEventListener('change', () => toggleCompare(cb.dataset.id)));
-
-        // --- Master Mode (Session Persisted) ---
-        document.getElementById('masterCompareToggle')?.addEventListener('change', e => {
-            fetch(`/compare/mode/?active=${e.target.checked}`).then(r => r.json()).then(d => document.body.classList.toggle('compare-mode-active', d.mode));
         });
 
         function getCookie(name) {

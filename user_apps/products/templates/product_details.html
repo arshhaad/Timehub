@@ -388,21 +388,23 @@
                     </div>
                 </div>
 
-                <div class="price-wrap">
+                <div class="price-wrap" id="price-wrap-container">
                     {% if product.discount_price %}
-                    ₹{{ product.discount_price }}
-                    <span class="discount">₹{{ product.price }}</span>
-                    <span style="color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;">
+                    <span id="main-price">₹{{ product.discount_price }}</span>
+                    <span class="discount" id="old-price">₹{{ product.price }}</span>
+                    <span id="savings-badge" style="color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;">
                         Save ₹{{ savings|floatformat:0 }} 
                     </span>
                     {% else %}
-                    ₹{{ product.price }}
+                    <span id="main-price">₹{{ product.price }}</span>
+                    <span class="discount" id="old-price" style="display:none;"></span>
+                    <span id="savings-badge" style="display:none; color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;"></span>
                     {% endif %}
                     
                     {% if product.stock > 0 %}
-                    <span class="stock-label stock-in">In Stock ({{ product.stock }})</span>
+                    <span id="stock-badge" class="stock-label stock-in">In Stock ({{ product.stock }})</span>
                     {% else %}
-                    <span class="stock-label stock-out">Out of Stock</span>
+                    <span id="stock-badge" class="stock-label stock-out">Out of Stock</span>
                     {% endif %}
                 </div>
 
@@ -438,6 +440,30 @@
 
                 <!-- Variations -->
                 <div class="variations">
+                    {% if active_variants %}
+                    <div class="variation-group">
+                        <div class="variation-label">
+                            <span>Select Variant</span>
+                            <span style="color:var(--primary-color)" id="selected-variant-label">Base Configuration</span>
+                        </div>
+                        <div class="options-row" id="variant-options">
+                            <!-- Base product option -->
+                            <button class="opt-btn active" data-variant-id="" data-price="{{ product.discount_price|default:product.price }}" data-old-price="{{ product.price }}" data-stock="{{ product.stock }}">Base Product</button>
+                            
+                            <!-- Product variants -->
+                            {% for variant in active_variants %}
+                            <button class="opt-btn" 
+                                data-variant-id="{{ variant.id }}" 
+                                data-price="{{ variant.effective_discount_price }}" 
+                                data-old-price="{{ variant.effective_price }}" 
+                                data-stock="{{ variant.stock }}">
+                                {% if variant.strap_color %}{{ variant.strap_color }}{% endif %}
+                                {% if variant.dial_color %} - {{ variant.dial_color }}{% endif %}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
                     <!-- Strap Material -->
                     {% if product.strap_material %}
                     <div class="variation-group">
@@ -450,21 +476,6 @@
                         </div>
                     </div>
                     {% endif %}
-
-                    <!-- Dial Color -->
-                    {% if product.dial_color or product.colors.all %}
-                    <div class="variation-group">
-                        <div class="variation-label">
-                            <span>Dial Color</span>
-                            <span style="color:var(--primary-color)">{{ product.dial_color|default:"Classic" }}</span>
-                        </div>
-                        <div class="color-row">
-                            <div class="color-swatch active" style="background-color: #f8f9fa;"></div>
-                            <div class="color-swatch" style="background-color: #1e1e24;"></div>
-                            <div class="color-swatch" style="background-color: #fbc2eb;"></div>
-                            <div class="color-swatch" style="background-color: #0b8043;"></div>
-                        </div>
-                    </div>
                     {% endif %}
                 </div>
 
@@ -827,9 +838,69 @@
             .catch(err => showToast('Please login to modify your wishlist.', 'error'));
         };
 
+        // --- Variant Selection Logic ---
+        let selectedVariantId = '';
+        const variantOptions = document.querySelectorAll('#variant-options .opt-btn');
+        
+        variantOptions.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all
+                variantOptions.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked
+                this.classList.add('active');
+                
+                selectedVariantId = this.dataset.variantId || '';
+                const newPrice = this.dataset.price;
+                const oldPrice = this.dataset.oldPrice;
+                const newStock = parseInt(this.dataset.stock) || 0;
+                
+                // Update specific product values if it's not base
+                document.getElementById('selected-variant-label').textContent = this.textContent.trim() || 'Base Configuration';
+                
+                // Update Prices
+                document.getElementById('main-price').textContent = '₹' + newPrice;
+                if(oldPrice && oldPrice !== newPrice) {
+                    document.getElementById('old-price').textContent = '₹' + oldPrice;
+                    document.getElementById('old-price').style.display = 'inline-block';
+                    const savings = oldPrice - newPrice;
+                    document.getElementById('savings-badge').textContent = `Save ₹${savings}`;
+                    document.getElementById('savings-badge').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('old-price').style.display = 'none';
+                    document.getElementById('savings-badge').style.display = 'none';
+                }
+                
+                // Update Stock
+                const stockBadge = document.getElementById('stock-badge');
+                if(newStock > 0) {
+                    stockBadge.className = 'stock-label stock-in';
+                    stockBadge.textContent = `In Stock (${newStock})`;
+                    document.querySelector('.add-cart-btn').disabled = false;
+                    document.querySelector('.add-cart-btn').innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+                    document.querySelector('.buy-now-btn').disabled = false;
+                    document.querySelector('.buy-now-btn').textContent = 'Buy Now';
+                } else {
+                    stockBadge.className = 'stock-label stock-out';
+                    stockBadge.textContent = 'Out of Stock';
+                    document.querySelector('.add-cart-btn').disabled = true;
+                    document.querySelector('.add-cart-btn').innerHTML = '<i class="fas fa-shopping-cart"></i> Sold Out';
+                    document.querySelector('.buy-now-btn').disabled = true;
+                    document.querySelector('.buy-now-btn').textContent = 'Unavailable';
+                }
+                
+                // Reset Qty input bound to max stock
+                const qtyInput = document.getElementById('qtyInput');
+                if (qtyInput) {
+                    qtyInput.value = 1;
+                    qtyInput.max = newStock;
+                }
+            });
+        });
+
         // --- Cart Logic ---
         window.addToCart = function(productId, btnElement = null) {
             const btn = btnElement || document.querySelector('.add-cart-btn');
+            if(btn.disabled) return;
             const originalHtml = btn.innerHTML;
             const quantity = document.getElementById('qtyInput')?.value || 1;
             
@@ -842,7 +913,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ quantity: quantity })
+                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId })
             })
             .then(res => res.json())
             .then(data => {
@@ -874,6 +945,7 @@
         // --- Buy Now Logic ---
         window.buyNow = function(productId) {
             const btn = document.querySelector('.buy-now-btn');
+            if(btn.disabled) return;
             const originalHtml = btn.innerHTML;
             const quantity = document.getElementById('qtyInput')?.value || 1;
             
@@ -886,7 +958,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ quantity: quantity })
+                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId })
             })
             .then(res => res.json())
             .then(data => {

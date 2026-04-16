@@ -200,12 +200,52 @@
             {% endif %}
         </div>
     </div>
+    {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
+    <div class="status-tracker-box">
+        
+        <div class="tracker-line">
+            <div class="tracker-line-fill" 
+                {% if order.status == 'Return Requested' %} style="width: 33%;"
+                {% elif order.status == 'Returned' %} style="width: 100%;"
+                {% else %} style="width: 0%;" {% endif %}>
+            </div>
+        </div>
+
+        <div class="status-step-alt completed">
+            <div class="step-icon-outer"><i class="fas fa-undo"></i></div>
+            <div class="step-title">Return Requested</div>
+            <div class="step-desc">Request received</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Return Requested' %}active{% elif order.status == 'Returned' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-cog"></i></div>
+            <div class="step-title">Return Processing</div>
+            <div class="step-desc">Verifying items</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Returned' %}completed{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-calendar-check"></i></div>
+            <div class="step-title">Pickup Scheduled</div>
+            <div class="step-desc">Agent will contact you</div>
+        </div>
+
+        <div class="status-step-alt {% if order.status == 'Returned' %}active{% endif %}">
+            <div class="step-icon-outer"><i class="fas fa-box-open"></i></div>
+            <div class="step-title">Product Returned</div>
+            <div class="step-desc">Return complete</div>
+        </div>
+    </div>
+    {% if order.return_reason %}
+    <div class="status-tracker-error" style="background: rgba(255, 106, 0, 0.05); border-color: rgba(255, 106, 0, 0.2);">
+        <h2 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Return Reason</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">{{ order.return_reason }}</p>
+    </div>
+    {% endif %}
     {% else %}
     <div class="status-tracker-error">
-        <h2><i class="fas fa-times-circle"></i> Order {{ order.status }}</h2>
+        <h2><i class="fas fa-times-circle"></i> Order Cancelled</h2>
         <p>
             {% if order.cancel_reason %} Reason: {{ order.cancel_reason }} {% endif %}
-            {% if order.return_reason %} Reason: {{ order.return_reason }} {% endif %}
         </p>
     </div>
     {% endif %}

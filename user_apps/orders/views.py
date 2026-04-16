@@ -81,21 +81,31 @@ def checkout_page(request):
 
             for item in items:
                 # Check stock before creating order item
-                if item.product.stock < item.quantity:
-                    messages.error(request, f"Sorry, only {item.product.stock} units of {item.product.name} are available.")
+                available_stock = item.variant.stock if item.variant else item.product.stock
+                if available_stock < item.quantity:
+                    messages.error(request, f"Sorry, only {available_stock} units of {item.product.name} are available.")
                     raise Exception("Insufficient stock")
 
-                price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+                if item.variant:
+                    price_at_purchase = item.variant.effective_discount_price
+                else:
+                    price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+                
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
+                    variant=item.variant,
                     quantity=item.quantity,
                     price=price_at_purchase,
                 )
                 
                 # Decrement Stock
-                item.product.stock -= item.quantity
-                item.product.save()
+                if item.variant:
+                    item.variant.stock -= item.quantity
+                    item.variant.save()
+                else:
+                    item.product.stock -= item.quantity
+                    item.product.save()
 
         # Clear cart
         cart.items.all().delete()
@@ -202,8 +212,7 @@ def cancel_order(request, order_id):
         messages.success(request, f'Order #{order.id} has been cancelled.')
     else:
         messages.error(request, 'This order cannot be cancelled.')
-        
-    return redirect('order_history')
+    return redirect('order_detail', order_id=order.id)
 
 
 @login_required
@@ -257,7 +266,7 @@ def return_order(request, order_id):
     else:
         messages.error(request, 'This order is not eligible for return.')
         
-    return redirect('order_history')
+    return redirect('order_detail', order_id=order.id)
 
 
 @login_required

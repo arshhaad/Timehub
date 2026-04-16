@@ -233,17 +233,61 @@
 </div>
 
 <!-- Stepper Container -->
-{% if order.status == 'Cancelled' or order.status == 'Returned' %}
+{% if order.status == 'Cancelled' %}
 <div class="card" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
     <div class="card-body" style="text-align: center; padding: 40px;">
         <div class="stepper-icon" style="margin: 0 auto 16px; background: #ef4444; color: #fff; border:none; width: 50px; height: 50px; font-size: 1.2rem;">
             <i class="fas fa-times"></i>
         </div>
-        <h2 style="color: #ef4444; margin-bottom: 8px;">Order {{ order.status }}</h2>
+        <h2 style="color: #ef4444; margin-bottom: 8px;">Order Cancelled</h2>
         {% if order.cancel_reason %}<p style="color: var(--text-muted);">Reason: {{ order.cancel_reason }}</p>{% endif %}
-        {% if order.return_reason %}<p style="color: var(--text-muted);">Reason: {{ order.return_reason }}</p>{% endif %}
     </div>
 </div>
+{% elif order.status == 'Return Requested' or order.status == 'Returned' %}
+<div class="stepper">
+    <!-- Step 1: Return Requested -->
+    <div class="stepper-item done">
+        <div class="stepper-icon"><i class="fas fa-undo"></i></div>
+        <div>
+            <div class="stepper-label">Return Requested</div>
+            <div class="stepper-desc">Request received</div>
+        </div>
+    </div>
+    <!-- Step 2: Return Processing -->
+    <div class="stepper-item {% if order.status == 'Return Requested' %}current{% else %}done{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-cog"></i></div>
+        <div>
+            <div class="stepper-label">Return Processing</div>
+            <div class="stepper-desc">Verifying items</div>
+        </div>
+    </div>
+    <!-- Step 3: Pick Up Scheduled -->
+    <div class="stepper-item {% if order.status == 'Return Requested' %}pending{% else %}done{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <div class="stepper-label">Pickup Scheduled</div>
+            <div class="stepper-desc">Agent will contact you</div>
+        </div>
+    </div>
+    <!-- Step 4: Product Returned -->
+    <div class="stepper-item {% if order.status == 'Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
+        <div>
+            <div class="stepper-label">Product Returned</div>
+            <div class="stepper-desc">Return complete</div>
+        </div>
+    </div>
+</div>
+{% if order.return_reason %}
+<div class="card" style="border-width: 1px; border-color: var(--border-color); background: rgba(255, 255, 255, 0.02); margin-bottom: 24px;">
+    <div class="card-body" style="padding: 16px 24px;">
+        <p style="color: #fff; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-info-circle" style="color: var(--primary-color);"></i> Return Reason
+        </p>
+        <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.9rem; line-height: 1.5;">{{ order.return_reason }}</p>
+    </div>
+</div>
+{% endif %}
 {% else %}
 <div class="stepper">
     <!-- Step 1: Pending -->

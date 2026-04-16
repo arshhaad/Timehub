@@ -471,7 +471,7 @@
                 <tr>
                     <td>ORD-{{ order.id }}</td>
                     <td>{{ order.created_at|date:"M d, Y" }}</td>
-                    <td>${{ order.total_amount }}</td>
+                    <td>₹{{ order.total_amount }}</td>
                     <td>
                         <span class="status-badge status-{{ order.status|cut:' ' }}">
                             {{ order.status }}

@@ -253,7 +253,12 @@ def cart_view(request):
     items = cart.items.select_related('product').all()
     subtotal = sum(item.total_price for item in items)
     tax = subtotal * Decimal('0.05') # 5% tax
-    total = subtotal + tax
+    shipping = Decimal('0.00')
+    if subtotal >= Decimal('20000.00'):
+        shipping = Decimal('99.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('49.00')
+    total = subtotal + tax + shipping
     
     has_stock_issues = False
     for item in items:
@@ -268,6 +273,7 @@ def cart_view(request):
         'cart': cart,
         'items': items,
         'subtotal': subtotal,
+        'shipping': shipping,
         'tax': tax,
         'total': total,
         'has_stock_issues': has_stock_issues
@@ -278,12 +284,33 @@ def add_to_cart(request, product_id):
     if request.method == 'POST':
         product = get_object_or_404(Product, id=product_id)
         
+        try:
+            data = json.loads(request.body)
+            quantity = int(data.get('quantity', 1))
+            variant_id = data.get('variant_id')
+        except:
+            quantity = 1
+            variant_id = None
+            
         # Prevent adding blocked/unlisted products
         if not product.is_active or product.is_deleted or product.collection.is_deleted:
             return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
             
-        if product.stock <= 0:
-            return JsonResponse({'success': False, 'error': 'Product is out of stock'})
+        variant = None
+        if variant_id:
+            from user_apps.core.models import ProductVariant
+            variant = ProductVariant.objects.filter(id=variant_id, product=product).first()
+        
+        # Check stock of variant if it exists, else base product
+        available_stock = variant.stock if variant else product.stock
+        if available_stock <= 0:
+            return JsonResponse({'success': False, 'error': 'Item is out of stock'})
+        
+        MAX_QTY = 10
+        if quantity > MAX_QTY:
+            return JsonResponse({'success': False, 'error': f'Maximum quantity per item is {MAX_QTY}'})
+        if quantity > available_stock:
+            return JsonResponse({'success': False, 'error': f'Only {available_stock} items available in stock'})
             
         cart, created = Cart.objects.get_or_create(user=request.user)
         
@@ -291,20 +318,18 @@ def add_to_cart(request, product_id):
         cart_item, item_created = CartItem.objects.get_or_create(
             cart=cart, 
             product=product,
-            defaults={'quantity': 1}
+            variant=variant,
+            defaults={'quantity': quantity}
         )
         
-        # Max quantity limit of 10 items
-        MAX_QTY = 10
-        
         if not item_created:
-            if cart_item.quantity < min(product.stock, MAX_QTY):
-                cart_item.quantity += 1
+            if cart_item.quantity + quantity <= min(available_stock, MAX_QTY):
+                cart_item.quantity += quantity
                 cart_item.save()
             elif cart_item.quantity >= MAX_QTY:
-                return JsonResponse({'success': False, 'error': f'Maximum quantity per item is {MAX_QTY}'})
+                return JsonResponse({'success': False, 'error': f'Maximum quantity limit reached in your cart.'})
             else:
-                return JsonResponse({'success': False, 'error': f'Only {product.stock} items available in stock. You already have {cart_item.quantity} in your cart.'})
+                return JsonResponse({'success': False, 'error': f'Only {available_stock} items available. You already have {cart_item.quantity} in cart.'})
                 
         # Remove from wishlist when added to cart
         if hasattr(request.user, 'wishlist'):
@@ -353,8 +378,13 @@ def update_cart(request, item_id):
             cart = cart_item.cart
             items = cart.items.select_related('product').all()
             subtotal = sum(item.total_price for item in items)
-            tax = subtotal * Decimal('0.08')
-            total = subtotal + tax
+            tax = subtotal * Decimal('0.05')
+            shipping = Decimal('0.00')
+            if subtotal >= Decimal('20000.00'):
+                shipping = Decimal('99.00')
+            elif subtotal >= Decimal('5000.00'):
+                shipping = Decimal('49.00')
+            total = subtotal + tax + shipping
             cart_count = sum(item.quantity for item in items)
             
             return JsonResponse({
@@ -363,6 +393,7 @@ def update_cart(request, item_id):
                 'item_total': str(cart_item.total_price),
                 'item_quantity': cart_item.quantity,
                 'subtotal': str(subtotal),
+                'shipping': str(shipping),
                 'tax': str(round(tax, 2)),
                 'total': str(round(total, 2))
             })
@@ -440,14 +471,18 @@ def save_for_later(request, item_id):
         cart = request.user.cart
         items = cart.items.select_related('product').all()
         subtotal = sum(item.total_price for item in items)
-        tax = subtotal * Decimal('0.08')
-        total = subtotal + tax
+        tax = subtotal * Decimal('0.05')
+        shipping = Decimal('0.00')
+        if subtotal > 0 and subtotal < Decimal('5000.00'):
+            shipping = Decimal('99.00')
+        total = subtotal + tax + shipping
         cart_count = sum(item.quantity for item in items)
         
         return JsonResponse({
             'success': True,
             'cart_count': cart_count,
             'subtotal': str(subtotal),
+            'shipping': str(shipping),
             'tax': str(round(tax, 2)),
             'total': str(round(total, 2))
         })

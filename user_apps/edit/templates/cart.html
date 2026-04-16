@@ -295,7 +295,7 @@
                     {% endif %}
                 </div>
                 <div class="item-price" id="item-price-{{ item.id }}">
-                    ${{ item.total_price|floatformat:2 }}
+                    ₹{{ item.total_price|floatformat:2 }}
                 </div>
                 <div class="item-actions-col" style="display:flex; flex-direction:column; gap:10px;">
                     <a href="{% url 'remove_from_cart' item.id %}" class="remove-btn" title="Remove from Cart">
@@ -315,20 +315,20 @@
             
             <div class="summary-row">
                 <span>Subtotal</span>
-                $<span id="cart-subtotal">{{ subtotal|floatformat:2 }}</span>
+                ₹<span id="cart-subtotal">{{ subtotal|floatformat:2 }}</span>
             </div>
             <div class="summary-row">
                 <span>Estimated Tax</span>
-                $<span id="cart-tax">{{ tax|floatformat:2 }}</span>
+                ₹<span id="cart-tax">{{ tax|floatformat:2 }}</span>
             </div>
             <div class="summary-row">
                 <span>Shipping</span>
-                <span>Free</span>
+                <span id="cart-shipping-container">{% if shipping == 0 %}<span style="color:#22c55e; font-weight:700;">Free</span>{% else %}₹<span id="cart-shipping">{{ shipping|floatformat:2 }}</span>{% endif %}</span>
             </div>
             
             <div class="summary-row total">
                 <span>Total</span>
-                <span style="color:var(--primary-color);">$<span id="cart-total">{{ total|floatformat:2 }}</span></span>
+                <span style="color:var(--primary-color);">₹<span id="cart-total">{{ total|floatformat:2 }}</span></span>
             </div>
             
             {% if has_stock_issues %}
@@ -374,10 +374,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(data.success) {
                     // Update exact elements
                     document.getElementById(`qty-val-${itemId}`).textContent = data.item_quantity;
-                    document.getElementById(`item-price-${itemId}`).textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                    document.getElementById(`item-price-${itemId}`).textContent = `₹${parseFloat(data.item_total).toFixed(2)}`;
                     
                     document.getElementById('cart-subtotal').textContent = parseFloat(data.subtotal).toFixed(2);
                     document.getElementById('cart-tax').textContent = parseFloat(data.tax).toFixed(2);
+                    
+                    const shippingEl = document.getElementById('cart-shipping-container');
+                    const shipVal = parseFloat(data.shipping);
+                    if (shipVal === 0) {
+                        shippingEl.innerHTML = '<span style="color:#22c55e; font-weight:700;">Free</span>';
+                    } else {
+                        shippingEl.innerHTML = `₹<span id="cart-shipping">${shipVal.toFixed(2)}</span>`;
+                    }
+                    
                     document.getElementById('cart-total').textContent = parseFloat(data.total).toFixed(2);
                     
                     if(data.item_quantity <= 0) {

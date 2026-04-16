@@ -3,6 +3,7 @@ from django.db.models import Q, Count, Max, DecimalField
 from django.db.models.functions import Coalesce
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage
@@ -170,10 +171,15 @@ def compare_products(request):
         history = []
         if request.user.is_authenticated:
             history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
-        return render(request, 'compare.html', {'products': [], 'history': history})
+        return render(request, 'compare.html', {
+            'products': [], 
+            'history': history,
+            'fill_count': 3,
+            'places_to_fill': range(3)
+        })
         
-    # Get products, limit to 2
-    products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:2]
+    # Get products, limit to 3
+    products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:3]
     
     # Save to history if logged in
     if request.user.is_authenticated and products.exists():
@@ -181,7 +187,7 @@ def compare_products(request):
             ComparisonHistory.objects.update_or_create(
                 user=request.user, 
                 product=p,
-                defaults={'created_at': None} 
+                defaults={'created_at': timezone.now()} 
             )
             
     # Process features for each product
@@ -196,9 +202,12 @@ def compare_products(request):
     if request.user.is_authenticated:
         history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
             
+    fill_count = max(0, 3 - len(products))
     context = {
         'products': products,
         'history': history,
+        'places_to_fill': range(fill_count),
+        'fill_count': fill_count,
     }
     return render(request, 'compare.html', context)
 
@@ -212,8 +221,8 @@ def toggle_compare(request):
     if str(product_id) in compare_list:
         compare_list.remove(str(product_id))
     else:
-        if len(compare_list) >= 2:
-            return JsonResponse({'success': False, 'error': 'Maximum 2 products allowed'})
+        if len(compare_list) >= 3:
+            return JsonResponse({'success': False, 'error': 'Maximum 3 products allowed'})
         compare_list.append(str(product_id))
     
     request.session['compare_list'] = compare_list
@@ -273,6 +282,8 @@ def product_details(request, product_id):
     savings = 0
     if product.discount_price:
         savings = product.price - product.discount_price
+    # Get active variants
+    active_variants = product.variants.filter(is_active=True).order_by('id')
     
     context = {
         'product': product,
@@ -281,6 +292,7 @@ def product_details(request, product_id):
         'related_products': related_products,
         'MAX_QTY': MAX_QTY,
         'savings': savings,
+        'active_variants': active_variants,
     }
 
     # Add wishlist status
