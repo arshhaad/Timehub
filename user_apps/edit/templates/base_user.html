@@ -17,17 +17,17 @@
             --bg-color: #0b0b0e;
             --sidebar-color: #111115;
             --card-bg: rgba(21, 21, 26, 0.7);
-            --primary-color: #ff6a00;
-            --primary-glow: rgba(255, 106, 0, 0.2);
-            --accent-gold: #e2b04a;
+            --primary-color: #f98822; /* Premium Orange/Gold */
+            --primary-glow: rgba(249, 136, 34, 0.2);
+            --accent-gold: #f98822; /* Converging accent gold with primary for consistency */
             --text-main: #ffffff;
             --text-muted: #9ca3af;
-            --border-color: rgba(39, 39, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.05);
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-pill: 30px;
-            --transition: all 0.3s ease-in-out;
-            --glass: blur(12px);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass: blur(15px);
         }
 
         /* Essential Reset for Responsiveness */
@@ -78,20 +78,24 @@
             font-weight: 800;
             padding: 30px 25px;
             flex-shrink: 0;
+            color: #fff;
+            text-decoration: none;
             background-color: var(--sidebar-color);
             z-index: 2;
         }
 
-        .sidebar-logo i {
-            color: var(--primary-color);
-            filter: drop-shadow(0 0 10px var(--primary-glow));
-        }
-
-        .sidebar-logo span {
-            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3);
         }
 
         .sidebar-scroll {
@@ -185,17 +189,33 @@
             margin: 0 auto;
         }
 
-        /* Mobile Header */
+        /* =========================================
+           RESPONSIVE BREAKPOINTS
+        ========================================= */
+
+        .sidebar-badge {
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Mobile Header sync */
         .mobile-header {
             display: none;
-            background-color: var(--sidebar-color);
+            background: rgba(11, 11, 14, 0.95);
+            backdrop-filter: blur(15px);
             padding: 15px 20px;
             border-bottom: 1px solid var(--border-color);
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 999;
+            z-index: 1000;
         }
 
         .menu-toggle {
@@ -211,6 +231,9 @@
             transition: var(--transition);
         }
         .menu-toggle:hover { background: rgba(255,255,255,0.1); }
+
+        /* Media Query updates for clean removal */
+        @media (max-width: 1200px) { }
 
         .sidebar-overlay {
             display: none;
@@ -298,16 +321,79 @@
         .toast-error::after { background: #ef4444; }
         .toast-success::after { background: #22c55e; }
         .toast-info::after { background: var(--primary-color); }
+        /* Dashboard Quick Access Header */
+        .dashboard-header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: rgba(11, 11, 14, 0.5);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-link {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .action-link:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: rgba(249, 136, 34, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--primary-glow);
+        }
+
+        .action-link.search-trigger {
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-header { padding: 15px 25px; display: none; } /* Hide on mobile because we have mobile header */
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
+    <!-- Search Overlay Synchronization -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search for luxury timepieces...">
+            <div class="search-close" id="closeSearch">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Header -->
     <header class="mobile-header">
         <a href="/" class="sidebar-logo" style="padding:0; border:none; background:transparent; text-decoration:none;">
-            <i class="fas fa-clock" style="color:var(--primary-color);"></i>
-            <span style="font-size:1.2rem; font-weight:800;">TimeHub</span>
+            <div class="logo-icon" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <span style="font-size:1.2rem; font-weight:800; color: #fff;">TimeHub</span>
         </a>
         <div class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -320,7 +406,9 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <a href="/" class="sidebar-logo" style="text-decoration:none;">
-            <i class="fas fa-clock"></i>
+            <div class="logo-icon">
+                <i class="fas fa-clock"></i>
+            </div>
             <span>TimeHub</span>
         </a>
 
@@ -341,7 +429,7 @@
 
             <ul class="nav-menu">
                 <li class="nav-item {% block nav_dashboard %}{% endblock %}">
-                    <a href="{% url 'user_dashboard' %}"><i class="fas fa-grid-2"></i> Dashboard</a>
+                    <a href="{% url 'user_dashboard' %}"><i class="fas fa-grid-horizontal"></i> Dashboard</a>
                 </li>
                 <li class="nav-item {% block nav_cart %}{% endblock %}">
                     <a href="{% url 'cart_view' %}"><i class="fas fa-shopping-cart"></i> My Cart</a>
@@ -358,11 +446,13 @@
                 <li class="nav-item {% block nav_payments %}{% endblock %}">
                     <a href="#"><i class="fas fa-credit-card"></i> Payment Methods</a>
                 </li>
-                <li class="nav-item {% block nav_compare %}{% endblock %}">
-                    <a href="#"><i class="fas fa-shuffle"></i> Compare Watches</a>
-                </li>
                 <li class="nav-item {% block nav_notifications %}{% endblock %}">
-                    <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+                    <a href="{% url 'user_notifications' %}">
+                        <i class="fas fa-bell"></i> Notifications
+                        {% if user.unread_notifications_count > 0 %}
+                        <span class="sidebar-badge">{{ user.unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
                 </li>
                 <li class="nav-item {% block nav_profile %}{% endblock %}">
                     <a href="{% url 'edit_profile' %}"><i class="fas fa-user-gear"></i> Profile Settings</a>
@@ -385,6 +475,27 @@
 
     <!-- Main Content Wrapper -->
     <div class="main-wrapper">
+        <!-- Dashboard Header Actions -->
+        <header class="dashboard-header">
+            <div class="quick-actions">
+                <a href="{% url 'landing_view' %}" class="action-link" title="Home">
+                    <i class="fas fa-house"></i>
+                </a>
+                <a href="{% url 'product_listing' %}" class="action-link" title="Collection">
+                    <i class="fas fa-bag-shopping"></i>
+                </a>
+                <div class="action-link search-trigger" title="Search">
+                    <i class="fas fa-magnifying-glass"></i>
+                </div>
+                <a href="{% url 'wishlist_view' %}" class="action-link" title="Wishlist">
+                    <i class="fas fa-heart"></i>
+                </a>
+                <a href="{% url 'cart_view' %}" class="action-link" title="My Cart">
+                    <i class="fas fa-cart-shopping"></i>
+                </a>
+            </div>
+        </header>
+
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
@@ -412,6 +523,33 @@
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
 
+        // Search Overlay Logic
+        const searchTrigger = document.querySelector('.search-trigger');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const closeSearch = document.getElementById('closeSearch');
+        const searchInput = document.getElementById('searchInput');
+
+        if (searchTrigger) {
+            searchTrigger.addEventListener('click', () => {
+                searchOverlay.classList.add('active');
+                setTimeout(() => searchInput.focus(), 300);
+            });
+        }
+
+        if (closeSearch) {
+            closeSearch.addEventListener('click', () => {
+                searchOverlay.classList.remove('active');
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                    window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
+                }
+            });
+        }
+
         // Global Toast System
         function showToast(message, type = 'error') {
             const container = document.getElementById('toastContainer');
@@ -434,6 +572,15 @@
                 setTimeout(() => toast.remove(), 600);
             }, 4000);
         }
+
+        // Initialize Django Messages as Toasts
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if messages %}
+                {% for message in messages %}
+                    showToast("{{ message|escapejs }}", "{{ message.tags|default:'info' }}");
+                {% endfor %}
+            {% endif %}
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

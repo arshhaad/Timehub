@@ -85,16 +85,6 @@
 
 {% block content %}
 <div class="container">
-    {% if messages %}
-    <div style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
-        {% for message in messages %}
-        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem;">
-            <i class="fas fa-exclamation-circle"></i>
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     <div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
     <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
@@ -106,28 +96,32 @@
 </div>
 
 <div class="form-container">
-    <div style="background: rgba(255, 106, 0, 0.1); border: 1px solid rgba(255, 106, 0, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 12px;">
-        <i class="fas fa-info-circle" style="color: var(--primary-color); margin-top: 3px;"></i>
-        <p style="color: #fff; font-size: 0.9rem; margin: 0; line-height: 1.5;">
-            <strong style="color: var(--primary-color);">Important Note:</strong> The reason for rescheduling must be valid. The TimeHub team will review and approve your request only based on the validity of the reason provided.
+    <div style="background: rgba(255, 106, 0, 0.05); border: 1px solid rgba(255, 106, 0, 0.3); border-radius: 16px; padding: 20px; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 14px;">
+        <i class="fas fa-circle-info" style="color: var(--primary-color); font-size: 1.1rem; margin-top: 2px;"></i>
+        <p style="color: #fff; font-size: 0.9rem; margin: 0; line-height: 1.6;">
+            <strong style="color: var(--primary-color);">Security Protocol:</strong> To ensure delivery integrity, all reschedule requests require a detailed reason and are manually verified by our fulfillment team within 24 hours.
         </p>
     </div>
 
     <form action="{% url 'reschedule_order' order.id %}" method="POST">
         {% csrf_token %}
-        <label for="scheduled_date" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Date</label>
+        <label for="scheduled_date" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">New Delivery Date</label>
         <input type="date" name="scheduled_date" id="scheduled_date" min="{{ today|date:'Y-m-d' }}">
         
-        <label for="scheduled_time" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Choose New Time</label>
-        <input type="time" name="scheduled_time" id="scheduled_time" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box;">
+        <label for="scheduled_time" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Preferred Time Window</label>
+        <input type="time" name="scheduled_time" id="scheduled_time" style="width: 100%; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box; transition: var(--transition);">
         
-        <label for="reschedule_reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Reason for Rescheduling</label>
-        <textarea name="reschedule_reason" id="reschedule_reason" required minlength="15" placeholder="Please provide a valid and detailed reason for your request..." rows="3" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box; resize:vertical;"></textarea>
+        <label for="reschedule_reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Reason for Rescheduling</label>
+        <textarea name="reschedule_reason" id="reschedule_reason" required minlength="15" placeholder="Specify why you need to adjust your delivery window (minimum 15 characters)..." rows="4" style="width: 100%; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; color: #fff; margin-bottom: 25px; font-family: inherit; outline: none; box-sizing: border-box; resize:vertical; transition: var(--transition);"></textarea>
 
         
         <div class="btn-group">
-            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">Cancel</a>
-            <button type="submit" class="btn-action-alt btn-primary-alt">Confirm Date</button>
+            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">
+                <i class="fas fa-chevron-left"></i> Go Back
+            </a>
+            <button type="submit" class="btn-action-alt btn-primary-alt">
+                <i class="fas fa-calendar-check"></i> Submit Request
+            </button>
         </div>
     </form>
 </div>

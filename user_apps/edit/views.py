@@ -248,6 +248,22 @@ def account_edit(request):
 
 @login_required
 @never_cache
+def notifications_view(request):
+    from user_apps.core.models import Notification
+    # Get all notifications for the user, ordered by newest first
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Mark them as read automatically upon viewing
+    unread_notifications = notifications.filter(is_read=False)
+    if unread_notifications.exists():
+        unread_notifications.update(is_read=True)
+        
+    return render(request, 'notifications.html', {
+        'notifications': notifications
+    })
+
+@login_required
+@never_cache
 def cart_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product').all()

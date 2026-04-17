@@ -214,13 +214,6 @@
     </div>
 
     <div class="security-card">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    <i class="fas fa-circle-info"></i> {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
 
         <h2><i class="fas fa-shield-halved" style="color: var(--primary-color);"></i> Change Password</h2>
 

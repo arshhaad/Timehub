@@ -72,6 +72,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         """Return the short name for the user."""
         return self.first_name or self.email.split('@')[0]
 
+    @property
+    def unread_notifications_count(self):
+        """Returns the count of unread notifications for the user."""
+        return self.notifications.filter(is_read=False).count()
+
 
 class EmailOTP(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="otps")

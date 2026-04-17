@@ -202,12 +202,16 @@ def compare_products(request):
     if request.user.is_authenticated:
         history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
             
+    # Calculate total price for summary
+    total_price = sum(p.price for p in products)
+    
     fill_count = max(0, 3 - len(products))
     context = {
         'products': products,
         'history': history,
         'places_to_fill': range(fill_count),
         'fill_count': fill_count,
+        'total_price': total_price,
     }
     return render(request, 'compare.html', context)
 

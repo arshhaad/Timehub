@@ -67,7 +67,7 @@
     .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
     .s-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
     .s-Cancelled, .s-Returned { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .s-Return-Requested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
+    .s-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
 
     /* Action Buttons */
     .btn-group { display: flex; gap: 12px; margin-top: 24px; }
@@ -200,18 +200,6 @@
 
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-    <!-- MESSAGES BLOCK -->
-    {% if messages %}
-    <div style="margin-bottom: 24px;">
-        {% for message in messages %}
-        <div class="status-badge s-{% if 'error' in message.tags %}Cancelled{% elif 'success' in message.tags %}Delivered{% else %}Pending{% endif %}" 
-             style="width: 100%; padding: 16px 20px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fas fa-{% if 'error' in message.tags %}exclamation-circle{% elif 'success' in message.tags %}check-circle{% else %}info-circle{% endif %}"></i>
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     <a href="{% url 'order_history' %}" class="back-link">
     <i class="fas fa-arrow-left"></i> Back to Orders
@@ -224,7 +212,7 @@
     </div>
     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
-            <i class="fas fa-map-marker-alt"></i> Track Order
+            <i class="fas fa-location-dot"></i> Track Order
         </a>
         <a href="{% url 'download_invoice' order.id %}" target="_blank" class="btn-action btn-primary-alt">
             <i class="fas fa-file-invoice"></i> Download Invoice
@@ -292,7 +280,7 @@
 <div class="stepper">
     <!-- Step 1: Pending -->
     <div class="stepper-item {% if order.status == 'Pending' %}current{% else %}done{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div class="stepper-icon"><i class="fas fa-receipt"></i></div>
         <div>
             <div class="stepper-label">Pending</div>
             <div class="stepper-desc">Awaiting confirmation</div>
@@ -303,7 +291,7 @@
         {% if order.status == 'Processing' %}current
         {% elif order.status in 'Shipped,Out for Delivery,Delivered' %}done
         {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
+        <div class="stepper-icon"><i class="fas fa-box-archive"></i></div>
         <div>
             <div class="stepper-label">Processing</div>
             <div class="stepper-desc">Packing your items</div>
@@ -314,7 +302,7 @@
         {% if order.status == 'Shipped' %}current
         {% elif order.status in 'Out for Delivery,Delivered' %}done
         {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-shipping-fast"></i></div>
+        <div class="stepper-icon"><i class="fas fa-truck-fast"></i></div>
         <div>
             <div class="stepper-label">Shipped</div>
             <div class="stepper-desc">On its way</div>
@@ -325,7 +313,7 @@
         {% if order.status == 'Out for Delivery' %}current
         {% elif order.status == 'Delivered' %}done
         {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-truck-loading"></i></div>
+        <div class="stepper-icon"><i class="fas fa-truck-ramp-box"></i></div>
         <div>
             <div class="stepper-label">Out for Delivery</div>
             <div class="stepper-desc">
@@ -338,7 +326,7 @@
     </div>
     <!-- Step 5: Delivered -->
     <div class="stepper-item {% if order.status == 'Delivered' %}done{% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-check"></i></div>
+        <div class="stepper-icon"><i class="fas fa-circle-check"></i></div>
         <div>
             <div class="stepper-label">Delivered</div>
             <div class="stepper-desc">
@@ -457,7 +445,7 @@
                             {% if order.status in 'Pending,Processing' %}
                                 {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' and order.reschedule_status != 'Rejected' %}
                                     <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
-                                        <i class="fas fa-history"></i> Reschedule Delivery
+                                        <i class="fas fa-calendar-days"></i> Reschedule Delivery
                                     </button>
                                 {% elif order.reschedule_status == 'Rejected' %}
                                     <div class="btn-action" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.8rem; flex: 1.5; cursor: default;">
@@ -508,7 +496,7 @@
         <!-- Shipping Address -->
         <div class="card">
             <div class="card-header" style="padding: 18px 24px;">
-                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-map-marker-alt"></i> SHIPPING ADDRESS</div>
+                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-location-dot"></i> SHIPPING ADDRESS</div>
             </div>
             <div class="card-body" style="padding: 24px;">
                 <p style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">

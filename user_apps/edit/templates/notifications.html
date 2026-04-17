@@ -1,0 +1,192 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Notifications | TimeHub{% endblock %}
+
+{% block nav_notifications %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .notification-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        gap: 20px;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .notification-card:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .notification-card.unread::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-color);
+        box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .notif-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(249, 136, 34, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .notif-content {
+        flex: 1;
+    }
+
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .notif-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #fff;
+    }
+
+    .notif-time {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .notif-msg {
+        color: var(--text-muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        background: var(--card-bg);
+        border-radius: var(--radius-lg);
+        border: 1px dashed var(--border-color);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--border-color);
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+    }
+
+    /* Animation */
+    .notification-card {
+        animation: slideUp 0.5s ease forwards;
+        opacity: 0;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    {% for i in "123456789"|make_list %}
+    .notification-card:nth-child({{forloop.counter}}) { animation-delay: {{forloop.counter0|add:forloop.counter0}}00ms; }
+    {% endfor %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="page-header">
+        <h2>Notifications</h2>
+        <p>Stay updated with alerts and messages from the TimeHub team.</p>
+    </div>
+
+    {% if notifications %}
+        {% for notif in notifications %}
+        <div class="notification-card {% if not notif.is_read %}unread{% endif %}">
+            <div class="notif-icon-wrap">
+                {% if "Security" in notif.message %}
+                <i class="fas fa-shield-check"></i>
+                {% elif "Order" in notif.message %}
+                <i class="fas fa-box-check"></i>
+                {% elif "Address" in notif.message %}
+                <i class="fas fa-map-marker-alt"></i>
+                {% else %}
+                <i class="fas fa-bell"></i>
+                {% endif %}
+            </div>
+            <div class="notif-content">
+                <div class="notif-header">
+                    <span class="notif-title">
+                        {% if "Security" in notif.message %}Security Alert
+                        {% elif "Address" in notif.message %}Address Update Required
+                        {% elif "Phone" in notif.message %}Verification Needed
+                        {% else %}System Message{% endif %}
+                    </span>
+                    <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+                </div>
+                <div class="notif-msg">
+                    {{ notif.message }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-bell-slash"></i>
+        </div>
+        <h3>No notifications yet</h3>
+        <p>You're all caught up! Check back later for system updates.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

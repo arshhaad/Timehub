@@ -1,0 +1,836 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About TimeHub - Crafting Moments</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --bg-card: #15151a;
+            --bg-card-hover: #1c1c23;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --primary-color: #f98822;
+            --primary-hover: #e07a1b;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .logo {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* NAVBAR (Synchronized) */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: var(--transition);
+            padding: 18px 0;
+        }
+
+        header.scrolled {
+            background: rgba(11, 11, 14, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 35px;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .home-btn {
+            background: var(--primary-color);
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(249, 136, 34, 0.2);
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(249, 136, 34, 0.4);
+            background: #fff;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* HERO SECTION */
+        .page-hero {
+            padding: 180px 0 100px;
+            text-align: center;
+            background: radial-gradient(circle at 50% -20%, rgba(249, 136, 34, 0.15) 0%, transparent 60%);
+        }
+
+        .page-hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .page-hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* CONTENT SECTIONS */
+        section {
+            padding: 100px 0;
+            scroll-margin-top: 100px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .about-img {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .about-text h2 {
+            font-size: 2.2rem;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-color);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+        }
+
+        /* CONTACT SECTION */
+        .contact-section {
+            background: #0f0f13;
+            padding: 120px 0;
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 100px;
+        }
+
+        .contact-info h2 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+        }
+
+        .contact-info p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .contact-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .method-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .method-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(249, 136, 34, 0.1);
+            color: var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .method-content h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .method-content p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: #25d366;
+            color: #fff;
+            border-radius: 50px;
+            font-weight: 700;
+            margin-top: 40px;
+            transition: var(--transition);
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.05);
+            background: #128c7e;
+        }
+
+        /* CONTACT FORM */
+        .contact-form-wrap {
+            background: var(--bg-card);
+            padding: 60px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: #fff;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-color);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(249, 136, 34, 0.3);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 80px 0 40px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-logo {
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* MOBILE MENU & OVERLAY */
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            cursor: pointer;
+            z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            height: 100vh;
+            background: var(--bg-card);
+            z-index: 1100;
+            padding: 100px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu a {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-menu a::after {
+            content: '\f061';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1050;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 1024px) {
+
+            .about-grid,
+            .contact-container {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .page-hero h1 {
+                font-size: 3rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 25px;
+            }
+
+            .page-hero {
+                padding: 140px 0 80px;
+            }
+
+            .page-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .contact-form-wrap {
+                padding: 40px 25px;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .page-hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .contact-methods {
+                gap: 20px;
+            }
+
+            .method-item {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header id="header">
+        <div class="container nav-wrap">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                TimeHub
+            </a>
+            <nav class="nav-links">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'product_listing' %}">Collection</a>
+                <a href="{% url 'about' %}" class="active">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="{% url 'home' %}" class="home-btn">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <div class="mobile-toggle" id="mobileToggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <div class="page-hero">
+        <div class="container">
+            <h1>Crafting Time Into<br><span style="color: var(--primary-color);">Timeless Legacies</span></h1>
+            <p>At TimeHub, we don't just sell watches. We curate the milestones of your life through the art of horology
+                and unmatched craftsmanship.</p>
+        </div>
+    </div>
+
+    <!-- STORY -->
+    <section>
+        <div class="container about-grid">
+            <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=1000"
+                alt="Watchmaking" class="about-img">
+            <div class="about-text">
+                <h2>Our Vision</h2>
+                <p>Since our inception, TimeHub has been the premiere destination for horological enthusiasts. Our
+                    mission is to bridge the gap between classic heritage and modern innovation.</p>
+                <p>We handpick every timepiece in our collection, ensuring that they meet the highest standards of
+                    accuracy, design, and durability. Whether it's a sleek minimalist piece or a complex mechanical
+                    marvel, we have the perfect watch for every moment.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section style="background: rgba(255,255,255,0.01);">
+        <div class="container">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-number">15k+</span>
+                    <span class="stat-label">Happy Clients</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">85+</span>
+                    <span class="stat-label">Luxury Brands</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">Global Outlets</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Expert Support</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section" id="contact">
+        <div class="container contact-container">
+            <div class="contact-info">
+                <h2>Reach Out To Us</h2>
+                <p>Have questions about a specific model or need help with an order? Our specialists are ready to assist
+                    you in every step of your journey.</p>
+
+                <div class="contact-methods">
+                    <div class="method-item">
+                        <div class="method-icon"><i class="fas fa-envelope"></i></div>
+                        <div class="method-content">
+                            <h4>Email Us</h4>
+                            <p>admin@timehub.com</p>
+                        </div>
+                    </div>
+                    <div class="method-item">
+                        <div class="method-icon"><i class="fas fa-location-dot"></i></div>
+                        <div class="method-content">
+                            <h4>Visit Us</h4>
+                            <p>Luxury Row, Fifth Avenue, NY</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="https://wa.me/+919946150870" target="_blank" class="whatsapp-btn">
+                    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            </div>
+
+            <div class="contact-form-wrap">
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="from_name" id="from_name" class="form-control" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email_id" id="email_id" class="form-control"
+                            placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Your Message</label>
+                        <textarea name="message" id="message" class="form-control" rows="5"
+                            placeholder="Tell us what's on your mind..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="logo footer-logo">
+                <div class="logo-icon"><i class="fas fa-clock"></i></div>
+                TimeHub
+            </div>
+            <div class="footer-links">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'product_listing' %}">Collection</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+            <p class="copyright">&copy; 2026 TimeHub Luxury Group. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- MOBILE MENU & OVERLAY -->
+    <div class="overlay" id="overlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'product_listing' %}">Collection</a>
+        <a href="{% url 'about' %}" class="active">About</a>
+        <a href="#contact" id="mobileContactLink">Contact</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'user_dashboard' %}">Dashboard</a>
+        <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+        <a href="{% url 'login' %}">Sign In</a>
+        <a href="{% url 'signup' %}">Sign Up</a>
+        {% endif %}
+    </div>
+
+    <script>
+        // Mobile Menu Logic
+        const mobileToggle = document.getElementById('mobileToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+        const mobileLinks = document.querySelectorAll('.mobile-menu a');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            const icon = mobileToggle.querySelector('i');
+            if (mobileMenu.classList.contains('active')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        }
+
+        mobileToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (mobileMenu.classList.contains('active')) toggleMenu();
+            });
+        });
+
+        // Header Scroll Effect
+        window.addEventListener('scroll', function () {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // EmailJS Implementation
+        (function () {
+            emailjs.init("NoqQ0uNP0Yc2Xngur");
+        })();
+
+        const contactForm = document.getElementById("contact-form");
+        const submitBtn = document.getElementById("submitBtn");
+
+        if (contactForm) {
+            contactForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                // Get field values
+                const name = document.getElementById("from_name").value.trim();
+                const email = document.getElementById("email_id").value.trim();
+                const message = document.getElementById("message").value.trim();
+
+                // Validation Regex
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
+                const nameRegex = /^[A-Za-z\s]+$/;
+
+                // Validations
+                if (name === "") {
+                    showToast("❌ Name cannot be empty.");
+                    return;
+                }
+                if (!nameRegex.test(name)) {
+                    showToast("❌ Name must contain only letters A–Z.");
+                    return;
+                }
+                if (!emailRegex.test(email)) {
+                    showToast("❌ Please enter a valid email address.");
+                    return;
+                }
+                if (message === "") {
+                    showToast("❌ Message cannot be empty.");
+                    return;
+                }
+
+                // Loading State
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Sending...";
+
+                // Send with EmailJS
+                emailjs.sendForm("service_3q00g5l", "template_bwt4f92", this)
+                    .then(() => {
+                        showToast("✅ Message sent successfully!", "success");
+                        contactForm.reset();
+                    }, (error) => {
+                        showToast("❌ Failed to send message.");
+                        console.error("EmailJS Error:", error);
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "Send Message";
+                    });
+            });
+        }
+
+        // Custom Toast Helper (matches site aesthetic)
+        function showToast(msg, type = 'error') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 30px; right: 30px; 
+                padding: 15px 30px; border-radius: 12px;
+                background: #111; color: #fff; z-index: 9999;
+                border: 1px solid ${type === 'success' ? '#22c55e' : '#ef4444'};
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                font-weight: 600; font-size: 0.9rem;
+                transform: translateX(120%); transition: all 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            `;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+
+            setTimeout(() => {
+                toast.style.transform = 'translateX(120%)';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+    </script>
+</body>
+
+</html>

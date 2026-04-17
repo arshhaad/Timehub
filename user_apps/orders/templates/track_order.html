@@ -165,25 +165,25 @@
         </div>
 
         <div class="status-step-alt {% if order.status == 'Pending' %}active{% elif order.status in 'Processing,Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
-            <div class="step-icon-outer"><i class="fas fa-clipboard-list"></i></div>
+            <div class="step-icon-outer"><i class="fas fa-receipt"></i></div>
             <div class="step-title">Pending</div>
             <div class="step-desc">Order received</div>
         </div>
 
         <div class="status-step-alt {% if order.status == 'Processing' %}active{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
-            <div class="step-icon-outer"><i class="fas fa-box"></i></div>
+            <div class="step-icon-outer"><i class="fas fa-box-archive"></i></div>
             <div class="step-title">Processing</div>
             <div class="step-desc">Being prepared</div>
         </div>
 
         <div class="status-step-alt {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
-            <div class="step-icon-outer"><i class="fas fa-truck-moving"></i></div>
+            <div class="step-icon-outer"><i class="fas fa-truck-fast"></i></div>
             <div class="step-title">Shipped</div>
             <div class="step-desc">On the way</div>
         </div>
 
         <div class="status-step-alt {% if order.status == 'Out for Delivery' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
-            <div class="step-icon-outer"><i class="fas fa-shuttle-van"></i></div>
+            <div class="step-icon-outer"><i class="fas fa-truck-ramp-box"></i></div>
             <div class="step-title">Out for Delivery</div>
             <div class="step-desc">Out for delivery</div>
             {% if order.scheduled_delivery_date %}
@@ -192,7 +192,7 @@
         </div>
 
         <div class="status-step-alt {% if order.status == 'Delivered' %}active{% endif %}">
-            <div class="step-icon-outer"><i class="fas fa-check"></i></div>
+            <div class="step-icon-outer"><i class="fas fa-circle-check"></i></div>
             <div class="step-title">Delivered</div>
             <div class="step-desc">Delivered to customer</div>
             {% if order.scheduled_delivery_date %}

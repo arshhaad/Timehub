@@ -37,8 +37,8 @@
         /* HEADER */
         header { padding: 25px 0; border-bottom: 1px solid var(--border-color); background: rgba(11, 11, 14, 0.95); backdrop-filter: blur(15px); }
         .nav-wrap { display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 1.6rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .logo-icon { width: 30px; height: 30px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 1.2rem; }
+        .logo { font-size: 1.6rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 34px; height: 34px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.1rem; }
         .logo-dot { color: var(--primary-color); }
         .nav-links { display: flex; gap: 35px; }
         .nav-links a { font-size: 0.9rem; font-weight: 600; color: #fff; }
@@ -178,8 +178,10 @@
     <header>
         <div class="container nav-wrap">
             <a href="/" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-                <div class="logo-icon">T</div>
-                <span class="logo">TimeHub <span class="logo-dot">.</span></span>
+                <div class="logo-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="logo">TimeHub<span class="logo-dot">.</span></span>
             </a>
             <div class="nav-links">
                 <a href="#">New Arrivals</a>
@@ -299,7 +301,7 @@
                     <i class="fas fa-receipt"></i> View Order Details
                 </a>
                 <a href="{% url 'track_order' order.id %}" class="btn btn-outline" id="trackOrderBtn">
-                    <i class="fas fa-map-marker-alt"></i> Track Order
+                    <i class="fas fa-location-dot"></i> Track Order
                 </a>
                 <a href="{% url 'product_listing' %}" class="btn btn-primary" id="continueShoppingBtn">
                     <i class="fas fa-shopping-bag"></i> Continue Shopping

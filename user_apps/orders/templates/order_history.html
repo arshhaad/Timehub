@@ -28,14 +28,14 @@
     .meta-item .val { font-weight: 700; font-size: 1rem; color: #fff; }
 
     .status-badge { padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .status-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
-    .status-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
-    .status-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
-    .status-OutforDelivery { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
-    .status-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
-    .status-Cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .status-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
-    .status-Returned { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+    .s-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+    .s-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .s-OutforDelivery { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+    .s-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .s-Cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .s-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
+    .s-Returned { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
 
     .order-items { display: flex; flex-direction: column; gap: 20px; }
     .item-row { display: flex; align-items: center; gap: 20px; }
@@ -94,14 +94,6 @@
     <p>Track, manage and view your previous timepieces acquisitions.</p>
 </div>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
 
 <div class="search-container">
     <form method="GET" action="{% url 'order_history' %}" id="search-form">
@@ -111,7 +103,7 @@
                 <i class="fas fa-times" style="color: #ef4444; cursor: pointer;"></i>
             </a>
         {% else %}
-            <i class="fas fa-search search-icon" onclick="document.getElementById('search-form').submit();" style="cursor: pointer;"></i>
+            <i class="fas fa-magnifying-glass search-icon" onclick="document.getElementById('search-form').submit();" style="cursor: pointer;"></i>
         {% endif %}
     </form>
 </div>
@@ -134,7 +126,7 @@
                     <span class="val">₹{{ order.total_amount|floatformat:0 }}</span>
                 </div>
             </div>
-            <div class="status-badge status-{{ order.status|cut:' ' }}">
+            <div class="status-badge s-{{ order.status|cut:' ' }}">
                 {{ order.status }}
             </div>
         </a>
@@ -204,7 +196,7 @@
         <div class="order-actions">
             <a href="{% url 'order_detail' order.id %}" class="btn-action btn-primary-alt">View Details</a>
             <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
-                <i class="fas fa-map-marker-alt"></i> Track Order
+                <i class="fas fa-location-dot"></i> Track Order
             </a>
 
             {% if order.status in 'Pending,Processing' %}
