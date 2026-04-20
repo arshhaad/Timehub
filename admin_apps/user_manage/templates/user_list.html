@@ -1,1024 +1,296 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Users - TimeHub</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        :root {
-            --bg-color: #fafbfc;
-            --sidebar-width: 260px;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-color: #f3f4f6;
-            --primary-bg: #ff6b00;
-            --primary-text: #ffffff;
-            --black-btn: #000000;
-
-            --success-bg: #dcfce7;
-            --success-text: #166534;
-            --danger-bg: #fee2e2;
-            --danger-text: #991b1b;
-            --warning-bg: #ffedd5;
-            --warning-text: #c2410c;
-
-            --radius-pill: 9999px;
-            --transition: all 0.2s ease;
-        }
-
-        /* Mobile Header */
-        .mobile-header {
-            display: none;
-            height: 60px;
-            background: #fff;
-            padding: 0 20px;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 1001;
-        }
-
-        .mobile-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            text-decoration: none;
-            color: var(--text-main);
-        }
-
-        .mobile-brand .brand-icon {
-            width: 32px;
-            height: 32px;
-            font-size: 1rem;
-            margin-bottom: 0;
-        }
-
-        .menu-toggle {
-            font-size: 1.2rem;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
-        /* Sidebar Overlay */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(2px);
-            z-index: 99;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        /* Essential reset and components identical to dashboard for perfect parity */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        .admin-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar Styles (Same as Dashboard) */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: #ffffff;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .brand {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 30px 20px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fff;
-            flex-shrink: 0;
-        }
-
-        .brand-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--primary-bg);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
-            transition: var(--transition);
-        }
-
-        .brand-icon:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 15px -3px rgba(255, 107, 0, 0.4);
-        }
-
-        .brand h2 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: #e5e7eb;
-            border-radius: 10px;
-        }
-
-        .nav-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.95rem;
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .nav-item a i {
-            font-size: 1.1rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        .nav-item a:hover {
-            background-color: #f9fafb;
-            color: var(--text-main);
-            transform: translateX(4px);
-        }
-
-        .nav-item.active a {
-            background-color: #000;
-            color: #fff;
-            border-radius: 10px;
-        }
-
-        .sidebar-section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #9ca3af;
-            font-weight: 700;
-            margin: 25px 0 15px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Main Wrapper */
-        .main-wrapper {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            width: calc(100% - var(--sidebar-width));
-        }
-
-        /* Topbar Styles (Same as Dashboard) */
-        .topbar {
-            height: 80px;
-            background: #fff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            width: 100%;
-            transition: var(--transition);
-        }
-
-        .search-bar {
-            display: flex;
-            align-items: center;
-            background: #f3f4f6;
-            padding: 10px 20px;
-            border-radius: var(--radius-pill);
-            width: 400px;
-            gap: 12px;
-        }
-
-        .search-bar input {
-            border: none;
-            background: transparent;
-            outline: none;
-            width: 100%;
-            font-size: 0.9rem;
-            color: var(--text-main);
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .icon-btn {
-            position: relative;
-            color: #6b7280;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .icon-dot {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 8px;
-            height: 8px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            border: 2px solid #ffffff;
-        }
-
-        .admin-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-left: 20px;
-            border-left: 1px solid var(--border-color);
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .admin-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-main);
-            display: block;
-        }
-
-        .admin-role {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: block;
-            text-align: right;
-        }
-
-        /* User Table Specific Content */
-        .content {
-            padding: 40px;
-            flex: 1;
-            min-width: 0;
-            overflow-x: hidden;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .header-left h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
-        }
-
-        .header-left p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-        
-        .btn-primary {
-            background: #000;
-            color: #fff;
-        }
-
-        .btn-outline {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-        }
-
-        .btn-outline:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
-        }
-
-        /* Table Filter Section */
-        .table-controls {
-            padding: 24px;
-            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-            border: 1px solid var(--border-color);
-            background: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .filter-tabs {
-            display: flex;
-            background: #f3f4f6;
-            padding: 4px;
-            border-radius: 12px;
-            gap: 4px;
-        }
-
-        .filter-tab {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 10px;
-            transition: var(--transition);
-        }
-
-        .filter-tab:hover {
-            color: var(--text-main);
-        }
-
-        .filter-tab.active {
-            background: #ffffff;
-            color: var(--text-main);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-
-        /* Modern Table Styling */
-        .table-panel {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            margin-top: -1px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            width: 100%;
-        }
-
-        .user-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            min-width: 1050px;
-            table-layout: fixed;
-        }
-
-        .user-table th {
-            background: #ffffff;
-            padding: 16px 24px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .user-table td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-
-        .user-table tr:hover {
-            background-color: #fafbfc;
-        }
-
-        /* User Identity Column */
-        .user-cell {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            text-decoration: none;
-            color: inherit;
-            padding: 4px 8px;
-            margin: -4px -8px;
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .user-cell:hover {
-            background-color: #f3f4f6;
-            transform: translateX(4px);
-        }
-
-        .user-cell:hover .user-info-name {
-            color: var(--primary-bg);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #f3f4f6;
-            flex-shrink: 0;
-        }
-
-        .user-initials {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-bg);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .user-info-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--text-main);
-            display: block;
-        }
-
-        .user-info-id {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* Status Badges */
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: var(--radius-pill);
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-active {
-            background: var(--success-bg);
-            color: var(--success-text);
-        }
-
-        .status-blocked {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-        }
-
-        .status-inactive {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        /* Action Buttons */
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            color: var(--text-main);
-            border-color: #d1d5db;
-            background: #f9fafb;
-            transform: translateY(-2px);
-        }
-
-        .btn-status {
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            border-radius: 10px;
-            font-weight: 700;
-            width: 80px;
-            justify-content: center;
-            border: 1px solid transparent;
-        }
-
-        .btn-status-block {
-            background: #fee2e2;
-            color: #ef4444;
-            border-color: #fecaca;
-        }
-
-        .btn-status-unblock {
-            background: #dcfce7;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
-
-        /* Pagination Styling */
-        .pagination-container {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 24px; 
-            border-top: 1px solid var(--border-color);
-        }
-
-        .pagination-info {
-            font-size: 0.85rem; 
-            color: var(--text-muted); 
-            font-weight: 500;
-        }
-
-        .pagination-info span {
-            color: var(--text-main); 
-            font-weight: 700;
-        }
-
-        .pagination-controls {
-            display: flex; 
-            align-items: center; 
-            gap: 12px;
-        }
-
-        .pagination-page-indicator {
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            font-weight: 700; 
-            font-size: 0.9rem; 
-            background: #f3f4f6; 
-            padding: 8px 16px; 
-            border-radius: 10px; 
-            min-width: 80px; 
-            justify-content: center;
-        }
-
-        .pagination-page-indicator span {
-            color: #9ca3af; 
-            font-weight: 400;
-        }
-
-        /* Checkbox Styling */
-        .custom-checkbox {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            border: 2px solid #d1d5db;
-            cursor: pointer;
-            accent-color: var(--black-btn);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-wrapper {
-                margin-left: 0;
-                width: 100%;
-            }
-
-            .mobile-header {
-                display: flex;
-            }
-
-            .topbar {
-                padding: 0 20px;
-                height: 70px;
-            }
-
-            .search-bar {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                padding: 20px;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .table-controls {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-
-            .filter-tabs {
-                width: 100%;
-                overflow-x: auto;
-                padding-bottom: 5px;
-            }
-
-            .topbar-right .icon-btn:first-child {
-                display: none;
-            }
-
-            .admin-info {
-                display: none;
-            }
-
-            .pagination {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Mobile Header -->
-    <header class="mobile-header">
-        <a href="#" class="mobile-brand">
-            <div class="brand-icon">
-                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
-            </div>
-            TimeHub
+{% block title %}User Management Registry - TimeHub Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registry-container {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Table Filter Section */
+    .table-controls {
+        padding: 24px 30px;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 5px;
+    }
+
+    .filter-tabs {
+        display: flex;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+        gap: 4px;
+    }
+
+    .filter-tab {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 10px;
+        transition: var(--transition);
+    }
+
+    .filter-tab:hover { color: var(--text-main); }
+
+    .filter-tab.active {
+        background: #ffffff;
+        color: var(--text-main);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Registry Table Styling */
+    .table-panel {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        overflow: hidden;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+        margin-top: -1px;
+    }
+
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .user-table th {
+        background: #f8fafc;
+        padding: 18px 24px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .user-table td {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .user-table tr:hover { background-color: #fcfdfe; }
+
+    /* Identity Cell */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .user-avatar {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #f1f5f9;
+        flex-shrink: 0;
+    }
+
+    .user-initials {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        background: var(--primary-bg);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .user-info-name { font-weight: 700; color: var(--text-main); display: block; margin-bottom: 2px; }
+    .user-info-id { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: var(--radius-pill);
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-active { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+    .status-blocked { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+
+    /* Action Buttons */
+    .action-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    
+    .btn-action {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: #fff;
+        color: var(--text-muted);
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none; transition: var(--transition);
+    }
+    .btn-action:hover { color: var(--text-main); border-color: #cbd5e1; transform: translateY(-2px); }
+
+    .btn-status {
+        padding: 6px 14px; font-size: 0.75rem; border-radius: 10px; font-weight: 700;
+        border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-block { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
+    .btn-unblock { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+    .btn-block:hover { background: #fecaca; }
+    .btn-unblock:hover { background: #d1fae5; }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 24px 30px; border-top: 1px solid var(--border-color);
+        background: #fcfdfe;
+    }
+    .pagination-info { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .pagination-info span { color: var(--text-main); font-weight: 800; }
+    .pagination-controls { display: flex; align-items: center; gap: 12px; }
+    .page-indicator { font-weight: 800; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-color); }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-title">Customer Registry</div>
+<div class="topbar-subtitle">Manage and monitor all platform user accounts.</div>
+{% endblock %}
+
+{% block topbar_search %}
+<form action="{% url 'user_list' %}" method="GET" class="search-bar">
+    {% if query %}
+        <a href="{% url 'user_list' %}" style="text-decoration: none; display: flex; align-items: center; padding-right: 5px;">
+            <i class="fas fa-times" style="color: #ef4444; font-size: 0.8rem;"></i>
         </a>
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fa-solid fa-bars"></i>
-        </div>
-    </header>
+    {% else %}
+        <i class="fas fa-search" style="color: var(--text-muted); font-size: 0.9rem;"></i>
+    {% endif %}
+    <input type="text" name="q" placeholder="Search accounts or IDs..." value="{{ query|default:'' }}">
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+</form>
+{% endblock %}
 
-    <div class="admin-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon">
-                    <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
-                </div>
-                <h2>TimeHub</h2>
+{% block content %}
+<div class="registry-container">
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="table-controls">
+            <div class="filter-tabs">
+                <a href="?status=all{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if not status or status == 'all' %}active{% endif %}">Total Universe</a>
+                <a href="?status=active{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'active' %}active{% endif %}">Active Members</a>
+                <a href="?status=blocked{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'blocked' %}active{% endif %}">Restricted</a>
+            </div>
+            <div class="table-actions">
+                <!-- Add context-specific actions if needed -->
+            </div>
+        </div>
+
+        <div class="table-panel">
+            <div class="table-responsive">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" style="accent-color: #000;"></th>
+                            <th style="width: 30%;">Principal Identity</th>
+                            <th style="width: 20%;">Contact Logic</th>
+                            <th style="width: 10%;">Engagement</th>
+                            <th style="width: 15%;">Commercial Value</th>
+                            <th style="width: 12%;">Status</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td><input type="checkbox" name="user_ids" value="{{ u.id }}" style="accent-color: #000;"></td>
+                            <td>
+                                <a href="{% url 'user_profiles' u.id %}" class="user-cell">
+                                    {% if u.avatar %}
+                                        <img src="{{ u.avatar.url }}" class="user-avatar" alt="">
+                                    {% else %}
+                                        <div class="user-initials">
+                                            {{ u.first_name|slice:":1"|upper }}{{ u.last_name|slice:":1"|upper|default:u.email|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <span class="user-info-name">{% if u.first_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.email }}{% endif %}</span>
+                                        <span class="user-info-id">ID: #UDR-{{ u.id|stringformat:"05d" }}</span>
+                                    </div>
+                                </a>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700;">{{ u.email }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ u.phone_number }}</div>
+                            </td>
+                            <td><span style="font-weight: 800;">{{ u.order_count|default:0 }}</span> <span style="font-size: 0.7rem; color: var(--text-muted);">Orders</span></td>
+                            <td><span style="font-weight: 800; color: #059669;">₹{{ u.total_spent|default:0|floatformat:2 }}</span></td>
+                            <td>
+                                <span class="status-badge {% if u.is_active %}status-active{% else %}status-blocked{% endif %}">
+                                    <i class="fas fa-{% if u.is_active %}check-circle{% else %}ban{% endif %}"></i>
+                                    {% if u.is_active %}Active{% else %}Blocked{% endif %}
+                                </span>
+                            </td>
+                            <td class="action-btns">
+                                <form method="POST" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="toggle_status">
+                                    <input type="hidden" name="user_id" value="{{ u.id }}">
+                                    {% if u.is_active %}
+                                        <button type="submit" class="btn-status btn-block"><i class="fas fa-lock"></i></button>
+                                    {% else %}
+                                        <button type="submit" class="btn-status btn-unblock"><i class="fas fa-unlock"></i></button>
+                                    {% endif %}
+                                </form>
+                                <a href="{% url 'user_profiles' u.id %}" class="btn-action" title="Investigate Profile"><i class="fas fa-search-plus"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" style="text-align: center; padding: 60px; color: #94a3b8;">No records found in current inventory.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <div class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="sidebar-section-title">Main Menu</li>
-                    <li class="nav-item"><a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
-                    <li class="nav-item"><a href="#"><i class="fas fa-chart-line"></i> Revenue</a></li>
-                    <li class="nav-item"><a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a></li>
-                    <li class="nav-item"><a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a></li>
-                    <li class="nav-item {% if active_menu == 'orders' %}active{% endif %}">
-                        <a href="{% url 'admin_order_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
-                    </li>
-                    <li class="nav-item {% if active_menu == 'inventory' %}active{% endif %}">
-                        <a href="{% url 'admin_inventory_list' %}"><i class="fas fa-boxes"></i> Inventory</a>
-                    </li>
-                    <li class="nav-item {% if active_menu == 'users' %}active{% endif %}">
-                        <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
-                    </li>
-                    <li class="sidebar-section-title">Featured</li>
-                    <li class="nav-item {% if active_menu == 'user_requests' %}active{% endif %}">
-                        <a href="{% url 'admin_user_requests' %}"><i class="fas fa-user-clock"></i> User Request</a>
-                    </li>
-                    <li class="nav-item {% if active_menu == 'reschedule' %}active{% endif %}">
-                        <a href="{% url 'admin_user_reschedule' %}"><i class="fas fa-calendar-alt"></i> Reschedule</a>
-                    </li>
-                    <li class="nav-item"><a href="#"><i class="fas fa-wallet"></i> Wallet</a></li>
-                    <li class="nav-item"><a href="#"><i class="fas fa-star"></i> Featured</a></li>
-                </ul>
-                <ul class="nav-list" style="margin-top:30px; border-top:1px solid var(--border-color); padding-top:20px;">
-                    <li class="nav-item"><a href="{% url 'admin_profile' %}"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li class="nav-item"><a href="{% url 'admin_logout' %}" style="color:#ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-                </ul>
+            {% if users.paginator.num_pages > 1 %}
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing <span>{{ users.start_index }}</span> - <span>{{ users.end_index }}</span> of <span>{{ users.paginator.count }}</span> Identities
+                </div>
+                <div class="pagination-controls">
+                    {% if users.has_previous %}
+                        <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-outline" style="padding: 10px 20px;">Previous</a>
+                    {% endif %}
+                    
+                    <div class="page-indicator">{{ users.number }} <span>/</span> {{ users.paginator.num_pages }}</div>
+
+                    {% if users.has_next %}
+                        <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-outline" style="padding: 10px 20px;">Next</a>
+                    {% endif %}
+                </div>
             </div>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="main-wrapper">
-            <!-- Topbar -->
-            <header class="topbar">
-                <form action="{% url 'user_list' %}" method="GET" class="search-bar">
-                    {% if query %}
-                    <a href="{% url 'user_list' %}" style="text-decoration: none; display: flex; align-items: center;">
-                        <i class="fas fa-times" style="color: #ef4444;"></i>
-                    </a>
-                    {% else %}
-                    <i class="fas fa-search"></i>
-                    {% endif %}
-                    <input type="text" name="q" placeholder="Search orders, products, or users..."
-                        value="{{ query|default:'' }}">
-                    {% if status %}
-                    <input type="hidden" name="status" value="{{ status }}">
-                    {% endif %}
-                </form>
-
-                <div class="topbar-right">
-                    <div class="icon-btn">
-                        <i class="fa-regular fa-comment-dots"></i>
-                    </div>
-                    <div class="icon-btn">
-                        <i class="fa-regular fa-bell"></i>
-                        <span class="icon-dot"></span>
-                    </div>
-
-                    <a href="{% url 'admin_profile' %}" class="admin-profile">
-                        <div class="admin-info" style="text-align: right;">
-                            <span class="admin-name" style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; line-height: 1.2;">
-                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}
-                            </span>
-                            <span class="admin-role" style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); display: block;">Super admin</span>
-                        </div>
-                        <div class="brand-icon"
-                            style="width: 40px; height: 40px; font-size: 0.9rem; margin-bottom: 0; box-shadow: none; flex-shrink: 0;">
-                            {% if user.profile and user.profile.image %}
-                            <img src="{{ user.profile.image.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                            {% elif user.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                            {% else %}
-                            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f3f4f6; color: #4b5563; font-weight: 700;">
-                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </a>
-                </div>
-            </header>
-
-            <form method="POST" class="content">
-                {% csrf_token %}
-                <div class="page-header">
-                    <div class="header-left">
-                        <h1>Users</h1>
-                        <p>Manage customer accounts, view purchase history, and handle permissions.</p>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-controls">
-                        <div class="filter-tabs">
-                            <a href="?status=all{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if not status or status == 'all' %}active{% endif %}">All Users</a>
-                            <a href="?status=active{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'active' %}active{% endif %}">Active</a>
-                            <a href="?status=blocked{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'blocked' %}active{% endif %}">Blocked</a>
-                        </div>
-                        <div class="table-actions">
-                            <!-- Placeholder for bulk actions -->
-                        </div>
-                    </div>
-
-                    <div class="table-panel">
-                        <div class="table-responsive">
-                            <table class="user-table">
-                                <colgroup>
-                                    <col style="width: 50px;">
-                                    <col style="width: 250px;">
-                                    <col style="width: 200px;">
-                                    <col style="width: 80px;">
-                                    <col style="width: 120px;">
-                                    <col style="width: 120px;">
-                                    <col style="width: 110px;">
-                                    <col style="width: 120px;">
-                                </colgroup>
-                                <thead>
-                                    <tr>
-                                        <th><input type="checkbox" class="custom-checkbox"></th>
-                                        <th>User</th>
-                                        <th>Contact</th>
-                                        <th>Orders</th>
-                                        <th>Total Spent</th>
-                                        <th>Status</th>
-                                        <th>Join Date</th>
-                                        <th style="text-align:right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for u in users %}
-                                    <tr>
-                                        <td><input type="checkbox" name="user_ids" value="{{ u.id }}"
-                                                class="custom-checkbox user-checkbox"></td>
-                                        <td>
-                                            <a href="{% url 'user_profiles' u.id %}" class="user-cell">
-                                                {% if u.avatar %}
-                                                <img src="{{ u.avatar.url }}" class="user-avatar" alt="">
-                                                {% else %}
-                                                <div class="user-initials">
-                                                    {{ u.first_name|slice:":1"|upper }}{{ u.last_name|slice:":1"|upper|default:u.email|slice:":1"|upper }}
-                                                </div>
-                                                {% endif %}
-                                                <div>
-                                                    <span class="user-info-name">
-                                                        {% if u.first_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.email }}{% endif %}
-                                                    </span>
-                                                    <span class="user-info-id">USR-{{ u.id|stringformat:"04d" }}</span>
-                                                </div>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <div style="font-size: 0.85rem; font-weight: 500;">{{ u.email }}</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ u.phone_number }}</div>
-                                        </td>
-                                        <td>
-                                            <span style="font-weight: 600;">{{ u.order_count|default:0 }}</span>
-                                        </td>
-                                        <td>
-                                            <span style="font-weight: 700;">${{ u.total_spent|default:0|floatformat:2 }}</span>
-                                        </td>
-                                        <td>
-                                            {% if u.is_active %}
-                                            <span class="status-badge status-active"><i class="fas fa-check-circle"></i>
-                                                Active</span>
-                                            {% else %}
-                                            <span class="status-badge status-blocked"><i class="fas fa-ban"></i>
-                                                Blocked</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div style="font-size: 0.85rem; text-align:right;">{{ u.created_at|date:"M d, Y" }}</div>
-                                        </td>
-                                        <td class="action-btns">
-                                            <form method="POST" style="display: inline;">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="toggle_status">
-                                                <input type="hidden" name="user_id" value="{{ u.id }}">
-                                                {% if u.is_active %}
-                                                <button type="submit" class="btn btn-status btn-status-block">
-                                                    <i class="fas fa-ban"></i> Block
-                                                </button>
-                                                {% else %}
-                                                <button type="submit" class="btn btn-status btn-status-unblock">
-                                                    <i class="fas fa-check"></i> Unblock
-                                                </button>
-                                                {% endif %}
-                                            </form>
-                                            <a href="{% url 'user_profiles' u.id %}" class="action-btn" title="View Profile">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8"
-                                            style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                            No users found matching your search.
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="pagination-container">
-                            <div class="pagination-info">
-                                Showing <span>{{ users.start_index }}</span> to <span>{{ users.end_index }}</span> of <span>{{ users.paginator.count }}</span> users
-                            </div>
-                            <div class="pagination-controls">
-                                {% if users.has_previous %}
-                                <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                                    class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px;">Previous</a>
-                                {% else %}
-                                <button type="button" class="btn btn-outline"
-                                    style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; opacity: 0.5; cursor: not-allowed;"
-                                    disabled>Previous</button>
-                                {% endif %}
-
-                                <div class="pagination-page-indicator">
-                                    {{ users.number }} <span>/</span> {{ users.paginator.num_pages }}
-                                </div>
-
-                                {% if users.has_next %}
-                                <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
-                                    class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px;">Next</a>
-                                {% else %}
-                                <button type="button" class="btn btn-outline"
-                                    style="padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; opacity: 0.5; cursor: not-allowed;"
-                                    disabled>Next</button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+            {% endif %}
         </div>
-    </div>
-
-
-    <!-- Sidebar Toggle Script -->
-    <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-
-        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
-        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
-    </script>
-</body>
-
-</html>
+    </form>
+</div>
+{% endblock %}

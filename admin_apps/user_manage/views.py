@@ -6,7 +6,8 @@ from django.db.models import Q, Count, Sum
 from django.core.paginator import Paginator
 from django.contrib import messages
 from user_apps.edit.models import Address
-from user_apps.core.models import Notification, Collection, Product
+from user_apps.core.models import Notification, Collection, Product, Wallet, WalletTransaction
+from decimal import Decimal
 
 User = get_user_model()
 
@@ -130,3 +131,63 @@ def user_profiles(request, user_id):
         'active_menu': 'users'
     }
     return render(request, "user_profiles.html", context)
+
+@superuser_required
+def admin_user_wallet(request, user_id):
+    customer = get_object_or_404(User, id=user_id)
+    wallet, created = Wallet.objects.get_or_create(user=customer)
+    
+    if request.method == "POST":
+        amount = request.POST.get("amount")
+        action_type = request.POST.get("action_type") # 'Credit' or 'Debit'
+        description = request.POST.get("description", "Admin Adjustment")
+        
+        try:
+            amount_dec = Decimal(amount)
+            if amount_dec <= 0:
+                messages.error(request, "Amount must be greater than zero.")
+            else:
+                if action_type == 'Debit' and wallet.balance < amount_dec:
+                    messages.error(request, "Insufficient balance for this debit.")
+                else:
+                    # Update balance
+                    if action_type == 'Credit':
+                        wallet.balance += amount_dec
+                    else:
+                        wallet.balance -= amount_dec
+                    wallet.save()
+                    
+                    # Create transaction record
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type=action_type,
+                        amount=amount_dec,
+                        description=description
+                    )
+                    messages.success(request, f"Successfully {action_type.lower()}ed ₹{amount_dec} to {customer.email}'s wallet.")
+                    return redirect('admin_user_wallet', user_id=user_id)
+        except (ValueError, Decimal.InvalidOperation):
+            messages.error(request, "Invalid amount entered.")
+            
+    transactions = wallet.transactions.all().order_by('-timestamp')
+    
+    context = {
+        'customer': customer,
+        'wallet': wallet,
+        'transactions': transactions,
+        'active_menu': 'wallet',
+    }
+    return render(request, "user_wallat.html", context)
+
+@superuser_required
+def wallet_list(request):
+    wallets = Wallet.objects.select_related('user').annotate(
+        order_count=Count('user__orders'),
+        total_spent=Sum('user__orders__total_amount')
+    ).order_by('-user__created_at')
+    
+    context = {
+        'wallets': wallets,
+        'active_menu': 'wallet',
+    }
+    return render(request, "wallet_list.html", context)

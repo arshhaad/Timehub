@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Master Wallet List - TimeHub Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-overview-container {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Table Styling */
+    .card-overflow {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        background: #f8fafc;
+        padding: 20px 30px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+    }
+
+    .data-table td {
+        padding: 24px 30px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .data-row {
+        transition: var(--transition);
+    }
+
+    .data-row:hover {
+        background: #fcfdfe;
+    }
+
+    /* Customer Info */
+    .customer-cell {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .customer-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #334155;
+        border: 1px solid var(--border-color);
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .customer-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .customer-details .name {
+        display: block;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        margin-bottom: 2px;
+    }
+
+    .customer-details .email {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* Financial Indicators */
+    .balance-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .balance-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #059669;
+        letter-spacing: -0.5px;
+    }
+
+    .order-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .order-count {
+        font-weight: 700;
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    .total-spent {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* Status & Actions */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: var(--radius-pill);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .status-active {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #d1fae5;
+    }
+
+    .status-blocked {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fee2e2;
+    }
+
+    .btn-manage {
+        padding: 8px 18px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        color: #334155;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-manage:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #000;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-title">Wallet List</div>
+{% endblock %}
+
+{% block content %}
+<div class="wallet-overview-container">
+    <div class="card-overflow">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Customer Intelligence</th>
+                        <th style="width: 20%;">Portfolio Balance</th>
+                        <th style="width: 20%;">Interaction Stats</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wallet in wallets %}
+                    <tr class="data-row">
+                        <td>
+                            <div class="customer-cell">
+                                <div class="customer-avatar"
+                                    style="{% if not wallet.user.avatar and not wallet.user.profile.image %}background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); color: #64748b;{% endif %}">
+                                    {% if wallet.user.profile and wallet.user.profile.image %}
+                                    <img src="{{ wallet.user.profile.image.url }}" class="customer-avatar-img" alt="">
+                                    {% elif wallet.user.avatar %}
+                                    <img src="{{ wallet.user.avatar.url }}" class="customer-avatar-img" alt="">
+                                    {% else %}
+                                    {{ wallet.user.first_name|slice:":1"|upper }}{{
+                                    wallet.user.last_name|slice:":1"|upper|default:wallet.user.email|slice:":1"|upper }}
+                                    {% endif %}
+                                </div>
+                                <div class="customer-details">
+                                    <span class="name">{{ wallet.user.get_full_name|default:wallet.user.email }}</span>
+                                    <span class="email">{{ wallet.user.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="balance-wrapper">
+                                <span class="balance-amount">₹{{ wallet.balance }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="order-stats">
+                                <span class="order-count">{{ wallet.order_count }} Orders Processed</span>
+                                <span class="total-spent">Lifetime Value: ₹{{ wallet.total_spent|default:"0.00" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if wallet.user.is_active %}
+                            <span class="status-pill status-active">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="status-pill status-blocked">
+                                <i class="fas fa-ban"></i> Blocked
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_user_wallet' wallet.user.id %}" class="btn-manage">
+                                <i class="fas fa-sliders"></i> Adjust
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div style="padding: 80px 0; text-align: center; color: #94a3b8;">
+                                <i class="fas fa-vault" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.2;"></i>
+                                <p style="font-weight: 600; font-size: 1.1rem;">No wallet data available yet.</p>
+                                <p style="font-size: 0.9rem;">Customer wallets will appear here once they are
+                                    initialized.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

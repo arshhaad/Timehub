@@ -111,10 +111,47 @@
             justify-content: space-between; position: sticky; top: 0; z-index: 10;
         }
         .search-bar {
-            display: flex; align-items: center; background: #f3f4f6;
-            padding: 10px 20px; border-radius: var(--radius-pill); width: 400px; gap: 12px;
+            display: flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            width: 380px;
+            gap: 12px;
+            border: 2px solid transparent;
+            transition: var(--transition);
         }
-        .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-size: .9rem; }
+
+        .search-bar:focus-within {
+            background-color: #ffffff;
+            border-color: #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 420px;
+        }
+
+        .search-bar i {
+            color: #9ca3af;
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within i {
+            color: var(--primary-bg);
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .search-bar input::placeholder {
+            color: #9ca3af;
+        }
+
         .topbar-right { display: flex; align-items: center; gap: 25px; }
         .icon-btn { position: relative; color: #6b7280; font-size: 1.2rem; cursor: pointer; }
         .icon-dot {
@@ -218,10 +255,18 @@
         <div class="sidebar-nav">
             <ul class="nav-list">
                 <li class="sidebar-section-title">Main Menu</li>
-                <li class="nav-item"><a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="#"><i class="fas fa-chart-line"></i> Revenue</a></li>
-                <li class="nav-item"><a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a></li>
-                <li class="nav-item"><a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a></li>
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'sales_report' %}active{% endif %}">
+                    <a href="{% url 'sales_report' %}"><i class="fas fa-chart-line"></i> Sales Report</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a>
+                </li>
                 <li class="nav-item {% if active_menu == 'orders' %}active{% endif %}">
                     <a href="{% url 'admin_order_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
                 </li>
@@ -238,7 +283,7 @@
                 <li class="nav-item {% if active_menu == 'reschedule' %}active{% endif %}">
                     <a href="{% url 'admin_user_reschedule' %}"><i class="fas fa-calendar-alt"></i> Reschedule</a>
                 </li>
-                <li class="nav-item"><a href="#"><i class="fas fa-wallet"></i> Wallet</a></li>
+                <li class="nav-item"><a href="{% url 'wallet_list' %}"><i class="fas fa-wallet"></i> Wallet</a></li>
                 <li class="nav-item"><a href="#"><i class="fas fa-star"></i> Featured</a></li>
             </ul>
             <ul class="nav-list" style="margin-top:30px; border-top:1px solid var(--border-color); padding-top:20px;">
@@ -253,7 +298,10 @@
         <!-- Topbar -->
         <header class="topbar">
             {% block topbar_left %}
-            <!-- Default: empty topbar left (pages override this) -->
+            <form action="{% url 'product_list' %}" method="GET" class="search-bar" id="adminSearchForm">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" id="adminSearchInput" placeholder="Search orders, products, or users..." value="{{ request.GET.q }}">
+            </form>
             {% endblock %}
 
             <div class="topbar-right">
@@ -311,6 +359,7 @@
     function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
     if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
     if (overlay)    overlay.addEventListener('click', toggleSidebar);
+
 
     // Auto-dismiss toasts
     const toastWrap = document.getElementById('toastWrap');

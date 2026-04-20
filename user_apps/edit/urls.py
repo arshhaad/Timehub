@@ -13,6 +13,7 @@ urlpatterns = [
     path('profile/resend-otp/', views.resend_email_otp, name='resend_email_otp'),
     path('account/security/', views.account_edit, name='account_edit'),
     path('notifications/', views.notifications_view, name='user_notifications'),
+    path('profile/wallet/', views.wallet_view, name='user_wallet'),
     
     # Cart
     path('cart/', views.cart_view, name='cart_view'),

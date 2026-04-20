@@ -11,4 +11,5 @@ urlpatterns = [
     path('user-requests/', views.user_requests, name='admin_user_requests'),
     path('user-reschedule/', views.user_reschedule, name='admin_user_reschedule'),
     path('user-reschedule/<int:order_id>/process/', views.process_reschedule, name='process_reschedule'),
+    path('sales-report/', views.sales_report, name='sales_report'),
 ]

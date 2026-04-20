@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from .models import Address
 from .forms import AddressForm, UserEditForm
@@ -11,7 +12,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 import json
 from decimal import Decimal
-from user_apps.core.models import Cart, CartItem, Product, WishlistItem, Wishlist, Order
+from user_apps.core.models import Cart, CartItem, Product, WishlistItem, Wishlist, Order, Wallet, WalletTransaction
 from user_apps.accounts.models import EmailOTP, CustomUser
 from django.core.mail import send_mail
 from django.conf import settings
@@ -503,3 +504,22 @@ def save_for_later(request, item_id):
             'total': str(round(total, 2))
         })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
+@never_cache
+def wallet_view(request):
+    wallet, created = Wallet.objects.get_or_create(user=request.user)
+    transactions = wallet.transactions.all().order_by('-timestamp')
+    
+    # Calculate professional stats
+    total_added = transactions.filter(transaction_type='Credit').aggregate(total=Sum('amount'))['total'] or 0
+    total_spent = transactions.filter(transaction_type='Debit').aggregate(total=Sum('amount'))['total'] or 0
+    
+    context = {
+        'wallet': wallet,
+        'transactions': transactions,
+        'total_added': total_added,
+        'total_spent': total_spent,
+        'active_menu': 'wallet',
+    }
+    return render(request, 'wallat.html', context)

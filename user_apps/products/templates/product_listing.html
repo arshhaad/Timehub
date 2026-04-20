@@ -1738,22 +1738,34 @@
         }
 
         .btn-clear-compare {
-            background: none;
-            border: none;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: 50px;
             font-size: 0.75rem;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1.2px;
+            white-space: nowrap;
         }
 
         .btn-clear-compare:hover {
-            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ff4d4d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-clear-compare i {
+            font-size: 0.85rem;
         }
 
         @media (max-width: 600px) {

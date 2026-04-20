@@ -4,9 +4,16 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from user_apps.core.models import Order, Product, ProductVariant, OrderItem
+from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem
 import json
 from django.http import JsonResponse
+from django.db.models import Sum, Count, Avg, F
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 @login_required
@@ -394,3 +401,96 @@ def process_reschedule(request, order_id):
     if next_url:
         return redirect(next_url)
     return redirect('admin_user_reschedule')
+@login_required
+def sales_report(request):
+    if not request.user.is_superuser:
+        return redirect("dashboard")
+
+    # --- KPIs ---
+    delivered_orders = Order.objects.filter(status='Delivered')
+    total_revenue = delivered_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_orders = Order.objects.exclude(status='Cancelled').count()
+    
+    today = timezone.now().date()
+    today_revenue = Order.objects.filter(
+        status='Delivered', 
+        created_at__date=today
+    ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    aov = delivered_orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0
+
+    # --- Trend Data ---
+    today_dt = timezone.now()
+    ninety_days_ago = today_dt - timedelta(days=90)
+    thirty_days_ago = today_dt - timedelta(days=30)
+    
+    # Daily (Last 30 days)
+    daily_sales = delivered_orders.filter(created_at__gte=thirty_days_ago) \
+        .annotate(day=TruncDay('created_at')) \
+        .values('day') \
+        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
+        .order_by('day')
+
+    # Weekly (Last 90 days)
+    weekly_sales = delivered_orders.filter(created_at__gte=ninety_days_ago) \
+        .annotate(week=TruncWeek('created_at')) \
+        .values('week') \
+        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
+        .order_by('week')
+
+    # Monthly (All time)
+    monthly_sales = delivered_orders.annotate(month=TruncMonth('created_at')) \
+        .values('month') \
+        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
+        .order_by('month')
+
+    # Convert to JSON-friendly format for Chart.js
+    daily_data = {
+        'labels': [s['day'].strftime('%d %b') for s in daily_sales],
+        'revenue': [float(s['revenue']) for s in daily_sales],
+        'counts': [int(s['count']) for s in daily_sales]
+    }
+    weekly_data = {
+        'labels': [s['week'].strftime('Week %W') for s in weekly_sales],
+        'revenue': [float(s['revenue']) for s in weekly_sales],
+        'counts': [int(s['count']) for s in weekly_sales]
+    }
+    monthly_data = {
+        'labels': [s['month'].strftime('%b %Y') for s in monthly_sales],
+        'revenue': [float(s['revenue']) for s in monthly_sales],
+        'counts': [int(s['count']) for s in monthly_sales]
+    }
+
+    # --- Top Selling Products ---
+    top_products = Product.objects.filter(is_deleted=False) \
+        .annotate(
+            units_sold=Sum('orderitem__quantity', filter=Q(orderitem__order__status='Delivered')),
+            contribution=Sum(F('orderitem__price') * F('orderitem__quantity'), filter=Q(orderitem__order__status='Delivered'))
+        ).filter(units_sold__gt=0).order_by('-contribution')[:5]
+
+    # --- Company Metrics ---
+    total_customers = User.objects.filter(is_superuser=False).count()
+    total_products_count = Product.objects.filter(is_deleted=False).count()
+
+    # --- Most Wanted (Wishlist) ---
+    most_wanted = Product.objects.filter(is_deleted=False) \
+        .annotate(wishlist_count=Count('wishlistitem')) \
+        .filter(wishlist_count__gt=0) \
+        .order_by('-wishlist_count')[:5]
+
+    context = {
+        'total_revenue': total_revenue,
+        'today_revenue': today_revenue,
+        'total_orders': total_orders,
+        'total_customers': total_customers,
+        'total_products_count': total_products_count,
+        'aov': aov,
+        'daily_data_json': json.dumps(daily_data),
+        'weekly_data_json': json.dumps(weekly_data),
+        'monthly_data_json': json.dumps(monthly_data),
+        'top_products': top_products,
+        'most_wanted': most_wanted,
+        'active_menu': 'sales_report',
+        'now': timezone.now(),
+    }
+    return render(request, 'order_manage/sales_report.html', context)
