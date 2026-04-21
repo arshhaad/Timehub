@@ -1,4 +1,4 @@
-{% extends 'order_manage/base.html' %}
+{% extends "order_manage/base.html" %}
 
 {% block title %}Process Reschedule - Order #{{ order.id }} - TimeHub{% endblock %}
 
@@ -163,6 +163,22 @@
         margin-top: 6px;
     }
 </style>
+{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <a href="{% url 'admin_user_reschedule' %}">Reschedule Requests</a>
+        <span class="sep">/</span>
+        <span class="curr">Process #{{ order.id }}</span>
+    </div>
+    <form action="{% url 'admin_user_reschedule' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Search reschedules..." value="">
+    </form>
+</div>
 {% endblock %}
 
 {% block content %}

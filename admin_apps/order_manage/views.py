@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem
+from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem, Collection
 import json
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Avg, F
@@ -424,41 +424,88 @@ def sales_report(request):
     ninety_days_ago = today_dt - timedelta(days=90)
     thirty_days_ago = today_dt - timedelta(days=30)
     
-    # Daily (Last 30 days)
+    # Daily Trend (Last 30 days)
     daily_sales = delivered_orders.filter(created_at__gte=thirty_days_ago) \
-        .annotate(day=TruncDay('created_at')) \
-        .values('day') \
-        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
-        .order_by('day')
+        .annotate(date=TruncDay('created_at')) \
+        .values('date') \
+        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
+        .order_by('date')
 
-    # Weekly (Last 90 days)
-    weekly_sales = delivered_orders.filter(created_at__gte=ninety_days_ago) \
-        .annotate(week=TruncWeek('created_at')) \
-        .values('week') \
-        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
-        .order_by('week')
+    daily_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in daily_sales if item['date']}
+    daily_labels, daily_revenue, daily_counts = [], [], []
+    for i in range(30, -1, -1):
+        day = (today_dt - timedelta(days=i)).date()
+        daily_labels.append(day.strftime('%d %b'))
+        if day in daily_dict:
+            daily_revenue.append(float(daily_dict[day]['revenue']))
+            daily_counts.append(daily_dict[day]['counts'])
+        else:
+            daily_revenue.append(0.0)
+            daily_counts.append(0)
 
-    # Monthly (All time)
-    monthly_sales = delivered_orders.annotate(month=TruncMonth('created_at')) \
-        .values('month') \
-        .annotate(revenue=Sum('total_amount'), count=Count('id')) \
-        .order_by('month')
-
-    # Convert to JSON-friendly format for Chart.js
     daily_data = {
-        'labels': [s['day'].strftime('%d %b') for s in daily_sales],
-        'revenue': [float(s['revenue']) for s in daily_sales],
-        'counts': [int(s['count']) for s in daily_sales]
+        "labels": daily_labels,
+        "revenue": daily_revenue,
+        "counts": daily_counts,
     }
+
+    # Weekly Trend (Last 12 weeks)
+    weekly_sales = delivered_orders.filter(created_at__gte=today_dt - timedelta(weeks=12)) \
+        .annotate(date=TruncWeek('created_at')) \
+        .values('date') \
+        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
+        .order_by('date')
+
+    weekly_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in weekly_sales if item['date']}
+    weekly_labels, weekly_revenue, weekly_counts = [], [], []
+    today_week_start = today_dt.date() - timedelta(days=today_dt.date().weekday())
+    for i in range(12, -1, -1):
+        week_start = today_week_start - timedelta(weeks=i)
+        weekly_labels.append(week_start.strftime('Week %W'))
+        if week_start in weekly_dict:
+            weekly_revenue.append(float(weekly_dict[week_start]['revenue']))
+            weekly_counts.append(weekly_dict[week_start]['counts'])
+        else:
+            weekly_revenue.append(0.0)
+            weekly_counts.append(0)
+
     weekly_data = {
-        'labels': [s['week'].strftime('Week %W') for s in weekly_sales],
-        'revenue': [float(s['revenue']) for s in weekly_sales],
-        'counts': [int(s['count']) for s in weekly_sales]
+        "labels": weekly_labels,
+        "revenue": weekly_revenue,
+        "counts": weekly_counts,
     }
+
+    # Monthly Trend (Last 12 months)
+    monthly_sales = delivered_orders.annotate(date=TruncMonth('created_at')) \
+        .values('date') \
+        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
+        .order_by('date')
+
+    monthly_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in monthly_sales if item['date']}
+    monthly_labels, monthly_revenue, monthly_counts = [], [], []
+    today_month_start = today_dt.date().replace(day=1)
+    
+    from datetime import date
+    for i in range(11, -1, -1):
+        target_month = today_month_start.month - i
+        target_year = today_month_start.year
+        while target_month <= 0:
+            target_month += 12
+            target_year -= 1
+        month_start = date(target_year, target_month, 1)
+        
+        monthly_labels.append(month_start.strftime('%b %Y'))
+        if month_start in monthly_dict:
+            monthly_revenue.append(float(monthly_dict[month_start]['revenue']))
+            monthly_counts.append(monthly_dict[month_start]['counts'])
+        else:
+            monthly_revenue.append(0.0)
+            monthly_counts.append(0)
+
     monthly_data = {
-        'labels': [s['month'].strftime('%b %Y') for s in monthly_sales],
-        'revenue': [float(s['revenue']) for s in monthly_sales],
-        'counts': [int(s['count']) for s in monthly_sales]
+        "labels": monthly_labels,
+        "revenue": monthly_revenue,
+        "counts": monthly_counts,
     }
 
     # --- Top Selling Products ---
@@ -478,6 +525,33 @@ def sales_report(request):
         .filter(wishlist_count__gt=0) \
         .order_by('-wishlist_count')[:5]
 
+    # --- Category Distribution ---
+    category_sales = Collection.objects.filter(is_deleted=False) \
+        .annotate(revenue=Sum(F('products__orderitem__price') * F('products__orderitem__quantity'), 
+                              filter=Q(products__orderitem__order__status='Delivered'))) \
+        .filter(revenue__gt=0).order_by('-revenue')
+    
+    category_data = {
+        "labels": [c.name for c in category_sales],
+        "datasets": [{
+            "data": [float(c.revenue) for c in category_sales],
+            "backgroundColor": ['#ff6b00', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4']
+        }]
+    }
+
+    # --- Status Distribution ---
+    status_counts = Order.objects.values('status').annotate(count=Count('id')).order_by('-count')
+    status_data = {
+        "labels": [s['status'] for s in status_counts],
+        "datasets": [{
+            "data": [s['count'] for s in status_counts],
+            "backgroundColor": ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#94a3b8', '#8b5cf6', '#ec4899']
+        }]
+    }
+
+    # --- Recent Transactions ---
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:8]
+
     context = {
         'total_revenue': total_revenue,
         'today_revenue': today_revenue,
@@ -488,9 +562,12 @@ def sales_report(request):
         'daily_data_json': json.dumps(daily_data),
         'weekly_data_json': json.dumps(weekly_data),
         'monthly_data_json': json.dumps(monthly_data),
+        'category_data_json': json.dumps(category_data),
+        'status_data_json': json.dumps(status_data),
+        'recent_orders': recent_orders,
         'top_products': top_products,
         'most_wanted': most_wanted,
-        'active_menu': 'sales_report',
+        'active_menu': 'sales',
         'now': timezone.now(),
     }
     return render(request, 'order_manage/sales_report.html', context)

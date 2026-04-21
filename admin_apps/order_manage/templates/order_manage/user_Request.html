@@ -1,4 +1,4 @@
-{% extends 'order_manage/base.html' %}
+{% extends "order_manage/base.html" %}
 
 {% block title %}User Requests - TimeHub{% endblock %}
 
@@ -20,8 +20,49 @@
         letter-spacing: 0.01em;
         line-height: 1.5;
     }
+    /* ── Toolbar & Premium Search ── */
+    .toolbar {
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        padding: 18px 24px; display: flex; flex-wrap: wrap;
+        gap: 16px; align-items: center; justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: -1px;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .premium-search-container {
+        display: flex; align-items: center;
+        background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 12px; padding: 2px 2px 2px 16px;
+        gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .premium-search-container:focus-within {
+        background: #fff; border-color: #000;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+    }
+    .premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
+    .premium-search-container:focus-within i.search-icon { color: #000; }
+    .premium-search-container input {
+        border: none; background: transparent; outline: none; font-size: .875rem;
+        color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
+    }
+    .premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
+    .search-action-btn {
+        background: #000; color: #fff; border: none;
+        padding: 0 20px; height: 38px; border-radius: 10px;
+        font-size: 0.85rem; font-weight: 700; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+        transition: all 0.2s ease;
+    }
+    .search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
+    .search-action-btn:active { transform: scale(0.98); }
+    .search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
+    .search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
+
     .table-panel {
-        background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;
     }
     .table-responsive {
@@ -59,16 +100,15 @@
 {% endblock %}
 
 {% block topbar_left %}
-<div class="topbar-search">
-    <form method="GET" action="" class="search-bar">
-        {% if query %}
-        <a href="{% url 'admin_user_requests' %}" style="text-decoration: none; display: flex; align-items: center;">
-            <i class="fas fa-times" style="color: #ef4444;"></i>
-        </a>
-        {% else %}
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <span class="curr">User Requests</span>
+    </div>
+    <form action="{% url 'admin_user_requests' %}" method="GET" class="topbar-search">
         <i class="fas fa-search"></i>
-        {% endif %}
-        <input type="text" name="q" placeholder="Search requests by ID, email..." value="{{ query|default:'' }}">
+        <input type="text" name="q" placeholder="Search requests..." value="{{ query|default:'' }}">
     </form>
 </div>
 {% endblock %}
@@ -80,6 +120,25 @@
         <p class="page-desc">Manage return requests, reschedule applications, and view cancellation logs.</p>
     </div>
 </div>
+
+<form action="{% url 'admin_user_requests' %}" method="GET" style="display:contents;">
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="premium-search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" placeholder="Search by order ID or customer..." value="{{ query|default:'' }}">
+                <button type="submit" class="search-action-btn">
+                    <i class="fas fa-magnifying-glass"></i> Search
+                </button>
+            </div>
+        </div>
+        {% if query %}
+        <a href="{% url 'admin_user_requests' %}" style="padding:10px 18px; border-radius:10px; font-weight:700; font-size:0.85rem; background:#f9fafb; border:1px solid var(--border-color); text-decoration:none; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-rotate-left"></i> Reset
+        </a>
+        {% endif %}
+    </div>
+</form>
 
 <div class="table-panel">
     <div class="table-responsive">

@@ -105,6 +105,7 @@ def dashboard(request):
         "low_stock": low_stock,
         "now": now,
         "user": request.user,
+        "active_menu": "dashboard",
     }
     return render(request, "dashboard.html", context)
 
@@ -323,5 +324,6 @@ def admin_profile(request):
         "password_form": password_form,
         "user": user,
         "active_tab": active_tab,
+        "active_menu": "profile",
     }
     return render(request, "admin_profile.html", context)

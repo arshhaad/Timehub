@@ -9,24 +9,54 @@
 .toolbar {
     background: #fff; border: 1px solid var(--border-color);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 18px 24px; display: flex; flex-wrap: wrap;
-    gap: 12px; align-items: center; justify-content: space-between;
+    padding: 20px 24px; display: flex; flex-wrap: wrap;
+    gap: 16px; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 }
-.toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.toolbar-search {
-    display: flex; align-items: center; background: #f3f4f6;
-    border-radius: var(--radius-md); padding: 9px 16px; gap: 10px; min-width: 260px;
+.toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ── Premium Search Box ── */
+.premium-search-container {
+    display: flex; align-items: center;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 2px 2px 2px 16px;
+    gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
-.toolbar-search input { border: none; background: transparent; outline: none; font-size: .875rem; color: var(--text-main); width: 100%; }
-.toolbar-search input::placeholder { color: #9ca3af; }
+.premium-search-container:focus-within {
+    background: #fff; border-color: #000;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+.premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
+.premium-search-container:focus-within i.search-icon { color: #000; }
+.premium-search-container input {
+    border: none; background: transparent; outline: none; font-size: .875rem;
+    color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
+}
+.premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
+
+.search-action-btn {
+    background: #000; color: #fff; border: none;
+    padding: 0 20px; height: 38px; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s ease;
+}
+.search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
+.search-action-btn:active { transform: scale(0.98); }
+.search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
+.search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
+
 .select-filter {
-    padding: 9px 36px 9px 14px; border: 1px solid var(--border-color);
-    border-radius: var(--radius-md); font-size: .875rem; font-weight: 500;
+    padding: 10px 36px 10px 16px; border: 1px solid #e2e8f0;
+    border-radius: 12px; font-size: .875rem; font-weight: 600;
     color: var(--text-main); appearance: none; outline: none; cursor: pointer;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
     transition: var(--transition);
 }
-.select-filter:focus { border-color: var(--primary-bg); box-shadow: 0 0 0 3px rgba(255,107,0,.1); }
+.select-filter:hover { border-color: #cbd5e1; background-color: #f8fafc; }
+.select-filter:focus { border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,.05); }
 
 /* ── Filter tabs ── */
 .filter-tabs-row {
@@ -111,18 +141,17 @@
 {% endblock %}
 
 {% block topbar_left %}
-<form action="{% url 'admin_order_list' %}" method="GET" class="search-bar" id="admin-search-top">
-    {% if query %}
-        <a href="{% url 'admin_order_list' %}" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-            <i class="fas fa-times" style="color:#ef4444; cursor: pointer;"></i>
-        </a>
-    {% else %}
-        <i class="fas fa-search" style="color:#9ca3af; cursor: pointer;" onclick="document.getElementById('admin-search-top').submit()"></i>
-    {% endif %}
-    <input type="text" name="q" placeholder="Search orders, users…" value="{{ query|default:'' }}">
-    {% if status_filter and status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
-    {% if sort and sort != 'newest' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
-</form>
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <span class="curr">Order Management</span>
+    </div>
+    <form action="{% url 'admin_order_list' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Track specific orders..." value="{{ query|default:'' }}">
+    </form>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -137,15 +166,12 @@
 <form method="GET" action="{% url 'admin_order_list' %}" id="filterForm">
     <div class="toolbar">
         <div class="toolbar-left">
-            <div class="toolbar-search">
-                {% if query %}
-                    <a href="{% url 'admin_order_list' %}" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                        <i class="fas fa-times" style="color:#ef4444; cursor: pointer; font-size:.85rem;"></i>
-                    </a>
-                {% else %}
-                    <i class="fas fa-search" style="color:#9ca3af; font-size:.85rem; flex-shrink:0; cursor: pointer;" onclick="document.getElementById('filterForm').submit()"></i>
-                {% endif %}
+            <div class="premium-search-container">
+                <i class="fas fa-search search-icon"></i>
                 <input type="text" name="q" placeholder="Order ID, name or email…" value="{{ query|default:'' }}">
+                <button type="submit" class="search-action-btn">
+                    <i class="fas fa-magnifying-glass"></i> Search
+                </button>
             </div>
             <select name="sort" class="select-filter" onchange="document.getElementById('filterForm').submit()">
                 <option value="newest"      {% if sort == 'newest' or not sort %}selected{% endif %}>Newest First</option>
@@ -155,12 +181,6 @@
             </select>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
-            <button type="submit" class="btn btn-primary" style="padding:9px 20px;">
-                <i class="fas fa-search"></i> Search
-            </button>
-            {% if query or status_filter and status_filter != 'all' or sort and sort != 'newest' %}
-            <a href="{% url 'admin_order_list' %}" class="btn-clear"><i class="fas fa-times"></i> Clear</a>
-            {% endif %}
         </div>
     </div>
 

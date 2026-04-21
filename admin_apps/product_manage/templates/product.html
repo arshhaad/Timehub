@@ -1,1486 +1,613 @@
+{% extends "order_manage/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Products - TimeHub</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Cropper.js -->
+{% block title %}Manage Products - TimeHub{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <span class="curr">Inventory Control</span>
+    </div>
+    <form action="{% url 'product_list' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Global product check..." value="{{ request.GET.q|default:'' }}">
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
     <style>
+        /* Product Specific Styles */
         :root {
-            --bg-color: #fafbfc;
-            --sidebar-width: 260px;
             --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-color: #f3f4f6;
-            --primary-bg: #ff6b00;
-            /* Vibrant orange for clock icon */
-            --primary-text: #ffffff;
             --black-btn: #000000;
-
-            --success-bg: #dcfce7;
-            --success-text: #166534;
-            --danger-bg: #fee2e2;
-            --danger-text: #991b1b;
-            --warning-bg: #ffedd5;
-            --warning-text: #c2410c;
-
             --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-pill: 9999px;
-            --transition: all 0.2s ease;
         }
 
-        /* Mobile Header */
-        .mobile-header {
-            display: none;
-            height: 60px;
-            background: #fff;
-            padding: 0 20px;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 1001;
+        /* ── Toolbar & Premium Search ── */
+        .toolbar {
+            background: #fff; border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            padding: 20px 24px; display: flex; flex-wrap: wrap;
+            gap: 16px; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            margin-bottom: -1px;
         }
+        .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-        .mobile-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            text-decoration: none;
-            color: var(--text-main);
-        }
-
-        .mobile-brand .brand-icon {
-            width: 32px;
-            height: 32px;
-            font-size: 1rem;
-            margin-bottom: 0;
-        }
-
-        .menu-toggle {
-            font-size: 1.2rem;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
-        /* Sidebar Overlay */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(2px);
-            z-index: 99;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        /* Basic Resets */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        .admin-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: #ffffff;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .brand {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 30px 20px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fff;
-            flex-shrink: 0;
-        }
-
-        .brand-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--primary-bg);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
-            transition: var(--transition);
-        }
-
-        .brand-icon:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 15px -3px rgba(255, 107, 0, 0.4);
-        }
-
-        .brand h2 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        /* Scrollbar styling for sidebar */
-        .sidebar-nav::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: #e5e7eb;
-            border-radius: 10px;
-        }
-
-        .nav-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        /* Search Bar Refinement */
-        .search-bar {
-            display: flex;
-            align-items: center;
-            background: #f3f4f6;
-            padding: 10px 20px;
-            border-radius: 10px;
-            width: 400px;
-            gap: 12px;
-            transition: var(--transition);
-            border: 1px solid transparent;
-            text-decoration: none;
-        }
-
-        .search-bar:focus-within {
-            background: #fff;
-            border-color: var(--primary-bg);
-            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.05);
-        }
-
-        .search-bar input {
-            border: none;
-            background: transparent;
-            outline: none;
-            width: 100%;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            font-weight: 500;
-        }
-
-        .search-bar i {
-            color: #9ca3af;
-            font-size: 0.95rem;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.95rem;
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .nav-item a i {
-            font-size: 1.1rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        .nav-item a:hover {
-            background-color: #f9fafb;
-            color: var(--text-main);
-            transform: translateX(4px);
-        }
-
-        .nav-item.active a {
-            background-color: #000;
-            color: #fff;
-            border-radius: 10px;
-        }
-
-        .sidebar-section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #9ca3af;
-            font-weight: 700;
-            margin: 25px 0 15px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Main Content */
-        .main-wrapper {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        .topbar {
-            height: 80px;
-            background: #fff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .icon-btn {
+        .premium-search-container {
+            display: flex; align-items: center;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 12px; padding: 2px 2px 2px 16px;
+            gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: var(--transition);
         }
+        .premium-search-container:focus-within {
+            background: #fff; border-color: #000;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+        .premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
+        .premium-search-container:focus-within i.search-icon { color: #000; }
+        .premium-search-container input {
+            border: none; background: transparent; outline: none; font-size: .875rem;
+            color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
+        }
+        .premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
 
-        .icon-btn:hover {
-            color: var(--text-main);
+        .search-action-btn {
+            background: #000; color: #fff; border: none;
+            padding: 0 20px; height: 38px; border-radius: 10px;
+            font-size: 0.85rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s ease;
         }
+        .search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
+        .search-action-btn:active { transform: scale(0.98); }
+        .search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
+        .search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
 
-        .icon-dot {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
-            border: 2px solid #fff;
-            border-radius: 50%;
-        }
+        /* Tables & UI Components */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-left h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; }
+        .header-left p { color: var(--text-muted); font-weight: 500; }
 
-        .content {
-            padding: 40px;
-            flex: 1;
-        }
+        .table-panel { background: #fff; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
+        .table-responsive { overflow-x: auto; }
+        .prod-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .prod-table th { background: #f8fafc; padding: 16px 24px; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
+        .prod-table td { padding: 18px 24px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; vertical-align: middle; }
+        .prod-table tr:last-child td { border-bottom: none; }
+        .product-thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border-color); }
+        
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        
+        .color-dots { display: flex; gap: 4px; }
+        .color-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
 
-        /* UI Components */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .header-left h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
-        .header-left p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--black-btn);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #1f2937;
-            transform: translateY(-2px);
-        }
-
-        /* Table Panels */
-        .table-panel {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .prod-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        .prod-table th {
-            background: #000000;
-            padding: 16px 24px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .prod-table td {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
-        }
-
-        .prod-table tr:hover {
-            background-color: #fafbfc;
-        }
-
-        .product-thumb {
-            width: 48px;
-            height: 48px;
-            background: #f3f4f6;
-            border-radius: 10px;
-            object-fit: cover;
-        }
-
-        /* Status & Badges */
-        .badge {
-            padding: 4px 12px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .badge-success {
-            background: var(--success-bg);
-            color: var(--success-text);
-        }
-
-        .badge-danger {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-        }
-
-        /* Actions */
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .action-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            color: var(--text-main);
-            border-color: #d1d5db;
-            background: #f9fafb;
-            transform: translateY(-2px);
-        }
-
-        .action-btn.delete:hover {
-            color: #ef4444;
-            border-color: #fecaca;
-            background: #fef2f2;
-        }
+        .action-btns { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .btn-icon:hover { background: #f8fafc; color: var(--text-main); border-color: #cbd5e1; }
+        .btn-icon.edit:hover { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+        .btn-icon.delete:hover { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
 
         /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: #fff; border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { padding: 24px 32px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .modal-header h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+        .close-modal { font-size: 1.25rem; color: #94a3b8; cursor: pointer; transition: 0.2s; }
+        .close-modal:hover { color: var(--text-main); transform: rotate(90deg); }
+        .modal-body { padding: 0; }
 
-        .modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background: #fff;
-            width: 800px;
-            max-width: 95%;
-            border-radius: var(--radius-lg);
-            padding: 32px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .modal-header h2 {
-            font-size: 1.25rem;
-            font-weight: 800;
-        }
-
-        .modal-close {
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
+        /* Modal Tabs */
+        .modal-tabs { display: flex; border-bottom: 1px solid var(--border-color); background: #f8fafc; padding: 0 20px; }
+        .modal-tab { padding: 16px 20px; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; position: relative; transition: 0.2s; }
+        .modal-tab:hover { color: var(--text-main); }
+        .modal-tab.active { color: var(--primary-bg); }
+        .modal-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: var(--primary-bg); border-radius: 3px 3px 0 0; }
+        
+        .tab-panel { display: none; padding: 32px; }
+        .tab-panel.active { display: block; }
 
         /* Form Controls */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; color: #4b5563; }
+        .form-control { padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 0.9rem; font-weight: 500; transition: 0.2s; width: 100%; outline: none; }
+        .form-control:focus { border-color: var(--primary-bg); box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.05); }
+        textarea.form-control { min-height: 100px; resize: vertical; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .image-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .image-slot { aspect-ratio: 1; border: 2px dashed #e5e7eb; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; background: #f8fafc; }
+        .image-slot:hover { border-color: var(--primary-bg); background: #fffcfa; }
+        .image-slot i { font-size: 1.5rem; color: #94a3b8; margin-bottom: 8px; }
+        .image-slot span { font-size: 0.75rem; font-weight: 600; color: #64748b; }
+        .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
 
-        .form-label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-main);
-        }
+        .color-options { display: flex; flex-wrap: wrap; gap: 12px; }
+        .color-chip { position: relative; }
+        .color-chip input { position: absolute; opacity: 0; cursor: pointer; }
+        .color-chip label { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; font-weight: 600; }
+        .color-chip input:checked + label { border-color: var(--primary-bg); background: #fffcfa; color: var(--primary-bg); }
+        .color-indicator { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
 
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            outline: none;
-            transition: var(--transition);
-        }
+        .variant-table { width: 100%; border-collapse: collapse; }
+        .variant-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
+        .variant-table td { padding: 8px; }
 
-        .form-input:focus {
-            border-color: var(--black-btn);
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-        }
+        .modal-footer { padding: 24px 32px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 0; background: #fff; z-index: 10; }
 
-        /* Updated Image Upload UI (No JS Cropper) */
-        .image-upload-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-top: 10px;
-        }
-
-        .image-slot {
-            aspect-ratio: 1;
-            border: 2px dashed #e5e7eb;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            background: #f9fafb;
-            transition: var(--transition);
-        }
-
-        .image-slot:hover {
-            border-color: var(--primary-bg);
-            background: #fff;
-        }
-
-        .image-slot i {
-            font-size: 1.5rem;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-
-        .image-slot p {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .file-input-hidden {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: var(--success-bg);
-            color: var(--success-text);
-        }
-
-        .alert-error {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-        }
-
-        /* Color Selection Chips */
-        .color-section {
-            margin-top: 24px;
-            margin-bottom: 30px;
-        }
-
-        .color-section-header {
-            margin-bottom: 16px;
-        }
-
-        .color-section-header h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: var(--text-main);
-        }
-
-        .color-section-header p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-        }
-
-        .color-checkbox {
-            display: none;
-        }
-
-        .color-chip {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .color-chip:hover {
-            border-color: #d1d5db;
-            background: #f9fafb;
-        }
-
-        .color-checkbox:checked+.color-chip {
-            background: #f9fafb;
-            border-color: #000;
-        }
-
-        .color-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
-        }
-
-        .color-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-main);
-            flex: 1;
-        }
-
-        .check-mark {
-            font-size: 0.8rem;
-            color: #000;
-            display: none;
-        }
-
-        .color-checkbox:checked+.color-chip .check-mark {
-            display: block;
-        }
-
-        /* Color dots in table */
-        .color-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .color-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        /* Responsive Media Queries */
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-wrapper {
-                margin-left: 0;
-            }
-
-            .mobile-header {
-                display: flex;
-            }
-
-            .topbar {
-                padding: 0 20px;
-            }
-        }
+        /* Cropper Tool Styles */
+        #cropperContainer { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        #cropperContainer.active { display: flex; }
+        .cropper-box { width: 100%; max-width: 600px; aspect-ratio: 1; background: #222; border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+        .cropper-actions { display: flex; gap: 16px; }
 
         @media (max-width: 768px) {
-            .topbar {
-                height: 70px;
-            }
-
-            .search-bar {
-                display: none;
-                /* Hide search on very small mobile if space is tight, or adapt */
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .modal-content {
-                padding: 20px;
-                width: 95%;
-            }
-
-            .image-upload-grid {
-                grid-template-columns: 1fr;
-            }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
+            .image-slots { grid-template-columns: 1fr; }
         }
-
-        /* Table Responsiveness */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .prod-table {
-            min-width: 800px;
-        }
-
-        /* ── Modal Tabs ── */
-        .modal-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border-color); margin-bottom: 24px; }
-        .modal-tab { padding: 12px 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: var(--transition); white-space: nowrap; }
-        .modal-tab:hover { color: var(--text-main); }
-        .modal-tab.active { color: var(--text-main); border-bottom-color: #000; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; animation: fadeTab 0.25s ease; }
-        @keyframes fadeTab { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* ── Variant Table ── */
-        .variant-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 12px; }
-        .variant-table th { background: #f9fafb; padding: 10px 12px; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border-color); }
-        .variant-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-        .variant-table input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.82rem; outline: none; background: #fff; transition: var(--transition); }
-        .variant-table input:focus { border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,0.04); }
-        .variant-remove { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #fecaca; background: #fef2f2; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
-        .variant-remove:hover { background: #fee2e2; transform: scale(1.08); }
-        .add-variant-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #f3f4f6; border: 1px dashed #d1d5db; border-radius: 10px; font-weight: 600; font-size: 0.82rem; cursor: pointer; color: var(--text-muted); transition: var(--transition); margin-top: 12px; }
-        .add-variant-btn:hover { border-color: #000; color: #000; background: #fff; }
-
-        /* ── Image Slot Enhancements ── */
-        .image-slot .existing-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-        .image-slot .delete-img-btn { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; background: rgba(239,68,68,0.9); color: #fff; border: none; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; opacity: 0; transition: opacity 0.2s; }
-        .image-slot:hover .delete-img-btn { opacity: 1; }
-        .image-slot .replace-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; text-align: center; font-size: 0.7rem; padding: 4px; opacity: 0; transition: opacity 0.2s; border-radius: 0 0 10px 10px; }
-        .image-slot:hover .replace-label { opacity: 1; }
-
-        /* ── Variants count badge in table ── */
-        .variant-count { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #f0f9ff; color: #0369a1; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
     </style>
-</head>
+{% endblock %}
 
-<body>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Mobile Header -->
-    <header class="mobile-header">
-        <a href="#" class="mobile-brand">
-            <div class="brand-icon">
-                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
-            </div>
-            TimeHub
-        </a>
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fa-solid fa-bars"></i>
+{% block content %}
+    <div class="page-header">
+        <div class="header-left">
+            <h1>Products</h1>
+            <p>Manage your luxury timepiece inventory and listings.</p>
         </div>
-    </header>
+        <button class="btn btn-primary" onclick="openProductModal('add')">
+            <i class="fas fa-plus"></i> Add Product
+        </button>
+    </div>
 
-    <div class="admin-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon">
-                    <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
-                </div>
-                <h2>TimeHub</h2>
-            </div>
-            <div class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="sidebar-section-title">Main Menu</li>
-                    <li class="nav-item">
-                        <a href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#"><i class="fas fa-chart-pie"></i> Revenue</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a href="{% url 'product_list' %}"><i class="fas fa-box"></i> Products</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'category_list' %}"><i class="fas fa-tags"></i> Categories</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_order_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_inventory_list' %}"><i class="fas fa-boxes"></i> Inventory</a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="sidebar-section-title"><i class="fas fa-chart-line"></i> Featured</li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_user_requests' %}"><i class="fas fa-user-clock"></i> User Request</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_user_reschedule' %}"><i class="fas fa-calendar-alt"></i> Reschedule</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'wallet_list' %}"><i class="fas fa-wallet"></i> Wallet</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#"><i class="fas fa-star"></i> Featured</a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list">
-                    <li class="sidebar-section-title">System</li>
-                    <li class="nav-item">
-                        <a href="#"><i class="fas fa-chart-bar"></i> Analytics</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#"><i class="fas fa-bullhorn"></i> Marketing</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_profile' %}"><i class="fas fa-cog"></i> Settings</a>
-                    </li>
-                </ul>
-
-                <ul class="nav-list"
-                    style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <li class="nav-item">
-                        <a href="{% url 'admin_logout' %}" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i>
-                            Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
-
-        <div class="main-wrapper">
-            <header class="topbar">
-                <form action="{% url 'product_list' %}" method="GET" class="search-bar">
-                    {% if query %}
-                    <a href="{% url 'product_list' %}" style="text-decoration: none; display: flex; align-items: center;">
-                        <i class="fas fa-times" style="color: #ef4444;"></i>
-                    </a>
-                    {% else %}
-                    <i class="fas fa-search"></i>
-                    {% endif %}
-                    <input type="text" name="q" value="{{ query|default:'' }}"
-                        placeholder="Search orders, products, or...">
-                </form>
-
-                <div class="topbar-right">
-                    <div class="icon-btn">
-                        <i class="fa-regular fa-comment-dots"></i>
-                    </div>
-                    <div class="icon-btn">
-                        <i class="fa-regular fa-bell"></i>
-                        <span class="icon-dot"></span>
-                    </div>
-
-                    <a href="{% url 'admin_profile' %}" class="admin-profile"
-                        style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
-                        <div class="admin-info" style="text-align: right;">
-                            <span class="admin-name"
-                                style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; line-height: 1.2;">
-                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{
-                                user.email }}{% endif %}
-                            </span>
-                            <span class="admin-role"
-                                style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); display: block;">Super
-                                admin</span>
-                        </div>
-                        <div class="brand-icon"
-                            style="width: 40px; height: 40px; font-size: 0.9rem; margin-bottom: 0; box-shadow: none; flex-shrink: 0;">
-                            {% if user.profile and user.profile.image %}
-                            <img src="{{ user.profile.image.url }}" alt="Admin"
-                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                            {% elif user.avatar %}
-                            <img src="{{ user.avatar.url }}" alt="Admin"
-                                style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                            {% else %}
-                            <div
-                                style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f3f4f6; color: #4b5563; font-weight: 700;">
-                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{
-                                user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </a>
-                </div>
-            </header>
-
-            <main class="content">
-                <div class="page-header">
-                    <div class="header-left">
-                        <h1>Products</h1>
-                        <p>Manage your luxury timepiece inventory and listings.</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="openProductModal('add')">
-                        <i class="fas fa-plus"></i> Add Product
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <form action="{% url 'product_list' %}" method="GET" style="display: contents;">
+                <div class="premium-search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" placeholder="Search products by name, category..." value="{{ query|default:'' }}">
+                    <button type="submit" class="search-action-btn">
+                        <i class="fas fa-magnifying-glass"></i> Search
                     </button>
                 </div>
+            </form>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+        </div>
+    </div>
 
-                {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-                {% endif %}
-
-                <div class="table-panel">
-                    <div class="table-responsive">
-                        <table class="prod-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Category</th>
-                                    <th>Color</th>
-                                    <th>Pricing</th>
-                                    <th>Stock</th>
-                                    <th>Variants</th>
-                                    <th>Status</th>
-                                    <th style="text-align:right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for prod in products %}
-                                <tr>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:12px;">
-                                            {% if prod.image %}
-                                            <img src="{{ prod.image.url }}" class="product-thumb">
-                                            {% else %}
-                                            <div class="product-thumb"
-                                                style="display:flex; align-items:center; justify-content:center; background:#eee;">
-                                                <i class="fas fa-image" style="color:#ccc"></i>
-                                            </div>
-                                            {% endif %}
-                                            <div>
-                                                <div style="font-weight:700;">{{ prod.name }}</div>
-                                                <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{ prod.collection.name|default:"General" }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="color-dots">
-                                            {% for c in prod.colors.all %}
-                                            <div class="color-dot" style="background: {{ c.hex_code }};"
-                                                title="{{ c.name }}"></div>
-                                            {% empty %}
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);">None</span>
-                                            {% endfor %}
-                                        </div>
-                                    </td>
-                                    <td style="font-weight:600;">
-                                        {% if prod.discount_price %}
-                                        <div style="color: var(--text-main);">₹{{ prod.discount_price }}</div>
-                                        <div
-                                            style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">
-                                            ₹{{ prod.price }}</div>
-                                        {% else %}
-                                        ₹{{ prod.price }}
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if prod.stock <= 5 %}
-                                        <div style="color: #ef4444; font-size: 0.75rem; font-weight: 700;">
-                                            <i class="fas fa-exclamation-circle" style="margin-right: 4px;"></i>{{ prod.stock }} Low
-                                        </div>
-                                        {% else %}
-                                        <span style="font-weight: 600; color: var(--text-main);">{{ prod.stock }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% with vc=prod.variants.count %}
-                                        {% if vc > 0 %}
-                                        <span class="variant-count"><i class="fas fa-layer-group"></i> {{ vc }}</span>
-                                        {% else %}
-                                        <span style="font-size:0.75rem; color:var(--text-muted);">—</span>
-                                        {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td>
-                                        {% if prod.is_active %}
-                                        <span class="badge badge-success">Active</span>
-                                        {% else %}
-                                        <span class="badge badge-danger">Disabled</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="action-btns">
-                                        <button class="action-btn"
-                                            onclick="openEditModal('{{ prod.id }}')"
-                                            title="Edit">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-                                        <button class="action-btn delete"
-                                            onclick="confirmDelete('{{ prod.id|escapejs }}', '{{ prod.name|escapejs }}')"
-                                            title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+    <div class="table-panel">
+        <div class="table-responsive">
+            <table class="prod-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Color</th>
+                        <th>Pricing</th>
+                        <th>Stock</th>
+                        <th>Variants</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prod in products %}
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                {% if prod.image %}
+                                <img src="{{ prod.image.url }}" class="product-thumb">
+                                {% else %}
+                                <div class="product-thumb" style="display:flex; align-items:center; justify-content:center; background:#eee;">
+                                    <i class="fas fa-image" style="color:#ccc"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight:700;">{{ prod.name }}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">ID: #{{ prod.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{ prod.collection.name|default:"General" }}</span>
+                        </td>
+                        <td>
+                            <div class="color-dots">
+                                {% for c in prod.colors.all %}
+                                <div class="color-dot" style="background: {{ c.hex_code }};" title="{{ c.name }}"></div>
                                 {% empty %}
-                                <tr>
-                                    <td colspan="8" style="text-align:center; padding: 60px; color:var(--text-muted);">
-                                        No products found. Start by adding a luxury timepiece!
-                                    </td>
-                                </tr>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">None</span>
                                 {% endfor %}
+                            </div>
+                        </td>
+                        <td style="font-weight:600;">
+                            {% if prod.discount_price %}
+                            <div style="color:var(--primary-bg);">₹{{ prod.discount_price }}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-decoration:line-through;">₹{{ prod.price }}</div>
+                            {% else %}
+                            <div>₹{{ prod.price }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="font-weight:700; color:{% if prod.stock < 10 %}#ef4444{% else %}#111827{% endif %};">{{ prod.stock }}</span>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">Units</div>
+                        </td>
+                        <td>
+                             <div style="display:flex; flex-direction:column; gap:2px;">
+                                 {% for variant in prod.variants.all %}
+                                 <span style="font-size:0.7rem; background:#f9fafb; padding:2px 6px; border-radius:4px; border:1px solid #eee;">{{ variant.size }} ({{ variant.stock }})</span>
+                                 {% empty %}
+                                 <span style="font-size:0.7rem; color:var(--text-muted);">No variants</span>
+                                 {% endfor %}
+                             </div>
+                        </td>
+                        <td>
+                            {% if prod.is_active %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
+                            {% else %}
+                            <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-icon edit" onclick="openEditModal({{ prod.id }})" title="Edit Product">
+                                    <i class="fas fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="confirmDelete({{ prod.id }}, '{{ prod.name|escapejs }}')" title="Delete Product">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding: 60px 0; color: var(--text-muted);">
+                            <div style="font-size: 2.5rem; margin-bottom: 20px; opacity: 0.3;"><i class="fas fa-box-open"></i></div>
+                            <div style="font-weight: 800; font-size: 1.2rem; color: var(--text-main); margin-bottom: 8px;">No products found</div>
+                            <p style="font-size: 0.9rem;">
+                                {% if query %}
+                                    We couldn't find anything matching your search.
+                                    <a href="{% url 'product_list' %}" style="color:var(--primary-bg); font-weight:700; text-decoration:none;">Clear Filters</a>
+                                {% else %}
+                                    Your inventory is currently empty.
+                                {% endif %}
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Product Add/Edit Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Product</h3>
+                <i class="fas fa-times close-modal" onclick="closeModal('productModal')"></i>
+            </div>
+            
+            <div class="modal-tabs">
+                <div class="modal-tab active" data-tab="general">General Info</div>
+                <div class="modal-tab" data-tab="specs">Specifications</div>
+                <div class="modal-tab" data-tab="variants">Variants & Stock</div>
+                <div class="modal-tab" data-tab="images">Product Images</div>
+            </div>
+
+            <form id="productForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="formAction" value="add_product">
+                <input type="hidden" name="product_id" id="formProductId">
+                
+                <div class="modal-body">
+                    <!-- General Tab -->
+                    <div id="tab-general" class="tab-panel active">
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label>Product Name</label>
+                                <input type="text" name="name" id="formName" class="form-control" required placeholder="Enter product name...">
+                            </div>
+                            <div class="form-group">
+                                <label>Brand</label>
+                                <input type="text" name="brand" id="formBrand" class="form-control" value="TimeHub" required placeholder="Luxury Brand...">
+                            </div>
+                            <div class="form-group">
+                                <label>Category (Collection)</label>
+                                <select name="collection" id="formCategory" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Base Price (₹)</label>
+                                <input type="number" name="price" id="formPrice" class="form-control" required step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Discounted Price (₹)</label>
+                                <input type="number" name="discount_price" id="formDiscountPrice" class="form-control" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Total Stock (Fallback)</label>
+                                <input type="number" name="stock" id="formStock" class="form-control" required min="0">
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 30px;">
+                                    <input type="checkbox" name="is_active" id="formActive" checked style="width: 18px; height: 18px;">
+                                    Active for Sale
+                                </label>
+                            </div>
+                            <div class="form-group full">
+                                <label>Short Description</label>
+                                <textarea name="description" id="formDesc" class="form-control" required placeholder="Describe the craftsmanship..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Specs Tab -->
+                    <div id="tab-specs" class="tab-panel">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender" id="formGender" class="form-control">
+                                    <option value="Men">Men</option>
+                                    <option value="Women">Women</option>
+                                    <option value="Unisex">Unisex</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Occasion</label>
+                                <select name="occasion" id="formOccasion" class="form-control">
+                                    <option value="Casual">Casual</option>
+                                    <option value="Formal">Formal</option>
+                                    <option value="Sport">Sport</option>
+                                    <option value="Luxury">Luxury</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Function</label>
+                                <select name="function" id="formFunction" class="form-control">
+                                    <option value="Analog">Analog</option>
+                                    <option value="Digital">Digital</option>
+                                    <option value="Chronograph">Chronograph</option>
+                                    <option value="Smart">Smart</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Strap Material</label>
+                                <input type="text" name="strap_material" id="formStrapMaterial" class="form-control" placeholder="e.g. Italian Leather">
+                            </div>
+                            <div class="form-group">
+                                <label>Strap Color</label>
+                                <input type="text" name="strap_color" id="formStrapColor" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Dial Color</label>
+                                <input type="text" name="dial_color" id="formDialColor" class="form-control">
+                            </div>
+                            <div class="form-group full">
+                                <label>Features (Dynamic List)</label>
+                                <textarea name="features" id="formFeatures" class="form-control" placeholder="Water Resistant 50m, Sapphire Glass..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variants Tab -->
+                    <div id="tab-variants" class="tab-panel">
+                         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                             <h4 style="font-size: 0.9rem; font-weight: 700;">Available Colors</h4>
+                             <span style="font-size: 0.75rem; color: var(--text-muted);">Select at least one</span>
+                         </div>
+                         <div class="color-options" style="margin-bottom: 32px;">
+                             {% for c in colors %}
+                             <div class="color-chip">
+                                 <input type="checkbox" name="color_ids" value="{{ c.id }}" id="color_{{ c.id }}" class="color-checkbox">
+                                 <label for="color_{{ c.id }}">
+                                     <div class="color-indicator" style="background: {{ c.hex_code }};"></div>
+                                     {{ c.name }}
+                                 </label>
+                             </div>
+                             {% endfor %}
+                         </div>
+
+                         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="font-size: 0.9rem; font-weight: 700;">Size Variants</h4>
+                            <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.75rem;" onclick="addVariantRow()">+ Add Size</button>
+                        </div>
+                        <table class="variant-table">
+                            <tbody id="variantBody">
+                                <!-- Variant rows go here -->
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Pagination -->
-                    {% if products.paginator.num_pages > 1 %}
-                    <div
-                        style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            Showing {{ products.start_index }} to {{ products.end_index }} of {{ products.paginator.count }} products
+                    <!-- Images Tab -->
+                    <div id="tab-images" class="tab-panel">
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;">Product Photography</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-muted);">Upload up to 3 high-quality images. Recommended resolution: 800x800px (1:1 Ratio).</p>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            {% if products.has_previous %}
-                            <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
-                                class="btn"
-                                style="background:#f3f4f6; padding: 8px 16px; font-size: 0.8rem;">Previous</a>
-                            {% endif %}
-                            <div
-                                style="display: flex; align-items: center; gap: 4px; padding: 0 10px; font-weight: 600;">
-                                {{ products.number }} / {{ products.paginator.num_pages }}
+                        <div class="image-slots">
+                            <div class="image-slot" onclick="document.getElementById('inputSlot1').click()">
+                                <input type="file" id="inputSlot1" style="display:none" accept="image/*" onchange="handleImageInput(event, 1)">
+                                <div id="previewWrap1">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Primary Image</span>
+                                </div>
                             </div>
-                            {% if products.has_next %}
-                            <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
-                                class="btn" style="background:#f3f4f6; padding: 8px 16px; font-size: 0.8rem;">Next</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <!-- Add/Edit Product Modal -->
-    <div class="modal-overlay" id="productModal">
-        <div class="modal-content" style="width:900px;">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New Product</h2>
-                <span class="modal-close" onclick="closeModal('productModal')">&times;</span>
-            </div>
-
-            <!-- Tabs -->
-            <div class="modal-tabs">
-                <div class="modal-tab active" onclick="switchTab('general')"><i class="fas fa-info-circle" style="margin-right:6px;"></i>General</div>
-                <div class="modal-tab" onclick="switchTab('specs')"><i class="fas fa-cogs" style="margin-right:6px;"></i>Specifications</div>
-                <div class="modal-tab" onclick="switchTab('inventory')"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Inventory & Variants</div>
-                <div class="modal-tab" onclick="switchTab('media')"><i class="fas fa-images" style="margin-right:6px;"></i>Media</div>
-            </div>
-
-            <form method="POST" id="productForm" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="action" id="formAction" value="add_product">
-                <input type="hidden" name="product_id" id="formProductId">
-
-                <!-- TAB 1: General Info -->
-                <div class="tab-panel active" id="tab-general">
-                    <div class="form-group">
-                        <label class="form-label">Product Name</label>
-                        <input type="text" name="name" id="formName" class="form-input" placeholder="e.g., Rolex Submariner" required>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Brand</label>
-                            <input type="text" name="brand" id="formBrand" class="form-input" placeholder="TimeHub" value="TimeHub">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Category</label>
-                            <select name="collection_id" id="formCategory" class="form-input" required style="appearance:none;">
-                                <option value="">Select Category</option>
-                                {% for cat in all_categories %}
-                                <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Regular Price (₹)</label>
-                            <input type="number" name="price" id="formPrice" class="form-input" placeholder="0.00" step="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Discount Price (₹) <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Optional)</span></label>
-                            <input type="number" name="discount_price" id="formDiscountPrice" class="form-input" placeholder="0.00" step="0.01">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" id="formDesc" class="form-input" style="height:100px; resize:none;" placeholder="Provide details about the watch..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Key Features <span style="font-weight:normal; color:var(--text-muted); font-size:0.75rem;">(Comma-separated)</span></label>
-                        <input type="text" name="features" id="formFeatures" class="form-input" placeholder="Water Resistant, Sapphire Crystal, Swiss Made">
-                    </div>
-                    <div class="color-section" style="margin-top:16px; margin-bottom:0;">
-                        <div class="color-section-header"><h3>Available Colors</h3><p>Select all colors this watch is available in.</p></div>
-                        <div class="color-grid">
-                            {% for color in all_colors %}
-                            <div class="color-item">
-                                <input type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}" class="color-checkbox">
-                                <label for="color_{{ color.id }}" class="color-chip">
-                                    <span class="color-indicator" style="background: {{ color.hex_code }};"></span>
-                                    <span class="color-name">{{ color.name }}</span>
-                                    <i class="fas fa-check check-mark"></i>
-                                </label>
+                            <div class="image-slot" onclick="document.getElementById('inputSlot2').click()">
+                                <input type="file" id="inputSlot2" style="display:none" accept="image/*" onchange="handleImageInput(event, 2)">
+                                <div id="previewWrap2">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Second View</span>
+                                </div>
                             </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 2: Specifications -->
-                <div class="tab-panel" id="tab-specs">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Gender</label>
-                            <select name="gender" id="formGender" class="form-input" style="appearance:none;">
-                                <option value="Unisex">Unisex</option>
-                                <option value="Men">Men</option>
-                                <option value="Women">Women</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Occasion</label>
-                            <select name="occasion" id="formOccasion" class="form-input" style="appearance:none;">
-                                <option value="Casual">Casual</option>
-                                <option value="Formal">Formal</option>
-                                <option value="Sport">Sport</option>
-                                <option value="Luxury">Luxury</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Function / Movement</label>
-                            <select name="function" id="formFunction" class="form-input" style="appearance:none;">
-                                <option value="Analog">Analog</option>
-                                <option value="Digital">Digital</option>
-                                <option value="Chronograph">Chronograph</option>
-                                <option value="Automatic">Automatic</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Strap Material</label>
-                            <input type="text" name="strap_material" id="formStrapMaterial" class="form-input" placeholder="e.g., Stainless Steel, Leather">
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Strap Color</label>
-                            <input type="text" name="strap_color" id="formStrapColor" class="form-input" placeholder="e.g., Silver, Brown">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Dial Color</label>
-                            <input type="text" name="dial_color" id="formDialColor" class="form-input" placeholder="e.g., Black, Blue">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 3: Inventory & Variants -->
-                <div class="tab-panel" id="tab-inventory">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Base Stock Quantity</label>
-                            <input type="number" name="stock" id="formStock" class="form-input" placeholder="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Status</label>
-                            <div style="display:flex; align-items:center; gap:10px; height:46px;">
-                                <input type="checkbox" name="is_active" id="formActive" checked style="width:20px; height:20px; accent-color:#000;">
-                                <span style="font-size:0.9rem; font-weight:500;">Product is Active</span>
+                            <div class="image-slot" onclick="document.getElementById('inputSlot3').click()">
+                                <input type="file" id="inputSlot3" style="display:none" accept="image/*" onchange="handleImageInput(event, 3)">
+                                <div id="previewWrap3">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Third View</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--border-color);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <div>
-                                <h3 style="font-size:1rem; font-weight:700; margin-bottom:2px;">Product Variants</h3>
-                                <p style="font-size:0.82rem; color:var(--text-muted);">Add variants for different strap/dial combinations with individual stock.</p>
-                            </div>
-                        </div>
-                        <div style="overflow-x:auto;">
-                            <table class="variant-table" id="variantTable">
-                                <thead>
-                                    <tr>
-                                        <th>Strap Material</th>
-                                        <th>Strap Color</th>
-                                        <th>Dial Color</th>
-                                        <th style="width:40px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="variantBody"></tbody>
-                            </table>
-                        </div>
-                        <button type="button" class="add-variant-btn" onclick="addVariantRow()">
-                            <i class="fas fa-plus"></i> Add Variant
-                        </button>
-                    </div>
                 </div>
 
-                <!-- TAB 4: Media -->
-                <div class="tab-panel" id="tab-media">
-                    <label class="form-label">Product Images (Upload up to 3 images)</label>
-                    <div class="image-upload-grid">
-                        <label class="image-slot" for="product_image_1" id="slot-1">
-                            <i class="fas fa-camera" id="icon-1"></i>
-                            <p id="label-1">Main Image</p>
-                            <input type="file" name="product_image_1" id="product_image_1" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 1)">
-                            <div id="preview-1" class="slot-preview"></div>
-                        </label>
-                        <label class="image-slot" for="product_image_2" id="slot-2">
-                            <i class="fas fa-camera" id="icon-2"></i>
-                            <p id="label-2">Side View</p>
-                            <input type="file" name="product_image_2" id="product_image_2" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 2)">
-                            <div id="preview-2" class="slot-preview"></div>
-                        </label>
-                        <label class="image-slot" for="product_image_3" id="slot-3">
-                            <i class="fas fa-camera" id="icon-3"></i>
-                            <p id="label-3">Back/Box</p>
-                            <input type="file" name="product_image_3" id="product_image_3" class="file-input-hidden" accept="image/*" onchange="previewImage(this, 3)">
-                            <div id="preview-3" class="slot-preview"></div>
-                        </label>
-                    </div>
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; padding-top:20px; border-top:1px solid var(--border-color);">
-                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="closeModal('productModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">Create Product</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Cancel</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary">Create Product</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Cropper Modal -->
-    <div class="modal-overlay" id="cropModal" style="z-index:1100;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>Crop Product Image</h2>
-                <span class="modal-close" onclick="cancelCrop()">&times;</span>
-            </div>
-            <div style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.85rem;">
-                Adjust image to fit the square aspect ratio.
-            </div>
-            <div style="width: 100%; height: 400px; background: #000; border-radius: var(--radius-md); overflow: hidden;">
-                <img id="cropImage" src="" style="max-width: 100%; display: block;">
-            </div>
-            <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
-                <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="cancelCrop()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="applyCrop()" style="background: var(--primary-bg);">Crop & Save</button>
-            </div>
+    <!-- Cropper Container -->
+    <div id="cropperContainer">
+        <div class="cropper-box">
+            <img id="cropperImage" src="" alt="To Crop">
+        </div>
+        <div class="cropper-actions">
+            <button class="btn btn-outline" style="background:#fff; color:#000" onclick="cancelCrop()">Discard</button>
+            <button class="btn btn-primary" style="background:var(--primary-bg); border:none" onclick="applyCrop()">Apply Crop</button>
         </div>
     </div>
 
     <!-- Delete Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal-content" style="text-align:center;">
-            <div style="width:64px; height:64px; background:var(--danger-bg); color:var(--danger-text); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin: 0 auto 24px;">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h2 style="font-weight: 800; margin-bottom: 12px;">Delete Product?</h2>
-            <p style="color:var(--text-muted); margin-bottom: 32px;">Delete <strong id="del_prod_name"></strong>? This will archive the product but historical orders will remain.</p>
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px;">
+            <div style="font-size: 3.5rem; color: #ef4444; margin-bottom: 20px;"><i class="fas fa-circle-exclamation"></i></div>
+            <h3 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 8px;">Are you sure?</h3>
+            <p style="color: var(--text-muted); line-height: 1.5; margin-bottom: 30px;">
+                You are about to delete <strong id="del_prod_name" style="color: var(--text-main);">Product Name</strong>. 
+                This action is permanent and cannot be undone.
+            </p>
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete_product">
                 <input type="hidden" name="product_id" id="del_prod_id">
-                <div style="display:flex; justify-content: center; gap: 12px;">
-                    <button type="button" class="btn" style="background:#f3f4f6; color:var(--text-main);" onclick="closeModal('deleteModal')">Cancel</button>
-                    <button type="submit" class="btn" style="background:#ef4444; color:#fff;">Yes, Delete</button>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('deleteModal')" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: #ef4444; flex: 1;">Delete Now</button>
                 </div>
             </form>
         </div>
     </div>
+{% endblock %}
 
-    <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
-
-        function toggleSidebar() { sidebar.classList.toggle('active'); sidebarOverlay.classList.toggle('active'); }
-        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
-        if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
-
+{% block extra_js %}
+        // Modal functions
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // ── Tab Switching ──
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+        // Tab selection
+        document.querySelectorAll('.modal-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
 
-        // ── Image Cropping ──
-        let currentCropper = null, currentSlot = null;
+        // ── Cropper Integration ──
+        let cropper = null;
+        let activeSlot = null;
         const croppedBlobs = new Map();
-        const existingImageIds = new Map(); // slot -> image DB id
+        const existingImageIds = new Set(); // To tracking which existing images to delete
 
-        function previewImage(input, slot) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    currentSlot = slot;
-                    const cropImg = document.getElementById('cropImage');
-                    cropImg.src = e.target.result;
-                    openModal('cropModal');
-                    if (currentCropper) currentCropper.destroy();
-                    currentCropper = new Cropper(cropImg, { aspectRatio: 1, viewMode: 2, autoCropArea: 1 });
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function applyCrop() {
-            if (!currentCropper) return;
-            const canvas = currentCropper.getCroppedCanvas({ width: 800, height: 800 });
-            canvas.toBlob((blob) => {
-                croppedBlobs.set(currentSlot, blob);
-                const url = URL.createObjectURL(blob);
-                showSlotPreview(currentSlot, url, null);
-                closeModal('cropModal');
-            }, 'image/jpeg', 0.9);
+        function handleImageInput(e, slot) {
+            const file = e.target.files[0];
+            if(!file) return;
+            activeSlot = slot;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('cropperImage').src = event.target.result;
+                document.getElementById('cropperContainer').classList.add('active');
+                if(cropper) cropper.destroy();
+                cropper = new Cropper(document.getElementById('cropperImage'), {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                });
+            };
+            reader.readAsDataURL(file);
         }
 
         function cancelCrop() {
-            const fileInput = document.getElementById(`product_image_${currentSlot}`);
-            if (fileInput) fileInput.value = '';
-            closeModal('cropModal');
+            document.getElementById('cropperContainer').classList.remove('active');
+            document.getElementById('inputSlot' + activeSlot).value = '';
         }
 
-        function showSlotPreview(slot, url, imgDbId) {
-            const preview = document.getElementById(`preview-${slot}`);
-            const icon = document.getElementById(`icon-${slot}`);
-            const label = document.getElementById(`label-${slot}`);
-            if (icon) icon.style.display = 'none';
-            if (label) label.style.display = 'none';
+        function applyCrop() {
+            cropper.getCroppedCanvas({width: 800, height: 800}).toBlob(blob => {
+                croppedBlobs.set(activeSlot, blob);
+                const url = URL.createObjectURL(blob);
+                showSlotPreview(activeSlot, url);
+                document.getElementById('cropperContainer').classList.remove('active');
+            }, 'image/jpeg', 0.9);
+        }
 
-            let deleteBtn = '';
-            if (imgDbId) {
-                existingImageIds.set(slot, imgDbId);
-                deleteBtn = `<button type="button" class="delete-img-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteExistingImage(${imgDbId}, ${slot})"><i class="fas fa-times"></i></button>`;
-            }
-            preview.innerHTML = `<img src="${url}" class="existing-preview">${deleteBtn}<div class="replace-label">Click to replace</div>`;
+        function showSlotPreview(slot, url, imageId = null) {
+            const wrap = document.getElementById(`previewWrap${slot}`);
+            wrap.innerHTML = `<img src="${url}" class="preview-img">
+                              <div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); opacity:0; transition:0.2s; display:flex; align-items:center; justify-content:center; z-index:3; color:#fff" class="preview-overlay">
+                                <i class="fas fa-sync-alt"></i>
+                              </div>`;
+            if (imageId) existingImageIds.add(imageId);
         }
 
         function clearSlotPreview(slot) {
-            const preview = document.getElementById(`preview-${slot}`);
-            const icon = document.getElementById(`icon-${slot}`);
-            const label = document.getElementById(`label-${slot}`);
-            preview.innerHTML = '';
-            if (icon) icon.style.display = '';
-            if (label) label.style.display = '';
-            existingImageIds.delete(slot);
+            const wrap = document.getElementById(`previewWrap${slot}`);
+            const text = slot === 1 ? 'Primary Image' : (slot === 2 ? 'Second View' : 'Third View');
+            wrap.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><span>${text}</span>`;
+            document.getElementById(`inputSlot${slot}`).value = '';
         }
 
-        function deleteExistingImage(imgId, slot) {
-            if (!confirm('Remove this image?')) return;
-            fetch(`/adminpanel/products/image/${imgId}/delete/`, {
-                method: 'POST', headers: { 'X-CSRFToken': csrfToken }
-            }).then(r => r.json()).then(d => {
-                if (d.status === 'ok') clearSlotPreview(slot);
-            });
-        }
-
-        // ── Variant Rows ──
-        function addVariantRow(data) {
-            const body = document.getElementById('variantBody');
-            const d = data || {};
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="text" name="variant_strap_material[]" value="${d.strap_material || ''}" placeholder="Leather"></td>
-                <td><input type="text" name="variant_strap_color[]" value="${d.strap_color || ''}" placeholder="Brown"></td>
-                <td><input type="text" name="variant_dial_color[]" value="${d.dial_color || ''}" placeholder="Black">
-                    <input type="hidden" name="variant_id[]" value="${d.id || ''}">
-                </td>
-                <td><button type="button" class="variant-remove" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
-            `;
-            body.appendChild(row);
-        }
-
-        // ── Form Submit ──
+        // ── Form Submit with Blobs ──
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            // Append cropped blobs
             croppedBlobs.forEach((blob, slot) => {
-                formData.set(`product_image_${slot}`, blob, `cropped_${slot}.jpg`);
+                formData.append(`image_slot_${slot}`, blob, `image_${slot}.jpg`);
             });
+            // If editing, handle existing image replacements is usually handled server-side by logic
+            // but we ensure the action is correct
+            
             fetch(window.location.href, {
-                method: 'POST', body: formData,
-                headers: { 'X-CSRFToken': csrfToken }
-            }).then(r => { if (r.redirected) window.location.href = r.url; else window.location.reload(); })
-              .catch(err => { console.error(err); alert("Submission error."); });
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(r => {
+                if(r.ok) window.location.reload();
+                else alert('Failed to save product. Check required fields.');
+            });
         });
+
+        // ── Variant Logic ──
+        function addVariantRow(data = null) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="v_size[]" class="form-control" placeholder="Size (e.g. 42mm)" value="${data ? data.size : ''}" required></td>
+                <td><input type="number" name="v_stock[]" class="form-control" placeholder="Stock" value="${data ? data.stock : '0'}" required min="0"></td>
+                <td style="width: 50px;"><button type="button" class="btn-icon delete" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+            `;
+            document.getElementById('variantBody').appendChild(row);
+        }
 
         // ── Open Add Modal ──
         function openProductModal() {
@@ -1556,7 +683,4 @@
             document.getElementById('del_prod_name').innerText = name;
             openModal('deleteModal');
         }
-    </script>
-</body>
-
-</html>
+{% endblock %}

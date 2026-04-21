@@ -1,231 +1,224 @@
-{% extends 'base.html' %}
+{% extends "order_manage/base.html" %}
 {% load static %}
 
 {% block title %}User Management Registry - TimeHub Admin{% endblock %}
 
 {% block extra_css %}
 <style>
-    .registry-container {
-        animation: fadeIn 0.6s ease-out;
-    }
+    /* ── Page Transition ── */
+    .registry-container { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Table Filter Section */
-    .table-controls {
-        padding: 24px 30px;
+    /* ── Toolbar & Premium Search (Identical to Orders) ── */
+    .toolbar {
+        background: #fff; border: 1px solid var(--border-color);
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        border: 1px solid var(--border-color);
-        background: #ffffff;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 5px;
+        padding: 20px 24px; display: flex; flex-wrap: wrap;
+        gap: 16px; align-items: center; justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
     }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-    .filter-tabs {
-        display: flex;
-        background: #f1f5f9;
-        padding: 4px;
-        border-radius: 12px;
-        gap: 4px;
+    .premium-search-container {
+        display: flex; align-items: center;
+        background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 12px; padding: 2px 2px 2px 16px;
+        gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
     }
+    .premium-search-container:focus-within {
+        background: #fff; border-color: #000;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+    }
+    .premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
+    .premium-search-container:focus-within i.search-icon { color: #000; }
+    .premium-search-container input {
+        border: none; background: transparent; outline: none; font-size: .875rem;
+        color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
+    }
+    .premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
 
+    .search-action-btn {
+        background: #000; color: #fff; border: none;
+        padding: 0 20px; height: 38px; border-radius: 10px;
+        font-size: 0.85rem; font-weight: 700; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+        transition: all 0.2s ease;
+    }
+    .search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
+    .search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
+    .search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
+
+    /* ── Filter Tabs (Identical to Orders) ── */
+    .filter-tabs-row {
+        background: #fff; border-left: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color); padding: 0 24px;
+        display: flex; border-bottom: 1px solid var(--border-color); overflow-x: auto;
+    }
     .filter-tab {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        text-decoration: none;
-        padding: 8px 20px;
-        border-radius: 10px;
-        transition: var(--transition);
+        font-size: .85rem; font-weight: 600; color: var(--text-muted); text-decoration: none;
+        padding: 13px 16px; border-bottom: 2px solid transparent;
+        transition: var(--transition); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
     }
-
     .filter-tab:hover { color: var(--text-main); }
+    .filter-tab.active { color: var(--text-main); border-bottom-color: #000; }
+    .tab-count { background: #f3f4f6; color: var(--text-muted); font-size: .72rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); }
+    .filter-tab.active .tab-count { background: #000; color: #fff; }
 
-    .filter-tab.active {
-        background: #ffffff;
-        color: var(--text-main);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Registry Table Styling */
+    /* ── Table Styling ── */
     .table-panel {
-        background: #fff;
-        border: 1px solid var(--border-color);
-        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-        overflow: hidden;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
-        margin-top: -1px;
+        background: #fff; border: 1px solid var(--border-color);
+        border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden;
     }
-
-    .user-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-    }
-
+    .table-responsive { overflow-x: auto; width: 100%; }
+    .user-table { width: 100%; border-collapse: collapse; text-align: left; }
     .user-table th {
-        background: #f8fafc;
-        padding: 18px 24px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #64748b;
-        border-bottom: 1px solid var(--border-color);
+        background: #fafbfc; padding: 14px 20px; font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color); white-space: nowrap;
     }
+    .user-table td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.875rem; }
+    .user-table tbody tr:hover { background: #fafbfc; }
 
-    .user-table td {
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--border-color);
-        vertical-align: middle;
-        font-size: 0.9rem;
-    }
-
-    .user-table tr:hover { background-color: #fcfdfe; }
-
-    /* Identity Cell */
-    .user-cell {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        text-decoration: none;
-        color: inherit;
-    }
-
-    .user-avatar {
-        width: 42px; height: 42px;
-        border-radius: 12px;
-        object-fit: cover;
-        background: #f1f5f9;
-        flex-shrink: 0;
-    }
-
+    /* ── Identity Cell ── */
+    .user-cell { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
+    .profile-img-wrap { width: 42px; height: 42px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); flex-shrink: 0; }
+    .user-avatar { width: 100%; height: 100%; object-fit: cover; }
     .user-initials {
-        width: 42px; height: 42px;
-        border-radius: 12px;
-        background: var(--primary-bg);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        font-weight: 800;
-        flex-shrink: 0;
+        width: 100%; height: 100%; background: var(--primary-bg); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.9rem; font-weight: 800;
     }
-
     .user-info-name { font-weight: 700; color: var(--text-main); display: block; margin-bottom: 2px; }
     .user-info-id { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
 
-    /* Status Badges */
+    /* ── Status Badges ── */
     .status-badge {
-        padding: 6px 12px;
-        border-radius: var(--radius-pill);
-        font-size: 0.75rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        padding: 5px 12px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700;
+        display: inline-flex; align-items: center; gap: 6px;
     }
+    .s-Active  { background: #ecfdf5; color: #059669; }
+    .s-Blocked { background: #fef2f2; color: #dc2626; }
 
-    .status-active { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
-    .status-blocked { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
-
-    /* Action Buttons */
-    .action-btns { display: flex; gap: 8px; justify-content: flex-end; }
-    
+    /* ── Action Buttons ── */
+    .action-col { display: flex; gap: 8px; justify-content: flex-end; }
     .btn-action {
-        width: 34px; height: 34px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-        background: #fff;
-        color: var(--text-muted);
-        display: flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border-color);
+        background: #fff; color: var(--text-muted); display: flex; align-items: center; justify-content: center;
         text-decoration: none; transition: var(--transition);
     }
-    .btn-action:hover { color: var(--text-main); border-color: #cbd5e1; transform: translateY(-2px); }
-
-    .btn-status {
-        padding: 6px 14px; font-size: 0.75rem; border-radius: 10px; font-weight: 700;
-        border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    .btn-action:hover { color: var(--text-main); border-color: #d1d5db; background: #f9fafb; transform: translateY(-2px); }
+    
+    .btn-status-toggle {
+        padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; font-weight: 700;
+        border: 1px solid var(--border-color); cursor: pointer; background: #fff; transition: var(--transition);
     }
-    .btn-block { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
-    .btn-unblock { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
-    .btn-block:hover { background: #fecaca; }
-    .btn-unblock:hover { background: #d1fae5; }
+    .btn-status-toggle:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
 
-    /* Pagination */
+    /* ── Pagination ── */
     .pagination-container {
         display: flex; justify-content: space-between; align-items: center;
         padding: 24px 30px; border-top: 1px solid var(--border-color);
-        background: #fcfdfe;
     }
     .pagination-info { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
     .pagination-info span { color: var(--text-main); font-weight: 800; }
-    .pagination-controls { display: flex; align-items: center; gap: 12px; }
-    .page-indicator { font-weight: 800; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-color); }
+    .page-btn {
+        width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border-color);
+        background: #fff; color: var(--text-main); font-size: .85rem; font-weight: 600;
+        display: flex; align-items: center; justify-content: center; text-decoration: none; transition: var(--transition);
+    }
+    .page-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .page-indicator { font-weight: 700; font-size: 0.875rem; background: #f3f4f6; padding: 8px 16px; border-radius: 9px; }
+
+    @media (max-width: 1024px) {
+        .toolbar { flex-direction: column; align-items: stretch; }
+        .premium-search-container { min-width: 0; width: 100%; }
+        .topbar-breadcrumb-search { display: none; } /* Hide on mobile to save space */
+    }
 </style>
 {% endblock %}
 
 {% block topbar_left %}
-<div class="topbar-title">Customer Registry</div>
-<div class="topbar-subtitle">Manage and monitor all platform user accounts.</div>
-{% endblock %}
-
-{% block topbar_search %}
-<form action="{% url 'user_list' %}" method="GET" class="search-bar">
-    {% if query %}
-        <a href="{% url 'user_list' %}" style="text-decoration: none; display: flex; align-items: center; padding-right: 5px;">
-            <i class="fas fa-times" style="color: #ef4444; font-size: 0.8rem;"></i>
-        </a>
-    {% else %}
-        <i class="fas fa-search" style="color: var(--text-muted); font-size: 0.9rem;"></i>
-    {% endif %}
-    <input type="text" name="q" placeholder="Search accounts or IDs..." value="{{ query|default:'' }}">
-    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
-</form>
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <span class="curr">Customer Registry</span>
+    </div>
+    <form action="{% url 'user_list' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Quick find identities..." value="{{ query|default:'' }}">
+    </form>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="registry-container">
-    <form method="POST">
-        {% csrf_token %}
-        
-        <div class="table-controls">
-            <div class="filter-tabs">
-                <a href="?status=all{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if not status or status == 'all' %}active{% endif %}">Total Universe</a>
-                <a href="?status=active{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'active' %}active{% endif %}">Active Members</a>
-                <a href="?status=blocked{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if status == 'blocked' %}active{% endif %}">Restricted</a>
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+        <div>
+            <h1 style="font-size:1.8rem; font-weight:800; letter-spacing:-.5px; margin-bottom:4px;">Users</h1>
+            <p style="color:var(--text-muted); font-size:.95rem;">Monitor and manage client identities and engagement metrics.</p>
+        </div>
+    </div>
+
+    <form method="GET" action="{% url 'user_list' %}" id="filterForm">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="premium-search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" placeholder="Search accounts or IDs..." value="{{ query|default:'' }}">
+                    <button type="submit" class="search-action-btn">
+                        <i class="fas fa-magnifying-glass"></i> Search
+                    </button>
+                </div>
             </div>
-            <div class="table-actions">
-                <!-- Add context-specific actions if needed -->
+            <div style="display:flex; gap:10px; align-items:center;">
+                {% if query or status and status != 'all' %}
+                <a href="{% url 'user_list' %}" class="btn-clear" style="padding: 10px 20px; border-radius: 12px; font-weight: 700; background:#f9fafb; border:1px solid var(--border-color); text-decoration:none; color:var(--text-muted); font-size:.85rem;">
+                    <i class="fas fa-rotate-left"></i> Reset
+                </a>
+                {% endif %}
             </div>
         </div>
 
-        <div class="table-panel">
-            <div class="table-responsive">
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;"><input type="checkbox" style="accent-color: #000;"></th>
-                            <th style="width: 30%;">Principal Identity</th>
-                            <th style="width: 20%;">Contact Logic</th>
-                            <th style="width: 10%;">Engagement</th>
-                            <th style="width: 15%;">Commercial Value</th>
-                            <th style="width: 12%;">Status</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for u in users %}
-                        <tr>
-                            <td><input type="checkbox" name="user_ids" value="{{ u.id }}" style="accent-color: #000;"></td>
-                            <td>
-                                <a href="{% url 'user_profiles' u.id %}" class="user-cell">
+        <div class="filter-tabs-row">
+            <a href="?status=all{% if query %}&q={{ query }}{% endif %}" 
+               class="filter-tab {% if not status or status == 'all' %}active{% endif %}">
+                All Identities <span class="tab-count">{{ users.paginator.count }}</span>
+            </a>
+            <a href="?status=active{% if query %}&q={{ query }}{% endif %}" 
+               class="filter-tab {% if status == 'active' %}active{% endif %}">
+                Active
+            </a>
+            <a href="?status=blocked{% if query %}&q={{ query }}{% endif %}" 
+               class="filter-tab {% if status == 'blocked' %}active{% endif %}">
+                Restricted
+            </a>
+        </div>
+    </form>
+
+    <div class="table-panel">
+        <div class="table-responsive">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" style="accent-color: #000;"></th>
+                        <th style="width: 32%;">Principal Identity</th>
+                        <th style="width: 20%;">Contact Details</th>
+                        <th style="width: 12%;">Engagement</th>
+                        <th style="width: 14%;">Lifetime Value</th>
+                        <th style="width: 12%;">Status</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><input type="checkbox" name="user_ids" value="{{ u.id }}" style="accent-color: #000;"></td>
+                        <td>
+                            <a href="{% url 'user_profiles' u.id %}" class="user-cell">
+                                <div class="profile-img-wrap">
                                     {% if u.avatar %}
                                         <img src="{{ u.avatar.url }}" class="user-avatar" alt="">
                                     {% else %}
@@ -233,64 +226,80 @@
                                             {{ u.first_name|slice:":1"|upper }}{{ u.last_name|slice:":1"|upper|default:u.email|slice:":1"|upper }}
                                         </div>
                                     {% endif %}
-                                    <div>
-                                        <span class="user-info-name">{% if u.first_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.email }}{% endif %}</span>
-                                        <span class="user-info-id">ID: #UDR-{{ u.id|stringformat:"05d" }}</span>
-                                    </div>
-                                </a>
-                            </td>
-                            <td>
-                                <div style="font-weight: 700;">{{ u.email }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ u.phone_number }}</div>
-                            </td>
-                            <td><span style="font-weight: 800;">{{ u.order_count|default:0 }}</span> <span style="font-size: 0.7rem; color: var(--text-muted);">Orders</span></td>
-                            <td><span style="font-weight: 800; color: #059669;">₹{{ u.total_spent|default:0|floatformat:2 }}</span></td>
-                            <td>
-                                <span class="status-badge {% if u.is_active %}status-active{% else %}status-blocked{% endif %}">
-                                    <i class="fas fa-{% if u.is_active %}check-circle{% else %}ban{% endif %}"></i>
-                                    {% if u.is_active %}Active{% else %}Blocked{% endif %}
-                                </span>
-                            </td>
-                            <td class="action-btns">
-                                <form method="POST" style="display: inline;">
+                                </div>
+                                <div>
+                                    <span class="user-info-name">{% if u.first_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.email }}{% endif %}</span>
+                                    <span class="user-info-id">ID: #U-{{ u.id|stringformat:"05d" }}</span>
+                                </div>
+                            </a>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-main);">{{ u.email }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top:2px;">{{ u.phone_number|default:"No Phone" }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700;">{{ u.order_count|default:0 }}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">Orders Placed</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 800; color: #059669;">₹{{ u.total_spent|default:0|floatformat:2 }}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if u.is_active %}s-Active{% else %}s-Blocked{% endif %}">
+                                <i class="fas fa-{% if u.is_active %}check-circle{% else %}ban{% endif %}"></i>
+                                {% if u.is_active %}Active{% else %}Blocked{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-col">
+                                <form method="POST" style="display: contents;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="toggle_status">
                                     <input type="hidden" name="user_id" value="{{ u.id }}">
                                     {% if u.is_active %}
-                                        <button type="submit" class="btn-status btn-block"><i class="fas fa-lock"></i></button>
+                                        <button type="submit" class="btn-status-toggle" style="color:#ef4444;" title="Restrict Access"><i class="fas fa-user-slash"></i></button>
                                     {% else %}
-                                        <button type="submit" class="btn-status btn-unblock"><i class="fas fa-unlock"></i></button>
+                                        <button type="submit" class="btn-status-toggle" style="color:#059669;" title="Restore Access"><i class="fas fa-user-check"></i></button>
                                     {% endif %}
                                 </form>
-                                <a href="{% url 'user_profiles' u.id %}" class="btn-action" title="Investigate Profile"><i class="fas fa-search-plus"></i></a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="7" style="text-align: center; padding: 60px; color: #94a3b8;">No records found in current inventory.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if users.paginator.num_pages > 1 %}
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Showing <span>{{ users.start_index }}</span> - <span>{{ users.end_index }}</span> of <span>{{ users.paginator.count }}</span> Identities
-                </div>
-                <div class="pagination-controls">
-                    {% if users.has_previous %}
-                        <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-outline" style="padding: 10px 20px;">Previous</a>
-                    {% endif %}
-                    
-                    <div class="page-indicator">{{ users.number }} <span>/</span> {{ users.paginator.num_pages }}</div>
-
-                    {% if users.has_next %}
-                        <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-outline" style="padding: 10px 20px;">Next</a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
+                                <a href="{% url 'user_profiles' u.id %}" class="btn-action" title="Investigate Record"><i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                            <div style="font-size: 2rem; opacity: 0.3; margin-bottom:12px;"><i class="fas fa-users-slash"></i></div>
+                            No customer records match your filter criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </form>
+
+        {% if users.paginator.num_pages > 1 %}
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing <span>{{ users.start_index }}</span>–<span>{{ users.end_index }}</span> of <span>{{ users.paginator.count }}</span> Identities
+            </div>
+            <div class="pagination-controls" style="display:flex; align-items:center; gap:8px;">
+                {% if users.has_previous %}
+                    <a href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+                {% else %}
+                    <span class="page-btn" style="opacity:0.4; cursor:not-allowed;"><i class="fas fa-chevron-left"></i></span>
+                {% endif %}
+                
+                <div class="page-indicator">{{ users.number }} / {{ users.paginator.num_pages }}</div>
+
+                {% if users.has_next %}
+                    <a href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+                {% else %}
+                    <span class="page-btn" style="opacity:0.4; cursor:not-allowed;"><i class="fas fa-chevron-right"></i></span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
