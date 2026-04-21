@@ -289,6 +289,41 @@ def product_details(request, product_id):
     # Get active variants
     active_variants = product.variants.filter(is_active=True).order_by('id')
     
+    # Extract unique attributes for professional selection
+    strap_colors = []
+    dial_colors = []
+    materials = []
+    
+    seen_strap = set()
+    seen_dial = set()
+    seen_material = set()
+    
+    # Try to map color names to hex codes from Color model
+    from user_apps.core.models import Color
+    color_map = {c.name.lower(): c.hex_code for c in Color.objects.all()}
+    
+    for v in active_variants:
+        if v.strap_color and v.strap_color.strip().lower() not in seen_strap:
+            c_name = v.strap_color.strip()
+            strap_colors.append({
+                'name': c_name,
+                'hex': color_map.get(c_name.lower(), '#888') # Default gray if not found
+            })
+            seen_strap.add(c_name.lower())
+            
+        if v.dial_color and v.dial_color.strip().lower() not in seen_dial:
+            c_name = v.dial_color.strip()
+            dial_colors.append({
+                'name': c_name,
+                'hex': color_map.get(c_name.lower(), '#888')
+            })
+            seen_dial.add(c_name.lower())
+            
+        if v.strap_material and v.strap_material.strip().lower() not in seen_material:
+            m_name = v.strap_material.strip()
+            materials.append(m_name)
+            seen_material.add(m_name.lower())
+
     context = {
         'product': product,
         'images': images,
@@ -297,6 +332,9 @@ def product_details(request, product_id):
         'MAX_QTY': MAX_QTY,
         'savings': savings,
         'active_variants': active_variants,
+        'strap_colors': strap_colors,
+        'dial_colors': dial_colors,
+        'materials': materials,
     }
 
     # Add wishlist status

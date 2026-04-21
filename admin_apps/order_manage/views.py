@@ -221,10 +221,15 @@ def inventory_list(request):
             elif product.stock < 10:
                 total_low += 1
 
+    # Pagination
+    paginator = Paginator(inventory_items, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    inventory_page = paginator.get_page(page_number)
+
     context = {
         'active_menu': 'inventory',
-        'inventory_items': inventory_items,
-        'total_items': len(inventory_items),
+        'inventory_items': inventory_page,
+        'total_items': paginator.count,
         'total_low': total_low,
         'total_out': total_out,
         'search_query': search_query,

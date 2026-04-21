@@ -14,18 +14,21 @@
     
     <style>
         :root {
-            --bg-color: #0b0b0e;
-            --bg-card: #15151a;
-            --bg-card-hover: #1c1c23;
+            --bg-color: #050505;
+            --bg-card: #0f0f12;
+            --bg-card-hover: #16161b;
             --text-main: #ffffff;
-            --text-muted: #9ca3af;
+            --text-muted: #94a3b8;
             --primary-color: #ff6a00;
             --primary-hover: #e05e00;
-            --border-color: #27272a;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --radius-pill: 50px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --radius-md: 14px;
+            --radius-lg: 24px;
+            --radius-pill: 100px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(12px);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -62,7 +65,7 @@
         .breadcrumb a:hover { color: #fff; }
 
         /* PRODUCT GRID */
-        .product-content { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding-bottom: 80px; }
+        .product-content { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; padding: 40px 0 80px; }
 
         /* LEFT GALLERY */
         .gallery-wrapper { display: flex; flex-direction: column; gap: 20px; }
@@ -112,15 +115,31 @@
         .variation-label span:last-child { color: var(--text-muted); }
         
         /* Options Buttons */
-        .options-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .opt-btn { padding: 10px 20px; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); }
-        .opt-btn.active { border-color: var(--primary-color); color: var(--primary-color); background: rgba(255, 106, 0, 0.05); }
+        .options-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .opt-btn { padding: 12px 24px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+        .opt-btn:hover { border-color: rgba(255,255,255,0.2); background: var(--bg-card-hover); }
+        .opt-btn.active { border-color: var(--primary-color); color: #fff; background: rgba(255, 106, 0, 0.1); box-shadow: 0 0 15px rgba(255, 106, 0, 0.1); }
+        .variant-chip { display: flex; flex-direction: column; gap: 4px; }
+        .variant-chip span:last-child { font-size: 0.7rem; opacity: 0.6; }
 
         /* Color Swatches */
-        .color-row { display: flex; gap: 15px; }
-        .color-swatch { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; box-shadow: 0 0 0 2px transparent; transition: var(--transition); position: relative; }
-        
-        .color-swatch.active { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--primary-color); }
+        .color-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 5px; }
+        .color-option { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .color-swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--bg-color); outline: 1px solid var(--border-color); transition: var(--transition); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-option.active .color-swatch { outline: 2px solid var(--primary-color); transform: scale(1.1); }
+        .color-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); }
+        .color-option.active .color-name { color: var(--primary-color); }
+
+        /* Material Chips */
+        .material-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .material-chip { padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); }
+        .material-chip i { font-size: 1.1rem; color: var(--text-muted); }
+        .material-chip.active { border-color: var(--primary-color); background: rgba(255, 106, 0, 0.05); }
+        .material-chip.active i { color: var(--primary-color); }
+        .material-label { display: flex; flex-direction: column; }
+        .material-label span:first-child { font-weight: 700; font-size: 0.9rem; color: #fff; }
+        .material-label span:last-child { font-size: 11px; color: var(--text-muted); }
 
         .actions-row { display: flex; gap: 15px; margin-bottom: 25px; }
         .qty-controls { display: flex; align-items: center; background: #15151a; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; height: 56px;}
@@ -135,7 +154,9 @@
         .wishlist-btn.active { background: #ff4757; color: #fff; }
 
         .buy-now-btn { width: 100%; background: var(--primary-color); color: #000; height: 56px; border-radius: var(--radius-md); font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: var(--transition); box-shadow: 0 10px 20px rgba(255, 106, 0, 0.2); }
-        .buy-now-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 15px 25px rgba(255, 106, 0, 0.3); }
+        .buy-now-btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 15px 25px rgba(255, 106, 0, 0.3); }
+        .buy-now-btn:disabled { background: #1a1a1f; color: #4b5563; cursor: not-allowed; box-shadow: none; transform: none; border: 1px solid var(--border-color); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .trust-badges { display: flex; gap: 30px; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color); }
         .trust-item { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; text-align: center; font-weight: 500; flex: 1; }
@@ -195,38 +216,70 @@
         .footer-bottom { padding-top: 30px; border-top: 1px solid #1c1c23; display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.8rem; }
         .footer-bottom-links { display: flex; gap: 20px; }
 
+        @media (max-width: 1200px) {
+            .product-content { gap: 40px; }
+            .container { padding: 0 24px; }
+        }
+
         @media (max-width: 991px) {
-            .product-content { grid-template-columns: 1fr; gap: 40px; }
-            .product-grid { grid-template-columns: repeat(2, 1fr); }
-            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
-            .main-image-container { height: 450px; }
+            .product-content { grid-template-columns: 1fr; gap: 50px; }
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+            .main-image-container { height: 500px; }
         }
         @media (max-width: 768px) {
             .nav-links { display: none; }
-            .nav-wrap { flex-wrap: wrap; justify-content: space-between; }
-            .nav-actions { flex-wrap: wrap; gap: 10px; }
+            .nav-wrap { padding: 15px 0; }
             .product-title { font-size: 2rem; }
-            .main-image-container { height: 350px; }
+            .price-wrap { font-size: 1.8rem; }
+            .main-image-container { height: 400px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); }
             .action-buttons { flex-direction: column; }
-            .btn { width: 100%; justify-content: center; }
-            .meta-row { flex-wrap: wrap; gap: 10px; }
+            .btn { width: 100%; }
+            .meta-row { gap: 10px; }
             .spec-item { flex-direction: column; gap: 5px; }
             .spec-label { width: 100%; }
             .spec-value { width: 100%; }
             .footer-bottom { flex-direction: column; gap: 20px; text-align: center; }
             .nav-arrows { display: none; }
+            .trust-badges { gap: 15px; flex-wrap: wrap; }
+            .trust-item { flex: 1 1 40%; }
+            
+            /* Sticky Mobile Actions */
+            .mobile-sticky-actions {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: rgba(11, 11, 14, 0.85);
+                backdrop-filter: blur(20px);
+                padding: 16px 20px 30px;
+                border-top: 1px solid var(--border-color);
+                display: flex;
+                gap: 12px;
+                z-index: 1000;
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            }
         }
         @media (max-width: 576px) {
             .product-grid { grid-template-columns: 1fr; }
-            .tabs-nav { flex-wrap: wrap; gap: 10px; }
-            .tab-btn { flex: 1 1 100%; text-align: center; padding: 10px; font-size: 0.9rem; }
-            .container { padding: 0 15px; }
-            .main-image-container { height: 280px; }
-            .thumb-card { width: 60px; height: 60px; }
-            .price { font-size: 1.8rem; }
-            .product-title { font-size: 1.8rem; }
-            .related-section { padding: 40px 0; }
-            .carousel-btn { width: 35px; height: 35px; font-size: 0.8rem; }
+            .tabs-nav { gap: 15px; border-bottom: none; }
+            .tab-btn { flex: 1; padding: 12px 5px; font-size: 0.85rem; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color); }
+            .tab-btn.active::after { display: none; }
+            .tab-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); }
+            .container { padding: 0 16px; }
+            .main-image-container { height: 320px; }
+            .thumb-card { width: 70px; height: 70px; }
+            .product-title { font-size: 1.7rem; }
+            .highlights-section ul { grid-template-columns: 1fr; }
+            .specs-list { grid-template-columns: 1fr; }
+        }
+        
+        .mobile-sticky-actions { display: none; }
+        @media (max-width: 768px) {
+          .mobile-sticky-actions { display: flex; }
+          body { padding-bottom: 100px; }
+          .actions-row, .buy-now-btn { display: none; }
         }
 
         /* Premium Toast Notifications */
@@ -438,46 +491,109 @@
                     {{ product.description|default:"Premium timepiece from TimeHub's exclusive collection. Built with precision and elegance." }}
                 </div>
 
-                <!-- Variations -->
-                <div class="variations">
+                <!-- Professional Variations (3-Tier Selection) -->
+                <div class="variations" id="selection-container">
                     {% if active_variants %}
-                    <div class="variation-group">
-                        <div class="variation-label">
-                            <span>Select Variant</span>
-                            <span style="color:var(--primary-color)" id="selected-variant-label">Base Configuration</span>
+                        <!-- 1. Dial Color Selection -->
+                        {% if dial_colors %}
+                        <div class="variation-group">
+                            <div class="variation-label">
+                                <span>Dial Color</span>
+                                <span id="label-dial" class="selected-val">{{ dial_colors.0.name }}</span>
+                            </div>
+                            <div class="color-row">
+                                {% for dial in dial_colors %}
+                                <div class="color-option {% if forloop.first %}active{% endif %}" 
+                                     data-type="dial" 
+                                     data-value="{{ dial.name }}" 
+                                     onclick="handleSelection('dial', '{{ dial.name }}', this)">
+                                    <div class="color-swatch" style="background-color: {{ dial.hex }};"></div>
+                                    <span class="color-name">{{ dial.name }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div class="options-row" id="variant-options">
-                            <!-- Base product option -->
-                            <button class="opt-btn active" data-variant-id="" data-price="{{ product.discount_price|default:product.price }}" data-old-price="{{ product.price }}" data-stock="{{ product.stock }}">Base Product</button>
-                            
-                            <!-- Product variants -->
-                            {% for variant in active_variants %}
-                            <button class="opt-btn" 
-                                data-variant-id="{{ variant.id }}" 
-                                data-price="{{ variant.effective_discount_price }}" 
-                                data-old-price="{{ variant.effective_price }}" 
-                                data-stock="{{ variant.stock }}">
-                                {% if variant.strap_color %}{{ variant.strap_color }}{% endif %}
-                                {% if variant.dial_color %} - {{ variant.dial_color }}{% endif %}
-                            </button>
-                            {% endfor %}
+                        {% endif %}
+
+                        <!-- 2. Strap Color Selection -->
+                        {% if strap_colors %}
+                        <div class="variation-group">
+                            <div class="variation-label">
+                                <span>Strap Color</span>
+                                <span id="label-strap-color" class="selected-val">{{ strap_colors.0.name }}</span>
+                            </div>
+                            <div class="color-row">
+                                {% for strap in strap_colors %}
+                                <div class="color-option {% if forloop.first %}active{% endif %}" 
+                                     data-type="strap-color" 
+                                     data-value="{{ strap.name }}" 
+                                     onclick="handleSelection('strap-color', '{{ strap.name }}', this)">
+                                    <div class="color-swatch" style="background-color: {{ strap.hex }};"></div>
+                                    <span class="color-name">{{ strap.name }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
+                        {% endif %}
+
+                        <!-- 3. Strap Material Selection -->
+                        {% if materials %}
+                        <div class="variation-group">
+                            <div class="variation-label">
+                                <span>Strap Material</span>
+                                <span id="label-material" class="selected-val">{{ materials.0 }}</span>
+                            </div>
+                            <div class="material-row">
+                                {% for mat in materials %}
+                                <div class="material-chip {% if forloop.first %}active{% endif %}" 
+                                     data-type="material" 
+                                     data-value="{{ mat }}" 
+                                     onclick="handleSelection('material', '{{ mat }}', this)">
+                                    <i class="fas {% if 'Leather' in mat %}fa-ribbon{% elif 'Steel' in mat %}fa-link{% else %}fa-clock{% endif %}"></i>
+                                    <div class="material-label">
+                                        <span>{{ mat }}</span>
+                                        <span>Premium Build</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     {% else %}
-                    <!-- Strap Material -->
-                    {% if product.strap_material %}
-                    <div class="variation-group">
-                        <div class="variation-label">
-                            <span>Strap Material</span>
-                            <span>{{ product.strap_material }}</span>
+                        <!-- Single Product Display -->
+                        <div class="variation-group">
+                            <div class="variation-label">
+                                <span>Specifications</span>
+                                <span>Standard Edition</span>
+                            </div>
+                            <div class="material-row">
+                                <div class="material-chip active">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div class="material-label">
+                                        <span>{{ product.strap_color|default:"Standard Color" }}</span>
+                                        <span>{{ product.strap_material|default:"Premium Material" }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="options-row">
-                            <button class="opt-btn active">{{ product.strap_material }}</button>
-                        </div>
-                    </div>
-                    {% endif %}
                     {% endif %}
                 </div>
+
+                <script id="variants-data" type="application/json">
+                    [
+                        {% for v in active_variants %}
+                        {
+                            "id": "{{ v.id }}",
+                            "dial": "{{ v.dial_color|default:''|escapejs }}",
+                            "strap": "{{ v.strap_color|default:''|escapejs }}",
+                            "material": "{{ v.strap_material|default:''|escapejs }}",
+                            "price": "{{ v.effective_discount_price }}",
+                            "old_price": "{{ v.effective_price }}",
+                            "stock": {{ v.stock }}
+                        }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                </script>
 
                 <!-- Actions -->
                 <div class="actions-row">
@@ -498,7 +614,7 @@
                 </div>
 
                 <button class="buy-now-btn" onclick="window.buyNow({{ product.id }});" {% if product.stock == 0 %}disabled{% endif %}>
-                    {% if product.stock > 0 %}Buy Now{% else %}Unavailable{% endif %}
+                    {% if product.stock > 0 %}Buy Now{% else %}Out of Stock{% endif %}
                 </button>
 
                 <!-- Trust Badges -->
@@ -609,8 +725,16 @@
 
         </div><!-- end tabs-container -->
     </div><!-- end container -->
-    <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Mobile Sticky Actions -->
+    <div class="mobile-sticky-actions">
+        <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px;">
+            <div style="font-size: 1.2rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.discount_price|default:product.price }}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.discount_price %}₹{{ product.price }}{% endif %}</div>
+        </div>
+        <button class="btn btn-primary" style="flex: 1; border-radius: 12px; height: 50px; font-size: 0.9rem;" onclick="window.addToCart({{ product.id }});" id="sticky-cart-btn">
+            <i class="fas fa-shopping-cart"></i> Add to Cart
+        </button>
+    </div>
 
     <footer>
         <div class="container">
@@ -838,64 +962,205 @@
             .catch(err => showToast('Please login to modify your wishlist.', 'error'));
         };
 
-        // --- Variant Selection Logic ---
+        // --- Professional Multi-Attribute Selection Logic ---
+        let variants = [];
+        try {
+            variants = JSON.parse(document.getElementById('variants-data').textContent);
+        } catch (e) {
+            console.error("Failed to parse variants data", e);
+        }
+
+        let selectedState = {
+            dial: '{% if dial_colors %}{{ dial_colors.0.name|escapejs }}{% endif %}',
+            strapColor: '{% if strap_colors %}{{ strap_colors.0.name|escapejs }}{% endif %}',
+            material: '{% if materials %}{{ materials.0|escapejs }}{% endif %}'
+        };
+
         let selectedVariantId = '';
-        const variantOptions = document.querySelectorAll('#variant-options .opt-btn');
-        
-        variantOptions.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Remove active class from all
-                variantOptions.forEach(b => b.classList.remove('active'));
-                // Add active class to clicked
-                this.classList.add('active');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (variants.length > 0) {
+                updateSelection();
+            }
+        });
+
+        window.handleSelection = function(type, value, element) {
+            // Update active state in UI
+            const group = element.parentElement;
+            group.querySelectorAll('.color-option, .material-chip').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            // Update state
+            if (type === 'dial') {
+                selectedState.dial = value;
+                document.getElementById('label-dial').textContent = value;
+            } else if (type === 'strap-color') {
+                selectedState.strapColor = value;
+                document.getElementById('label-strap-color').textContent = value;
+            } else if (type === 'material') {
+                selectedState.material = value;
+                document.getElementById('label-material').textContent = value;
+            }
+
+            updateSelection();
+        };
+
+        function updateSelection() {
+            // Find perfect match
+            let match = variants.find(v => 
+                v.dial === selectedState.dial && 
+                v.strap === selectedState.strapColor && 
+                v.material === selectedState.material
+            );
+
+            // If no perfect match, find best match (e.g. keep dial and material, find any strap color)
+            // This prevents the UI from "breaking" if a user picks an invalid combo
+            if (!match) {
+                match = variants.find(v => v.dial === selectedState.dial && v.material === selectedState.material) ||
+                        variants.find(v => v.dial === selectedState.dial) ||
+                        variants[0];
                 
-                selectedVariantId = this.dataset.variantId || '';
-                const newPrice = this.dataset.price;
-                const oldPrice = this.dataset.oldPrice;
-                const newStock = parseInt(this.dataset.stock) || 0;
-                
-                // Update specific product values if it's not base
-                document.getElementById('selected-variant-label').textContent = this.textContent.trim() || 'Base Configuration';
-                
-                // Update Prices
-                document.getElementById('main-price').textContent = '₹' + newPrice;
-                if(oldPrice && oldPrice !== newPrice) {
-                    document.getElementById('old-price').textContent = '₹' + oldPrice;
-                    document.getElementById('old-price').style.display = 'inline-block';
-                    const savings = oldPrice - newPrice;
-                    document.getElementById('savings-badge').textContent = `Save ₹${savings}`;
-                    document.getElementById('savings-badge').style.display = 'inline-flex';
+                // Update state to the matched variant's attributes to keep UI in sync
+                selectedState.dial = match.dial;
+                selectedState.strapColor = match.strap;
+                selectedState.material = match.material;
+                syncUIToState();
+            }
+
+            selectedVariantId = match.id;
+            updateVariantUI(match);
+            updateAvailability();
+        }
+
+        function syncUIToState() {
+            // Update labels
+            if (document.getElementById('label-dial')) document.getElementById('label-dial').textContent = selectedState.dial;
+            if (document.getElementById('label-strap-color')) document.getElementById('label-strap-color').textContent = selectedState.strapColor;
+            if (document.getElementById('label-material')) document.getElementById('label-material').textContent = selectedState.material;
+
+            // Update active classes
+            document.querySelectorAll('.color-option, .material-chip').forEach(el => {
+                const type = el.dataset.type;
+                const val = el.dataset.value;
+                if ((type === 'dial' && val === selectedState.dial) ||
+                    (type === 'strap-color' && val === selectedState.strapColor) ||
+                    (type === 'material' && val === selectedState.material)) {
+                    el.classList.add('active');
                 } else {
-                    document.getElementById('old-price').style.display = 'none';
-                    document.getElementById('savings-badge').style.display = 'none';
-                }
-                
-                // Update Stock
-                const stockBadge = document.getElementById('stock-badge');
-                if(newStock > 0) {
-                    stockBadge.className = 'stock-label stock-in';
-                    stockBadge.textContent = `In Stock (${newStock})`;
-                    document.querySelector('.add-cart-btn').disabled = false;
-                    document.querySelector('.add-cart-btn').innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
-                    document.querySelector('.buy-now-btn').disabled = false;
-                    document.querySelector('.buy-now-btn').textContent = 'Buy Now';
-                } else {
-                    stockBadge.className = 'stock-label stock-out';
-                    stockBadge.textContent = 'Out of Stock';
-                    document.querySelector('.add-cart-btn').disabled = true;
-                    document.querySelector('.add-cart-btn').innerHTML = '<i class="fas fa-shopping-cart"></i> Sold Out';
-                    document.querySelector('.buy-now-btn').disabled = true;
-                    document.querySelector('.buy-now-btn').textContent = 'Unavailable';
-                }
-                
-                // Reset Qty input bound to max stock
-                const qtyInput = document.getElementById('qtyInput');
-                if (qtyInput) {
-                    qtyInput.value = 1;
-                    qtyInput.max = newStock;
+                    el.classList.remove('active');
                 }
             });
-        });
+        }
+
+        function updateVariantUI(variant) {
+            // Prices
+            updatePriceUI(variant.price, variant.old_price);
+            
+            // Stock
+            updateStockUI(variant.stock);
+            
+            // Sync with quantity input
+            if (qtyInput) {
+                qtyInput.value = 1;
+                qtyInput.max = Math.min(variant.stock, MAX_CART_LIMIT);
+            }
+        }
+
+        function updateAvailability() {
+            // Logic to dim/disable combinations that don't exist OR are out of stock
+            document.querySelectorAll('.color-option[data-type="strap-color"]').forEach(el => {
+                const val = el.dataset.value;
+                const variants_with_strap = variants.filter(v => v.dial === selectedState.dial && v.strap === val && v.material === selectedState.material);
+                const exists = variants_with_strap.length > 0;
+                const has_stock = variants_with_strap.some(v => v.stock > 0);
+                
+                el.style.opacity = exists ? (has_stock ? '1' : '0.4') : '0.1';
+                el.style.pointerEvents = exists ? 'auto' : 'none';
+                el.title = exists ? (has_stock ? '' : 'Out of Stock') : 'Not Available';
+            });
+
+            document.querySelectorAll('.material-chip').forEach(el => {
+                const val = el.dataset.value;
+                const variants_with_mat = variants.filter(v => v.dial === selectedState.dial && v.strap === selectedState.strapColor && v.material === val);
+                const exists = variants_with_mat.length > 0;
+                const has_stock = variants_with_mat.some(v => v.stock > 0);
+                
+                el.style.opacity = exists ? (has_stock ? '1' : '0.4') : '0.1';
+                el.style.pointerEvents = exists ? 'auto' : 'none';
+                el.title = exists ? (has_stock ? '' : 'Out of Stock') : 'Not Available';
+            });
+        }
+
+        function updatePriceUI(newPrice, oldPrice) {
+            const mainPriceEl = document.getElementById('main-price');
+            const stickyPriceEl = document.getElementById('sticky-price');
+            const oldPriceEl = document.getElementById('old-price');
+            const stickyOldPriceEl = document.getElementById('sticky-old-price');
+            const savingsBadge = document.getElementById('savings-badge');
+
+            if (mainPriceEl) mainPriceEl.textContent = '₹' + newPrice;
+            if (stickyPriceEl) stickyPriceEl.textContent = '₹' + newPrice;
+
+            if (oldPrice && oldPrice !== newPrice) {
+                const savings = parseFloat(oldPrice) - parseFloat(newPrice);
+                if (oldPriceEl) {
+                    oldPriceEl.textContent = '₹' + oldPrice;
+                    oldPriceEl.style.display = 'inline-block';
+                }
+                if (stickyOldPriceEl) {
+                    stickyOldPriceEl.textContent = '₹' + oldPrice;
+                    stickyOldPriceEl.style.display = 'inline-block';
+                }
+                if (savingsBadge && savings > 0) {
+                    savingsBadge.textContent = `Save ₹${savings.toFixed(0)}`;
+                    savingsBadge.style.display = 'inline-flex';
+                } else if (savingsBadge) {
+                    savingsBadge.style.display = 'none';
+                }
+            } else {
+                if (oldPriceEl) oldPriceEl.style.display = 'none';
+                if (stickyOldPriceEl) stickyOldPriceEl.style.display = 'none';
+                if (savingsBadge) savingsBadge.style.display = 'none';
+            }
+        }
+
+        function updateStockUI(stockCount) {
+            const stockBadge = document.getElementById('stock-badge');
+            const cartBtns = [document.querySelector('.add-cart-btn'), document.getElementById('sticky-cart-btn')];
+            const buyBtn = document.querySelector('.buy-now-btn');
+
+            if (stockCount > 0) {
+                if (stockBadge) {
+                    stockBadge.className = 'stock-label stock-in';
+                    stockBadge.textContent = `In Stock (${stockCount})`;
+                }
+                cartBtns.forEach(btn => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+                    }
+                });
+                if (buyBtn) {
+                    buyBtn.disabled = false;
+                    buyBtn.textContent = 'Buy Now';
+                }
+            } else {
+                if (stockBadge) {
+                    stockBadge.className = 'stock-label stock-out';
+                    stockBadge.textContent = 'Out of Stock';
+                }
+                cartBtns.forEach(btn => {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-shopping-cart"></i> Sold Out';
+                    }
+                });
+                if (buyBtn) {
+                    buyBtn.disabled = true;
+                    buyBtn.textContent = 'Unavailable';
+                }
+            }
+        }
 
         // --- Cart Logic ---
         window.addToCart = function(productId, btnElement = null) {

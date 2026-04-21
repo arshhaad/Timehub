@@ -4,100 +4,143 @@
 {% block title %}Inventory Management - TimeHub{% endblock %}
 
 {% block extra_css %}
-/* ── Page Header ── */
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
-.page-header h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
-.page-header p { color: var(--text-muted); font-size: 0.9rem; }
+<style>
+    /* ── Pop-in Animation ── */
+    @keyframes cardPopIn {
+        0%   { opacity: 0; transform: translateY(20px) scale(0.97); }
+        60%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
+        100% { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
 
-/* ── Metrics Cards ── */
-.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-.metric-card { background: #fff; padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 20px; transition: var(--transition); }
-.metric-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-.metric-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
-.metric-icon.blue { background: #dbeafe; color: #1e40af; }
-.metric-icon.orange { background: #ffedd5; color: #c2410c; }
-.metric-icon.red { background: #fee2e2; color: #991b1b; }
-.metric-info h3 { font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
-.metric-info span { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* ── Page Header ── */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 35px; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .page-header p { color: var(--text-muted); font-size: 0.95rem; }
 
-/* ── Inventory Table ── */
-.btn-delete-small { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; font-size: 1rem; color: #ef4444; cursor: pointer; transition: all 0.2s; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
-.btn-delete-small:hover { background: #fee2e2; }
+    /* ── Metrics Cards ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+    .metric-card {
+        background: #fff; padding: 24px; border-radius: var(--radius-lg); 
+        border: 1px solid var(--border-color); display: flex; align-items: center; gap: 24px; 
+        transition: var(--transition); animation: cardPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .metric-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); border-color: #e5e7eb; }
+    .metric-card:nth-child(1) { animation-delay: 0.05s; }
+    .metric-card:nth-child(2) { animation-delay: 0.1s; }
+    .metric-card:nth-child(3) { animation-delay: 0.15s; }
 
-/* ── Toolbar & Premium Search ── */
-.toolbar {
-    background: #fff; border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 20px 24px; display: flex; flex-wrap: wrap;
-    gap: 16px; align-items: center; justify-content: space-between;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-    margin-bottom: -1px;
-}
-.toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .metric-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .metric-icon.blue { background: #eff6ff; color: #3b82f6; }
+    .metric-icon.orange { background: #fff7ed; color: #f97316; }
+    .metric-icon.red { background: #fef2f2; color: #ef4444; }
+    
+    .metric-info h3 { font-size: 2rem; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+    .metric-info span { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
 
-.premium-search-container {
-    display: flex; align-items: center;
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 12px; padding: 2px 2px 2px 16px;
-    gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-.premium-search-container:focus-within {
-    background: #fff; border-color: #000;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
-}
-.premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
-.premium-search-container:focus-within i.search-icon { color: #000; }
-.premium-search-container input {
-    border: none; background: transparent; outline: none; font-size: .875rem;
-    color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
-}
-.premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
+    /* ── Toolbar & Premium Search ── */
+    .toolbar-form { margin-bottom: 30px; }
+    .toolbar {
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg); padding: 12px 12px 12px 24px; 
+        display: flex; gap: 16px; align-items: center; justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+    }
+    
+    .premium-search-container {
+        display: flex; align-items: center; background: #f9fafb; 
+        border: 1px solid #e5e7eb; border-radius: 12px; padding: 2px 2px 2px 18px;
+        gap: 12px; min-width: 400px; transition: var(--transition);
+    }
+    .premium-search-container:focus-within {
+        background: #fff; border-color: #000;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); transform: translateY(-1px);
+    }
+    .premium-search-container i { color: #9ca3af; font-size: 1rem; }
+    .premium-search-container input {
+        border: none; background: transparent; outline: none; height: 42px;
+        width: 100%; font-size: 0.9rem; font-weight: 500; color: var(--text-main);
+    }
 
-.search-action-btn {
-    background: #000; color: #fff; border: none;
-    padding: 0 20px; height: 38px; border-radius: 10px;
-    font-size: 0.85rem; font-weight: 700; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    transition: all 0.2s ease;
-}
-.search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
-.search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
-.search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
+    .search-action-btn {
+        background: #000; color: #fff; border: none; padding: 0 24px; 
+        height: 42px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; 
+        cursor: pointer; display: flex; align-items: center; gap: 8px; transition: var(--transition);
+    }
+    .search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
 
-.card-table { background: #fff; border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
-.table-responsive { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; min-width: 800px; }
-.table th { background: #f9fafb; padding: 16px 24px; text-align: left; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
-.table td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-.table tbody tr:last-child td { border-bottom: none; }
-.table tbody tr:hover { background: #fdfdfd; }
+    /* ── Inventory Table ── */
+    .table-responsive { 
+        overflow-x: auto; 
+        width: 100%; 
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    .table th { background: #f9fafb; padding: 18px 24px; font-weight: 700; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .table td { padding: 20px 24px; border-bottom: 1px solid var(--border-color); vertical-align: middle; transition: var(--transition); }
+    .table tbody tr:hover td { background: #fafafa; }
 
-/* Product Info */
-.product-cell { display: flex; align-items: center; gap: 14px; }
-.product-img { width: 48px; height: 48px; border-radius: 10px; background: #f3f4f6; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#d1d5db; }
-.product-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: block; margin-bottom: 2px; }
-.product-variant { font-size: 0.8rem; color: var(--text-muted); }
+    .product-cell { display: flex; align-items: center; gap: 16px; }
+    .product-img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); }
+    .product-name { font-weight: 700; font-size: 1rem; color: var(--text-main); display: block; }
+    .product-variant { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; display: block; }
 
-/* Stock Controls */
-.stock-badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
-.stock-badge.safe { background: var(--success-bg); color: var(--success-text); }
-.stock-badge.low { background: var(--warning-bg); color: var(--warning-text); }
-.stock-badge.out { background: var(--danger-bg); color: var(--danger-text); }
+    .stock-badge { 
+        padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; 
+        display: inline-flex; align-items: center; gap: 6px; 
+    }
+    .stock-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .stock-badge.safe { background: #f0fdf4; color: #166534; }
+    .stock-badge.safe::before { background: #22c55e; }
+    .stock-badge.low  { background: #fff7ed; color: #9a3412; }
+    .stock-badge.low::before  { background: #f97316; }
+    .stock-badge.out  { background: #fef2f2; color: #991b1b; }
+    .stock-badge.out::before  { background: #ef4444; }
 
-.stock-control { display: inline-flex; align-items: center; background: #f3f4f6; border-radius: var(--radius-md); border: 1px solid var(--border-color); overflow: hidden; }
-.btn-stock { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
-.btn-stock:hover { background: #e5e7eb; }
-.stock-input { width: 50px; height: 32px; border: 1px solid var(--border-color); text-align: center; font-weight: 700; font-size: 0.9rem; background: #fff; border-radius: 4px; -moz-appearance: textfield; }
-.stock-input::-webkit-outer-spin-button, .stock-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    /* ── Stock Controls ── */
+    .stock-control { display: inline-flex; align-items: center; background: #f3f4f6; border-radius: 12px; padding: 4px; gap: 4px; }
+    .btn-stock { 
+        width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; 
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; 
+        transition: var(--transition); font-size: 0.8rem; color: var(--text-main);
+    }
+    .btn-stock:hover { border-color: #000; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .btn-stock:active { transform: scale(0.95); }
+    
+    .stock-input { 
+        width: 60px; height: 32px; border: none; background: transparent; 
+        text-align: center; font-weight: 800; font-size: 0.95rem; color: var(--text-main);
+    }
+    .stock-input::-webkit-inner-spin-button { display: none; }
 
-.btn-delete-small { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; font-size: 1rem; color: #ef4444; cursor: pointer; transition: all 0.2s; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
-.btn-delete-small:hover { background: #fee2e2; }
+    .badge-select { 
+        padding: 8px 12px; border-radius: 10px; border: 1px solid #e5e7eb; 
+        background: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; 
+    }
+    .btn-delete-small {
+        width: 38px; height: 38px; border-radius: 10px; background: #fff;
+        border: 1px solid #fee2e2; color: #ef4444; cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .btn-delete-small:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-@media (max-width: 992px) {
-    .metrics-grid { grid-template-columns: 1fr; gap: 16px; }
-}
+    @media (max-width: 992px) {
+        .metrics-grid { grid-template-columns: 1fr; }
+        .premium-search-container { min-width: 100%; }
+        .toolbar { flex-direction: column; align-items: stretch; }
+    }
+
+    /* ── Pagination ── */
+    .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; background: #fff; }
+    .pagination-info { font-size: .85rem; color: var(--text-muted); font-weight: 500; }
+    .pagination-info span { color: var(--text-main); font-weight: 700; }
+    .pagination-controls { display: flex; align-items: center; gap: 8px; }
+    .page-btn { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border-color); background: #fff; color: var(--text-main); font-size: .85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: var(--transition); }
+    .page-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .page-btn.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+    .page-indicator { font-weight: 700; font-size: .875rem; background: #f3f4f6; padding: 8px 16px; border-radius: 9px; min-width: 80px; text-align: center; }
+    .page-indicator span { color: #9ca3af; font-weight: 400; }
+</style>
 {% endblock %}
 
 {% block topbar_left %}
@@ -122,40 +165,43 @@
     <div class="metric-card">
         <div class="metric-icon blue"><i class="fas fa-boxes"></i></div>
         <div class="metric-info">
-            <h3 id="stat-total-items">{{ total_items }}</h3>
+            <h3 class="stat-value" id="stat-total-items" data-raw="{{ total_items }}">{{ total_items }}</h3>
             <span>Total Items</span>
         </div>
     </div>
     <div class="metric-card">
         <div class="metric-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
         <div class="metric-info">
-            <h3 id="stat-low-stock">{{ total_low }}</h3>
-            <span>Low Stock (&lt;10)</span>
+            <h3 class="stat-value" id="stat-low-stock" data-raw="{{ total_low }}">{{ total_low }}</h3>
+            <span>Low Stock</span>
         </div>
     </div>
     <div class="metric-card">
         <div class="metric-icon red"><i class="fas fa-times-circle"></i></div>
         <div class="metric-info">
-            <h3 id="stat-out-stock">{{ total_out }}</h3>
+            <h3 class="stat-value" id="stat-out-stock" data-raw="{{ total_out }}">{{ total_out }}</h3>
             <span>Out of Stock</span>
         </div>
     </div>
-<form action="{% url 'admin_inventory' %}" method="GET" style="display: contents;">
+</div>
+
+<form action="{% url 'admin_inventory_list' %}" method="GET" class="toolbar-form" id="adminSearchForm">
     <div class="toolbar">
-        <div class="toolbar-left">
-            <div class="premium-search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" name="search" placeholder="Search inventory by name, SKU..." value="{{ search_query|default:'' }}">
-                <button type="submit" class="search-action-btn">
-                    <i class="fas fa-magnifying-glass"></i> Search
-                </button>
-            </div>
+        <div class="premium-search-container">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" name="search" id="adminSearchInput" placeholder="Search inventory by product name, SKU, or variants..." value="{{ search_query|default:'' }}">
+            <button type="submit" class="search-action-btn">
+                <i class="fas fa-search"></i> Search
+            </button>
         </div>
-        {% if search_query %}
-        <a href="{% url 'admin_inventory' %}" style="padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; background:#f9fafb; border:1px solid var(--border-color); text-decoration:none; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
-            <i class="fas fa-rotate-left"></i> Reset
-        </a>
-        {% endif %}
+        
+        <div class="toolbar-right">
+            {% if search_query %}
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                Showing results for "{{ search_query }}"
+            </span>
+            {% endif %}
+        </div>
     </div>
 </form>
 
@@ -236,10 +282,54 @@
             </tbody>
         </table>
     </div>
+
+    {% if inventory_items.paginator.num_pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <span>{{ inventory_items.start_index }}</span>–<span>{{ inventory_items.end_index }}</span>
+            of <span>{{ inventory_items.paginator.count }}</span> items
+        </div>
+        <div class="pagination-controls">
+            {% if inventory_items.has_previous %}
+            <a href="?page={{ inventory_items.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn"><i class="fas fa-chevron-left"></i></a>
+            {% else %}<span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>{% endif %}
+
+            <div class="page-indicator">{{ inventory_items.number }} <span>/</span> {{ inventory_items.paginator.num_pages }}</div>
+
+            {% if inventory_items.has_next %}
+            <a href="?page={{ inventory_items.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn"><i class="fas fa-chevron-right"></i></a>
+            {% else %}<span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>{% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
+document.addEventListener('DOMContentLoaded', () => {
+    runCounters();
+});
+
+function animateCounter(el, end, duration) {
+    const start = parseInt(el.textContent) || 0;
+    const startTime = performance.now();
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = start + (end - start) * eased;
+        el.textContent = Math.floor(current);
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function runCounters() {
+    document.querySelectorAll('.stat-value[data-raw]').forEach(el => {
+        const raw = parseInt(el.dataset.raw) || 0;
+        animateCounter(el, raw, 1200);
+    });
+}
+
 function recalculateStats() {
     let totalItems = 0;
     let lowStock = 0;
@@ -260,9 +350,9 @@ function recalculateStats() {
     const statLowEl = document.getElementById('stat-low-stock');
     const statOutEl = document.getElementById('stat-out-stock');
 
-    if (statTotalEl) statTotalEl.textContent = totalItems;
-    if (statLowEl) statLowEl.textContent = lowStock;
-    if (statOutEl) statOutEl.textContent = outStock;
+    if (statTotalEl) animateCounter(statTotalEl, totalItems, 800);
+    if (statLowEl) animateCounter(statLowEl, lowStock, 800);
+    if (statOutEl) animateCounter(statOutEl, outStock, 800);
 }
 
 function updateStock(type, id, change) {
@@ -272,14 +362,12 @@ function updateStock(type, id, change) {
     let newStock = currentStock + change;
     
     if (newStock < 0) newStock = 0;
-    if (newStock === currentStock) return; // No change needed
+    if (newStock === currentStock) return;
 
-    // Instantly update UI for immediate feedback
     inputEl.value = newStock;
     updateBadgeUI(badgeEl, newStock);
     recalculateStats();
 
-    // Call API
     fetch("{% url 'admin_inventory_update' %}", {
         method: 'POST',
         headers: {
@@ -292,7 +380,6 @@ function updateStock(type, id, change) {
     .then(data => {
         if (!data.success) {
             alert('Error updating stock: ' + data.message);
-            // Revert UI if error
             inputEl.value = currentStock;
             updateBadgeUI(badgeEl, currentStock);
             recalculateStats();
@@ -300,8 +387,6 @@ function updateStock(type, id, change) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Network error occurred.');
-        // Revert UI if error
         inputEl.value = currentStock;
         updateBadgeUI(badgeEl, currentStock);
         recalculateStats();
@@ -321,7 +406,6 @@ function updateStockDirect(type, id) {
     updateBadgeUI(badgeEl, newStock);
     recalculateStats();
 
-    // Call API
     fetch("{% url 'admin_inventory_update' %}", {
         method: 'POST',
         headers: {
@@ -335,9 +419,6 @@ function updateStockDirect(type, id) {
         if (!data.success) {
             alert('Error updating stock: ' + data.message);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
     });
 }
 
@@ -355,9 +436,6 @@ function updateBadge(type, id, badgeValue) {
         if (!data.success) {
             alert('Error updating badge: ' + data.message);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
     });
 }
 
@@ -375,24 +453,23 @@ function deleteInventoryItem(type, id) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove the row from the table
             const row = document.querySelector(`tr[data-type="${type}"][data-id="${id}"]`);
             if (row) {
-                row.remove();
-                recalculateStats();
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    row.remove();
+                    recalculateStats();
+                }, 300);
             }
         } else {
             alert('Error deleting item: ' + data.message);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Network error occurred.');
     });
 }
 
 function updateBadgeUI(badgeEl, stock) {
-    badgeEl.className = 'stock-badge'; // reset
+    badgeEl.className = 'stock-badge';
     if (stock === 0) {
         badgeEl.classList.add('out');
         badgeEl.innerText = 'Out of Stock';
