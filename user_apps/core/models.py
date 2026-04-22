@@ -160,6 +160,14 @@ class Order(models.Model):
         # 5% tax as per project standard
         self.tax = round(self.subtotal * Decimal('0.05'), 2)
         
+        # Calculate shipping based on subtotal
+        shipping = Decimal('0.00')
+        if self.subtotal >= Decimal('20000.00'):
+            shipping = Decimal('99.00')
+        elif self.subtotal >= Decimal('5000.00'):
+            shipping = Decimal('49.00')
+        self.shipping_charge = shipping
+        
         # Total amount
         self.total_amount = self.subtotal + self.tax + self.shipping_charge - self.discount
         self.save()
@@ -172,6 +180,10 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     is_cancelled = models.BooleanField(default=False)
     cancel_reason = models.TextField(blank=True, null=True)
+
+    @property
+    def total_price(self):
+        return self.price * self.quantity
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"

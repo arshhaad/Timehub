@@ -490,8 +490,10 @@ def save_for_later(request, item_id):
         subtotal = sum(item.total_price for item in items)
         tax = subtotal * Decimal('0.05')
         shipping = Decimal('0.00')
-        if subtotal > 0 and subtotal < Decimal('5000.00'):
+        if subtotal >= Decimal('20000.00'):
             shipping = Decimal('99.00')
+        elif subtotal >= Decimal('5000.00'):
+            shipping = Decimal('49.00')
         total = subtotal + tax + shipping
         cart_count = sum(item.quantity for item in items)
         

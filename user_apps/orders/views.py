@@ -30,7 +30,11 @@ def checkout_page(request):
 
     subtotal = sum(item.total_price for item in items)
     tax = round(subtotal * TAX_RATE, 2)
-    shipping = SHIPPING_CHARGE if subtotal < Decimal('5000') else Decimal('0')
+    shipping = Decimal('0.00')
+    if subtotal >= Decimal('20000.00'):
+        shipping = Decimal('99.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('49.00')
     total = subtotal + tax + shipping
 
     addresses = Address.objects.filter(user=request.user)

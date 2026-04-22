@@ -248,7 +248,7 @@ display:inline-flex; align-items:center; gap:6px; }
                         <tr>
                             <th style="width:40%;">Product</th>
                             <th style="text-align:center;">Qty</th>
-                            <th style="text-align:right;">Unit Price</th>
+                            <th style="text-align:right;">Total</th>
                             <th style="text-align:center;">Status</th>
                             <th style="text-align:right;">Action</th>
                         </tr>
@@ -271,7 +271,10 @@ display:inline-flex; align-items:center; gap:6px; }
                                 </div>
                             </td>
                             <td style="text-align:center; font-weight:600;">{{ item.quantity }}</td>
-                            <td class="item-price">₹{{ item.price|floatformat:2 }}</td>
+                            <td class="item-price">
+                                ₹{{ item.total_price|floatformat:2 }}
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">Unit: ₹{{ item.price|floatformat:2 }}</div>
+                            </td>
                             <td style="text-align:center;">
                                 {% if item.is_cancelled %}
                                 <span class="status-badge s-Cancelled"
@@ -323,7 +326,7 @@ display:inline-flex; align-items:center; gap:6px; }
                 </div>
                 <div class="summary-row">
                     <span class="summary-label">Shipping</span>
-                    <span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}Free{% endif %}</span>
+                    <span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span>
                 </div>
                 {% if order.discount > 0 %}
                 <div class="summary-row">

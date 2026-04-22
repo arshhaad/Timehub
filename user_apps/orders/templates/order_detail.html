@@ -355,7 +355,7 @@
                         <tr>
                             <th style="width:50%;">Product</th>
                             <th style="text-align:center;">Qty</th>
-                            <th style="text-align:right;">Price</th>
+                            <th style="text-align:right;">Total</th>
                             <th style="text-align:right;">Action</th>
                         </tr>
                     </thead>
@@ -378,7 +378,10 @@
                                 </div>
                             </td>
                             <td style="text-align:center; font-weight:700;">{{ item.quantity }}</td>
-                            <td class="item-total">₹{{ item.price|floatformat:0 }}</td>
+                            <td class="item-total">
+                                ₹{{ item.total_price|floatformat:0 }}
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">₹{{ item.price|floatformat:0 }} each</div>
+                            </td>
                             <td style="text-align:right;">
                                 {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
                                 <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item.id %}', '{{ item.product.name|escapejs }}')">Cancel</button>
@@ -482,7 +485,7 @@
             <div class="card-body" style="padding: 20px 24px;">
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:0 }}</span></div>
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (5%)</span><span class="summary-value">₹{{ order.tax|floatformat:0 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:0 }}{% else %}Free{% endif %}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:0 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span></div>
                 {% if order.discount > 0 %}
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:0 }}</span></div>
                 {% endif %}
