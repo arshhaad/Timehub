@@ -258,7 +258,7 @@ def _save_variants(product, post_data):
                 pass
         else:
             # Create new variant
-            if v_strap_col or v_dial_col:
+            if v_strap_col or v_dial_col or v_sku:
                 variant = ProductVariant.objects.create(
                     product=product,
                     strap_color=v_strap_col,
@@ -297,9 +297,9 @@ def product_list(request):
             brand = request.POST.get("brand", "TimeHub").strip()
             gender = request.POST.get("gender", "Unisex")
             occasion = request.POST.get("occasion", "Casual")
-            strap_material = request.POST.get("strap_material", "").strip()
-            strap_color = request.POST.get("strap_color", "").strip()
-            dial_color = request.POST.get("dial_color", "").strip()
+            strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
+            strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
+            dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
             function = request.POST.get("function", "Analog")
             features = request.POST.get("features", "").strip()
 
@@ -414,9 +414,9 @@ def product_list(request):
             product.brand = request.POST.get("brand", product.brand)
             product.gender = request.POST.get("gender", product.gender)
             product.occasion = request.POST.get("occasion", product.occasion)
-            product.strap_material = request.POST.get("strap_material", product.strap_material)
-            product.strap_color = request.POST.get("strap_color", product.strap_color)
-            product.dial_color = request.POST.get("dial_color", product.dial_color)
+            product.strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
+            product.strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
+            product.dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
             product.function = request.POST.get("function", product.function)
             product.features = request.POST.get("features", product.features)
             product.save()

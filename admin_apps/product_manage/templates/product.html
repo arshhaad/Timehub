@@ -248,7 +248,7 @@
                         <td>
                              <div style="display:flex; flex-direction:column; gap:2px;">
                                  {% for variant in prod.variants.all %}
-                                 <span style="font-size:0.7rem; background:#f9fafb; padding:2px 6px; border-radius:4px; border:1px solid #eee;">{{ variant.size }} ({{ variant.stock }})</span>
+                                 <span style="font-size:0.7rem; background:#f9fafb; padding:2px 6px; border-radius:4px; border:1px solid #eee;">{{ variant.sku|default:"Size" }} ({{ variant.stock }})</span>
                                  {% empty %}
                                  <span style="font-size:0.7rem; color:var(--text-muted);">No variants</span>
                                  {% endfor %}
@@ -327,9 +327,9 @@
                             </div>
                             <div class="form-group">
                                 <label>Category (Collection)</label>
-                                <select name="collection" id="formCategory" class="form-control" required>
+                                <select name="collection_id" id="formCategory" class="form-control" required>
                                     <option value="">Select Category</option>
-                                    {% for cat in categories %}
+                                    {% for cat in all_categories %}
                                     <option value="{{ cat.id }}">{{ cat.name }}</option>
                                     {% endfor %}
                                 </select>
@@ -388,17 +388,45 @@
                                     <option value="Smart">Smart</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group full">
                                 <label>Strap Material</label>
-                                <input type="text" name="strap_material" id="formStrapMaterial" class="form-control" placeholder="e.g. Italian Leather">
+                                <div class="color-options">
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Leather" id="mat_leather" class="mat-checkbox"><label for="mat_leather">Leather</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Steel" id="mat_steel" class="mat-checkbox"><label for="mat_steel">Steel</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Silicone" id="mat_silicone" class="mat-checkbox"><label for="mat_silicone">Silicone</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Titanium" id="mat_titanium" class="mat-checkbox"><label for="mat_titanium">Titanium</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Ceramic" id="mat_ceramic" class="mat-checkbox"><label for="mat_ceramic">Ceramic</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Canvas" id="mat_canvas" class="mat-checkbox"><label for="mat_canvas">Canvas</label></div>
+                                    <div class="color-chip"><input type="checkbox" name="strap_material" value="Rubber" id="mat_rubber" class="mat-checkbox"><label for="mat_rubber">Rubber</label></div>
+                                </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group full">
                                 <label>Strap Color</label>
-                                <input type="text" name="strap_color" id="formStrapColor" class="form-control">
+                                <div class="color-options">
+                                    {% for c in all_colors %}
+                                    <div class="color-chip">
+                                        <input type="checkbox" name="strap_color" value="{{ c.name }}" id="scol_{{ c.id }}" class="scol-checkbox">
+                                        <label for="scol_{{ c.id }}">
+                                            <div class="color-indicator" style="background: {{ c.hex_code }};"></div>
+                                            {{ c.name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group full">
                                 <label>Dial Color</label>
-                                <input type="text" name="dial_color" id="formDialColor" class="form-control">
+                                <div class="color-options">
+                                    {% for c in all_colors %}
+                                    <div class="color-chip">
+                                        <input type="checkbox" name="dial_color" value="{{ c.name }}" id="dcol_{{ c.id }}" class="dcol-checkbox">
+                                        <label for="dcol_{{ c.id }}">
+                                            <div class="color-indicator" style="background: {{ c.hex_code }};"></div>
+                                            {{ c.name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                             <div class="form-group full">
                                 <label>Features (Dynamic List)</label>
@@ -414,9 +442,9 @@
                              <span style="font-size: 0.75rem; color: var(--text-muted);">Select at least one</span>
                          </div>
                          <div class="color-options" style="margin-bottom: 32px;">
-                             {% for c in colors %}
+                             {% for c in all_colors %}
                              <div class="color-chip">
-                                 <input type="checkbox" name="color_ids" value="{{ c.id }}" id="color_{{ c.id }}" class="color-checkbox">
+                                 <input type="checkbox" name="colors" value="{{ c.id }}" id="color_{{ c.id }}" class="color-checkbox">
                                  <label for="color_{{ c.id }}">
                                      <div class="color-indicator" style="background: {{ c.hex_code }};"></div>
                                      {{ c.name }}
@@ -578,12 +606,31 @@
         }
 
         // ── Form Submit with Blobs ──
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            const form = document.getElementById('productForm');
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    const tabPanel = firstInvalid.closest('.tab-panel');
+                    if (tabPanel) {
+                        const tabId = tabPanel.id.replace('tab-', '');
+                        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                        document.querySelector(`.modal-tab[data-tab="${tabId}"]`).classList.add('active');
+                        tabPanel.classList.add('active');
+                    }
+                    form.reportValidity();
+                }
+            }
+        });
+
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             // Append cropped blobs
             croppedBlobs.forEach((blob, slot) => {
-                formData.append(`image_slot_${slot}`, blob, `image_${slot}.jpg`);
+                formData.append(`product_image_${slot}`, blob, `image_${slot}.jpg`);
             });
             // If editing, handle existing image replacements is usually handled server-side by logic
             // but we ensure the action is correct
@@ -602,8 +649,11 @@
         function addVariantRow(data = null) {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><input type="text" name="v_size[]" class="form-control" placeholder="Size (e.g. 42mm)" value="${data ? data.size : ''}" required></td>
-                <td><input type="number" name="v_stock[]" class="form-control" placeholder="Stock" value="${data ? data.stock : '0'}" required min="0"></td>
+                <td>
+                    <input type="hidden" name="variant_id[]" value="${data ? data.id : ''}">
+                    <input type="text" name="variant_sku[]" class="form-control" placeholder="Size (e.g. 42mm)" value="${data ? (data.sku || data.size || '') : ''}">
+                </td>
+                <td><input type="number" name="variant_stock[]" class="form-control" placeholder="Stock" value="${data ? data.stock : '0'}" required min="0"></td>
                 <td style="width: 50px;"><button type="button" class="btn-icon delete" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
             `;
             document.getElementById('variantBody').appendChild(row);
@@ -612,6 +662,9 @@
         // ── Open Add Modal ──
         function openProductModal() {
             document.getElementById('productForm').reset();
+            document.querySelectorAll('input[name="strap_material"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="strap_color"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="dial_color"]').forEach(cb => cb.checked = false);
             document.getElementById('formAction').value = 'add_product';
             document.getElementById('modalTitle').innerText = 'Add New Product';
             document.getElementById('submitBtn').innerText = 'Create Product';
@@ -653,9 +706,18 @@
                     document.getElementById('formGender').value = data.gender || 'Unisex';
                     document.getElementById('formOccasion').value = data.occasion || 'Casual';
                     document.getElementById('formFunction').value = data.function || 'Analog';
-                    document.getElementById('formStrapMaterial').value = data.strap_material || '';
-                    document.getElementById('formStrapColor').value = data.strap_color || '';
-                    document.getElementById('formDialColor').value = data.dial_color || '';
+                    if (data.strap_material) {
+                        const mats = data.strap_material.split(',').map(m => m.trim());
+                        document.querySelectorAll('input[name="strap_material"]').forEach(cb => { if(mats.includes(cb.value)) cb.checked = true; });
+                    }
+                    if (data.strap_color) {
+                        const scols = data.strap_color.split(',').map(m => m.trim());
+                        document.querySelectorAll('input[name="strap_color"]').forEach(cb => { if(scols.includes(cb.value)) cb.checked = true; });
+                    }
+                    if (data.dial_color) {
+                        const dcols = data.dial_color.split(',').map(m => m.trim());
+                        document.querySelectorAll('input[name="dial_color"]').forEach(cb => { if(dcols.includes(cb.value)) cb.checked = true; });
+                    }
                     // Colors
                     if (data.colors) {
                         data.colors.forEach(cid => {

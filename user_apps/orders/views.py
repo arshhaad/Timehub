@@ -187,7 +187,7 @@ def cancel_order(request, order_id):
     
     if request.method == 'GET':
         if order.status not in ['Pending', 'Processing']:
-            messages.error(request, 'This order cannot be cancelled.')
+            messages.error(request, 'This order cannot be cancelled')
             return redirect('order_detail', order_id=order.id)
         return render(request, 'cancel.html', {'order': order})
         

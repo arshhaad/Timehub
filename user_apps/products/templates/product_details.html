@@ -92,7 +92,7 @@
         .image-view-badge { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 20;}
 
         /* RIGHT INFO */
-        .product-info { padding-top: 10px; }
+        .product-info { padding-top: 10px; position: sticky; top: 100px; align-self: start; }
         .brand-name { color: var(--primary-color); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
         .product-title { font-size: 2.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 15px; }
         
@@ -158,12 +158,12 @@
         .buy-now-btn:disabled { background: #1a1a1f; color: #4b5563; cursor: not-allowed; box-shadow: none; transform: none; border: 1px solid var(--border-color); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .trust-badges { display: flex; gap: 30px; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color); }
-        .trust-item { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; text-align: center; font-weight: 500; flex: 1; }
-        .trust-item i { font-size: 1.5rem; color: var(--primary-color); margin-bottom: 5px; }
-
-        /* TABS SECTION */
-        .tabs-container { border-top: 1px solid var(--border-color); margin-top: 60px; }
+        .trust-badges { display: flex; gap: 30px; margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--border-color); }
+        .trust-item { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+        .trust-item i { font-size: 1.5rem; color: var(--primary-color); }
+        
+        /* Tabs */
+        .tabs-container { margin-top: 30px; padding-top: 20px; }
         .tabs-nav { display: flex; gap: 40px; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
         .tab-btn { background: transparent; border: none; color: var(--text-muted); font-weight: 600; font-size: 1rem; padding: 20px 0; cursor: pointer; position: relative; text-transform: uppercase; letter-spacing: 1px; }
         .tab-btn.active { color: var(--primary-color); }
@@ -461,7 +461,7 @@
                     {% endif %}
                 </div>
 
-                <div class="coupon-section" style="background: rgba(255,106,0,0.05); border: 1px dashed var(--primary-color); padding: 15px; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="coupon-section" style="background: rgba(255,106,0,0.05); border: 1px dashed var(--primary-color); padding: 12px 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <i class="fas fa-tag" style="color: var(--primary-color); font-size: 1.2rem;"></i>
                         <div>
@@ -474,12 +474,12 @@
 
                 <!-- Highlights Section -->
                 {% if features_list %}
-                <div class="highlights-section" style="margin-bottom: 35px;">
-                    <h4 style="font-size: 1rem; margin-bottom: 15px; color: #fff;">Product Highlights</h4>
-                    <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="highlights-section" style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">Product Highlights</h4>
+                    <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         {% for feature in features_list %}
-                        <li style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted);">
-                            <i class="fas fa-check-circle" style="color: var(--primary-color); font-size: 0.8rem;"></i>
+                        <li style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                            <i class="fas fa-check-circle" style="color: var(--primary-color); font-size: 0.75rem;"></i>
                             {{ feature }}
                         </li>
                         {% endfor %}
@@ -487,93 +487,129 @@
                 </div>
                 {% endif %}
 
-                <div class="product-desc">
-                    {{ product.description|default:"Premium timepiece from TimeHub's exclusive collection. Built with precision and elegance." }}
-                </div>
+                <!-- Professional Variations -->
+                <div class="variations" id="selection-container" style="gap: 20px; display: flex; flex-direction: column; margin-bottom: 25px;">
+                    <!-- Available Colors (from Product model) -->
+                    {% if product.colors.exists %}
+                    <div class="variation-group" style="margin-bottom: 0;">
+                        <div class="variation-label">
+                            <span>Available Colors</span>
+                            <span id="label-color" class="selected-val">{{ product.colors.first.name }}</span>
+                        </div>
+                        <div class="color-row">
+                            {% for color in product.colors.all %}
+                            <div class="color-option {% if forloop.first %}active{% endif %}" onclick="handleColorSelection(this, '{{ color.name|escapejs }}')">
+                                <div class="color-swatch" style="background-color: {{ color.hex_code }};" title="{{ color.name }}"></div>
+                                <span class="color-name">{{ color.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
 
-                <!-- Professional Variations (3-Tier Selection) -->
-                <div class="variations" id="selection-container">
+                    <!-- Strap Colors (from Product strap_color CSV) -->
+                    {% if product.strap_color %}
+                    <div class="variation-group" style="margin-bottom: 0;">
+                        <div class="variation-label">
+                            <span>Strap Colors</span>
+                            <span id="label-strapclr" class="selected-val"></span> <!-- Set by JS -->
+                        </div>
+                        <div class="color-row">
+                            <script>
+                                const strapColorsList = "{{ product.strap_color|escapejs }}".split(',').map(s => s.trim()).filter(s => s);
+                                if(strapColorsList.length > 0) {
+                                    document.getElementById('label-strapclr').textContent = strapColorsList[0];
+                                    strapColorsList.forEach((col, idx) => {
+                                        document.write(`
+                                            <div class="color-option ${idx === 0 ? 'active' : ''}" onclick="handleStrapClrSelection(this, '${col}')">
+                                                <div class="color-swatch" style="background-color: #2F3640;" title="${col}"></div>
+                                                <span class="color-name">${col}</span>
+                                            </div>
+                                        `);
+                                    });
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Dial Colors (from Product dial_color CSV) -->
+                    {% if product.dial_color %}
+                    <div class="variation-group" style="margin-bottom: 0;">
+                        <div class="variation-label">
+                            <span>Dial Colors</span>
+                            <span id="label-dial" class="selected-val"></span> <!-- Set by JS -->
+                        </div>
+                        <div class="color-row">
+                            <script>
+                                const dialColors = "{{ product.dial_color|escapejs }}".split(',').map(s => s.trim()).filter(s => s);
+                                if(dialColors.length > 0) {
+                                    document.getElementById('label-dial').textContent = dialColors[0];
+                                    dialColors.forEach((dial, idx) => {
+                                        document.write(`
+                                            <div class="color-option ${idx === 0 ? 'active' : ''}" onclick="handleDialSelection(this, '${dial}')">
+                                                <div class="color-swatch" style="background-color: #f1f5f9;" title="${dial}"></div>
+                                                <span class="color-name">${dial}</span>
+                                            </div>
+                                        `);
+                                    });
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Strap Materials (from Product strap_material CSV) -->
+                    {% if product.strap_material %}
+                    <div class="variation-group" style="margin-bottom: 0;">
+                        <div class="variation-label">
+                            <span>Strap Materials</span>
+                            <span id="label-material" class="selected-val"></span> <!-- Set by JS -->
+                        </div>
+                        <div class="material-row">
+                            <script>
+                                const materials = "{{ product.strap_material|escapejs }}".split(',').map(s => s.trim()).filter(s => s);
+                                if(materials.length > 0) {
+                                    document.getElementById('label-material').textContent = materials[0];
+                                    materials.forEach((mat, idx) => {
+                                        document.write(`
+                                            <div class="material-chip ${idx === 0 ? 'active' : ''}" onclick="handleMaterialSelection(this, '${mat}')">
+                                                <i class="fas ${mat.toLowerCase().includes('leather') ? 'fa-ribbon' : (mat.toLowerCase().includes('steel') ? 'fa-link' : 'fa-clock')}"></i>
+                                                <div class="material-label">
+                                                    <span>${mat}</span>
+                                                    <span>Premium Build</span>
+                                                </div>
+                                            </div>
+                                        `);
+                                    });
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if active_variants %}
-                        <!-- 1. Dial Color Selection -->
-                        {% if dial_colors %}
-                        <div class="variation-group">
+                        <!-- Size/Variant Selection -->
+                        <div class="variation-group" style="margin-bottom: 0;">
                             <div class="variation-label">
-                                <span>Dial Color</span>
-                                <span id="label-dial" class="selected-val">{{ dial_colors.0.name }}</span>
+                                <span>Select Size / Variant</span>
+                                <span id="label-size" class="selected-val">{{ active_variants.first.sku|default:"Standard" }}</span>
                             </div>
-                            <div class="color-row">
-                                {% for dial in dial_colors %}
-                                <div class="color-option {% if forloop.first %}active{% endif %}" 
-                                     data-type="dial" 
-                                     data-value="{{ dial.name }}" 
-                                     onclick="handleSelection('dial', '{{ dial.name }}', this)">
-                                    <div class="color-swatch" style="background-color: {{ dial.hex }};"></div>
-                                    <span class="color-name">{{ dial.name }}</span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- 2. Strap Color Selection -->
-                        {% if strap_colors %}
-                        <div class="variation-group">
-                            <div class="variation-label">
-                                <span>Strap Color</span>
-                                <span id="label-strap-color" class="selected-val">{{ strap_colors.0.name }}</span>
-                            </div>
-                            <div class="color-row">
-                                {% for strap in strap_colors %}
-                                <div class="color-option {% if forloop.first %}active{% endif %}" 
-                                     data-type="strap-color" 
-                                     data-value="{{ strap.name }}" 
-                                     onclick="handleSelection('strap-color', '{{ strap.name }}', this)">
-                                    <div class="color-swatch" style="background-color: {{ strap.hex }};"></div>
-                                    <span class="color-name">{{ strap.name }}</span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- 3. Strap Material Selection -->
-                        {% if materials %}
-                        <div class="variation-group">
-                            <div class="variation-label">
-                                <span>Strap Material</span>
-                                <span id="label-material" class="selected-val">{{ materials.0 }}</span>
-                            </div>
-                            <div class="material-row">
-                                {% for mat in materials %}
-                                <div class="material-chip {% if forloop.first %}active{% endif %}" 
-                                     data-type="material" 
-                                     data-value="{{ mat }}" 
-                                     onclick="handleSelection('material', '{{ mat }}', this)">
-                                    <i class="fas {% if 'Leather' in mat %}fa-ribbon{% elif 'Steel' in mat %}fa-link{% else %}fa-clock{% endif %}"></i>
-                                    <div class="material-label">
-                                        <span>{{ mat }}</span>
-                                        <span>Premium Build</span>
+                            <div class="options-row" style="margin-top: 10px;">
+                                {% for v in active_variants %}
+                                <button class="opt-btn {% if forloop.first %}active{% endif %}"
+                                        data-type="variant"
+                                        data-variant-id="{{ v.id }}"
+                                        data-price="{{ v.effective_discount_price }}"
+                                        data-old-price="{{ v.effective_price }}"
+                                        data-stock="{{ v.stock }}"
+                                        onclick="handleSizeSelection(this)">
+                                    <div class="variant-chip" style="pointer-events: none;">
+                                        <span>{{ v.sku|default:"Standard" }}</span>
+                                        <span>{{ v.stock }} left</span>
                                     </div>
-                                </div>
+                                </button>
                                 {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% else %}
-                        <!-- Single Product Display -->
-                        <div class="variation-group">
-                            <div class="variation-label">
-                                <span>Specifications</span>
-                                <span>Standard Edition</span>
-                            </div>
-                            <div class="material-row">
-                                <div class="material-chip active">
-                                    <i class="fas fa-check-circle"></i>
-                                    <div class="material-label">
-                                        <span>{{ product.strap_color|default:"Standard Color" }}</span>
-                                        <span>{{ product.strap_material|default:"Premium Material" }}</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     {% endif %}
@@ -644,7 +680,31 @@
             </div>
             
             <div class="tab-content active" id="tab-desc">
-                <p>{{ product.description|default:"Premium timepiece from TimeHub's exclusive collection." }}</p>
+                <div class="pro-description" style="max-width: 800px; margin: 0 auto; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden;">
+                    <!-- Decorative background text -->
+                    <div style="position: absolute; top: -30px; left: -20px; font-size: 8rem; font-weight: 900; color: rgba(255,255,255,0.02); pointer-events: none; line-height: 1; user-select: none;">
+                        DETAILS
+                    </div>
+
+                    <div style="position: relative; z-index: 1;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                            <div style="width: 40px; height: 2px; background: var(--primary-color);"></div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); letter-spacing: 2px; text-transform: uppercase;">
+                                The Art of Watchmaking
+                            </h4>
+                        </div>
+                        
+                        <div style="font-size: 1.1rem; line-height: 1.9; color: #e2e8f0; font-weight: 300; letter-spacing: 0.3px;">
+                            {% if product.description %}
+                                {{ product.description|linebreaksbr }}
+                            {% else %}
+                                Premium timepiece from TimeHub's exclusive collection. Engineered with precision and built using only the finest materials, it is designed to stand the test of time while elevating your everyday style.
+                                <br><br>
+                                Whether worn for a formal occasion or as a signature daily accessory, its sophisticated aesthetic makes a bold statement of elegance and performance.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="tab-content" id="tab-specs">
@@ -660,6 +720,14 @@
                     <div class="spec-item">
                         <div class="spec-label">Gender</div>
                         <div class="spec-value">{{ product.gender }}</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label">Strap Material</div>
+                        <div class="spec-value">{{ product.strap_material|default:"Standard" }}</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-label">Key Colors</div>
+                        <div class="spec-value">{{ product.strap_color|default:"Standard" }}</div>
                     </div>
                     <div class="spec-item">
                         <div class="spec-label">Function</div>
@@ -962,134 +1030,91 @@
             .catch(err => showToast('Please login to modify your wishlist.', 'error'));
         };
 
-        // --- Professional Multi-Attribute Selection Logic ---
-        let variants = [];
-        try {
-            variants = JSON.parse(document.getElementById('variants-data').textContent);
-        } catch (e) {
-            console.error("Failed to parse variants data", e);
-        }
+        // --- Professional Selection Logic ---
+        let selectedVariantId = '';
+        let selectedColor = '{% if product.colors.exists %}{{ product.colors.first.name|escapejs }}{% endif %}';
 
-        let selectedState = {
-            dial: '{% if dial_colors %}{{ dial_colors.0.name|escapejs }}{% endif %}',
-            strapColor: '{% if strap_colors %}{{ strap_colors.0.name|escapejs }}{% endif %}',
-            material: '{% if materials %}{{ materials.0|escapejs }}{% endif %}'
+        window.handleColorSelection = function(element, colorName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedColor = colorName;
+
+            if (document.getElementById('label-color')) {
+                document.getElementById('label-color').textContent = colorName;
+            }
         };
 
-        let selectedVariantId = '';
+        let selectedDial = '';
+        window.handleDialSelection = function(element, dialName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedDial = dialName;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (variants.length > 0) {
-                updateSelection();
+            if (document.getElementById('label-dial')) {
+                document.getElementById('label-dial').textContent = dialName;
             }
-        });
+        };
 
-        window.handleSelection = function(type, value, element) {
-            // Update active state in UI
+        let selectedStrapClr = '';
+        window.handleStrapClrSelection = function(element, clrName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedStrapClr = clrName;
+
+            if (document.getElementById('label-strapclr')) {
+                document.getElementById('label-strapclr').textContent = clrName;
+            }
+        };
+
+        let selectedMaterial = '';
+        window.handleMaterialSelection = function(element, materialName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.material-chip').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedMaterial = materialName;
+
+            if (document.getElementById('label-material')) {
+                document.getElementById('label-material').textContent = materialName;
+            }
+        };
+
+        window.handleSizeSelection = function(element) {
+            // Update active UI
             const group = element.parentElement;
-            group.querySelectorAll('.color-option, .material-chip').forEach(el => el.classList.remove('active'));
+            group.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
-            // Update state
-            if (type === 'dial') {
-                selectedState.dial = value;
-                document.getElementById('label-dial').textContent = value;
-            } else if (type === 'strap-color') {
-                selectedState.strapColor = value;
-                document.getElementById('label-strap-color').textContent = value;
-            } else if (type === 'material') {
-                selectedState.material = value;
-                document.getElementById('label-material').textContent = value;
+            // Apply selected ID
+            selectedVariantId = element.dataset.variantId;
+
+            // Update Label
+            if(document.getElementById('label-size')) {
+                document.getElementById('label-size').textContent = element.querySelector('.variant-chip span:first-child').textContent;
             }
 
-            updateSelection();
-        };
+            // Update Price
+            updatePriceUI(element.dataset.price, element.dataset.oldPrice);
 
-        function updateSelection() {
-            // Find perfect match
-            let match = variants.find(v => 
-                v.dial === selectedState.dial && 
-                v.strap === selectedState.strapColor && 
-                v.material === selectedState.material
-            );
+            // Update Stock
+            const stock = parseInt(element.dataset.stock);
+            updateStockUI(stock);
 
-            // If no perfect match, find best match (e.g. keep dial and material, find any strap color)
-            // This prevents the UI from "breaking" if a user picks an invalid combo
-            if (!match) {
-                match = variants.find(v => v.dial === selectedState.dial && v.material === selectedState.material) ||
-                        variants.find(v => v.dial === selectedState.dial) ||
-                        variants[0];
-                
-                // Update state to the matched variant's attributes to keep UI in sync
-                selectedState.dial = match.dial;
-                selectedState.strapColor = match.strap;
-                selectedState.material = match.material;
-                syncUIToState();
-            }
-
-            selectedVariantId = match.id;
-            updateVariantUI(match);
-            updateAvailability();
-        }
-
-        function syncUIToState() {
-            // Update labels
-            if (document.getElementById('label-dial')) document.getElementById('label-dial').textContent = selectedState.dial;
-            if (document.getElementById('label-strap-color')) document.getElementById('label-strap-color').textContent = selectedState.strapColor;
-            if (document.getElementById('label-material')) document.getElementById('label-material').textContent = selectedState.material;
-
-            // Update active classes
-            document.querySelectorAll('.color-option, .material-chip').forEach(el => {
-                const type = el.dataset.type;
-                const val = el.dataset.value;
-                if ((type === 'dial' && val === selectedState.dial) ||
-                    (type === 'strap-color' && val === selectedState.strapColor) ||
-                    (type === 'material' && val === selectedState.material)) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
-            });
-        }
-
-        function updateVariantUI(variant) {
-            // Prices
-            updatePriceUI(variant.price, variant.old_price);
-            
-            // Stock
-            updateStockUI(variant.stock);
-            
-            // Sync with quantity input
+            // Update quantity max
             if (qtyInput) {
                 qtyInput.value = 1;
-                qtyInput.max = Math.min(variant.stock, MAX_CART_LIMIT);
+                qtyInput.max = Math.min(stock, MAX_CART_LIMIT);
             }
-        }
+        };
 
-        function updateAvailability() {
-            // Logic to dim/disable combinations that don't exist OR are out of stock
-            document.querySelectorAll('.color-option[data-type="strap-color"]').forEach(el => {
-                const val = el.dataset.value;
-                const variants_with_strap = variants.filter(v => v.dial === selectedState.dial && v.strap === val && v.material === selectedState.material);
-                const exists = variants_with_strap.length > 0;
-                const has_stock = variants_with_strap.some(v => v.stock > 0);
-                
-                el.style.opacity = exists ? (has_stock ? '1' : '0.4') : '0.1';
-                el.style.pointerEvents = exists ? 'auto' : 'none';
-                el.title = exists ? (has_stock ? '' : 'Out of Stock') : 'Not Available';
-            });
-
-            document.querySelectorAll('.material-chip').forEach(el => {
-                const val = el.dataset.value;
-                const variants_with_mat = variants.filter(v => v.dial === selectedState.dial && v.strap === selectedState.strapColor && v.material === val);
-                const exists = variants_with_mat.length > 0;
-                const has_stock = variants_with_mat.some(v => v.stock > 0);
-                
-                el.style.opacity = exists ? (has_stock ? '1' : '0.4') : '0.1';
-                el.style.pointerEvents = exists ? 'auto' : 'none';
-                el.title = exists ? (has_stock ? '' : 'Out of Stock') : 'Not Available';
-            });
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstVariantBtn = document.querySelector('.opt-btn[data-type="variant"]');
+            if (firstVariantBtn) {
+                handleSizeSelection(firstVariantBtn);
+            }
+        });
 
         function updatePriceUI(newPrice, oldPrice) {
             const mainPriceEl = document.getElementById('main-price');
@@ -1178,7 +1203,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId })
+                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId, color: selectedColor })
             })
             .then(res => res.json())
             .then(data => {
@@ -1223,7 +1248,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId })
+                body: JSON.stringify({ quantity: quantity, variant_id: selectedVariantId, color: selectedColor })
             })
             .then(res => res.json())
             .then(data => {
