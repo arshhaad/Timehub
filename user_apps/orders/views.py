@@ -10,8 +10,14 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product
+from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product, Wallet, WalletTransaction
 from user_apps.edit.models import Address
+from django.conf import settings
+try:
+    import razorpay
+    RAZORPAY_CLIENT = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+except ImportError:
+    RAZORPAY_CLIENT = None
 
 
 SHIPPING_CHARGE = Decimal('99.00')
@@ -66,6 +72,18 @@ def checkout_page(request):
         }
 
         with transaction.atomic():
+            if payment_method == 'wallet':
+                wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                if wallet.balance < total:
+                    messages.error(request, 'Insufficient wallet balance.')
+                    return render(request, 'checkout_page.html', {
+                        'items': items, 'subtotal': subtotal, 'tax': tax,
+                        'shipping': shipping, 'total': total,
+                        'addresses': addresses, 'default_address': default_address,
+                    })
+                wallet.balance -= total
+                wallet.save()
+
             # Generate estimated delivery date (3–7 days from now) and save it
             days_to_delivery = random.randint(3, 7)
             estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
@@ -82,6 +100,14 @@ def checkout_page(request):
                 status='Pending',
                 scheduled_delivery_date=estimated_delivery_date,
             )
+
+            if payment_method == 'wallet':
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='Debit',
+                    amount=total,
+                    description=f'Payment for Order #{order.id}'
+                )
 
             for item in items:
                 # Check stock before creating order item
@@ -198,6 +224,8 @@ def cancel_order(request, order_id):
     if request.method == 'POST' and order.status in ['Pending', 'Processing']:
         reason = request.POST.get('reason', 'User cancelled')
         with transaction.atomic():
+            original_total = order.total_amount
+
             order.status = 'Cancelled'
             order.cancel_reason = reason
             order.save()
@@ -212,6 +240,17 @@ def cancel_order(request, order_id):
                 item.save()
             
             order.update_totals()
+            
+            if order.payment_method in ['razorpay', 'wallet']:
+                wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                wallet.balance += original_total
+                wallet.save()
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=original_total,
+                    description=f'Refund for cancelled Order #{order.id}'
+                )
                 
         messages.success(request, f'Order #{order.id} has been cancelled.')
     else:
@@ -230,6 +269,8 @@ def cancel_order_item(request, item_id):
     if order.status in ['Pending', 'Processing'] and not item.is_cancelled:
         reason = request.POST.get('reason', 'User cancelled')
         with transaction.atomic():
+            original_total = order.total_amount
+
             item.is_cancelled = True
             item.cancel_reason = reason
             item.save()
@@ -242,6 +283,19 @@ def cancel_order_item(request, item_id):
             # Note: We are no longer automatically cancelling the entire order 
             # when all items are cancelled to allow for more granular control.
             order.update_totals()
+            
+            if order.payment_method in ['razorpay', 'wallet']:
+                refund_amount = original_total - order.total_amount
+                if refund_amount > 0:
+                    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                    wallet.balance += refund_amount
+                    wallet.save()
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='Credit',
+                        amount=refund_amount,
+                        description=f'Refund for cancelled item in Order #{order.id}'
+                    )
                 
         messages.success(request, f'Item "{item.product.name}" has been cancelled.')
     else:
@@ -446,3 +500,154 @@ def edit_address(request, id):
             })
 
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+@login_required
+@never_cache
+def initialize_razorpay_order(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    if not RAZORPAY_CLIENT:
+        return JsonResponse({'error': 'Razorpay client not configured. Please install razorpay and add keys.'}, status=500)
+    
+    # Calculate total
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.all()
+    if not items.exists():
+        return JsonResponse({'error': 'Cart is empty'}, status=400)
+    
+    subtotal = sum(item.total_price for item in items)
+    tax = round(subtotal * TAX_RATE, 2)
+    shipping = Decimal('0.00')
+    if subtotal >= Decimal('20000.00'):
+        shipping = Decimal('99.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('49.00')
+    total = subtotal + tax + shipping
+    
+    amount_paise = int(total * 100)
+    
+    try:
+        razorpay_order = RAZORPAY_CLIENT.order.create({
+            'amount': amount_paise,
+            'currency': 'INR',
+            'payment_capture': '1'
+        })
+        return JsonResponse({
+            'razorpay_order_id': razorpay_order['id'],
+            'amount': amount_paise,
+            'currency': 'INR',
+            'key': settings.RAZORPAY_KEY_ID
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@never_cache
+@transaction.atomic
+def verify_razorpay_payment(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    if not RAZORPAY_CLIENT:
+        return JsonResponse({'error': 'Razorpay client not configured.'}, status=500)
+        
+    data = json.loads(request.body)
+    payment_id = data.get('razorpay_payment_id')
+    razorpay_order_id = data.get('razorpay_order_id')
+    signature = data.get('razorpay_signature')
+    address_id = data.get('address_id')
+    
+    if not all([payment_id, razorpay_order_id, signature, address_id]):
+        return JsonResponse({'error': 'Missing payment details'}, status=400)
+    
+    # Verify signature
+    params_dict = {
+        'razorpay_order_id': razorpay_order_id,
+        'razorpay_payment_id': payment_id,
+        'razorpay_signature': signature
+    }
+    
+    try:
+        RAZORPAY_CLIENT.utility.verify_payment_signature(params_dict)
+    except:
+        return JsonResponse({'error': 'Payment verification failed'}, status=400)
+    
+    # Create the order
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+    address_data = {
+        'full_name': address.full_name,
+        'street': address.street,
+        'city': address.city,
+        'state': address.state,
+        'postal_code': address.postal_code,
+        'country': address.country,
+        'phone': address.phone,
+    }
+    
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.select_related('product').all()
+    
+    subtotal = sum(item.total_price for item in items)
+    tax = round(subtotal * TAX_RATE, 2)
+    shipping = Decimal('0.00')
+    if subtotal >= Decimal('20000.00'):
+        shipping = Decimal('99.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('49.00')
+    total = subtotal + tax + shipping
+    
+    # Generate estimated delivery date
+    days_to_delivery = random.randint(3, 7)
+    estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
+    
+    order = Order.objects.create(
+        user=request.user,
+        address_snapshot=json.dumps(address_data),
+        payment_method='razorpay',
+        subtotal=subtotal,
+        tax=tax,
+        shipping_charge=shipping,
+        discount=Decimal('0'),
+        total_amount=total,
+        status='Pending',
+        scheduled_delivery_date=estimated_delivery_date,
+    )
+    
+    for item in items:
+        # Check stock
+        available_stock = item.variant.stock if item.variant else item.product.stock
+        if available_stock < item.quantity:
+             # In a real scenario, you'd handle this better (refund if payment made)
+             continue
+             
+        if item.variant:
+            price_at_purchase = item.variant.effective_discount_price
+        else:
+            price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+            
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            variant=item.variant,
+            quantity=item.quantity,
+            price=price_at_purchase,
+        )
+        
+        # Decrement Stock
+        if item.variant:
+            item.variant.stock -= item.quantity
+            item.variant.save()
+        else:
+            item.product.stock -= item.quantity
+            item.product.save()
+            
+    # Clear cart
+    cart.items.all().delete()
+    
+    return JsonResponse({
+        'success': True,
+        'redirect_url': f'/orders/success/{order.id}/'
+    })

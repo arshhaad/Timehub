@@ -73,6 +73,7 @@ def product_detail_api(request, product_id):
             'stock': v.stock,
             'sku': v.sku,
             'is_active': v.is_active,
+            'image_url': v.image.url if v.image else '',
         })
     
     # Product fields
@@ -212,45 +213,49 @@ def category_list(request):
     return render(request, "Category.html", context)
 
 
-def _save_variants(product, post_data):
+def _save_variants(product, request):
     """Helper to create/update variants from form arrays."""
+    post_data = request.POST
+    
     strap_colors = post_data.getlist("variant_strap_color[]")
     dial_colors = post_data.getlist("variant_dial_color[]")
     variant_stocks = post_data.getlist("variant_stock[]")
     variant_prices = post_data.getlist("variant_price[]")
     variant_skus = post_data.getlist("variant_sku[]")
     variant_ids = post_data.getlist("variant_id[]")
+    variant_image_indices = post_data.getlist("variant_image_idx[]")
     
     # Track which existing variant IDs were submitted (for soft-deletion of removed ones)
     submitted_ids = set()
     
-    for idx in range(len(strap_colors)):
+    # Use skus or ids as the base for the loop to ensure we process all submitted rows
+    base_list = variant_skus if len(variant_skus) >= len(variant_ids) else variant_ids
+    
+    for idx in range(len(base_list)):
         v_id = variant_ids[idx] if idx < len(variant_ids) else ''
-        v_strap_col = strap_colors[idx] if idx < len(strap_colors) else ''
-        v_dial_col = dial_colors[idx] if idx < len(dial_colors) else ''
         v_stock_raw = variant_stocks[idx] if idx < len(variant_stocks) else '0'
-        v_price_raw = variant_prices[idx] if idx < len(variant_prices) else ''
         v_sku = variant_skus[idx] if idx < len(variant_skus) else ''
         
+        # Handle variant image
+        v_image = None
+        if idx < len(variant_image_indices):
+            v_img_idx = variant_image_indices[idx]
+            v_image = request.FILES.get(f"variant_image_{v_img_idx}")
+
         # Parse numeric values
         try:
             v_stock = int(v_stock_raw) if v_stock_raw else 0
         except ValueError:
             v_stock = 0
-        try:
-            v_price = float(v_price_raw) if v_price_raw else None
-        except ValueError:
-            v_price = None
         
         if v_id and v_id.isdigit():
             # Update existing variant
             try:
                 variant = ProductVariant.objects.get(id=int(v_id), product=product)
-                variant.strap_color = v_strap_col
-                variant.dial_color = v_dial_col
                 variant.stock = v_stock
-                variant.price = v_price
                 variant.sku = v_sku
+                if v_image:
+                    variant.image = v_image
                 variant.is_active = True
                 variant.save()
                 submitted_ids.add(variant.id)
@@ -258,14 +263,12 @@ def _save_variants(product, post_data):
                 pass
         else:
             # Create new variant
-            if v_strap_col or v_dial_col or v_sku:
+            if v_sku:
                 variant = ProductVariant.objects.create(
                     product=product,
-                    strap_color=v_strap_col,
-                    dial_color=v_dial_col,
                     stock=v_stock,
-                    price=v_price,
                     sku=v_sku,
+                    image=v_image
                 )
                 submitted_ids.add(variant.id)
     
@@ -361,7 +364,7 @@ def product_list(request):
                             product.save()
             
             # Save variants
-            _save_variants(product, request.POST)
+            _save_variants(product, request)
 
             messages.success(request, f"Product '{name}' created successfully.")
             return redirect("product_list")
@@ -441,7 +444,7 @@ def product_list(request):
                             product.save()
 
             # Save variants
-            _save_variants(product, request.POST)
+            _save_variants(product, request)
 
             messages.success(request, f"Product '{product.name}' updated successfully.")
             return redirect("product_list")

@@ -555,13 +555,14 @@
     #cropperContainer {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 3000;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 9999;
         display: none;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 40px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
     }
 
     #cropperContainer.active {
@@ -570,26 +571,55 @@
 
     .cropper-box {
         width: 100%;
-        max-width: 600px;
-        max-height: 70vh;
-        background: #000;
-        border-radius: 12px;
+        max-width: 700px;
+        height: 70vh;
+        background: #111;
+        border-radius: 16px;
         margin-bottom: 24px;
         position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
     #cropperImage {
-        display: block;
         max-width: 100%;
-        max-height: 100%;
+        display: block;
     }
 
     .cropper-actions {
         display: flex;
         gap: 16px;
+    }
+
+    .cropper-actions button {
+        min-width: 140px;
+        height: 48px;
+        justify-content: center;
+        font-weight: 700;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .cropper-actions .btn-primary {
+        background: var(--primary-bg);
+        border: none;
+        box-shadow: 0 10px 15px -3px var(--primary-glow);
+    }
+
+    .cropper-actions .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 20px -5px var(--primary-glow);
+    }
+
+    .cropper-actions .btn-outline {
+        background: #fff;
+        color: #000;
+        border: 1px solid #e5e7eb;
+    }
+
+    .cropper-actions .btn-outline:hover {
+        background: #f9fafb;
+        transform: translateY(-2px);
     }
 
     @media (max-width: 768px) {
@@ -620,7 +650,7 @@
         <h1>Products</h1>
         <p>Manage your luxury timepiece inventory and listings.</p>
     </div>
-    <button class="btn btn-primary" onclick="openProductModal('add')">
+    <button class="btn btn-primary" onclick="openProductModal()">
         <i class="fas fa-plus"></i> Add Product
     </button>
 </div>
@@ -677,8 +707,7 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{
-                            prod.collection.name|default:"General" }}</span>
+                        <span class="badge" style="background:#f3f4f6; color:#4b5563; font-weight: 600;">{{ prod.collection.name|default:"General" }}</span>
                     </td>
                     <td>
                         <div class="color-dots">
@@ -692,24 +721,21 @@
                     <td style="font-weight:600;">
                         {% if prod.discount_price %}
                         <div style="color:var(--primary-bg);">₹{{ prod.discount_price }}</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-decoration:line-through;">₹{{
-                            prod.price }}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-decoration:line-through;">₹{{ prod.price }}</div>
                         {% else %}
                         <div>₹{{ prod.price }}</div>
                         {% endif %}
                     </td>
                     <td>
                         <span
-                            style="font-weight:700; color:{% if prod.stock < 10 %}#ef4444{% else %}#111827{% endif %};">{{
-                            prod.stock }}</span>
+                            style="font-weight:700; color:{% if prod.stock < 10 %}#ef4444{% else %}#111827{% endif %};">{{ prod.stock }}</span>
                         <div style="font-size:0.7rem; color:var(--text-muted);">Units</div>
                     </td>
                     <td>
                         <div style="display:flex; flex-direction:column; gap:2px;">
                             {% for variant in prod.variants.all %}
                             <span
-                                style="font-size:0.7rem; background:#f9fafb; padding:2px 6px; border-radius:4px; border:1px solid #eee;">{{
-                                variant.sku|default:"Size" }} ({{ variant.stock }})</span>
+                                style="font-size:0.7rem; background:#f9fafb; padding:2px 6px; border-radius:4px; border:1px solid #eee;">{{ variant.sku|default:"Size" }} ({{ variant.stock }})</span>
                             {% empty %}
                             <span style="font-size:0.7rem; color:var(--text-muted);">No variants</span>
                             {% endfor %}
@@ -890,6 +916,7 @@
                             <label>Strap Color</label>
                             <div class="color-options">
                                 {% for c in all_colors %}
+                                {% if c.name|lower == 'white' or c.name|lower == 'black' or c.name|lower == 'brown' or c.name|lower == 'green' or c.name|lower == 'blue' or c.name|lower == 'silver' or c.name|lower == 'gold' or c.name|lower == 'rose gold' %}
                                 <div class="color-chip">
                                     <input type="checkbox" name="strap_color" value="{{ c.name }}" id="scol_{{ c.id }}"
                                         class="scol-checkbox">
@@ -898,6 +925,7 @@
                                         {{ c.name }}
                                     </label>
                                 </div>
+                                {% endif %}
                                 {% endfor %}
                             </div>
                         </div>
@@ -905,6 +933,7 @@
                             <label>Dial Color</label>
                             <div class="color-options">
                                 {% for c in all_colors %}
+                                {% if c.name|lower == 'white' or c.name|lower == 'black' or c.name|lower == 'brown' or c.name|lower == 'green' or c.name|lower == 'blue' or c.name|lower == 'silver' or c.name|lower == 'gold' or c.name|lower == 'rose gold' %}
                                 <div class="color-chip">
                                     <input type="checkbox" name="dial_color" value="{{ c.name }}" id="dcol_{{ c.id }}"
                                         class="dcol-checkbox">
@@ -913,6 +942,7 @@
                                         {{ c.name }}
                                     </label>
                                 </div>
+                                {% endif %}
                                 {% endfor %}
                             </div>
                         </div>
@@ -933,6 +963,7 @@
                     </div>
                     <div class="color-options" style="margin-bottom: 32px;">
                         {% for c in all_colors %}
+                        {% if c.name|lower == 'white' or c.name|lower == 'black' or c.name|lower == 'brown' or c.name|lower == 'green' or c.name|lower == 'blue' or c.name|lower == 'silver' or c.name|lower == 'gold' or c.name|lower == 'rose gold' %}
                         <div class="color-chip">
                             <input type="checkbox" name="colors" value="{{ c.id }}" id="color_{{ c.id }}"
                                 class="color-checkbox">
@@ -941,6 +972,7 @@
                                 {{ c.name }}
                             </label>
                         </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
 
@@ -951,6 +983,14 @@
                             onclick="addVariantRow()">+ Add Size</button>
                     </div>
                     <table class="variant-table">
+                        <thead>
+                            <tr>
+                                <th>Size/SKU</th>
+                                <th>Stock</th>
+                                <th>Variant Image</th>
+                                <th></th>
+                            </tr>
+                        </thead>
                         <tbody id="variantBody">
                             <!-- Variant rows go here -->
                         </tbody>
@@ -1007,9 +1047,8 @@
         <img id="cropperImage" src="" alt="To Crop">
     </div>
     <div class="cropper-actions">
-        <button class="btn btn-outline" style="background:#fff; color:#000" onclick="cancelCrop()">Discard</button>
-        <button class="btn btn-primary" style="background:var(--primary-bg); border:none" onclick="applyCrop()">Apply
-            Crop</button>
+        <button class="btn btn-outline" onclick="cancelCrop()">Discard</button>
+        <button class="btn btn-primary" onclick="applyCrop()">Apply Crop</button>
     </div>
 </div>
 
@@ -1061,54 +1100,75 @@ let cropper = null;
 let activeSlot = null;
 const croppedBlobs = new Map();
 const existingImageIds = new Set(); // To tracking which existing images to delete
+let variantCounter = 0;
 
 function handleImageInput(e, slot) {
     const file = e.target.files[0];
-    if(!file) return;
+    if (!file) return;
+    
     activeSlot = slot;
     const reader = new FileReader();
     reader.onload = (event) => {
+        const img = document.getElementById('cropperImage');
+        const container = document.getElementById('cropperContainer');
+
+        // Reset cropper if exists
         if (cropper) {
             cropper.destroy();
             cropper = null;
         }
 
-        const img = document.getElementById('cropperImage');
-        const container = document.getElementById('cropperContainer');
-
-        // Show container first
-        container.classList.add('active');
-        
-        // Set image source
         img.src = event.target.result;
+        container.classList.add('active');
 
-        // Initialize Cropper after a small delay to ensure visibility and image load
-        setTimeout(() => {
-            if (cropper) cropper.destroy();
+        // Initialize Cropper after image is loaded
+        img.onload = () => {
             cropper = new Cropper(img, {
                 aspectRatio: 1,
                 viewMode: 1,
-                autoCropArea: 0.8,
-                responsive: true,
-                checkOrientation: false,
+                autoCropArea: 1,
+                dragMode: 'move',
+                background: false,
+                ready() {
+                    // Optional: could add a loader hider here
+                }
             });
-        }, 200);
+        };
     };
     reader.readAsDataURL(file);
 }
 
 function cancelCrop() {
-document.getElementById('cropperContainer').classList.remove('active');
-document.getElementById('inputSlot' + activeSlot).value = '';
+    document.getElementById('cropperContainer').classList.remove('active');
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    // Clear the input so same file can be re-selected if needed
+    document.getElementById('inputSlot' + activeSlot).value = '';
 }
 
 function applyCrop() {
-cropper.getCroppedCanvas({width: 800, height: 800}).toBlob(blob => {
-croppedBlobs.set(activeSlot, blob);
-const url = URL.createObjectURL(blob);
-showSlotPreview(activeSlot, url);
-document.getElementById('cropperContainer').classList.remove('active');
-}, 'image/jpeg', 0.9);
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+        width: 800,
+        height: 800,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+    });
+
+    canvas.toBlob(blob => {
+        croppedBlobs.set(activeSlot, blob);
+        const url = URL.createObjectURL(blob);
+        showSlotPreview(activeSlot, url);
+        document.getElementById('cropperContainer').classList.remove('active');
+        
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    }, 'image/jpeg', 0.92);
 }
 
 function showSlotPreview(slot, url, imageId = null) {
@@ -1129,23 +1189,25 @@ document.getElementById(`inputSlot${slot}`).value = '';
 }
 
 // ── Form Submit with Blobs ──
+// ── Form Validation ──
 document.getElementById('submitBtn').addEventListener('click', function(e) {
-const form = document.getElementById('productForm');
-if (!form.checkValidity()) {
-e.preventDefault();
-const firstInvalid = form.querySelector(':invalid');
-if (firstInvalid) {
-const tabPanel = firstInvalid.closest('.tab-panel');
-if (tabPanel) {
-const tabId = tabPanel.id.replace('tab-', '');
-document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-document.querySelector(`.modal-tab[data-tab="${tabId}"]`).classList.add('active');
-tabPanel.classList.add('active');
-}
-form.reportValidity();
-}
-}
+    const form = document.getElementById('productForm');
+    if (!form.checkValidity()) {
+        const firstInvalid = form.querySelector(':invalid');
+        if (firstInvalid) {
+            const tabPanel = firstInvalid.closest('.tab-panel');
+            if (tabPanel) {
+                const tabId = tabPanel.id.replace('tab-', '');
+                document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                
+                const targetTab = document.querySelector(`.modal-tab[data-tab="${tabId}"]`);
+                if (targetTab) targetTab.classList.add('active');
+                tabPanel.classList.add('active');
+            }
+        }
+        form.reportValidity();
+    }
 });
 
 document.getElementById('productForm').addEventListener('submit', function(e) {
@@ -1170,40 +1232,76 @@ else alert('Failed to save product. Check required fields.');
 
 // ── Variant Logic ──
 function addVariantRow(data = null) {
-const row = document.createElement('tr');
-row.innerHTML = `
-<td>
-    <input type="hidden" name="variant_id[]" value="${data ? data.id : ''}">
-    <input type="text" name="variant_sku[]" class="form-control" placeholder="Size (e.g. 42mm)"
-        value="${data ? (data.sku || data.size || '') : ''}">
-</td>
-<td><input type="number" name="variant_stock[]" class="form-control" placeholder="Stock"
-        value="${data ? data.stock : '0'}" required min="0"></td>
-<td style="width: 50px;"><button type="button" class="btn-icon delete" onclick="this.closest('tr').remove()"><i
-            class="fas fa-times"></i></button></td>
-`;
-document.getElementById('variantBody').appendChild(row);
+    const idx = variantCounter++;
+    const row = document.createElement('tr');
+    const imagePreview = data && data.image_url ? `<img src="${data.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px;">` : '<i class="fas fa-image" style="color:#ccc"></i>';
+    
+    row.innerHTML = `
+    <td>
+        <input type="hidden" name="variant_id[]" value="${data ? data.id : ''}">
+        <input type="hidden" name="variant_image_idx[]" value="${idx}">
+        <input type="text" name="variant_sku[]" class="form-control" placeholder="Size (e.g. 42mm)"
+            value="${data ? (data.sku || '') : ''}">
+    </td>
+    <td>
+        <input type="number" name="variant_stock[]" class="form-control" placeholder="Stock"
+            value="${data ? data.stock : '0'}" required min="0">
+    </td>
+    <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="variant-img-preview" style="width:30px; height:30px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:4px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                ${imagePreview}
+            </div>
+            <input type="file" name="variant_image_${idx}" class="form-control" style="font-size:0.7rem; padding:4px;" accept="image/*">
+        </div>
+    </td>
+    <td style="width: 40px;">
+        <button type="button" class="btn-icon delete" onclick="this.closest('tr').remove()" title="Remove">
+            <i class="fas fa-times"></i>
+        </button>
+    </td>
+    `;
+    document.getElementById('variantBody').appendChild(row);
 }
 
 // ── Open Add Modal ──
+// ── Open Add Modal ──
 function openProductModal() {
-document.getElementById('productForm').reset();
-document.querySelectorAll('input[name="strap_material"]').forEach(cb => cb.checked = false);
-document.querySelectorAll('input[name="strap_color"]').forEach(cb => cb.checked = false);
-document.querySelectorAll('input[name="dial_color"]').forEach(cb => cb.checked = false);
-document.getElementById('formAction').value = 'add_product';
-document.getElementById('modalTitle').innerText = 'Add New Product';
-document.getElementById('submitBtn').innerText = 'Create Product';
-document.getElementById('formBrand').value = 'TimeHub';
-document.querySelectorAll('.color-checkbox').forEach(cb => cb.checked = false);
-for (let i = 1; i <= 3; i++) clearSlotPreview(i); croppedBlobs.clear(); existingImageIds.clear();
-    document.getElementById('variantBody').innerHTML='' ; // Reset tabs to first
-    document.querySelectorAll('.tab-panel').forEach(p=> p.classList.remove('active'));
+    const form = document.getElementById('productForm');
+    form.reset();
+    
+    // Reset Hidden Inputs
+    document.getElementById('formProductId').value = '';
+    document.getElementById('formAction').value = 'add_product';
+    
+    // Reset Text/UI
+    document.getElementById('modalTitle').innerText = 'Add New Product';
+    document.getElementById('submitBtn').innerText = 'Create Product';
+    document.getElementById('formBrand').value = 'TimeHub';
+    
+    // Clear dynamic content
+    document.getElementById('variantBody').innerHTML = '';
+    variantCounter = 0;
+    croppedBlobs.clear();
+    existingImageIds.clear();
+    
+    // Clear previews
+    for (let i = 1; i <= 3; i++) {
+        clearSlotPreview(i);
+    }
+    
+    // Reset Checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('formActive').checked = true; // Default active
+    
+    // Reset Tabs
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-general').classList.add('active');
-    document.querySelector('.modal-tab').classList.add('active');
+    document.querySelector('.modal-tab[data-tab="general"]').classList.add('active');
+    
     openModal('productModal');
-    }
+}
 
     // ── Open Edit Modal (AJAX) ──
     function openEditModal(productId) {

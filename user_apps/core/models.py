@@ -85,6 +85,7 @@ class ProductImage(models.Model):
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    image = models.ImageField(upload_to='variant_images/', null=True, blank=True)
     strap_material = models.CharField(max_length=100, blank=True)
     strap_color = models.CharField(max_length=100, blank=True)
     dial_color = models.CharField(max_length=100, blank=True)

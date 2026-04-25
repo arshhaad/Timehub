@@ -14,6 +14,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
         :root {
@@ -1775,16 +1776,112 @@
         // ─────────── Place Order – button loading state ───────────
         document.getElementById('checkoutForm').addEventListener('submit', function (e) {
             const radios = document.querySelectorAll('input[name="address_id"]');
-            const anyChecked = Array.from(radios).some(r => r.checked);
-            if (!anyChecked) {
+            const checkedAddress = Array.from(radios).find(r => r.checked);
+            
+            if (!checkedAddress) {
                 e.preventDefault();
                 showToast('Please select a delivery address to continue.', 'error');
                 return;
             }
+
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
             const btn = document.getElementById('placeOrderBtn');
+
+            if (paymentMethod === 'razorpay') {
+                e.preventDefault();
+                handleRazorpayPayment(checkedAddress.value);
+                return;
+            }
+
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
             btn.disabled = true;
         });
+
+        function handleRazorpayPayment(addressId) {
+            const btn = document.getElementById('placeOrderBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
+            btn.disabled = true;
+
+            fetch("{% url 'razorpay_init' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const options = {
+                    "key": data.key,
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "TimeHub",
+                    "description": "Secure Luxury Watch Purchase",
+                    "order_id": data.razorpay_order_id,
+                    "handler": function (response) {
+                        verifyPayment(response, addressId);
+                    },
+                    "prefill": {
+                        "name": "{{ request.user.full_name }}",
+                        "email": "{{ request.user.email }}"
+                    },
+                    "theme": {
+                        "color": "#ff6a00"
+                    },
+                    "modal": {
+                        "ondismiss": function() {
+                            btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                            btn.disabled = false;
+                        }
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            })
+            .catch(err => {
+                showToast('Could not connect to payment gateway.', 'error');
+                btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                btn.disabled = false;
+            });
+        }
+
+        function verifyPayment(response, addressId) {
+            const btn = document.getElementById('placeOrderBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            fetch("{% url 'razorpay_verify' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    address_id: addressId
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    showToast(data.error || 'Payment verification failed.', 'error');
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                showToast('Verification failed. Please contact support.', 'error');
+                btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                btn.disabled = false;
+            });
+        }
     </script>
 </body>
 

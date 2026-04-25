@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem, Collection
+from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem, Collection, Wallet, WalletTransaction
 import json
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Avg, F
@@ -89,6 +89,17 @@ def order_detail(request, order_id):
                 from django.utils import timezone
                 order.refund_processed_at = timezone.now()
                 order.refund_method = request.POST.get('refund_method')
+                
+                if order.payment_method in ['razorpay', 'wallet']:
+                    wallet, _ = Wallet.objects.get_or_create(user=order.user)
+                    wallet.balance += order.total_amount
+                    wallet.save()
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='Credit',
+                        amount=order.total_amount,
+                        description=f'Refund for returned Order #{order.id}'
+                    )
             
             order.status = new_status
             
@@ -133,6 +144,18 @@ def update_order_status(request, order_id):
             from django.utils import timezone
             order.refund_processed_at = timezone.now()
             order.refund_method = request.POST.get('refund_method')
+            
+            if order.payment_method in ['razorpay', 'wallet']:
+                wallet, _ = Wallet.objects.get_or_create(user=order.user)
+                wallet.balance += order.total_amount
+                wallet.save()
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=order.total_amount,
+                    description=f'Refund for returned Order #{order.id}'
+                )
+                
         order.status = new_status
         order.save()
         messages.success(request, f'Order #{order.id} status updated to {new_status}.')
@@ -154,6 +177,8 @@ def cancel_order_item(request, item_id):
     if not item.is_cancelled:
         from django.db import transaction
         with transaction.atomic():
+            original_total = order.total_amount
+            
             item.is_cancelled = True
             item.cancel_reason = request.POST.get('reason', 'Cancelled by Admin')
             item.save()
@@ -164,7 +189,20 @@ def cancel_order_item(request, item_id):
             product.save()
             
             # We don't automatically cancel the order here 
+            order.update_totals()
             
+            if order.payment_method in ['razorpay', 'wallet']:
+                refund_amount = original_total - order.total_amount
+                if refund_amount > 0:
+                    wallet, _ = Wallet.objects.get_or_create(user=order.user)
+                    wallet.balance += refund_amount
+                    wallet.save()
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='Credit',
+                        amount=refund_amount,
+                        description=f'Refund for cancelled item in Order #{order.id}'
+                    )
             
         messages.success(request, f'Item "{item.product.name}" in Order #{order.id} has been cancelled.')
     else:

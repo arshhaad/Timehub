@@ -625,7 +625,8 @@
                             "material": "{{ v.strap_material|default:''|escapejs }}",
                             "price": "{{ v.effective_discount_price }}",
                             "old_price": "{{ v.effective_price }}",
-                            "stock": {{ v.stock }}
+                            "stock": {{ v.stock }},
+                            "image_url": "{{ v.image.url|default:''|escapejs }}"
                         }{% if not forloop.last %},{% endif %}
                         {% endfor %}
                     ]
@@ -1045,6 +1046,39 @@
             }
         };
 
+        window.autoSelectVariant = function() {
+            const dataEl = document.getElementById('variants-data');
+            if(!dataEl) return;
+            const variants = JSON.parse(dataEl.textContent);
+            
+            const activeStrapEl = document.getElementById('label-strapclr');
+            const activeDialEl = document.getElementById('label-dial');
+            const activeMaterialEl = document.getElementById('label-material');
+            
+            const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim() : '';
+            const currentDial = activeDialEl ? activeDialEl.textContent.trim() : '';
+            const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim() : '';
+            
+            let matchedVariant = variants.find(v => {
+                let match = true;
+                if(currentStrap && v.strap && v.strap !== currentStrap) match = false;
+                if(currentDial && v.dial && v.dial !== currentDial) match = false;
+                if(currentMaterial && v.material && v.material !== currentMaterial) match = false;
+                return match;
+            });
+            
+            if(!matchedVariant && variants.length > 0) {
+                 matchedVariant = variants.find(v => v.strap === currentStrap) || variants[0];
+            }
+            
+            if(matchedVariant) {
+                const btn = document.querySelector(`.opt-btn[data-variant-id="${matchedVariant.id}"]`);
+                if(btn && !btn.classList.contains('active')) {
+                    handleSizeSelection(btn, true);
+                }
+            }
+        };
+
         let selectedDial = '';
         window.handleDialSelection = function(element, dialName) {
             const group = element.closest('.variation-group');
@@ -1055,6 +1089,7 @@
             if (document.getElementById('label-dial')) {
                 document.getElementById('label-dial').textContent = dialName;
             }
+            autoSelectVariant();
         };
 
         let selectedStrapClr = '';
@@ -1067,6 +1102,7 @@
             if (document.getElementById('label-strapclr')) {
                 document.getElementById('label-strapclr').textContent = clrName;
             }
+            autoSelectVariant();
         };
 
         let selectedMaterial = '';
@@ -1079,9 +1115,10 @@
             if (document.getElementById('label-material')) {
                 document.getElementById('label-material').textContent = materialName;
             }
+            autoSelectVariant();
         };
 
-        window.handleSizeSelection = function(element) {
+        window.handleSizeSelection = function(element, isAutoTriggered = false) {
             // Update active UI
             const group = element.parentElement;
             group.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('active'));
@@ -1107,12 +1144,84 @@
                 qtyInput.value = 1;
                 qtyInput.max = Math.min(stock, MAX_CART_LIMIT);
             }
+
+            // Update Image if variant has one
+            const dataEl = document.getElementById('variants-data');
+            if (dataEl) {
+                const variants = JSON.parse(dataEl.textContent);
+                const variant = variants.find(v => v.id == selectedVariantId);
+                if (variant && variant.image_url) {
+                    renderSwap(variant.image_url, null);
+                }
+            }
+
+            // Sync visual chips if not auto-triggered
+            if (!isAutoTriggered) {
+                const dataEl = document.getElementById('variants-data');
+                if(dataEl) {
+                    const variants = JSON.parse(dataEl.textContent);
+                    const variant = variants.find(v => v.id === selectedVariantId);
+                    if (variant) {
+                        if (variant.strap) {
+                            selectedStrapClr = variant.strap;
+                            if (document.getElementById('label-strapclr')) document.getElementById('label-strapclr').textContent = variant.strap;
+                            document.querySelectorAll('#label-strapclr').forEach(l => {
+                                const g = l.closest('.variation-group');
+                                g.querySelectorAll('.color-option').forEach(o => {
+                                    if(o.querySelector('.color-name').textContent.trim() === variant.strap) {
+                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+                                        o.classList.add('active');
+                                    }
+                                });
+                            });
+                        }
+                        if (variant.dial) {
+                            selectedDial = variant.dial;
+                            if (document.getElementById('label-dial')) document.getElementById('label-dial').textContent = variant.dial;
+                            document.querySelectorAll('#label-dial').forEach(l => {
+                                const g = l.closest('.variation-group');
+                                g.querySelectorAll('.color-option').forEach(o => {
+                                    if(o.querySelector('.color-name').textContent.trim() === variant.dial) {
+                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+                                        o.classList.add('active');
+                                    }
+                                });
+                            });
+                        }
+                        if (variant.material) {
+                            selectedMaterial = variant.material;
+                            if (document.getElementById('label-material')) document.getElementById('label-material').textContent = variant.material;
+                            document.querySelectorAll('#label-material').forEach(l => {
+                                const g = l.closest('.variation-group');
+                                g.querySelectorAll('.material-chip').forEach(o => {
+                                    if(o.querySelector('.material-label span:first-child').textContent.trim() === variant.material) {
+                                        g.querySelectorAll('.material-chip').forEach(el => el.classList.remove('active'));
+                                        o.classList.add('active');
+                                    }
+                                });
+                            });
+                        }
+                    }
+                }
+            }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            const firstVariantBtn = document.querySelector('.opt-btn[data-type="variant"]');
-            if (firstVariantBtn) {
-                handleSizeSelection(firstVariantBtn);
+            const activeStrap = document.getElementById('label-strapclr');
+            if (activeStrap) selectedStrapClr = activeStrap.textContent.trim();
+            const activeDial = document.getElementById('label-dial');
+            if (activeDial) selectedDial = activeDial.textContent.trim();
+            const activeMat = document.getElementById('label-material');
+            if (activeMat) selectedMaterial = activeMat.textContent.trim();
+
+            autoSelectVariant();
+            
+            // Fallback if autoSelectVariant didn't find anything
+            if (!selectedVariantId) {
+                const firstVariantBtn = document.querySelector('.opt-btn[data-type="variant"]');
+                if (firstVariantBtn) {
+                    handleSizeSelection(firstVariantBtn, true);
+                }
             }
         });
 
