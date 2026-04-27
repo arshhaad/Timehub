@@ -32,10 +32,17 @@ class SignupForm(UserCreationForm):
             'placeholder': 'Phone number (optional)',
         }),
     )
+    referral_code = forms.CharField(
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Referral code (optional)',
+        }),
+    )
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name', 'phone_number', 'password1', 'password2')
+        fields = ('email', 'first_name', 'last_name', 'phone_number', 'referral_code', 'password1', 'password2')
 
 
 class LoginForm(forms.Form):

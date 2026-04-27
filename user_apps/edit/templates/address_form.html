@@ -264,8 +264,8 @@
 {% block content %}
 <div class="content-center">
 
-    <a href="{% url 'address_list' %}" class="back-link">
-        <i class="fas fa-chevron-left"></i> Back to Addresses
+    <a href="{% if next == 'checkout_page' %}{% url 'checkout_page' %}{% else %}{% url 'address_list' %}{% endif %}" class="back-link">
+        <i class="fas fa-chevron-left"></i> Back to {% if next == 'checkout_page' %}Checkout{% else %}Addresses{% endif %}
     </a>
 
     <div class="form-container">
@@ -280,6 +280,9 @@
 
         <form method="post" id="addressForm" novalidate>
             {% csrf_token %}
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
             <div class="form-grid">
 
                 <!-- Server-side errors (non-field) -->
@@ -464,7 +467,7 @@
             </div><!-- /form-grid -->
 
             <div class="form-actions">
-                <a href="{% url 'address_list' %}" class="btn btn-cancel">
+                <a href="{% if next == 'checkout_page' %}{% url 'checkout_page' %}{% else %}{% url 'address_list' %}{% endif %}" class="btn btn-cancel">
                     <i class="fas fa-times"></i> Cancel
                 </a>
                 <button type="submit" class="btn btn-save" id="submitBtn">

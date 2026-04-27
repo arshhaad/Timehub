@@ -412,9 +412,11 @@
                     
                     <!-- Additional Images -->
                     {% for img in images %}
+                    {% if img.image %}
                     <div class="thumb-card" onclick="swapImage('{{ img.image.url }}', this)">
                         <img src="{{ img.image.url }}" alt="Thumb">
                     </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -626,7 +628,7 @@
                             "price": "{{ v.effective_discount_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
-                            "image_url": "{{ v.image.url|default:''|escapejs }}"
+                            "image_url": "{% if v.image %}{{ v.image.url|escapejs }}{% endif %}"
                         }{% if not forloop.last %},{% endif %}
                         {% endfor %}
                     ]

@@ -268,7 +268,7 @@
                         </div>
                         <div class="item-info-alt">
                             <div class="item-name-alt">{{ item.product.name }}</div>
-                            <div class="item-qty-alt">Qty: {{ item.quantity }} &times; ₹{{ item.price|floatformat:0 }} = <strong style="color: #fff;">₹{{ item.total_price|floatformat:0 }}</strong></div>
+                            <div class="item-qty-alt">Qty: {{ item.quantity }} &times; ₹{{ item.price|floatformat:2 }} = <strong style="color: #fff;">₹{{ item.total_price|floatformat:2 }}</strong></div>
                         </div>
                     </div>
                     {% empty %}
@@ -282,19 +282,19 @@
                     <div style="flex:1;">
                         <div class="price-row-alt">
                             <span>Subtotal</span>
-                            <span>₹{{ order.subtotal|floatformat:0 }}</span>
+                            <span>₹{{ order.subtotal|floatformat:2 }}</span>
                         </div>
                         <div class="price-row-alt">
-                            <span>Tax (5%)</span>
-                            <span>₹{{ order.tax|floatformat:0 }}</span>
+                            <span>Tax (3%)</span>
+                            <span>₹{{ order.tax|floatformat:2 }}</span>
                         </div>
                         <div class="price-row-alt">
                             <span>Shipping</span>
-                            <span>{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:0 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span>
+                            <span>{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span>
                         </div>
                         <div class="price-row-alt total-alt">
                             <span>Total Amount</span>
-                            <span>₹{{ order.total_amount|floatformat:0 }}</span>
+                            <span>₹{{ order.total_amount|floatformat:2 }}</span>
                         </div>
                     </div>
                     <div style="margin-top: 15px; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">

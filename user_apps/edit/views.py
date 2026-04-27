@@ -24,6 +24,15 @@ from django.utils import timezone
 def dashboard(request):
     user = request.user
     
+    # Ensure user has a referral code (for existing users)
+    if not user.referral_code:
+        from user_apps.core.signals import generate_referral_code
+        code = f"TH-{generate_referral_code()}"
+        while CustomUser.objects.filter(referral_code=code).exists():
+            code = f"TH-{generate_referral_code()}"
+        user.referral_code = code
+        user.save(update_fields=['referral_code'])
+    
     # Fetch actual stats
     total_orders = user.orders.count()
     wishlist, _ = Wishlist.objects.get_or_create(user=user)
@@ -41,7 +50,7 @@ def dashboard(request):
         'user': user,
         'stats': stats,
         'recent_orders': recent_orders,
-        'referral_code': 'TIMEHUB-JS2024', # test value
+        'referral_code': user.referral_code,
     }
     
     return render(request, 'user_dashboard.html', context)
@@ -57,6 +66,7 @@ def address_list(request):
 @login_required
 @never_cache
 def add_address(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
     if request.method == 'POST':
         form = AddressForm(request.POST)
         if form.is_valid():
@@ -68,18 +78,19 @@ def add_address(request):
                 Address.objects.filter(user=request.user).update(is_default=False)
 
             address.save()
-            return redirect('address_list')
+            messages.success(request, 'Address added successfully!')
+            return redirect(next_url)
     else:
         form = AddressForm()
 
-    return render(request, 'address_form.html', {'form': form})
-
+    return render(request, 'address_form.html', {'form': form, 'next': next_url})
 
 
 @login_required
 @never_cache
 def edit_address(request, id):
     address = get_object_or_404(Address, id=id, user=request.user)
+    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
 
     if request.method == 'POST':
         form = AddressForm(request.POST, instance=address)
@@ -90,11 +101,12 @@ def edit_address(request, id):
                 Address.objects.filter(user=request.user).exclude(id=id).update(is_default=False)
 
             address.save()
-            return redirect('address_list')
+            messages.success(request, 'Address updated successfully!')
+            return redirect(next_url)
     else:
         form = AddressForm(instance=address)
 
-    return render(request, 'address_form.html', {'form': form})
+    return render(request, 'address_form.html', {'form': form, 'next': next_url})
 
 @login_required
 @never_cache
@@ -269,12 +281,13 @@ def cart_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product').all()
     subtotal = sum(item.total_price for item in items)
-    tax = subtotal * Decimal('0.05') # 5% tax
-    shipping = Decimal('0.00')
+    shipping = Decimal('99.00')
     if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('99.00')
+        shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
         shipping = Decimal('49.00')
+    
+    tax = round(subtotal * Decimal('0.03'), 2)
     total = subtotal + tax + shipping
     
     has_stock_issues = False
@@ -395,12 +408,13 @@ def update_cart(request, item_id):
             cart = cart_item.cart
             items = cart.items.select_related('product').all()
             subtotal = sum(item.total_price for item in items)
-            tax = subtotal * Decimal('0.05')
-            shipping = Decimal('0.00')
+            shipping = Decimal('99.00')
             if subtotal >= Decimal('20000.00'):
-                shipping = Decimal('99.00')
+                shipping = Decimal('0.00')
             elif subtotal >= Decimal('5000.00'):
                 shipping = Decimal('49.00')
+            
+            tax = round(subtotal * Decimal('0.03'), 2)
             total = subtotal + tax + shipping
             cart_count = sum(item.quantity for item in items)
             
@@ -488,12 +502,13 @@ def save_for_later(request, item_id):
         cart = request.user.cart
         items = cart.items.select_related('product').all()
         subtotal = sum(item.total_price for item in items)
-        tax = subtotal * Decimal('0.05')
-        shipping = Decimal('0.00')
+        shipping = Decimal('99.00')
         if subtotal >= Decimal('20000.00'):
-            shipping = Decimal('99.00')
+            shipping = Decimal('0.00')
         elif subtotal >= Decimal('5000.00'):
             shipping = Decimal('49.00')
+        
+        tax = round(subtotal * Decimal('0.03'), 2)
         total = subtotal + tax + shipping
         cart_count = sum(item.quantity for item in items)
         

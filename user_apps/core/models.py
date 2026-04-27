@@ -112,6 +112,7 @@ class ProductVariant(models.Model):
     def effective_discount_price(self):
         return self.discount_price if self.discount_price else self.product.discount_price
 
+
 class Order(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
@@ -142,6 +143,10 @@ class Order(models.Model):
     reschedule_reason = models.TextField(blank=True, null=True)
     requested_reschedule_date = models.DateField(blank=True, null=True)
     requested_reschedule_time = models.TimeField(blank=True, null=True)
+    coupon_code = models.CharField(max_length=50, blank=True, null=True, help_text="Coupon code applied at checkout")
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
     reschedule_status = models.CharField(max_length=20, choices=[('None', 'None'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='None')
     reschedule_count = models.PositiveIntegerField(default=0)
     scheduled_delivery_date = models.DateField(blank=True, null=True)
@@ -158,13 +163,13 @@ class Order(models.Model):
         active_items = self.items.filter(is_cancelled=False)
         self.subtotal = sum(item.price * item.quantity for item in active_items)
         
-        # 5% tax as per project standard
-        self.tax = round(self.subtotal * Decimal('0.05'), 2)
+        # 3% tax as per project standard
+        self.tax = round(self.subtotal * Decimal('0.03'), 2)
         
-        # Calculate shipping based on subtotal
-        shipping = Decimal('0.00')
+        # Calculate shipping based on subtotal (Standard: Free for high-value orders)
+        shipping = Decimal('99.00')
         if self.subtotal >= Decimal('20000.00'):
-            shipping = Decimal('99.00')
+            shipping = Decimal('0.00')
         elif self.subtotal >= Decimal('5000.00'):
             shipping = Decimal('49.00')
         self.shipping_charge = shipping
@@ -212,6 +217,7 @@ class ComparisonHistory(models.Model):
 
 class Cart(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
+    coupon = models.ForeignKey('offers.Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='carts')
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

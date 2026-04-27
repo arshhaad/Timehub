@@ -1,0 +1,169 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Payment Failed - TimeHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-container {
+        max-width: 600px;
+        margin: 80px auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .status-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .status-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        font-size: 3rem;
+        color: #ef4444;
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+        animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-2px, 0, 0); }
+        20%, 80% { transform: translate3d(4px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+        40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    .status-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+    }
+
+    .status-message {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+    
+    .status-message strong {
+        color: #fff;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-custom {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 32px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        gap: 10px;
+        text-decoration: none;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .btn-danger-custom {
+        background: #ef4444;
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger-custom:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        background: #dc2626;
+        color: #fff;
+    }
+
+    .btn-outline-custom {
+        background: transparent;
+        border: 2px solid var(--border-color);
+        color: #fff;
+    }
+
+    .btn-outline-custom:hover {
+        border-color: #fff;
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+    
+    .support-text {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px dashed var(--border-color);
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+    
+    .support-text a {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .support-text a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="status-container">
+        <div class="status-icon">
+            <i class="fas fa-times"></i>
+        </div>
+        
+        <h1 class="status-title">Payment Failed</h1>
+        <p class="status-message">
+            We couldn't process your payment. Don't worry, your order is still saved. 
+            Please check your payment details or try a different payment method.
+        </p>
+        
+        <div class="action-buttons">
+            <a href="{% url 'checkout' %}" class="btn-custom btn-danger-custom">
+                <i class="fas fa-redo"></i> Retry Payment
+            </a>
+            <a href="{% url 'cart' %}" class="btn-custom btn-outline-custom">
+                <i class="fas fa-arrow-left"></i> Back to Cart
+            </a>
+        </div>
+        
+        <div class="support-text">
+            If you continue to experience issues, please contact our <a href="{% url 'contact' %}">Support Team</a>.
+        </div>
+    </div>
+</div>
+{% endblock %}

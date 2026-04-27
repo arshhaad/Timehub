@@ -207,7 +207,11 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Category Name</label>
-                        <input type="text" name="name" class="form-control" required placeholder="e.g. Chronographs">
+                        <input type="text" name="name" id="add_cat_name" class="form-control" required 
+                               placeholder="e.g. Chronographs" 
+                               pattern="^[a-zA-Z0-9 ]+$" 
+                               title="Only letters, numbers, and spaces are allowed.">
+                        <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
                     </div>
                     <div class="form-group">
                         <label>Parent Category (Optional)</label>
@@ -245,7 +249,10 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Category Name</label>
-                        <input type="text" name="name" id="edit_cat_name" class="form-control" required>
+                        <input type="text" name="name" id="edit_cat_name" class="form-control" required
+                               pattern="^[a-zA-Z0-9 ]+$"
+                               title="Only letters, numbers, and spaces are allowed.">
+                        <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
                     </div>
                     <div class="form-group">
                         <label>Parent Category (Optional)</label>
@@ -319,5 +326,26 @@
                 setTimeout(() => a.remove(), 500);
             });
         }, 3000);
+
+        // Name validation logic
+        const nameInputs = [document.getElementById('add_cat_name'), document.getElementById('edit_cat_name')];
+        const regex = /^[a-zA-Z0-9 ]+$/;
+
+        nameInputs.forEach(input => {
+            if (!input) return;
+            
+            const msg = input.parentElement.querySelector('.validation-msg');
+            
+            input.addEventListener('input', () => {
+                const val = input.value.trim();
+                if (val && !regex.test(val)) {
+                    msg.style.display = 'block';
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    msg.style.display = 'none';
+                    input.style.borderColor = '';
+                }
+            });
+        });
     });
 {% endblock %}

@@ -52,7 +52,20 @@ def verify_otp(request):
             messages.error(request, "No OTP found. Please request a new one.")
             return redirect("verify-otp")
 
-    return render(request, "accounts/verify_otp.html", {"email": email})
+    # Get latest OTP for timer
+    seconds_left = 0
+    try:
+        user = CustomUser.objects.get(email=email)
+        otp_obj = user.otps.latest('created_at')
+        expiry_time = otp_obj.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        seconds_left = max(0, int((expiry_time - timezone.now()).total_seconds()))
+    except (CustomUser.DoesNotExist, EmailOTP.DoesNotExist):
+        pass
+
+    return render(request, "accounts/verify_otp.html", {
+        "email": email,
+        "seconds_left": seconds_left
+    })
 
 
 @never_cache
@@ -74,7 +87,7 @@ def resend_otp(request):
     # cooldown check
     if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < settings.RESET_OTP_COOLDWON_SEC:
         messages.error(request, "Please wait before requesting another OTP.")
-        return redirect("verify-otp")
+        return redirect("verify-otp") if not is_reset else redirect("verify-otp-reset")
 
     otp_obj = EmailOTP.objects.create(user=user)
 

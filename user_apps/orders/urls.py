@@ -20,4 +20,9 @@ urlpatterns = [
     # Razorpay
     path('razorpay/init/', views.initialize_razorpay_order, name='razorpay_init'),
     path('razorpay/verify/', views.verify_razorpay_payment, name='razorpay_verify'),
+
+    # Coupons
+    path('coupon/apply/', views.apply_coupon, name='apply_coupon'),
+    path('coupon/remove/', views.remove_coupon, name='remove_coupon'),
+    path('coupons/', views.available_coupons, name='available_coupons'),
 ]

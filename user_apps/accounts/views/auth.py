@@ -18,6 +18,17 @@ def signup_view(request):
 
         if form.is_valid():
             user = form.save(commit=False)
+            
+            # Handle referral code
+            ref_code = form.cleaned_data.get('referral_code')
+            if ref_code:
+                try:
+                    referrer = CustomUser.objects.get(referral_code=ref_code)
+                    user.referred_by = referrer
+                except CustomUser.DoesNotExist:
+                    # Optional: You could add an error to the form if the code is invalid
+                    # For now, we'll just ignore invalid codes
+                    pass
 
             # deactivate until email verified
             user.is_active = False

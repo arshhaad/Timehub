@@ -1,0 +1,374 @@
+{% extends 'order_manage/base.html' %}
+{% load static %}
+
+{% block title %}Marketing & Offers - TimeHub Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Page Header ── */
+    .offer-page-header {
+        margin-bottom: 40px;
+        background: linear-gradient(135deg, #111 0%, #1c1c1c 100%);
+        padding: 35px 40px;
+        border-radius: 24px;
+        border: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ── Grid ── */
+    .coupon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 28px;
+    }
+
+    /* ── Add New Card ── */
+    .add-coupon-card {
+        border: 2px dashed #d1d5db;
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 280px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        text-decoration: none;
+    }
+
+    .add-coupon-card:hover {
+        border-color: var(--primary-bg);
+        background: #fff9f5;
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(255, 107, 0, 0.08);
+    }
+
+    .add-icon-circle {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        background: #f4f4f5;
+        color: #71717a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 16px;
+        transition: 0.3s;
+    }
+
+    .add-coupon-card:hover .add-icon-circle {
+        background: var(--primary-bg);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(255, 107, 0, 0.35);
+    }
+
+    .add-coupon-card .add-label {
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--text-main);
+    }
+
+    .add-coupon-card .add-sublabel {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* ── Ticket Card ── */
+    .coupon-ticket {
+        background: #fff;
+        border-radius: 22px;
+        position: relative;
+        overflow: visible;
+        border: 1px solid var(--border-color);
+        transition: all 0.35s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coupon-ticket:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    .ticket-top {
+        padding: 26px 26px 20px;
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px 22px 0 0;
+    }
+
+    /* Subtle background accent */
+    .ticket-top::before {
+        content: '\f02b';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: -10px;
+        top: -10px;
+        font-size: 8rem;
+        color: rgba(0, 0, 0, 0.03);
+        pointer-events: none;
+    }
+
+    /* Punch holes */
+    .punch-hole {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        background: var(--bg-color);
+        border-radius: 50%;
+        bottom: -11px;
+        z-index: 5;
+        border: 1px solid var(--border-color);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .punch-left {
+        left: -11px;
+    }
+
+    .punch-right {
+        right: -11px;
+    }
+
+    .ticket-divider {
+        border: none;
+        border-top: 2px dashed #e5e7eb;
+        margin: 0 20px;
+    }
+
+    .ticket-bottom {
+        padding: 18px 26px;
+        background: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 0 0 22px 22px;
+    }
+
+    /* Discount value */
+    .discount-val {
+        font-size: 2.4rem;
+        font-weight: 900;
+        color: var(--primary-bg);
+        line-height: 1;
+        margin: 12px 0 4px;
+    }
+
+    .discount-val .off-label {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        font-weight: 600;
+        margin-left: 4px;
+    }
+
+    /* Usage bar */
+    .usage-bar-wrap {
+        height: 5px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 14px 0 6px;
+        overflow: hidden;
+    }
+
+    .usage-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-bg), #ff9a40);
+        border-radius: 10px;
+        transition: width 0.8s ease-out;
+    }
+
+    /* ── Modal ── */
+    /* Responsive */
+    @media (max-width: 640px) {
+        .offer-page-header {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="offer-page-header">
+    <div>
+        <h1 style="color:#fff; font-size:2rem; font-weight:900; letter-spacing:-0.5px; margin-bottom:6px;">
+            Offers & Coupons
+        </h1>
+        <p style="color:#999; font-size:0.9rem;">Drive conversions with custom discount codes and seasonal campaigns.
+        </p>
+    </div>
+    <div style="display:flex; align-items:center; gap:24px;">
+        <div style="text-align:right;">
+            <div style="color:#fff; font-weight:800; font-size:1.4rem; line-height:1;">{{ coupons|length }}</div>
+            <div style="color:#888; font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; margin-top:3px;">
+                Total Coupons</div>
+        </div>
+        <a href="{% url 'coupon_create' %}" class="btn btn-primary"
+            style="height:48px; display:flex; align-items:center; border-radius:14px; font-weight:800; white-space:nowrap; text-decoration: none;">
+            <i class="fas fa-plus"></i> New Coupon
+        </a>
+    </div>
+</div>
+
+<!-- Grid -->
+<div class="coupon-grid">
+
+    <!-- Add New Card -->
+    <a href="{% url 'coupon_create' %}" class="add-coupon-card">
+        <div class="add-icon-circle">
+            <i class="fas fa-plus"></i>
+        </div>
+        <span class="add-label">Create New Offer</span>
+        <span class="add-sublabel">Quick Setup Wizard</span>
+    </a>
+
+    <!-- Coupon Cards -->
+    {% for coupon in coupons %}
+    <div class="coupon-ticket">
+        <div class="ticket-top">
+
+            <!-- Status + Copy -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span class="status-badge {% if coupon.is_valid %}s-Delivered{% else %}s-Cancelled{% endif %}">
+                    <i class="fas {% if coupon.is_valid %}fa-check-circle{% else %}fa-ban{% endif %}"></i>
+                    {% if coupon.is_valid %}Active{% else %}Inactive{% endif %}
+                </span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="icon-btn" onclick="copyCode('{{ coupon.code }}')" title="Copy Code"
+                        style="border:none; background:transparent; cursor:pointer;">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <a href="{% url 'coupon_edit' coupon.id %}" class="icon-btn" title="Edit Coupon"
+                        style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Targeting Badges -->
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
+                {% if coupon.is_first_order_only %}
+                <span
+                    style="background: #eff6ff; color: #1e40af; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+                    <i class="fas fa-user-plus"></i> New User
+                </span>
+                {% endif %}
+                {% if coupon.is_referral_only %}
+                <span
+                    style="background: #fdf2f7; color: #9d174d; font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+                    <i class="fas fa-handshake"></i> Referral
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Discount Value -->
+            <div class="discount-val">
+                {% if coupon.discount_type == 'percentage' %}
+                {{ coupon.discount_value|floatformat:0 }}%
+                {% else %}
+                ₹{{ coupon.discount_value|floatformat:0 }}
+                {% endif %}
+                <span class="off-label">OFF</span>
+            </div>
+
+            <!-- Code -->
+            <div
+                style="font-size:1rem; font-weight:800; color:var(--text-main); margin-bottom:16px; font-family:'Courier New',monospace; letter-spacing:1px;">
+                {{ coupon.code }}
+            </div>
+
+            <!-- Usage bar -->
+            <div class="usage-bar-wrap">
+                {% if coupon.usage_limit %}
+                <div class="usage-bar-fill" style="width: {% widthratio coupon.used_count coupon.usage_limit 100 %}%">
+                </div>
+                {% else %}
+                <div class="usage-bar-fill" style="width:0%"></div>
+                {% endif %}
+            </div>
+            <div
+                style="display:flex; justify-content:space-between; font-size:0.72rem; color:#9ca3af; font-weight:600;">
+                <span>Used: {{ coupon.used_count }}</span>
+                <span>Limit: {{ coupon.usage_limit|default:"Unlimited" }}</span>
+            </div>
+
+            <!-- Punch holes -->
+            <div class="punch-hole punch-left"></div>
+            <div class="punch-hole punch-right"></div>
+        </div>
+
+        <hr class="ticket-divider">
+
+        <div class="ticket-bottom">
+            <div>
+                <div
+                    style="font-size:0.68rem; text-transform:uppercase; color:#9ca3af; font-weight:700; letter-spacing:0.5px;">
+                    Min. Purchase</div>
+                <div style="font-weight:800; font-size:0.95rem; color:var(--text-main);">₹{{
+                    coupon.min_purchase_amount|floatformat:0 }}</div>
+            </div>
+            <div>
+                <div
+                    style="font-size:0.68rem; text-transform:uppercase; color:#9ca3af; font-weight:700; letter-spacing:0.5px;">
+                    Expires</div>
+                <div style="font-weight:700; font-size:0.88rem; color:var(--text-main);">{{ coupon.valid_to|date:"M d,
+                    Y" }}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <a href="{% url 'coupon_toggle' coupon.id %}" class="btn btn-outline"
+                    style="padding:8px 12px; border-radius:10px; font-size:0.85rem;"
+                    title="{% if coupon.is_active %}Pause{% else %}Resume{% endif %}">
+                    {% if coupon.is_active %}<i class="fas fa-pause"></i>{% else %}<i class="fas fa-play"></i>{% endif
+                    %}
+                </a>
+                <button onclick="confirmDelete('{{ coupon.id }}','{{ coupon.code }}')" class="btn btn-outline"
+                    style="padding:8px 12px; border-radius:10px; color:#ef4444; border-color:#fecaca; font-size:0.85rem;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div
+        style="grid-column:1/-1; text-align:center; padding:80px 20px; background:#fff; border-radius:20px; border:1px dashed #e5e7eb;">
+        <i class="fas fa-ticket-alt" style="font-size:3rem; color:#e5e7eb; display:block; margin-bottom:20px;"></i>
+        <h3 style="color:var(--text-main); margin-bottom:10px;">No coupons yet</h3>
+        <p style="color:var(--text-muted); margin-bottom:28px;">Create your first offer to start rewarding customers.
+        </p>
+        <a href="{% url 'coupon_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Create First Coupon</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete(id, code) {
+        if (confirm('Delete coupon "' + code + '"?\n\nThis is permanent and will invalidate the code for all users.')) {
+            window.location.href = '/adminpanel/offers/delete/' + id + '/';
+        }
+    }
+
+    function copyCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="fas fa-check" style="color:#16a34a;"></i>';
+            setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 1500);
+        }).catch(() => {
+            prompt('Copy this code:', code);
+        });
+    }
+</script>
+{% endblock %}

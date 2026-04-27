@@ -3,7 +3,7 @@ from decimal import Decimal
 import random
 from datetime import timedelta
 from django.utils import timezone
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.http import JsonResponse
@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product, Wallet, WalletTransaction
+from admin_apps.offers.models import Coupon
 from user_apps.edit.models import Address
 from django.conf import settings
 try:
@@ -21,11 +22,14 @@ except ImportError:
 
 
 SHIPPING_CHARGE = Decimal('99.00')
-TAX_RATE = Decimal('0.05')  # 5% GST
+TAX_RATE = Decimal('0.03')  # 3% GST
 
+
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 @login_required
 @never_cache
+@ensure_csrf_cookie
 def checkout_page(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product').all()
@@ -35,13 +39,31 @@ def checkout_page(request):
         return redirect('cart_view')
 
     subtotal = sum(item.total_price for item in items)
-    tax = round(subtotal * TAX_RATE, 2)
-    shipping = Decimal('0.00')
+    shipping = Decimal('99.00')
     if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('99.00')
+        shipping = Decimal('0.00') # Free shipping for large orders
     elif subtotal >= Decimal('5000.00'):
         shipping = Decimal('49.00')
-    total = subtotal + tax + shipping
+    
+    tax = Decimal('0')
+    discount = Decimal('0')
+    if cart.coupon:
+        if cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
+            if cart.coupon.discount_type == 'percentage':
+                discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
+                if cart.coupon.max_discount_amount:
+                    discount = min(discount, cart.coupon.max_discount_amount)
+            else:
+                discount = cart.coupon.discount_value
+        else:
+            # Coupon no longer valid or min amount not met
+            cart.coupon = None
+            cart.save()
+            
+    taxable_amount = subtotal - discount
+    if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
+    tax = round(taxable_amount * TAX_RATE, 2)
+    total = taxable_amount + tax + shipping
 
     addresses = Address.objects.filter(user=request.user)
     default_address = addresses.filter(is_default=True).first() or addresses.first()
@@ -54,8 +76,8 @@ def checkout_page(request):
             messages.error(request, 'Please select a delivery address.')
             return render(request, 'checkout_page.html', {
                 'items': items, 'subtotal': subtotal, 'tax': tax,
-                'shipping': shipping, 'total': total,
-                'addresses': addresses, 'default_address': default_address,
+                'shipping': shipping, 'discount': discount, 'total': total,
+                'cart': cart, 'addresses': addresses, 'default_address': default_address,
             })
 
         address = get_object_or_404(Address, id=address_id, user=request.user)
@@ -78,8 +100,8 @@ def checkout_page(request):
                     messages.error(request, 'Insufficient wallet balance.')
                     return render(request, 'checkout_page.html', {
                         'items': items, 'subtotal': subtotal, 'tax': tax,
-                        'shipping': shipping, 'total': total,
-                        'addresses': addresses, 'default_address': default_address,
+                        'shipping': shipping, 'discount': discount, 'total': total,
+                        'cart': cart, 'addresses': addresses, 'default_address': default_address,
                     })
                 wallet.balance -= total
                 wallet.save()
@@ -95,11 +117,16 @@ def checkout_page(request):
                 subtotal=subtotal,
                 tax=tax,
                 shipping_charge=shipping,
-                discount=Decimal('0'),
+                discount=discount,
                 total_amount=total,
                 status='Pending',
                 scheduled_delivery_date=estimated_delivery_date,
+                coupon_code=cart.coupon.code if cart.coupon else None,
             )
+
+            if cart.coupon:
+                cart.coupon.used_count += 1
+                cart.coupon.save()
 
             if payment_method == 'wallet':
                 WalletTransaction.objects.create(
@@ -146,15 +173,24 @@ def checkout_page(request):
     days_to_add = random.randint(1, 7)
     estimated_delivery = timezone.now() + timedelta(days=days_to_add)
 
+    # Fetch active coupons for the modal
+    now = timezone.now()
+    active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=now, valid_to__gte=now)
+    # Exclude those that reached usage limit
+    active_coupons = [c for c in active_coupons if c.is_valid]
+
     return render(request, 'checkout_page.html', {
         'items': items,
         'subtotal': subtotal,
         'tax': tax,
         'shipping': shipping,
+        'discount': discount,
         'total': total,
+        'cart': cart,
         'addresses': addresses,
         'default_address': default_address,
         'estimated_delivery': estimated_delivery,
+        'active_coupons': active_coupons,
     })
 
 
@@ -518,21 +554,41 @@ def initialize_razorpay_order(request):
         return JsonResponse({'error': 'Cart is empty'}, status=400)
     
     subtotal = sum(item.total_price for item in items)
-    tax = round(subtotal * TAX_RATE, 2)
-    shipping = Decimal('0.00')
+    shipping = Decimal('99.00')
     if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('99.00')
+        shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
         shipping = Decimal('49.00')
-    total = subtotal + tax + shipping
+    
+    discount = Decimal('0')
+    if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
+        if cart.coupon.discount_type == 'percentage':
+            discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
+            if cart.coupon.max_discount_amount:
+                discount = min(discount, cart.coupon.max_discount_amount)
+        else:
+            discount = cart.coupon.discount_value
+            
+    taxable_amount = subtotal - discount
+    if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
+    tax = round(taxable_amount * TAX_RATE, 2)
+    total = taxable_amount + tax + shipping
     
     amount_paise = int(total * 100)
     
+    # Stock Check before initializing payment
+    for item in items:
+        available_stock = item.variant.stock if item.variant else item.product.stock
+        if available_stock < item.quantity:
+            return JsonResponse({'error': f"Sorry, only {available_stock} units of {item.product.name} are available."}, status=400)
+
     try:
+        receipt_id = f"receipt_cart_{cart.id}_{int(timezone.now().timestamp())}"
         razorpay_order = RAZORPAY_CLIENT.order.create({
             'amount': amount_paise,
             'currency': 'INR',
-            'payment_capture': '1'
+            'payment_capture': '1',
+            'receipt': receipt_id
         })
         return JsonResponse({
             'razorpay_order_id': razorpay_order['id'],
@@ -541,7 +597,10 @@ def initialize_razorpay_order(request):
             'key': settings.RAZORPAY_KEY_ID
         })
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        error_msg = str(e)
+        if "Amount exceeds maximum amount allowed" in error_msg:
+            error_msg = "The order amount exceeds the limit for this Razorpay test account. Please try with a cheaper item (e.g., under ₹50,000) or check your Razorpay dashboard settings."
+        return JsonResponse({'error': error_msg}, status=500)
 
 
 @login_required
@@ -575,79 +634,243 @@ def verify_razorpay_payment(request):
     except:
         return JsonResponse({'error': 'Payment verification failed'}, status=400)
     
-    # Create the order
-    address = get_object_or_404(Address, id=address_id, user=request.user)
-    address_data = {
-        'full_name': address.full_name,
-        'street': address.street,
-        'city': address.city,
-        'state': address.state,
-        'postal_code': address.postal_code,
-        'country': address.country,
-        'phone': address.phone,
-    }
-    
-    cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('product').all()
-    
-    subtotal = sum(item.total_price for item in items)
-    tax = round(subtotal * TAX_RATE, 2)
-    shipping = Decimal('0.00')
-    if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('99.00')
-    elif subtotal >= Decimal('5000.00'):
-        shipping = Decimal('49.00')
-    total = subtotal + tax + shipping
-    
-    # Generate estimated delivery date
-    days_to_delivery = random.randint(3, 7)
-    estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
-    
-    order = Order.objects.create(
-        user=request.user,
-        address_snapshot=json.dumps(address_data),
-        payment_method='razorpay',
-        subtotal=subtotal,
-        tax=tax,
-        shipping_charge=shipping,
-        discount=Decimal('0'),
-        total_amount=total,
-        status='Pending',
-        scheduled_delivery_date=estimated_delivery_date,
-    )
-    
-    for item in items:
-        # Check stock
-        available_stock = item.variant.stock if item.variant else item.product.stock
-        if available_stock < item.quantity:
-             # In a real scenario, you'd handle this better (refund if payment made)
-             continue
-             
-        if item.variant:
-            price_at_purchase = item.variant.effective_discount_price
-        else:
-            price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+    try:
+        with transaction.atomic():
+            # Create the order
+            address = get_object_or_404(Address, id=address_id, user=request.user)
+            address_data = {
+                'full_name': address.full_name,
+                'street': address.street,
+                'city': address.city,
+                'state': address.state,
+                'postal_code': address.postal_code,
+                'country': address.country,
+                'phone': address.phone,
+            }
             
-        OrderItem.objects.create(
-            order=order,
-            product=item.product,
-            variant=item.variant,
-            quantity=item.quantity,
-            price=price_at_purchase,
-        )
+            cart, _ = Cart.objects.get_or_create(user=request.user)
+            items = cart.items.select_related('product', 'variant').all()
+            
+            if not items.exists():
+                return JsonResponse({'error': 'Cart is empty'}, status=400)
+
+            subtotal = sum(item.total_price for item in items)
+            shipping = Decimal('99.00')
+            if subtotal >= Decimal('20000.00'):
+                shipping = Decimal('0.00')
+            elif subtotal >= Decimal('5000.00'):
+                shipping = Decimal('49.00')
+            
+            discount = Decimal('0')
+            if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
+                if cart.coupon.discount_type == 'percentage':
+                    discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
+                    if cart.coupon.max_discount_amount:
+                        discount = min(discount, cart.coupon.max_discount_amount)
+                else:
+                    discount = cart.coupon.discount_value
+                    
+            taxable_amount = subtotal - discount
+            if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
+            tax = round(taxable_amount * TAX_RATE, 2)
+            total = taxable_amount + tax + shipping
+            
+            # Generate estimated delivery date
+            days_to_delivery = random.randint(3, 7)
+            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
+            
+            order = Order.objects.create(
+                user=request.user,
+                address_snapshot=json.dumps(address_data),
+                payment_method='razorpay',
+                subtotal=subtotal,
+                tax=tax,
+                shipping_charge=shipping,
+                discount=discount,
+                total_amount=total,
+                status='Pending',
+                scheduled_delivery_date=estimated_delivery_date,
+                coupon_code=cart.coupon.code if cart.coupon else None,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_payment_id=payment_id,
+                razorpay_signature=signature,
+            )
+            
+            if cart.coupon:
+                cart.coupon.used_count += 1
+                cart.coupon.save()
+            
+            for item in items:
+                # Check stock again within the transaction
+                available_stock = item.variant.stock if item.variant else item.product.stock
+                if available_stock < item.quantity:
+                     # This should ideally trigger a refund logic if possible, 
+                     # but for now we raise an exception to rollback the order creation.
+                     raise ValueError(f"Insufficient stock for {item.product.name} after payment.")
+                     
+                if item.variant:
+                    price_at_purchase = item.variant.effective_discount_price
+                else:
+                    price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+                    
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    variant=item.variant,
+                    quantity=item.quantity,
+                    price=price_at_purchase,
+                )
+                
+                # Decrement Stock
+                if item.variant:
+                    item.variant.stock -= item.quantity
+                    item.variant.save()
+                else:
+                    item.product.stock -= item.quantity
+                    item.product.save()
+                    
+            # Clear cart
+            cart.items.all().delete()
+            
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('order_success', args=[order.id])
+            })
+    except Exception as e:
+        # If order creation fails AFTER payment verification (e.g. stock issue), 
+        # we credit the amount back to the user's wallet since we can't easily auto-refund.
+        try:
+            with transaction.atomic():
+                wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                wallet.balance += total
+                wallet.save()
+                
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=total,
+                    description=f'Refund for failed Razorpay Order (ID: {razorpay_order_id})'
+                )
+            error_msg = f"Payment was successful but order creation failed: {str(e)}. The amount of ₹{total} has been credited to your TimeHub Wallet."
+            return JsonResponse({'error': error_msg}, status=400)
+        except Exception as wallet_e:
+            return JsonResponse({'error': f'An unexpected error occurred during order processing. Please contact support with Payment ID: {payment_id}'}, status=500)
+
+
+@login_required
+@never_cache
+def apply_coupon(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+    
+    try:
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+    except:
+        code = request.POST.get('code', '').strip()
         
-        # Decrement Stock
-        if item.variant:
-            item.variant.stock -= item.quantity
-            item.variant.save()
-        else:
-            item.product.stock -= item.quantity
-            item.product.save()
-            
-    # Clear cart
-    cart.items.all().delete()
+    if not code:
+        return JsonResponse({'success': False, 'error': 'Please enter a coupon code'})
+        
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.all()
+    if not items.exists():
+        return JsonResponse({'success': False, 'error': 'Your cart is empty'})
+        
+    subtotal = sum(item.total_price for item in items)
+    
+    try:
+        coupon = Coupon.objects.get(code__iexact=code)
+    except Coupon.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid coupon code'})
+        
+    # Check user-specific validity
+    is_valid, error_message = coupon.is_valid_for_user(request.user)
+    if not is_valid:
+        return JsonResponse({'success': False, 'error': error_message})
+        
+    if subtotal < coupon.min_purchase_amount:
+        return JsonResponse({'success': False, 'error': f'Minimum purchase of ₹{coupon.min_purchase_amount} required'})
+        
+    # Apply coupon to cart
+    cart.coupon = coupon
+    cart.save()
+    
+    # Recalculate to return new totals
+    shipping = Decimal('99.00')
+    if subtotal >= Decimal('20000.00'): shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'): shipping = Decimal('49.00')
+    
+    discount = Decimal('0')
+    if coupon.discount_type == 'percentage':
+        discount = (subtotal * coupon.discount_value) / Decimal('100')
+        if coupon.max_discount_amount:
+            discount = min(discount, coupon.max_discount_amount)
+    else:
+        discount = coupon.discount_value
+        
+    taxable = max(Decimal('0'), subtotal - discount)
+    tax = round(taxable * TAX_RATE, 2)
+    total = taxable + tax + shipping
     
     return JsonResponse({
         'success': True,
-        'redirect_url': f'/orders/success/{order.id}/'
+        'message': f'Coupon {coupon.code} applied successfully!',
+        'subtotal': str(subtotal),
+        'discount': str(discount),
+        'tax': str(tax),
+        'shipping': str(shipping),
+        'total': str(total)
+    })
+
+@login_required
+@never_cache
+def remove_coupon(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+        
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart.coupon = None
+    cart.save()
+    
+    # Recalculate
+    items = cart.items.all()
+    subtotal = sum(item.total_price for item in items) if items.exists() else Decimal('0')
+    
+    shipping = Decimal('99.00')
+    if subtotal >= Decimal('20000.00'): shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'): shipping = Decimal('49.00')
+    
+    tax = round(subtotal * TAX_RATE, 2)
+    total = subtotal + tax + shipping
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Coupon removed successfully',
+        'subtotal': str(subtotal),
+        'discount': '0.00',
+        'tax': str(tax),
+        'shipping': str(shipping),
+        'total': str(total)
+    })
+@login_required
+@never_cache
+def available_coupons(request):
+    """View to list all available active coupons."""
+    now = timezone.now()
+    coupons = Coupon.objects.filter(
+        is_active=True, 
+        valid_from__lte=now, 
+        valid_to__gte=now
+    ).order_by('-discount_value')
+    
+    # Filter based on user-specific targeting rules
+    valid_coupons = []
+    for c in coupons:
+        is_valid, _ = c.is_valid_for_user(request.user)
+        if is_valid:
+            valid_coupons.append(c)
+    
+    return render(request, 'available_coupons.html', {
+        'active_coupons': valid_coupons
     })

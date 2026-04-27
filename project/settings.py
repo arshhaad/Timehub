@@ -60,11 +60,13 @@ INSTALLED_APPS = [
     'user_apps.edit',
     'user_apps.products',
     'user_apps.orders',
+    'user_apps.payment',
     # admin apps
     'admin_apps.auth',
     'admin_apps.user_manage',
     'admin_apps.product_manage',
     'admin_apps.order_manage',
+    'admin_apps.offers',
     
 ]
 

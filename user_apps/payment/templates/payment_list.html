@@ -1,0 +1,601 @@
+{% extends 'base_user.html' %}
+{% load static %}
+
+{% block title %}Payments & Cashbacks — TimeHub{% endblock %}
+{% block nav_payments %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========== PAGE LAYOUT ========== */
+    .payment-page {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        animation: fadeInUp 0.7s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== PAGE HEADER ========== */
+    .page-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-hero h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 30%, var(--primary-color) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+    }
+    .page-hero p { color: var(--text-muted); font-size: 0.95rem; }
+
+    /* ========== STAT CARDS ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 22px 24px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top left, rgba(249,136,34,0.05), transparent 60%);
+        pointer-events: none;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(249,136,34,0.25);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+
+    .stat-icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+    .icon-orders  { background: rgba(99,102,241,0.12); color: #818cf8; }
+    .icon-spent   { background: rgba(249,136,34,0.12); color: var(--primary-color); }
+    .icon-cashback{ background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .icon-wallet  { background: rgba(14,165,233,0.12); color: #38bdf8; }
+
+    .stat-info label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+    }
+    .stat-value {
+        font-size: 1.55rem;
+        font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--text-main);
+    }
+
+    /* ========== SECTION TABS ========== */
+    .section-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 4px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        width: fit-content;
+    }
+    .tab-btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        font-family: 'Inter', sans-serif;
+    }
+    .tab-btn.active {
+        background: var(--primary-color);
+        color: #000;
+        box-shadow: 0 4px 14px rgba(249,136,34,0.35);
+    }
+    .tab-btn:not(.active):hover { color: #fff; background: rgba(255,255,255,0.05); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeInUp 0.4s ease-out; }
+
+    /* ========== PANEL CARD ========== */
+    .panel {
+        background: var(--card-bg);
+        backdrop-filter: var(--glass);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 28px;
+        overflow: hidden;
+    }
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+    .panel-header h2 {
+        font-size: 1.1rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .panel-header h2 i { color: var(--primary-color); }
+    .count-badge {
+        background: rgba(249,136,34,0.15);
+        color: var(--primary-color);
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+
+    /* ========== TABLE ========== */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead th {
+        padding: 12px 16px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+    }
+    .data-table tbody tr {
+        transition: background 0.2s;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+    .data-table tbody td {
+        padding: 16px;
+        font-size: 0.88rem;
+        vertical-align: middle;
+    }
+
+    /* ========== ORDER ROW SPECIFICS ========== */
+    .order-id {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+    .order-items-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .order-items-preview span {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+    }
+    .order-items-preview .item-name {
+        color: var(--text-main);
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+
+    /* Payment method pill */
+    .method-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+    .method-cod       { background: rgba(107,114,128,0.15); color: #9ca3af; }
+    .method-razorpay  { background: rgba(99,102,241,0.15);  color: #818cf8; }
+    .method-wallet    { background: rgba(14,165,233,0.15);  color: #38bdf8; }
+
+    /* Status pill */
+    .status-pill {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .status-pending       { background: rgba(234,179,8,0.12);  color: #ca8a04; }
+    .status-processing    { background: rgba(99,102,241,0.12); color: #818cf8; }
+    .status-shipped       { background: rgba(14,165,233,0.12); color: #38bdf8; }
+    .status-outfordelivery{ background: rgba(249,136,34,0.15); color: var(--primary-color); }
+    .status-delivered     { background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .status-cancelled     { background: rgba(239,68,68,0.12);  color: #f87171; }
+    .status-returned, .status-returnrequested { background: rgba(244,63,94,0.12); color: #fb7185; }
+
+    /* Amount */
+    .amount-cell {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    .amount-positive { color: #22c55e; }
+    .amount-negative { color: #f87171; }
+    .amount-neutral  { color: var(--text-main); }
+
+    /* ========== TRANSACTION ROW ========== */
+    .tx-description { font-weight: 600; color: var(--text-main); }
+    .tx-date { font-size: 0.78rem; color: var(--text-muted); }
+
+    .tx-type-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 20px;
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    }
+    .tx-credit { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .tx-debit  { background: rgba(239,68,68,0.12); color: #f87171; }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state .empty-icon {
+        font-size: 3rem;
+        color: rgba(255,255,255,0.08);
+        margin-bottom: 16px;
+    }
+    .empty-state h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .empty-state p  { font-size: 0.9rem; color: var(--text-muted); }
+
+    /* ========== WALLET BALANCE BANNER ========== */
+    .wallet-banner {
+        background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(99,102,241,0.06) 100%);
+        border: 1px solid rgba(14,165,233,0.2);
+        border-radius: 18px;
+        padding: 20px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+    .wallet-banner .wb-left { display: flex; align-items: center; gap: 16px; }
+    .wallet-banner .wb-icon {
+        width: 50px; height: 50px;
+        background: rgba(14,165,233,0.15);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; color: #38bdf8;
+    }
+    .wallet-banner .wb-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .wallet-banner .wb-value {
+        font-size: 1.8rem; font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+        color: #38bdf8;
+    }
+    .wallet-banner .wb-right a {
+        padding: 10px 20px;
+        background: rgba(14,165,233,0.15);
+        border: 1px solid rgba(14,165,233,0.3);
+        border-radius: 12px;
+        color: #38bdf8;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .wallet-banner .wb-right a:hover {
+        background: rgba(14,165,233,0.28);
+        transform: translateY(-2px);
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+        .data-table thead { display: none; }
+        .data-table, .data-table tbody, .data-table tr, .data-table td {
+            display: block; width: 100%;
+        }
+        .data-table tbody tr {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            padding: 4px 0;
+        }
+        .data-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 10px 16px;
+        }
+        .data-table td::before {
+            content: attr(data-label);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .data-table td:last-child { border-bottom: none; }
+        .page-hero h1 { font-size: 1.5rem; }
+        .stat-value { font-size: 1.2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+
+    <!-- Hero Header -->
+    <div class="page-hero">
+        <div>
+            <h1><i class="fas fa-credit-card" style="font-size:1.5rem; -webkit-text-fill-color: var(--primary-color);"></i> Payments &amp; Cashbacks</h1>
+            <p>Track all your transactions, payments, and wallet rewards in one place.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-orders"><i class="fas fa-shopping-bag"></i></div>
+            <div class="stat-info">
+                <label>Total Orders</label>
+                <div class="stat-value">{{ orders.count }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-spent"><i class="fas fa-indian-rupee-sign"></i></div>
+            <div class="stat-info">
+                <label>Amount Spent</label>
+                <div class="stat-value">₹{{ total_spent|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-cashback"><i class="fas fa-gift"></i></div>
+            <div class="stat-info">
+                <label>Total Cashbacks / Credits</label>
+                <div class="stat-value">₹{{ total_cashback|floatformat:2 }}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Wallet Banner -->
+    {% if wallet %}
+    <div class="wallet-banner">
+        <div class="wb-left">
+            <div class="wb-icon"><i class="fas fa-wallet"></i></div>
+            <div>
+                <div class="wb-label">TimeHub Wallet Balance</div>
+                <div class="wb-value">₹{{ wallet.balance|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="wb-right">
+            <a href="{% url 'user_wallet' %}"><i class="fas fa-arrow-right"></i> View Full Wallet</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div class="section-tabs" id="sectionTabs">
+            <button class="tab-btn active" data-tab="payments" onclick="switchTab('payments', this)">
+                <i class="fas fa-receipt"></i> Payment History
+            </button>
+            <button class="tab-btn" data-tab="cashbacks" onclick="switchTab('cashbacks', this)">
+                <i class="fas fa-gift"></i> Cashbacks &amp; Credits
+            </button>
+        </div>
+        <span class="count-badge" id="tabCount">{{ orders.count }} records</span>
+    </div>
+
+    <!-- ====== TAB: PAYMENT HISTORY ====== -->
+    <div class="tab-panel active" id="tab-payments">
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-receipt"></i> Payment History</h2>
+                <span class="count-badge">{{ orders.count }} orders</span>
+            </div>
+            {% if orders %}
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Items</th>
+                            <th>Payment Method</th>
+                            <th>Coupon</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        {% with status_class=order.status|lower|cut:" " %}
+                        <tr>
+                            <td data-label="Order ID">
+                                <span class="order-id">#{{ order.id }}</span>
+                            </td>
+                            <td data-label="Items">
+                                <div class="order-items-preview">
+                                    {% for item in order.items.all|slice:":2" %}
+                                        <span class="item-name">{{ item.product.name }}</span>
+                                        <span>Qty: {{ item.quantity }} &nbsp;·&nbsp; ₹{{ item.price }}</span>
+                                    {% endfor %}
+                                    {% if order.items.count > 2 %}
+                                        <span style="color: var(--primary-color); font-size: 0.78rem; font-weight: 700;">+{{ order.items.count|add:"-2" }} more</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td data-label="Payment Method">
+                                {% if order.payment_method == 'cod' %}
+                                    <span class="method-pill method-cod"><i class="fas fa-money-bill-wave"></i> Cash on Delivery</span>
+                                {% elif order.payment_method == 'razorpay' %}
+                                    <span class="method-pill method-razorpay"><i class="fas fa-credit-card"></i> Razorpay</span>
+                                {% elif order.payment_method == 'wallet' %}
+                                    <span class="method-pill method-wallet"><i class="fas fa-wallet"></i> Wallet</span>
+                                {% else %}
+                                    <span class="method-pill method-cod">{{ order.payment_method }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Coupon">
+                                {% if order.coupon_code %}
+                                    <span style="font-size:0.8rem; color: #22c55e; font-weight: 700;"><i class="fas fa-tag"></i> {{ order.coupon_code }}</span>
+                                    {% if order.discount > 0 %}
+                                    <div style="font-size:0.75rem; color: var(--text-muted);">-₹{{ order.discount|floatformat:2 }}</div>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Amount">
+                                <span class="amount-cell amount-neutral">₹{{ order.total_amount|floatformat:2 }}</span>
+                                {% if order.discount > 0 %}
+                                <div style="font-size:0.75rem; color: var(--text-muted);">Saved ₹{{ order.discount|floatformat:2 }}</div>
+                                {% endif %}
+                            </td>
+                            <td data-label="Status">
+                                <span class="status-pill status-{{ status_class }}">{{ order.status }}</span>
+                            </td>
+                            <td data-label="Date" style="color: var(--text-muted); font-size: 0.82rem;">
+                                {{ order.created_at|date:"d M Y" }}<br>
+                                <span style="font-size:0.75rem;">{{ order.created_at|time:"h:i A" }}</span>
+                            </td>
+                            <td data-label="Action">
+                                <a href="{% url 'order_detail' order.id %}"
+                                   style="font-size:0.8rem; font-weight:700; color: var(--primary-color); text-decoration:none; transition: var(--transition);"
+                                   onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                    View <i class="fas fa-arrow-right" style="font-size:0.7rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-receipt"></i></div>
+                <h3>No payments yet</h3>
+                <p>Your payment history will appear here once you place your first order.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ====== TAB: CASHBACKS & CREDITS ====== -->
+    <div class="tab-panel" id="tab-cashbacks">
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-gift"></i> Cashbacks &amp; Wallet Credits</h2>
+                <span class="count-badge">{{ transactions|length }} transactions</span>
+            </div>
+
+            {% if transactions %}
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr>
+                            <td data-label="Description">
+                                <div class="tx-description">{{ tx.description }}</div>
+                            </td>
+                            <td data-label="Type">
+                                {% if tx.transaction_type == 'Credit' %}
+                                    <span class="tx-type-pill tx-credit"><i class="fas fa-arrow-down"></i> Credit</span>
+                                {% else %}
+                                    <span class="tx-type-pill tx-debit"><i class="fas fa-arrow-up"></i> Debit</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Amount">
+                                {% if tx.transaction_type == 'Credit' %}
+                                    <span class="amount-cell amount-positive">+₹{{ tx.amount|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="amount-cell amount-negative">-₹{{ tx.amount|floatformat:2 }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Date" class="tx-date">
+                                {{ tx.timestamp|date:"d M Y" }}<br>
+                                <span>{{ tx.timestamp|time:"h:i A" }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fas fa-gift"></i></div>
+                <h3>No cashbacks or credits yet</h3>
+                <p>Refunds, cashbacks, and wallet credits will appear here. Cancel an eligible order or receive a refund to see entries.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabName, btn) {
+        // Deactivate all tabs and panels
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+        // Activate clicked
+        btn.classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+
+        // Update count badge
+        const countMap = {
+            payments: '{{ orders.count }} records',
+            cashbacks: '{{ transactions|length }} records',
+        };
+        document.getElementById('tabCount').textContent = countMap[tabName] || '';
+    }
+</script>
+{% endblock %}

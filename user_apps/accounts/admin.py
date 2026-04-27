@@ -9,15 +9,16 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
 
     # List display in admin
-    list_display = ("email", "first_name", "last_name", "is_staff", "is_active")
+    list_display = ("email", "first_name", "last_name", "referral_code", "is_staff", "is_active")
     list_filter = ("is_staff", "is_active", "is_superuser")
-    search_fields = ("email", "first_name", "last_name")
+    search_fields = ("email", "first_name", "last_name", "referral_code")
     ordering = ("-created_at",)
 
     # Fields shown when EDITING an existing user
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("first_name", "last_name", "phone_number", "avatar")}),
+        ("Referral Info", {"fields": ("referral_code", "referred_by")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important Dates", {"fields": ("last_login",)}),
     )

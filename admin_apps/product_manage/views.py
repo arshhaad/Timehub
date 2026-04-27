@@ -1,5 +1,6 @@
 import uuid
 import json
+import re
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -154,6 +155,11 @@ def category_list(request):
                 messages.error(request, "Category name is required.")
                 return redirect("category_list")
             
+            # Special character validation: Only alphanumeric and spaces
+            if not re.match(r'^[a-zA-Z0-9 ]+$', name):
+                messages.error(request, "Category name cannot contain special characters or symbols.")
+                return redirect("category_list")
+            
             if Collection.objects.filter(name__iexact=name, is_deleted=False).exists():
                 messages.error(request, f"Category '{name}' already exists.")
                 return redirect("category_list")
@@ -173,6 +179,11 @@ def category_list(request):
 
             if not name:
                 messages.error(request, "Category name cannot be empty.")
+                return redirect("category_list")
+            
+            # Special character validation: Only alphanumeric and spaces
+            if not re.match(r'^[a-zA-Z0-9 ]+$', name):
+                messages.error(request, "Category name cannot contain special characters or symbols.")
                 return redirect("category_list")
             
             if Collection.objects.filter(name__iexact=name, is_deleted=False).exclude(id=cat.id).exists():

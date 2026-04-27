@@ -31,5 +31,7 @@ urlpatterns = [
     path('adminpanel/', include('admin_apps.user_manage.urls')),
     path('adminpanel/', include('admin_apps.product_manage.urls')),
     path('adminpanel/', include('admin_apps.order_manage.urls')),
+    path('adminpanel/offers/', include('admin_apps.offers.urls')),
+    path('user/payments/', include('user_apps.payment.urls')),
 ]
 

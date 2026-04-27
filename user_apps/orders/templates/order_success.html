@@ -265,7 +265,7 @@
                                 <div class="oi-name">{{ item.product.name }}</div>
                                 <div class="oi-qty">Qty: {{ item.quantity }}</div>
                             </div>
-                            <div class="oi-price">₹{{ item.price|floatformat:0 }}</div>
+                            <div class="oi-price">₹{{ item.price|floatformat:2 }}</div>
                         </div>
                         {% endfor %}
                     </div>
@@ -273,24 +273,24 @@
                     <!-- Price Summary -->
                     <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
-                            <span>Subtotal</span><span style="color:#fff; font-weight:600;">₹{{ order.subtotal|floatformat:0 }}</span>
+                            <span>Subtotal</span><span style="color:#fff; font-weight:600;">₹{{ order.subtotal|floatformat:2 }}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
                             <span>Shipping</span>
                             {% if order.shipping_charge == 0 %}
                             <span style="color:#22c55e; font-weight:700;">FREE</span>
                             {% else %}
-                            <span style="color:#fff; font-weight:600;">₹{{ order.shipping_charge|floatformat:0 }}</span>
+                            <span style="color:#fff; font-weight:600;">₹{{ order.shipping_charge|floatformat:2 }}</span>
                             {% endif %}
                         </div>
                         <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.88rem;">
-                            <span>Tax (5% GST)</span><span style="color:#fff; font-weight:600;">₹{{ order.tax|floatformat:0 }}</span>
+                            <span>Tax (3% GST)</span><span style="color:#fff; font-weight:600;">₹{{ order.tax|floatformat:2 }}</span>
                         </div>
                     </div>
 
                     <div class="total-row">
                         <span class="total-label">Total Paid</span>
-                        <span class="total-value">₹{{ order.total_amount|floatformat:0 }}</span>
+                        <span class="total-value">₹{{ order.total_amount|floatformat:2 }}</span>
                     </div>
                 </div>
             </div>

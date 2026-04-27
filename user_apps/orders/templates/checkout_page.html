@@ -942,6 +942,42 @@
             color: var(--primary-color);
         }
 
+        /* COUPON PANEL */
+        .suggested-coupon-row {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .suggested-coupon-row:last-child { border-bottom: none; }
+        .suggested-coupon-row:hover { background: rgba(255, 106, 0, 0.04); }
+        .quick-apply-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff6a00, #e05e00);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-weight: 800;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            letter-spacing: 0.3px;
+        }
+        .quick-apply-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(255, 106, 0, 0.35);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0);     }
+        }
+
         /* FOOTER */
         footer {
             padding: 60px 0 30px;
@@ -1266,13 +1302,9 @@
                                         {{ addr.country }}
                                     </div>
                                     <div class="address-actions">
-                                        <button type="button" class="addr-action-btn edit-addr-btn"
-                                            data-id="{{ addr.id }}" data-fullname="{{ addr.full_name }}"
-                                            data-street="{{ addr.street }}" data-city="{{ addr.city }}"
-                                            data-state="{{ addr.state }}" data-postal="{{ addr.postal_code }}"
-                                            data-country="{{ addr.country }}" data-phone="{{ addr.phone|default:'' }}">
-                                            <i class="fas fa-pen"></i> Edit
-                                        </button>
+                                        <a href="{% url 'edit_address' addr.id %}?next=checkout_page" class="addr-action-btn">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
                                     </div>
                                 </div>
                             </label>
@@ -1285,10 +1317,9 @@
                             {% endfor %}
                         </div>
 
-                        <button type="button" class="add-new-btn" id="openAddressModal">
-                            <i class="fas fa-plus" style="color: var(--primary-color);"></i>
-                            Add New Address
-                        </button>
+                        <a href="{% url 'add_address' %}?next=checkout_page" class="add-new-btn">
+                            <i class="fas fa-plus"></i> Add New Address
+                        </a>
                     </div>
 
                     <!-- STEP 2: PAYMENT METHOD -->
@@ -1333,18 +1364,95 @@
                             </label>
                         </div>
 
-                        <!-- Promo Code -->
-                        <div class="promo-row">
-                            <i class="fas fa-tag"></i>
-                            <div class="promo-text">
-                                <strong>Have a promo code?</strong>
-                                <span>Enter it below to add it to your wallet.</span>
+                        <!-- Coupon Code Section -->
+                        <div class="promo-row" id="couponSection">
+                            <i class="fas fa-tag" style="color: var(--primary-color);"></i>
+                            <div class="promo-text" id="couponTextContainer">
+                                {% if cart.coupon %}
+                                    <strong>Coupon Applied: {{ cart.coupon.code }}</strong>
+                                    <span>Discount applied to your order.</span>
+                                {% else %}
+                                    <strong>Have a coupon code?</strong>
+                                    <span>Enter it below to get a discount.</span>
+                                {% endif %}
                             </div>
-                            <div class="promo-input-wrap">
-                                <input type="text" class="promo-input" placeholder="Enter code" id="promoCodeInput">
-                                <button type="button" class="promo-apply-btn" onclick="applyPromo()">Enter code</button>
+                            
+                            <div class="promo-input-wrap" id="couponActionContainer">
+                                {% if cart.coupon %}
+                                    <button type="button" class="btn-outline" style="padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border-color: #ef4444; color: #ef4444;" onclick="removeCoupon()">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                {% else %}
+                                    <input type="text" class="promo-input" placeholder="Enter code" id="promoCodeInput" style="text-transform: uppercase;">
+                                    <button type="button" class="promo-apply-btn" onclick="applyCoupon()">Apply</button>
+                                {% endif %}
                             </div>
                         </div>
+                        {% if not cart.coupon %}
+                        <!-- Toggle Button -->
+                        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <button type="button" id="toggleCouponsBtn" onclick="toggleCouponPanel()"
+                                style="background: rgba(255,106,0,0.08); border: 1px solid rgba(255,106,0,0.25); color: var(--primary-color); font-size: 0.82rem; font-weight: 700; cursor: pointer; border-radius: 8px; padding: 7px 14px; display: flex; align-items: center; gap: 7px; transition: all 0.3s;">
+                                <i class="fas fa-ticket-alt"></i> Show Available Coupons
+                                <i class="fas fa-chevron-down" id="couponChevron" style="font-size: 0.7rem; transition: transform 0.3s;"></i>
+                            </button>
+                            <a href="{% url 'available_coupons' %}" style="text-decoration: none; color: var(--text-muted); font-size: 0.78rem; font-weight: 500;">
+                                View all <i class="fas fa-external-link-alt" style="font-size: 0.65rem;"></i>
+                            </a>
+                        </div>
+
+                        <!-- Coupon Suggestions Panel -->
+                        <div id="couponSuggestionsPanel" style="display: none; margin-top: 14px; border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; background: var(--bg-color);">
+                            <!-- Panel Header -->
+                            <div style="padding: 12px 16px; background: rgba(255,106,0,0.06); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-fire" style="color: var(--primary-color); font-size: 0.85rem;"></i>
+                                <span style="font-size: 0.82rem; font-weight: 700; color: #fff;">Top Picks For You</span>
+                                <span style="margin-left: auto; font-size: 0.72rem; color: var(--text-muted);">Based on your cart</span>
+                            </div>
+
+                            {% if active_coupons %}
+                                {% for coupon in active_coupons|slice:":3" %}
+                                <div class="suggested-coupon-row"
+                                    data-code="{{ coupon.code }}"
+                                    data-type="{{ coupon.discount_type }}"
+                                    data-value="{{ coupon.discount_value }}"
+                                    data-min="{{ coupon.min_purchase_amount }}"
+                                    data-max="{{ coupon.max_discount_amount|default:'0' }}"
+                                    onclick="quickApplyCoupon('{{ coupon.code }}')">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                        <div style="background: rgba(255,106,0,0.12); color: var(--primary-color); padding: 4px 10px; border-radius: 8px; font-weight: 800; font-family: 'Outfit', sans-serif; font-size: 0.9rem; letter-spacing: 0.8px; border: 1px dashed rgba(255,106,0,0.3);">
+                                            {{ coupon.code }}
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1rem; font-weight: 800; color: #22c55e; font-family: 'Outfit', sans-serif;">
+                                                {% if coupon.discount_type == 'percentage' %}
+                                                    {{ coupon.discount_value }}% OFF
+                                                {% else %}
+                                                    ₹{{ coupon.discount_value|floatformat:0 }} OFF
+                                                {% endif %}
+                                            </div>
+                                            <div class="coupon-saving-preview" style="font-size: 0.7rem; color: #4ade80; font-weight: 600;" id="saving_{{ coupon.code|slugify }}">
+                                                Calculating...
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+                                        Min. ₹{{ coupon.min_purchase_amount|floatformat:0 }}
+                                        {% if coupon.max_discount_amount %} · Max save ₹{{ coupon.max_discount_amount|floatformat:0 }}{% endif %}
+                                    </div>
+                                    <button type="button" class="quick-apply-btn" onclick="event.stopPropagation(); quickApplyCoupon('{{ coupon.code }}')">
+                                        <i class="fas fa-bolt"></i> Apply & Save
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="text-align: center; padding: 28px 20px; color: var(--text-muted); font-size: 0.88rem;">
+                                    <i class="fas fa-box-open" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                                    No active coupons at the moment.
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -1370,7 +1478,7 @@
                                     </div>
                                     <div class="order-item-qty">Qty: {{ item.quantity }}</div>
                                 </div>
-                                <div class="order-item-price">₹{{ item.total_price|floatformat:0 }}</div>
+                                <div class="order-item-price">₹{{ item.total_price|floatformat:2 }}</div>
                             </div>
                             {% endfor %}
                         </div>
@@ -1379,7 +1487,7 @@
                         <div class="price-rows">
                             <div class="price-row">
                                 <span class="label">Subtotal ({{ items|length }} item{% if items|length != 1 %}s{% endif %})</span>
-                                <span class="val">₹{{ subtotal|floatformat:0 }}</span>
+                                <span class="val" id="summarySubtotal">₹{{ subtotal|floatformat:2 }}</span>
                             </div>
                             <div class="price-row">
                                 <span class="label">
@@ -1387,25 +1495,23 @@
                                         style="color:var(--primary-color); font-size:0.75rem; margin-right:5px;"></i>
                                     Insured Shipping
                                 </span>
-                                {% if shipping == 0 %}
-                                <span class="val free-shipping">FREE</span>
-                                {% else %}
-                                <span class="val">₹{{ shipping|floatformat:0 }}</span>
-                                {% endif %}
+                                <span class="val {% if shipping == 0 %}free-shipping{% endif %}" id="summaryShipping">
+                                    {% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}
+                                </span>
                             </div>
                             <div class="price-row">
-                                <span class="label">Estimated Tax (5% GST)</span>
-                                <span class="val">₹{{ tax|floatformat:0 }}</span>
+                                <span class="label">Estimated Tax (3% GST)</span>
+                                <span class="val" id="summaryTax">₹{{ tax|floatformat:2 }}</span>
                             </div>
-                            {% if discount and discount > 0 %}
-                            <div class="price-row">
+                            
+                            <div class="price-row" id="summaryDiscountRow" style="display: {% if discount and discount > 0 %}flex{% else %}none{% endif %};">
                                 <span class="label">Discount</span>
-                                <span class="val" style="color: #22c55e;">-₹{{ discount|floatformat:0 }}</span>
+                                <span class="val" style="color: #22c55e;" id="summaryDiscount">-₹{{ discount|floatformat:2 }}</span>
                             </div>
-                            {% endif %}
+                            
                             <div class="price-row total-row">
                                 <span class="label">Total</span>
-                                <span class="val">₹{{ total|floatformat:0 }}</span>
+                                <span class="val" id="summaryTotal">₹{{ total|floatformat:2 }}</span>
                             </div>
                         </div>
 
@@ -1505,6 +1611,9 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Include Available Coupons Modal -->
+    {# Modal removed as it is now a separate page #}
+
     <!-- FOOTER -->
     <footer>
         <div class="container">
@@ -1597,6 +1706,266 @@
         const modal = document.getElementById('addressModal');
         // ─────────── Save New Address (AJAX) ───────────
         function showFieldError(id, msg) {
+            const input = document.getElementById(id);
+            const parent = input.closest('.modal-field');
+            const errorSpan = parent.querySelector('.field-error-msg');
+            parent.classList.add('is-invalid');
+            errorSpan.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+            errorSpan.style.display = 'flex';
+        }
+
+        function hideFieldError(id) {
+            const input = document.getElementById(id);
+            const parent = input.closest('.modal-field');
+            const errorSpan = parent.querySelector('.field-error-msg');
+            parent.classList.remove('is-invalid');
+            errorSpan.style.display = 'none';
+        }
+
+        // ─────────── Coupons Logic ───────────
+        const couponsModal = document.getElementById('couponsModal');
+        
+        function openCouponsModal() {
+            couponsModal.classList.add('active');
+        }
+        
+        function closeCouponsModal() {
+            couponsModal.classList.remove('active');
+        }
+
+        function applyCouponCode(code) {
+            closeCouponsModal();
+            document.getElementById('promoCodeInput').value = code;
+            applyCoupon();
+        }
+
+        // ── Coupon Panel Toggle ──────────────────────────────────────────
+        let couponPanelOpen = false;
+        function toggleCouponPanel() {
+            const panel = document.getElementById('couponSuggestionsPanel');
+            const chevron = document.getElementById('couponChevron');
+            const btn = document.getElementById('toggleCouponsBtn');
+
+            couponPanelOpen = !couponPanelOpen;
+
+            if (couponPanelOpen) {
+                panel.style.display = 'block';
+                panel.style.animation = 'slideDown 0.3s ease';
+                chevron.style.transform = 'rotate(180deg)';
+                btn.style.background = 'rgba(255,106,0,0.15)';
+                // Calculate previews
+                calculateSavingPreviews();
+            } else {
+                panel.style.display = 'none';
+                chevron.style.transform = 'rotate(0deg)';
+                btn.style.background = 'rgba(255,106,0,0.08)';
+            }
+        }
+
+        function calculateSavingPreviews() {
+            const subtotal = parseFloat('{{ subtotal|floatformat:2 }}');
+            document.querySelectorAll('.suggested-coupon-row').forEach(row => {
+                const code = row.dataset.code;
+                const type = row.dataset.type;
+                const value = parseFloat(row.dataset.value);
+                const min = parseFloat(row.dataset.min);
+                const max = parseFloat(row.dataset.max) || 0;
+                const slug = code.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const el = document.getElementById('saving_' + slug);
+                if (!el) return;
+
+                if (subtotal < min) {
+                    el.style.color = '#f87171';
+                    el.textContent = `Add ₹${(min - subtotal).toFixed(0)} more to unlock`;
+                    row.querySelector('.quick-apply-btn').disabled = true;
+                    row.querySelector('.quick-apply-btn').style.opacity = '0.5';
+                    return;
+                }
+
+                let saving = 0;
+                if (type === 'percentage') {
+                    saving = (subtotal * value) / 100;
+                    if (max > 0) saving = Math.min(saving, max);
+                } else {
+                    saving = value;
+                }
+                el.style.color = '#4ade80';
+                el.textContent = `You save ₹${saving.toFixed(2)}!`;
+            });
+        }
+
+        // ── Quick Apply from panel ───────────────────────────────────────
+        function quickApplyCoupon(code) {
+            const input = document.getElementById('promoCodeInput');
+            if (input) input.value = code;
+
+            // Visual feedback on all quick-apply buttons
+            document.querySelectorAll('.quick-apply-btn').forEach(b => {
+                if (b.closest('.suggested-coupon-row').dataset.code === code) {
+                    b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+                    b.disabled = true;
+                }
+            });
+
+            fetch("{% url 'apply_coupon' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`🎉 ${data.message}`, 'success');
+                    updateSummary(data);
+                    updateCouponUI(code, true);
+                    // Hide the panel
+                    document.getElementById('couponSuggestionsPanel').style.display = 'none';
+                    couponPanelOpen = false;
+                    if (document.getElementById('couponChevron'))
+                        document.getElementById('couponChevron').style.transform = 'rotate(0deg)';
+                } else {
+                    showToast(data.error || 'Invalid coupon code', 'error');
+                    document.querySelectorAll('.quick-apply-btn').forEach(b => {
+                        b.innerHTML = '<i class="fas fa-bolt"></i> Apply & Save';
+                        b.disabled = false;
+                    });
+                }
+            })
+            .catch(err => {
+                showToast('Something went wrong. Please try again.', 'error');
+                document.querySelectorAll('.quick-apply-btn').forEach(b => {
+                    b.innerHTML = '<i class="fas fa-bolt"></i> Apply & Save';
+                    b.disabled = false;
+                });
+            });
+        }
+
+        function applyCoupon() {
+            const codeInput = document.getElementById('promoCodeInput');
+            if (!codeInput) return;
+            const code = codeInput.value.trim();
+            if (!code) {
+                showToast('Please enter a coupon code', 'error');
+                return;
+            }
+            
+            const btn = document.querySelector('.promo-apply-btn');
+            if(btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+            }
+
+            fetch("{% url 'apply_coupon' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    updateSummary(data);
+                    updateCouponUI(code, true);
+                } else {
+                    showToast(data.error || 'Invalid coupon code', 'error');
+                    if(btn) {
+                        btn.innerHTML = 'Apply';
+                        btn.disabled = false;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Something went wrong. Please try again.', 'error');
+                if(btn) {
+                    btn.innerHTML = 'Apply';
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function removeCoupon() {
+            fetch("{% url 'remove_coupon' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'info');
+                    updateSummary(data);
+                    updateCouponUI('', false);
+                } else {
+                    showToast(data.error || 'Failed to remove coupon', 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Something went wrong. Please try again.', 'error');
+            });
+        }
+
+        function updateSummary(data) {
+            document.getElementById('summarySubtotal').innerText = '₹' + parseFloat(data.subtotal).toFixed(2);
+            document.getElementById('summaryTax').innerText = '₹' + parseFloat(data.tax).toFixed(2);
+            document.getElementById('summaryTotal').innerText = '₹' + parseFloat(data.total).toFixed(2);
+            
+            const shippingSpan = document.getElementById('summaryShipping');
+            if (parseFloat(data.shipping) === 0) {
+                shippingSpan.innerText = 'FREE';
+                shippingSpan.classList.add('free-shipping');
+            } else {
+                shippingSpan.innerText = '₹' + parseFloat(data.shipping).toFixed(2);
+                shippingSpan.classList.remove('free-shipping');
+            }
+            
+            const discountRow = document.getElementById('summaryDiscountRow');
+            const discountSpan = document.getElementById('summaryDiscount');
+            if (parseFloat(data.discount) > 0) {
+                discountRow.style.display = 'flex';
+                discountSpan.innerText = '-₹' + parseFloat(data.discount).toFixed(2);
+            } else {
+                discountRow.style.display = 'none';
+            }
+        }
+
+        function updateCouponUI(code, isApplied) {
+            const textContainer = document.getElementById('couponTextContainer');
+            const actionContainer = document.getElementById('couponActionContainer');
+            const viewLinkContainer = document.getElementById('viewCouponsLinkContainer');
+            
+            if (isApplied) {
+                textContainer.innerHTML = `
+                    <strong>Coupon Applied: ${code.toUpperCase()}</strong>
+                    <span>Discount applied to your order.</span>
+                `;
+                actionContainer.innerHTML = `
+                    <button type="button" class="btn-outline" style="padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border-color: #ef4444; color: #ef4444;" onclick="removeCoupon()">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                `;
+                if(viewLinkContainer) viewLinkContainer.style.display = 'none';
+            } else {
+                textContainer.innerHTML = `
+                    <strong>Have a coupon code?</strong>
+                    <span>Enter it below to get a discount.</span>
+                `;
+                actionContainer.innerHTML = `
+                    <input type="text" class="promo-input" placeholder="Enter code" id="promoCodeInput" style="text-transform: uppercase;">
+                    <button type="button" class="promo-apply-btn" onclick="applyCoupon()">Apply</button>
+                `;
+                if(viewLinkContainer) viewLinkContainer.style.display = 'block';
+            }
+        }
             const el = document.getElementById(id);
             const parent = el.closest('.modal-field');
             if (parent) parent.classList.add('is-invalid');
@@ -1773,6 +2142,24 @@
             showToast('Promo code "' + code + '" is not valid or has expired.', 'error');
         }
 
+        // ─────────── Dynamic Button Text ──────────────────────────
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const btn = document.getElementById('placeOrderBtn');
+                if (this.value === 'razorpay') {
+                    btn.innerHTML = '<i class="fas fa-credit-card"></i> Pay with Razorpay';
+                    btn.style.background = 'linear-gradient(to right, #ff6a00, #ff9d00)';
+                    showToast('Razorpay selected. Click "Pay with Razorpay" to proceed.', 'info');
+                } else if (this.value === 'wallet') {
+                    btn.innerHTML = '<i class="fas fa-wallet"></i> Pay with Wallet';
+                    btn.style.background = 'var(--primary-color)';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+                    btn.style.background = 'var(--primary-color)';
+                }
+            });
+        });
+
         // ─────────── Place Order – button loading state ───────────
         document.getElementById('checkoutForm').addEventListener('submit', function (e) {
             const radios = document.querySelectorAll('input[name="address_id"]');
@@ -1781,10 +2168,18 @@
             if (!checkedAddress) {
                 e.preventDefault();
                 showToast('Please select a delivery address to continue.', 'error');
+                // Scroll to address section
+                document.querySelector('.address-list').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+            if (!paymentRadio) {
+                e.preventDefault();
+                showToast('Please select a payment method.', 'error');
+                return;
+            }
+            const paymentMethod = paymentRadio.value;
             const btn = document.getElementById('placeOrderBtn');
 
             if (paymentMethod === 'razorpay') {
@@ -1826,8 +2221,9 @@
                         verifyPayment(response, addressId);
                     },
                     "prefill": {
-                        "name": "{{ request.user.full_name }}",
-                        "email": "{{ request.user.email }}"
+                        "name": "{{ request.user.get_full_name|default:request.user.email }}",
+                        "email": "{{ request.user.email }}",
+                        "contact": "{{ request.user.phone_number|default:'' }}"
                     },
                     "theme": {
                         "color": "#ff6a00"

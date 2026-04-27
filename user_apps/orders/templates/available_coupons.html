@@ -1,0 +1,255 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Available Coupons — TimeHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coupons-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .page-header {
+        margin-bottom: 40px;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .coupons-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 24px;
+    }
+
+    .coupon-card {
+        background: var(--bg-card);
+        border: 2px dashed var(--border-color);
+        border-radius: 20px;
+        padding: 30px;
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .coupon-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .coupon-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .coupon-code {
+        background: rgba(255, 106, 0, 0.1);
+        color: var(--primary-color);
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        letter-spacing: 1.5px;
+        border: 1px solid rgba(255, 106, 0, 0.2);
+    }
+
+    .coupon-status {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .coupon-body h3 {
+        font-size: 1.4rem;
+        color: #fff;
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .coupon-body p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .coupon-footer {
+        margin-top: 24px;
+    }
+
+    .apply-btn {
+        width: 100%;
+        background: #1c1c23;
+        color: #fff;
+        border: 1px solid var(--border-color);
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .coupon-card:hover .apply-btn {
+        background: var(--primary-color);
+        color: #000;
+        border-color: var(--primary-color);
+    }
+
+    /* Decorative punch holes */
+    .punch-hole {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: var(--bg-color);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .punch-left {
+        left: -11px;
+        border-right: 2px solid var(--border-color);
+    }
+
+    .punch-right {
+        right: -11px;
+        border-left: 2px solid var(--border-color);
+    }
+
+    .coupon-card:hover .punch-left { border-color: var(--primary-color); }
+    .coupon-card:hover .punch-right { border-color: var(--primary-color); }
+
+    .no-coupons {
+        text-align: center;
+        padding: 80px 20px;
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        color: var(--text-muted);
+        font-size: 2rem;
+    }
+
+    .back-to-checkout {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 24px;
+        transition: color 0.3s;
+    }
+
+    .back-to-checkout:hover {
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coupons-container">
+    <a href="{% url 'checkout_page' %}" class="back-to-checkout">
+        <i class="fas fa-arrow-left"></i> Back to Checkout
+    </a>
+
+    <div class="page-header">
+        <h1>Exclusive Offers</h1>
+        <p>Grab the best deals and save more on your favorite timepieces.</p>
+    </div>
+
+    {% if active_coupons %}
+        <div class="coupons-grid">
+            {% for coupon in active_coupons %}
+                <div class="coupon-card" onclick="copyAndGoBack('{{ coupon.code }}')">
+                    <div class="punch-hole punch-left"></div>
+                    <div class="punch-hole punch-right"></div>
+                    
+                    <div class="coupon-header">
+                        <div class="coupon-code">{{ coupon.code }}</div>
+                        <div class="coupon-status">Active</div>
+                    </div>
+
+                    <div class="coupon-body">
+                        <h3>
+                            {% if coupon.discount_type == 'percentage' %}
+                                {{ coupon.discount_value }}% OFF
+                            {% else %}
+                                ₹{{ coupon.discount_value|floatformat:2 }} OFF
+                            {% endif %}
+                        </h3>
+                        <p>
+                            Valid on orders above ₹{{ coupon.min_purchase_amount|floatformat:2 }}.
+                            {% if coupon.max_discount_amount %}
+                                Max discount: ₹{{ coupon.max_discount_amount|floatformat:2 }}.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="coupon-footer">
+                        <button class="apply-btn">
+                            <i class="fas fa-copy"></i> Copy & Use
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-coupons">
+            <div class="empty-icon">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <h2 style="color: #fff; margin-bottom: 12px;">No Active Coupons</h2>
+            <p style="color: var(--text-muted);">We don't have any coupons available right now. Check back soon for exciting offers!</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function copyAndGoBack(code) {
+        // Copy to clipboard
+        navigator.clipboard.writeText(code).then(() => {
+            // Show a brief notification (using alert for simplicity, could be a toast)
+            alert('Coupon code ' + code + ' copied! Redirecting to checkout...');
+            window.location.href = "{% url 'checkout_page' %}";
+        });
+    }
+</script>
+{% endblock %}

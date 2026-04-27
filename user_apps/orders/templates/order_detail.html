@@ -379,8 +379,8 @@
                             </td>
                             <td style="text-align:center; font-weight:700;">{{ item.quantity }}</td>
                             <td class="item-total">
-                                ₹{{ item.total_price|floatformat:0 }}
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">₹{{ item.price|floatformat:0 }} each</div>
+                                ₹{{ item.total_price|floatformat:2 }}
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">₹{{ item.price|floatformat:2 }} each</div>
                             </td>
                             <td style="text-align:right;">
                                 {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
@@ -483,15 +483,15 @@
                 <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-receipt"></i> ORDER SUMMARY</div>
             </div>
             <div class="card-body" style="padding: 20px 24px;">
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:0 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (5%)</span><span class="summary-value">₹{{ order.tax|floatformat:0 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:0 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (3%)</span><span class="summary-value">₹{{ order.tax|floatformat:2 }}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span></div>
                 {% if order.discount > 0 %}
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:0 }}</span></div>
+                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>
                 {% endif %}
                 <div class="summary-row summary-total" style="padding-top: 18px; margin-top: 10px; border-top: 1px solid var(--border-color);">
                     <span class="summary-label">Total Amount</span>
-                    <span class="summary-value" style="font-size: 1.25rem;">₹{{ order.total_amount|floatformat:0 }}</span>
+                    <span class="summary-value" style="font-size: 1.25rem;">₹{{ order.total_amount|floatformat:2 }}</span>
                 </div>
             </div>
         </div>

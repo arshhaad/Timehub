@@ -531,7 +531,7 @@
                     <a href="{% url 'address_list' %}"><i class="fas fa-map-location-dot"></i> Saved Addresses</a>
                 </li>
                 <li class="nav-item {% block nav_payments %}{% endblock %}">
-                    <a href="#"><i class="fas fa-credit-card"></i> Payment Methods</a>
+                    <a href="{% url 'payment_list' %}"><i class="fas fa-credit-card"></i> Payments</a>
                 </li>
                 <li class="nav-item {% block nav_notifications %}{% endblock %}">
                     <a href="{% url 'user_notifications' %}">
