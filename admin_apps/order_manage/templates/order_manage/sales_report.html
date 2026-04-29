@@ -127,31 +127,14 @@
         cursor: pointer;
     }
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,.1);
-        border-color: #e5e7eb;
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--primary-bg);
     }
-    .stat-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 25px;
-    }
-    .stat-icon {
-        width: 45px; height: 45px;
-        background-color: #f8f9fa;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-        color: var(--text-main);
-    }
-    .stat-change {
-        padding: 4px 10px;
-        border-radius: var(--radius-pill);
-        font-size: 0.75rem;
-        font-weight: 600;
-        background-color: var(--success-bg, #f0fdf4);
-        color: var(--success-text, #15803d);
+    .stat-card:hover .stat-icon {
+        background-color: var(--primary-bg) !important;
+        color: #fff !important;
+        transform: rotate(10deg);
     }
     .stat-title {
         font-size: 0.85rem;
@@ -686,6 +669,7 @@
             <button class="filter-btn active" data-period="daily">Daily</button>
             <button class="filter-btn"        data-period="weekly">Weekly</button>
             <button class="filter-btn"        data-period="monthly">Monthly</button>
+            <button class="filter-btn"        data-period="yearly">Yearly</button>
         </div>
     </div>
     <div style="height:350px;position:relative;">
@@ -809,20 +793,104 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // ── Data from Django ──────────────────────────────────────────────────────────
-const dailyData   = {{ daily_data_json   | safe }};
-const weeklyData  = {{ weekly_data_json  | safe }};
-const monthlyData = {{ monthly_data_json | safe }};
+const chartData = {{ chart_data_json|safe }};
+let salesChart = null;
 
-let salesChart   = null;
-let currentPeriod = 'daily';
+function buildChart(period) {
+    const canvas = document.getElementById('revenueChart');
+    const noData = document.getElementById('noDataMessage');
+    if (!canvas) return;
+
+    const data = chartData[period];
+    if (salesChart) { salesChart.destroy(); }
+
+    const empty = !data.labels || data.labels.length === 0;
+    noData.style.display = empty ? 'block' : 'none';
+    canvas.style.display = empty ? 'none' : 'block';
+    if (empty) return;
+
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+    gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
+
+    salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Revenue',
+                data: data.values,
+                borderColor: '#ff6b00',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#ff6b00',
+                pointBorderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#ff6b00',
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return '₹' + context.parsed.y.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f3f4f6', drawBorder: false },
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000) return '₹' + (value/1000) + 'k';
+                            return '₹' + value;
+                        }
+                    }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+// ── Period switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        buildChart(this.dataset.period);
+    });
+});
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function animateCounter(el, end, duration, prefix, isFloat) {
     const startTime = performance.now();
     function step(now) {
         const progress = Math.min((now - startTime) / duration, 1);
-        const eased    = 1 - Math.pow(1 - progress, 3);   // ease-out cubic
-        const current  = end * eased;
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = end * eased;
         el.textContent = prefix + (isFloat
             ? current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
             : Math.floor(current).toLocaleString('en-IN'));
@@ -833,16 +901,13 @@ function animateCounter(el, end, duration, prefix, isFloat) {
 
 function runCounters() {
     document.querySelectorAll('.stat-value[data-raw]').forEach(el => {
-        const raw     = parseFloat(el.dataset.raw);
-        const prefix  = el.dataset.prefix  || '';
+        const raw = parseFloat(el.dataset.raw);
+        const prefix = el.dataset.prefix || '';
         const isFloat = el.dataset.float === 'true';
-        if (isNaN(raw)) return;
-        el.textContent = prefix + (isFloat ? '0.00' : '0');
-        animateCounter(el, raw, 1600, prefix, isFloat);
+        if (!isNaN(raw)) animateCounter(el, raw, 1600, prefix, isFloat);
     });
 }
 
-// ── Progress bars ─────────────────────────────────────────────────────────────
 function runProgressBars() {
     document.querySelectorAll('.progress-bar-fill[data-pct]').forEach((bar, i) => {
         const pct = parseFloat(bar.dataset.pct) || 0;
@@ -850,189 +915,15 @@ function runProgressBars() {
     });
 }
 
-// ── Chart helpers ─────────────────────────────────────────────────────────────
-function makeGradient(ctx, r, g, b) {
-    const grad = ctx.createLinearGradient(0, 0, 0, 380);
-    grad.addColorStop(0, `rgba(${r},${g},${b},0.18)`);
-    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-    return grad;
-}
-
-function buildChart(data) {
-    const canvas = document.getElementById('revenueChart');
-    const noData = document.getElementById('noDataMessage');
-    if (!canvas) return;
-
-    if (salesChart) { salesChart.destroy(); salesChart = null; }
-
-    const empty = !data.labels || data.labels.length === 0;
-    noData.style.display  = empty ? 'block' : 'none';
-    canvas.style.display  = empty ? 'none'  : 'block';
-    if (empty) return;
-
-    const ctx     = canvas.getContext('2d');
-    const revGrad = makeGradient(ctx, 255, 107, 0);
-
-    salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [
-                {
-                    label: 'Revenue (₹)',
-                    data: data.revenue,
-                    borderColor: '#ff6b00',
-                    borderWidth: 3,
-                    backgroundColor: revGrad,
-                    fill: true,
-                    tension: 0.42,
-                    yAxisID: 'y',
-                    pointRadius: 0,
-                    pointHoverRadius: 7,
-                    pointHoverBackgroundColor: '#ff6b00',
-                    pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 3,
-                },
-                {
-                    label: 'Orders (Qty)',
-                    data: data.counts,
-                    borderColor: '#3b82f6',
-                    borderWidth: 2,
-                    borderDash: [6, 4],
-                    backgroundColor: 'transparent',
-                    fill: false,
-                    tension: 0.4,
-                    yAxisID: 'y1',
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#3b82f6',
-                    pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 2,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-                duration: 1200,
-                easing: 'easeInOutQuart',
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 8,
-                        padding: 20,
-                        font: { size: 12, weight: '600' }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#111827',
-                    padding: 14,
-                    titleFont: { size: 13, weight: 'bold' },
-                    bodyFont: { size: 12 },
-                    displayColors: true,
-                    boxPadding: 6,
-                    callbacks: {
-                        label(ctx) {
-                            return ctx.datasetIndex === 0
-                                ? 'Revenue: ₹' + ctx.parsed.y.toLocaleString('en-IN')
-                                : 'Orders: '   + ctx.parsed.y;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    position: 'left',
-                    beginAtZero: true,
-                    border: { display: false },
-                    grid: { borderDash: [5,5], color: '#f3f4f6', drawTicks: false },
-                    title: { display: true, text: 'Revenue (₹)', font: { weight: '600' } },
-                    ticks: {
-                        color: '#9ca3af',
-                        font: { size: 11 },
-                        callback: v => v >= 1000 ? '₹' + (v/1000).toFixed(0) + 'k' : '₹' + v
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    position: 'right',
-                    beginAtZero: true,
-                    grid: { drawOnChartArea: false },
-                    border: { display: false },
-                    title: { display: true, text: 'Orders (qty)', font: { weight: '600' } },
-                    ticks: { color: '#3b82f6', font: { size: 11 }, stepSize: 1 }
-                },
-                x: {
-                    border: { display: false },
-                    grid: { display: false },
-                    ticks: { color: '#9ca3af', font: { size: 12 } }
-                }
-            },
-            interaction: { intersect: false, mode: 'index' },
-        }
-    });
-}
-
-// ── Period switching ──────────────────────────────────────────────────────────
-function switchPeriod(period) {
-    if (period === currentPeriod) return;
-    currentPeriod = period;
-
-    const data = period === 'daily'   ? dailyData
-               : period === 'weekly'  ? weeklyData
-               :                        monthlyData;
-
-    const canvas = document.getElementById('revenueChart');
-    canvas.style.transition = 'opacity 0.25s ease';
-    canvas.style.opacity    = '0';
-
-    setTimeout(() => {
-        buildChart(data);
-        canvas.style.transition = 'opacity 0.35s ease';
-        canvas.style.opacity    = '1';
-    }, 260);
-}
-
-// ── Wire up filter buttons ────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn[data-period]')
-                .forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        switchPeriod(btn.dataset.period);
-    });
-});
-
-// ── Auto-dismiss messages after 5s ───────────────────────────────────────────
-document.querySelectorAll('.alert').forEach(alert => {
-    setTimeout(() => {
-        alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        alert.style.opacity    = '0';
-        alert.style.transform  = 'translateY(-8px)';
-        setTimeout(() => alert.remove(), 420);
-    }, 5000);
-});
-
-// ── Custom Date Toggle ────────────────────────────────────────────────────────
 function toggleCustomDates(val) {
     const customDiv = document.getElementById('custom-date-inputs');
-    if (customDiv) {
-        customDiv.style.display = val === 'custom' ? 'flex' : 'none';
-    }
+    if (customDiv) customDiv.style.display = val === 'custom' ? 'flex' : 'none';
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    buildChart(dailyData);
+    buildChart('daily');
     runCounters();
     runProgressBars();
-    
     const filterSelect = document.querySelector('select[name="filter_type"]');
     if (filterSelect) toggleCustomDates(filterSelect.value);
 });

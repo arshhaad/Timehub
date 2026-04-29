@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.views.decorators.cache import never_cache
 from django.db.models import Q, Sum, Count
+from django.db.models.functions import TruncDay, TruncMonth, TruncWeek, TruncYear
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
@@ -94,7 +95,7 @@ def dashboard(request):
     # --- Chart Data (Revenue Trends) ---
     # Daily (Last 7 days)
     daily_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=7)) \
-        .annotate(date=timezone.db.models.functions.TruncDay('created_at')) \
+        .annotate(date=TruncDay('created_at')) \
         .values('date') \
         .annotate(revenue=Sum('total_amount')) \
         .order_by('date')
@@ -105,7 +106,7 @@ def dashboard(request):
 
     # Monthly (Last 6 months)
     monthly_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=180)) \
-        .annotate(month=timezone.db.models.functions.TruncMonth('created_at')) \
+        .annotate(month=TruncMonth('created_at')) \
         .values('month') \
         .annotate(revenue=Sum('total_amount')) \
         .order_by('month')
@@ -113,20 +114,58 @@ def dashboard(request):
     monthly_labels = []
     monthly_values = []
     for i in range(5, -1, -1):
+        # Approximate month subtraction
         month_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
         monthly_labels.append(month_date.strftime('%b %Y'))
-        # Find in map
         val = 0.0
         for s in monthly_sales:
             if s['month'].year == month_date.year and s['month'].month == month_date.month:
                 val = float(s['revenue'])
                 break
         monthly_values.append(val)
+    
+    # Weekly (Last 8 weeks)
+    weekly_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=56)) \
+        .annotate(week=TruncWeek('created_at')) \
+        .values('week') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('week')
+    
+    weekly_labels = []
+    weekly_values = []
+    for i in range(7, -1, -1):
+        week_date = (now - timedelta(days=now.weekday(), weeks=i)).date()
+        weekly_labels.append(f"Week {week_date.strftime('%W')}")
+        val = 0.0
+        for s in weekly_sales:
+            if s['week'].date() == week_date:
+                val = float(s['revenue'])
+                break
+        weekly_values.append(val)
+
+    # Yearly (Last 5 years)
+    yearly_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=365*5)) \
+        .annotate(year=TruncYear('created_at')) \
+        .values('year') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('year')
+    
+    yearly_labels = [str(now.year - i) for i in range(4, -1, -1)]
+    yearly_values = []
+    for year_str in yearly_labels:
+        val = 0.0
+        for s in yearly_sales:
+            if str(s['year'].year) == year_str:
+                val = float(s['revenue'])
+                break
+        yearly_values.append(val)
 
     import json
     chart_data = {
         'daily': {'labels': daily_labels, 'values': daily_values},
+        'weekly': {'labels': weekly_labels, 'values': weekly_values},
         'monthly': {'labels': monthly_labels, 'values': monthly_values},
+        'yearly': {'labels': yearly_labels, 'values': yearly_values},
     }
 
     context = {

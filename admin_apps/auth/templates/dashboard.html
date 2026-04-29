@@ -321,6 +321,48 @@
         .side-notes-grid { grid-template-columns: 1fr; }
         .stats-grid { grid-template-columns: 1fr; }
     }
+    /* Hover Effects & Illustrations (Micro-interactions) */
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--primary-bg);
+    }
+
+    .stat-card:hover .stat-icon {
+        background-color: var(--primary-bg);
+        color: #fff;
+        transform: rotate(10deg);
+    }
+
+    .chart-panel:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-filter-btn:hover {
+        background-color: #e5e7eb;
+        color: var(--text-main);
+    }
+
+    .chart-filter-btn.active:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+
+    /* Animation for entering items */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card, .chart-panel, .note-card {
+        animation: fadeInUp 0.6s ease out backwards;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    .chart-panel { animation-delay: 0.5s; }
 </style>
 {% endblock %}
 
@@ -334,6 +376,103 @@
         <input type="text" name="q" placeholder="Quick search..." value="{{ request.GET.q|default:'' }}">
     </form>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+    const chartData = {{ chart_data_json|safe }};
+    let salesChart;
+
+    function initChart(period) {
+        const canvas = document.getElementById('salesChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const data = chartData[period];
+
+        if (salesChart) {
+            salesChart.destroy();
+        }
+
+        // Create premium gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
+        gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
+
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: data.values,
+                    borderColor: '#ff6b00',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ff6b00',
+                    pointBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#ff6b00',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '₹' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000) return '₹' + (value/1000) + 'k';
+                                return '₹' + value;
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Toggle logic
+    document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            initChart(this.dataset.period);
+        });
+    });
+
+    // Initialize
+    initChart('daily');
 {% endblock %}
 
 
@@ -406,7 +545,9 @@
         <div class="chart-title">Sales Revenue Trends</div>
         <div class="chart-filters">
             <button class="chart-filter-btn active" data-period="daily">Daily</button>
+            <button class="chart-filter-btn" data-period="weekly">Weekly</button>
             <button class="chart-filter-btn" data-period="monthly">Monthly</button>
+            <button class="chart-filter-btn" data-period="yearly">Yearly</button>
         </div>
     </div>
     <div style="height: 300px;">

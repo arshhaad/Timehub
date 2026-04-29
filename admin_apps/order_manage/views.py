@@ -8,7 +8,7 @@ from user_apps.core.models import Order, Product, ProductVariant, OrderItem, Wis
 import json
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Avg, F
-from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
@@ -616,34 +616,80 @@ def sales_report(request):
     total_customers = User.objects.filter(is_superuser=False).count()
     total_products_count = Product.objects.filter(is_deleted=False).count()
     aov = delivered_orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0
-
-    # Trend Data
-    today_dt = timezone.now()
-    thirty_days_ago = today_dt - timedelta(days=30)
-    
-    daily_sales = delivered_orders.filter(created_at__gte=thirty_days_ago) \
+    # --- Chart Data (Revenue Trends) ---
+    now = timezone.now()
+    # Daily (Last 7 days)
+    daily_sales_data = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=7)) \
         .annotate(date=TruncDay('created_at')) \
         .values('date') \
-        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
+        .annotate(revenue=Sum('total_amount')) \
         .order_by('date')
+    
+    daily_labels = [(now - timedelta(days=i)).strftime('%b %d') for i in range(6, -1, -1)]
+    daily_rev_map = {s['date'].date() if hasattr(s['date'], 'date') else s['date']: float(s['revenue']) for s in daily_sales_data}
+    daily_values = [daily_rev_map.get((now - timedelta(days=i)).date(), 0.0) for i in range(6, -1, -1)]
 
-    daily_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in daily_sales if item['date']}
-    daily_labels, daily_revenue, daily_counts = [], [], []
-    for i in range(30, -1, -1):
-        day = (today_dt - timedelta(days=i)).date()
-        daily_labels.append(day.strftime('%d %b'))
-        if day in daily_dict:
-            daily_revenue.append(float(daily_dict[day]['revenue']))
-            daily_counts.append(daily_dict[day]['counts'])
-        else:
-            daily_revenue.append(0.0)
-            daily_counts.append(0)
+    # Monthly (Last 6 months)
+    monthly_sales_data = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=180)) \
+        .annotate(month=TruncMonth('created_at')) \
+        .values('month') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('month')
+    
+    monthly_labels = []
+    monthly_values = []
+    for i in range(5, -1, -1):
+        month_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        monthly_labels.append(month_date.strftime('%b %Y'))
+        val = 0.0
+        for s in monthly_sales_data:
+            if s['month'].year == month_date.year and s['month'].month == month_date.month:
+                val = float(s['revenue'])
+                break
+        monthly_values.append(val)
+    
+    # Weekly (Last 8 weeks)
+    weekly_sales_data = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=56)) \
+        .annotate(week=TruncWeek('created_at')) \
+        .values('week') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('week')
+    
+    weekly_labels = []
+    weekly_values = []
+    for i in range(7, -1, -1):
+        week_date = (now - timedelta(days=now.weekday(), weeks=i)).date()
+        weekly_labels.append(f"Week {week_date.strftime('%W')}")
+        val = 0.0
+        for s in weekly_sales_data:
+            if s['week'].date() == week_date:
+                val = float(s['revenue'])
+                break
+        weekly_values.append(val)
 
-    daily_data = {"labels": daily_labels, "revenue": daily_revenue, "counts": daily_counts}
+    # Yearly (Last 5 years)
+    yearly_sales_data = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=365*5)) \
+        .annotate(year=TruncYear('created_at')) \
+        .values('year') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('year')
+    
+    yearly_labels = [str(now.year - i) for i in range(4, -1, -1)]
+    yearly_values = []
+    for year_str in yearly_labels:
+        val = 0.0
+        for s in yearly_sales_data:
+            if str(s['year'].year) == year_str:
+                val = float(s['revenue'])
+                break
+        yearly_values.append(val)
 
-    # Weekly Trend (simplified for current context)
-    weekly_data = {"labels": [], "revenue": [], "counts": []} # Can be filled if needed
-    monthly_data = {"labels": [], "revenue": [], "counts": []} # Can be filled if needed
+    chart_data = {
+        'daily': {'labels': daily_labels, 'values': daily_values},
+        'weekly': {'labels': weekly_labels, 'values': weekly_values},
+        'monthly': {'labels': monthly_labels, 'values': monthly_values},
+        'yearly': {'labels': yearly_labels, 'values': yearly_values},
+    }
 
     # Top Products
     top_products = Product.objects.filter(is_deleted=False) \
@@ -664,9 +710,7 @@ def sales_report(request):
         'total_customers': total_customers,
         'total_products_count': total_products_count,
         'aov': aov,
-        'daily_data_json': json.dumps(daily_data),
-        'weekly_data_json': json.dumps(weekly_data), # Placeholder or full
-        'monthly_data_json': json.dumps(monthly_data), # Placeholder or full
+        'chart_data_json': json.dumps(chart_data),
         'top_products': top_products,
         'most_wanted': most_wanted,
         'active_menu': 'sales',
