@@ -75,3 +75,36 @@ class Coupon(models.Model):
         if self.usage_limit is not None and self.used_count >= self.usage_limit:
             return False
         return True
+
+class ProductOffer(models.Model):
+    product = models.ForeignKey('core.Product', on_delete=models.CASCADE, related_name='product_offers')
+    discount_percentage = models.PositiveIntegerField(help_text="Discount in percentage (e.g. 20 for 20%)")
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.discount_percentage}% off on {self.product.name}"
+
+class CategoryOffer(models.Model):
+    category = models.ForeignKey('core.Collection', on_delete=models.CASCADE, related_name='category_offers')
+    discount_percentage = models.PositiveIntegerField(help_text="Discount in percentage (e.g. 15 for 15%)")
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.discount_percentage}% off on {self.category.name} collection"
+
+class ReferralOffer(models.Model):
+    referrer_reward = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount credited to referrer after referee's first order")
+    referee_signup_reward = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount credited to referee immediately on signup")
+    referee_order_reward = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount credited to referee after their first order")
+    referee_discount_percent = models.PositiveIntegerField(default=50, help_text="Discount percentage for referee's first order")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Referral: Referrer ₹{self.referrer_reward} | Referee ₹{self.referee_signup_reward}+{self.referee_order_reward}"

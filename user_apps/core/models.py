@@ -74,6 +74,45 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def get_best_discounted_price(self):
+        """Calculates price after applying the best available offer (Product vs Category)."""
+        from admin_apps.offers.models import ProductOffer, CategoryOffer
+        from django.utils import timezone
+        from decimal import Decimal
+        
+        now = timezone.now()
+        
+        # Get highest active product offer
+        product_offer = self.product_offers.filter(
+            is_active=True, valid_from__lte=now, valid_to__gte=now
+        ).order_by('-discount_percentage').first()
+        
+        # Get highest active category offer (via collection)
+        category_offer = self.collection.category_offers.filter(
+            is_active=True, valid_from__lte=now, valid_to__gte=now
+        ).order_by('-discount_percentage').first()
+        
+        prod_disc_perc = product_offer.discount_percentage if product_offer else 0
+        cat_disc_perc = category_offer.discount_percentage if category_offer else 0
+        
+        best_disc_perc = max(prod_disc_perc, cat_disc_perc)
+        
+        if best_disc_perc > 0:
+            discount_amount = (self.price * Decimal(best_disc_perc)) / Decimal(100)
+            return (self.price - discount_amount).quantize(Decimal('0.00'))
+        
+        # Fallback to manual discount_price if no offers active
+        return self.discount_price if self.discount_price else self.price
+        
+    @property
+    def display_price(self):
+        """Dynamic price property that accounts for offers."""
+        return self.get_best_discounted_price()
+
+    @property
+    def has_offer(self):
+        return self.get_best_discounted_price() < self.price
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='product_images/')
@@ -110,12 +149,28 @@ class ProductVariant(models.Model):
 
     @property
     def effective_discount_price(self):
+        """Calculates discount price for variant based on best offer or manual discount."""
+        from decimal import Decimal
+        
+        base_price = self.price if self.price else self.product.price
+        
+        # First check if the base product has an offer (applies to variants too)
+        best_price = self.product.get_best_discounted_price()
+        
+        # If product has an offer, we apply that same percentage to the variant price
+        if self.product.has_offer:
+            discount_perc = 100 - (best_price * 100 / self.product.price)
+            discount_amount = (base_price * discount_perc) / 100
+            return (base_price - discount_amount).quantize(Decimal('0.00'))
+            
+        # Fallback to manual variant discount or product discount
         return self.discount_price if self.discount_price else self.product.discount_price
 
 
 class Order(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
         ('Processing', 'Processing'),
         ('Shipped', 'Shipped'),
         ('Out for Delivery', 'Out for Delivery'),
@@ -129,6 +184,14 @@ class Order(models.Model):
         ('razorpay', 'Razorpay'),
         ('wallet', 'TimeHub Wallet'),
     )
+    RETURN_STATUS_CHOICES = (
+        ('None', 'None'),
+        ('Requested', 'Requested'),
+        ('Processing', 'Processing'),
+        ('Pickup Scheduled', 'Pickup Scheduled'),
+        ('Returned', 'Returned'),
+        ('Rejected', 'Rejected'),
+    )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     address_snapshot = models.TextField(blank=True, help_text='JSON snapshot of address at time of order')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
@@ -138,6 +201,7 @@ class Order(models.Model):
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='None')
     cancel_reason = models.TextField(blank=True, null=True)
     return_reason = models.TextField(blank=True, null=True)
     reschedule_reason = models.TextField(blank=True, null=True)
@@ -153,6 +217,7 @@ class Order(models.Model):
     scheduled_delivery_time = models.TimeField(blank=True, null=True)
     refund_processed_at = models.DateTimeField(blank=True, null=True)
     refund_method = models.CharField(max_length=50, blank=True, null=True)
+    is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

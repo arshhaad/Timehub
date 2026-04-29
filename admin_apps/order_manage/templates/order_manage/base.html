@@ -94,7 +94,9 @@
             border-radius: var(--radius-md); transition: var(--transition);
         }
         .nav-item a i { font-size: 1.1rem; width: 20px; text-align: center; }
-        .nav-item a:hover { background-color: #f3f4f6; color: var(--text-main); transform: translateX(4px); }
+        .nav-item a:hover { background-color: #f9fafb; color: #000; transform: translateX(6px); }
+        .nav-item a i { transition: transform 0.2s; }
+        .nav-item a:hover i { transform: scale(1.1); color: var(--primary-bg); }
         
         .nav-item.active a { 
             background-color: #000000 !important; 
@@ -300,8 +302,11 @@
                 <li class="nav-item {% if active_menu == 'orders' %}active{% endif %}">
                     <a href="{% url 'admin_order_list' %}"><i class="fas fa-shopping-cart"></i> Orders</a>
                 </li>
-                <li class="nav-item {% if active_menu == 'coupons' or request.resolver_match.url_name == 'coupon_list' %}active{% endif %}">
-                    <a href="{% url 'coupon_list' %}"><i class="fas fa-ticket-alt"></i> Coupons</a>
+                <li class="nav-item {% if active_menu == 'coupons' %}active{% endif %}">
+                    <a href="{% url 'coupon_manage' %}"><i class="fas fa-ticket-alt"></i> Coupons</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'offers' %}active{% endif %}">
+                    <a href="{% url 'admin_offers_list' %}"><i class="fas fa-percent"></i> Offers</a>
                 </li>
                 <li class="nav-item {% if active_menu == 'inventory' %}active{% endif %}">
                     <a href="{% url 'admin_inventory_list' %}"><i class="fas fa-boxes"></i> Inventory</a>
@@ -314,6 +319,9 @@
             <ul class="nav-list">
                 <li class="nav-item {% if active_menu == 'user_requests' %}active{% endif %}">
                     <a href="{% url 'admin_user_requests' %}"><i class="fas fa-user-clock"></i> User Requests</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'return_requests' %}active{% endif %}">
+                    <a href="{% url 'admin_return_requests' %}"><i class="fas fa-undo"></i> Return Requests</a>
                 </li>
                 <li class="nav-item {% if active_menu == 'reschedule' %}active{% endif %}">
                     <a href="{% url 'admin_user_reschedule' %}"><i class="fas fa-calendar-alt"></i> Reschedule</a>

@@ -312,6 +312,8 @@
         .toast-success i { color: #22c55e; }
         .toast-info { border-left: 4px solid var(--primary-color); }
         .toast-info i { color: var(--primary-color); }
+        .toast-warning { border-left: 4px solid #f59e0b; }
+        .toast-warning i { color: #f59e0b; }
         .toast::after {
             content: ''; position: absolute; bottom: 0; left: 0; height: 3px;
             background: rgba(255,255,255,0.1); width: 100%;
@@ -321,6 +323,7 @@
         .toast-error::after { background: #ef4444; }
         .toast-success::after { background: #22c55e; }
         .toast-info::after { background: var(--primary-color); }
+        .toast-warning::after { background: #f59e0b; }
 
         /* SEARCH OVERLAY SYNC */
         .search-overlay {
@@ -531,7 +534,7 @@
                     <a href="{% url 'address_list' %}"><i class="fas fa-map-location-dot"></i> Saved Addresses</a>
                 </li>
                 <li class="nav-item {% block nav_payments %}{% endblock %}">
-                    <a href="{% url 'payment_list' %}"><i class="fas fa-credit-card"></i> Payments</a>
+                    <a href="{% url 'payments:payment_list' %}"><i class="fas fa-credit-card"></i> Payments</a>
                 </li>
                 <li class="nav-item {% block nav_notifications %}{% endblock %}">
                     <a href="{% url 'user_notifications' %}">
@@ -644,7 +647,9 @@
             
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            const icon = type === 'error' ? 'exclamation-circle' : (type === 'success' ? 'check-circle' : 'info-circle');
+            const icon = type === 'success' ? 'check-circle' : 
+                         (type === 'error' || type === 'danger' ? 'exclamation-circle' : 
+                         (type === 'warning' ? 'exclamation-triangle' : 'info-circle'));
             
             toast.innerHTML = `
                 <i class="fas fa-${icon}"></i>

@@ -234,7 +234,7 @@
 {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
 <div class="stepper">
     <!-- Step 1: Return Requested -->
-    <div class="stepper-item done">
+    <div class="stepper-item {% if order.return_status != 'None' %}done{% else %}current{% endif %}">
         <div class="stepper-icon"><i class="fas fa-undo"></i></div>
         <div>
             <div class="stepper-label">Return Requested</div>
@@ -242,7 +242,10 @@
         </div>
     </div>
     <!-- Step 2: Return Processing -->
-    <div class="stepper-item {% if order.status == 'Return Requested' %}current{% else %}done{% endif %}">
+    <div class="stepper-item 
+        {% if order.return_status == 'Requested' %}current
+        {% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done
+        {% else %}pending{% endif %}">
         <div class="stepper-icon"><i class="fas fa-cog"></i></div>
         <div>
             <div class="stepper-label">Return Processing</div>
@@ -250,7 +253,10 @@
         </div>
     </div>
     <!-- Step 3: Pick Up Scheduled -->
-    <div class="stepper-item {% if order.status == 'Return Requested' %}pending{% else %}done{% endif %}">
+    <div class="stepper-item 
+        {% if order.return_status == 'Processing' %}current
+        {% elif order.return_status in 'Pickup Scheduled,Returned' %}done
+        {% else %}pending{% endif %}">
         <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
         <div>
             <div class="stepper-label">Pickup Scheduled</div>
@@ -258,7 +264,10 @@
         </div>
     </div>
     <!-- Step 4: Product Returned -->
-    <div class="stepper-item {% if order.status == 'Returned' %}done{% else %}pending{% endif %}">
+    <div class="stepper-item 
+        {% if order.return_status == 'Pickup Scheduled' %}current
+        {% elif order.return_status == 'Returned' %}done
+        {% else %}pending{% endif %}">
         <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
         <div>
             <div class="stepper-label">Product Returned</div>

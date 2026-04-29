@@ -17,9 +17,7 @@ urlpatterns = [
     path('invoice/<int:order_id>/', views.download_invoice, name='download_invoice'),
     path('reschedule/<int:order_id>/', views.reschedule_order, name='reschedule_order'),
 
-    # Razorpay
-    path('razorpay/init/', views.initialize_razorpay_order, name='razorpay_init'),
-    path('razorpay/verify/', views.verify_razorpay_payment, name='razorpay_verify'),
+
 
     # Coupons
     path('coupon/apply/', views.apply_coupon, name='apply_coupon'),

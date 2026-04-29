@@ -5,6 +5,7 @@
 {% block meta_description %}TimeHub admin order management — view, filter, sort, and update order statuses.{% endblock %}
 
 {% block extra_css %}
+<style>
 /* ── Toolbar ── */
 .toolbar {
     background: #fff; border: 1px solid var(--border-color);
@@ -18,15 +19,15 @@
 /* ── Premium Search Box ── */
 .premium-search-container {
     display: flex; align-items: center;
-    background: #f8fafc; border: 1px solid #e2e8f0;
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
     border-radius: 12px; padding: 2px 2px 2px 16px;
     gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 .premium-search-container:focus-within {
     background: #fff; border-color: #000;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 .premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
 .premium-search-container:focus-within i.search-icon { color: #000; }
@@ -38,25 +39,26 @@
 
 .search-action-btn {
     background: #000; color: #fff; border: none;
-    padding: 0 20px; height: 38px; border-radius: 10px;
-    font-size: 0.85rem; font-weight: 700; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    transition: all 0.2s ease;
+    padding: 0 24px; height: 38px; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-.search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
-.search-action-btn:active { transform: scale(0.98); }
+.search-action-btn:hover { background: #111; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+.search-action-btn:active { transform: translateY(0); }
 .search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
 .search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
 
 .select-filter {
-    padding: 10px 36px 10px 16px; border: 1px solid #e2e8f0;
+    padding: 10px 40px 10px 16px; border: 1.5px solid #e2e8f0;
     border-radius: 12px; font-size: .875rem; font-weight: 600;
     color: var(--text-main); appearance: none; outline: none; cursor: pointer;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
-    transition: var(--transition);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 16px center;
+    transition: all 0.2s;
 }
-.select-filter:hover { border-color: #cbd5e1; background-color: #f8fafc; }
-.select-filter:focus { border-color: #000; box-shadow: 0 0 0 3px rgba(0,0,0,.05); }
+.select-filter:hover { border-color: #cbd5e1; background-color: #f8fafc; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+.select-filter:focus { border-color: #000; box-shadow: 0 0 0 4px rgba(0,0,0,.04); }
 
 /* ── Filter tabs ── */
 .filter-tabs-row {
@@ -88,8 +90,8 @@
 }
 .order-table td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: .875rem; }
 .order-table tbody tr:last-child td { border-bottom: none; }
-.order-table tbody tr { transition: background .15s; }
-.order-table tbody tr:hover { background: #fafbfc; }
+.order-table tbody tr { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+.order-table tbody tr:hover { background: #f8fafc; transform: scale(1.002); box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
 
 /* ── Cells ── */
 .order-id-badge { font-weight: 800; font-size: .9rem; color: var(--text-main); }
@@ -103,12 +105,13 @@
 
 /* ── Status select ── */
 .status-select {
-    padding: 6px 28px 6px 10px; border-radius: 8px; font-size: .8rem; font-weight: 600;
-    color: var(--text-main); border: 1px solid var(--border-color);
-    outline: none; cursor: pointer; appearance: none; transition: var(--transition);
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7280' d='M1 1l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center;
+    padding: 8px 32px 8px 12px; border-radius: 10px; font-size: .8rem; font-weight: 700;
+    color: var(--text-main); border: 1.5px solid var(--border-color);
+    outline: none; cursor: pointer; appearance: none; transition: all 0.2s;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7280' d='M1 1l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center;
 }
-.status-select:focus { border-color: var(--primary-bg); box-shadow: 0 0 0 3px rgba(255,107,0,.1); }
+.status-select:hover { border-color: #cbd5e1; background-color: #fafbfc; }
+.status-select:focus { border-color: #000; box-shadow: 0 0 0 4px rgba(0,0,0,.03); }
 
 /* ── Action button ── */
 .action-col { display: flex; gap: 6px; justify-content: flex-end; }
@@ -138,6 +141,7 @@
     .toolbar-left { flex-direction: column; }
     .toolbar-search { min-width: auto; }
 }
+</style>
 {% endblock %}
 
 {% block topbar_left %}

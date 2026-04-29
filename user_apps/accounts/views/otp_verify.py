@@ -7,6 +7,7 @@ from ..models import CustomUser, EmailOTP
 from django.utils import timezone
 from datetime import timedelta
 from django.views.decorators.cache import never_cache
+from admin_apps.offers.services import process_referee_reward
 
 
 @never_cache
@@ -42,7 +43,10 @@ def verify_otp(request):
             # auto login
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            messages.success(request, "Email verified successfully!")
+            # Process referral reward for referee
+            process_referee_reward(user)
+
+            messages.success(request, f"Email verified! Welcome to TimeHub, {user.first_name or user.email}. 🎉")
             return redirect("home")
 
         except CustomUser.DoesNotExist:

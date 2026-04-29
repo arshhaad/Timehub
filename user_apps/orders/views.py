@@ -14,6 +14,7 @@ from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product, Wal
 from admin_apps.offers.models import Coupon
 from user_apps.edit.models import Address
 from django.conf import settings
+from admin_apps.offers.services import get_referral_first_order_discount
 try:
     import razorpay
     RAZORPAY_CLIENT = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -23,6 +24,45 @@ except ImportError:
 
 SHIPPING_CHARGE = Decimal('99.00')
 TAX_RATE = Decimal('0.03')  # 3% GST
+
+
+def get_cart_totals(cart):
+    """Helper to calculate subtotal, shipping, tax, discount and final total for a cart."""
+    items = cart.items.select_related('product', 'variant').all()
+    subtotal = sum(item.total_price for item in items)
+    
+    # Shipping logic
+    shipping = Decimal('99.00')
+    if subtotal >= Decimal('20000.00'):
+        shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('49.00')
+    
+    # Discount logic
+    discount = Decimal('0')
+    if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
+        if cart.coupon.discount_type == 'percentage':
+            discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
+            if cart.coupon.max_discount_amount:
+                discount = min(discount, cart.coupon.max_discount_amount)
+        else:
+            discount = cart.coupon.discount_value
+    # Referral First Order Discount
+    referral_discount = get_referral_first_order_discount(cart.user, subtotal)
+    discount += referral_discount
+            
+    taxable_amount = max(Decimal('0'), subtotal - discount)
+    tax = round(taxable_amount * TAX_RATE, 2)
+    total = taxable_amount + tax + shipping
+    
+    return {
+        'items': items,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'discount': discount,
+        'total': total
+    }
 
 
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -60,6 +100,10 @@ def checkout_page(request):
             cart.coupon = None
             cart.save()
             
+    # Referral First Order Discount
+    referral_discount = get_referral_first_order_discount(request.user, subtotal)
+    discount += referral_discount
+            
     taxable_amount = subtotal - discount
     if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
     tax = round(taxable_amount * TAX_RATE, 2)
@@ -94,6 +138,11 @@ def checkout_page(request):
         }
 
         with transaction.atomic():
+            # Generate estimated delivery date (3–7 days from now) and save it
+            days_to_delivery = random.randint(3, 7)
+            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
+
+            # Wallet deduction if applicable
             if payment_method == 'wallet':
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
                 if wallet.balance < total:
@@ -105,11 +154,7 @@ def checkout_page(request):
                     })
                 wallet.balance -= total
                 wallet.save()
-
-            # Generate estimated delivery date (3–7 days from now) and save it
-            days_to_delivery = random.randint(3, 7)
-            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
-
+                
             order = Order.objects.create(
                 user=request.user,
                 address_snapshot=json.dumps(address_data),
@@ -120,13 +165,10 @@ def checkout_page(request):
                 discount=discount,
                 total_amount=total,
                 status='Pending',
+                is_paid=True if payment_method == 'wallet' else False,
                 scheduled_delivery_date=estimated_delivery_date,
                 coupon_code=cart.coupon.code if cart.coupon else None,
             )
-
-            if cart.coupon:
-                cart.coupon.used_count += 1
-                cart.coupon.save()
 
             if payment_method == 'wallet':
                 WalletTransaction.objects.create(
@@ -136,17 +178,17 @@ def checkout_page(request):
                     description=f'Payment for Order #{order.id}'
                 )
 
+            if cart.coupon:
+                cart.coupon.used_count += 1
+                cart.coupon.save()
+
             for item in items:
-                # Check stock before creating order item
                 available_stock = item.variant.stock if item.variant else item.product.stock
                 if available_stock < item.quantity:
                     messages.error(request, f"Sorry, only {available_stock} units of {item.product.name} are available.")
                     raise Exception("Insufficient stock")
 
-                if item.variant:
-                    price_at_purchase = item.variant.effective_discount_price
-                else:
-                    price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
+                price_at_purchase = item.variant.effective_discount_price if item.variant else (item.product.discount_price or item.product.price)
                 
                 OrderItem.objects.create(
                     order=order,
@@ -164,8 +206,11 @@ def checkout_page(request):
                     item.product.stock -= item.quantity
                     item.product.save()
 
-        # Clear cart
-        cart.items.all().delete()
+            # Clear cart
+            cart.items.all().delete()
+
+        if payment_method == 'razorpay':
+            return redirect('payments:start_payment', order_id=order.id)
 
         return redirect('order_success', order_id=order.id)
 
@@ -268,9 +313,13 @@ def cancel_order(request, order_id):
             
             # Increment Stock
             for item in order.items.filter(is_cancelled=False):
-                product = item.product
-                product.stock += item.quantity
-                product.save()
+                if item.variant:
+                    item.variant.stock += item.quantity
+                    item.variant.save()
+                else:
+                    product = item.product
+                    product.stock += item.quantity
+                    product.save()
                 item.is_cancelled = True
                 item.cancel_reason = 'Order cancelled'
                 item.save()
@@ -312,9 +361,13 @@ def cancel_order_item(request, item_id):
             item.save()
             
             # Increment Stock
-            product = item.product
-            product.stock += item.quantity
-            product.save()
+            if item.variant:
+                item.variant.stock += item.quantity
+                item.variant.save()
+            else:
+                product = item.product
+                product.stock += item.quantity
+                product.save()
             
             # Note: We are no longer automatically cancelling the entire order 
             # when all items are cancelled to allow for more granular control.
@@ -354,6 +407,7 @@ def return_order(request, order_id):
             return redirect('order_detail', order_id=order.id)
             
         order.status = 'Return Requested'
+        order.return_status = 'Requested'
         order.return_reason = reason
         order.save()
         messages.success(request, 'Return request submitted successfully.')
@@ -538,223 +592,7 @@ def edit_address(request, id):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
-@login_required
-@never_cache
-def initialize_razorpay_order(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
-    if not RAZORPAY_CLIENT:
-        return JsonResponse({'error': 'Razorpay client not configured. Please install razorpay and add keys.'}, status=500)
-    
-    # Calculate total
-    cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.all()
-    if not items.exists():
-        return JsonResponse({'error': 'Cart is empty'}, status=400)
-    
-    subtotal = sum(item.total_price for item in items)
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('0.00')
-    elif subtotal >= Decimal('5000.00'):
-        shipping = Decimal('49.00')
-    
-    discount = Decimal('0')
-    if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
-        if cart.coupon.discount_type == 'percentage':
-            discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
-            if cart.coupon.max_discount_amount:
-                discount = min(discount, cart.coupon.max_discount_amount)
-        else:
-            discount = cart.coupon.discount_value
-            
-    taxable_amount = subtotal - discount
-    if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
-    tax = round(taxable_amount * TAX_RATE, 2)
-    total = taxable_amount + tax + shipping
-    
-    amount_paise = int(total * 100)
-    
-    # Stock Check before initializing payment
-    for item in items:
-        available_stock = item.variant.stock if item.variant else item.product.stock
-        if available_stock < item.quantity:
-            return JsonResponse({'error': f"Sorry, only {available_stock} units of {item.product.name} are available."}, status=400)
 
-    try:
-        receipt_id = f"receipt_cart_{cart.id}_{int(timezone.now().timestamp())}"
-        razorpay_order = RAZORPAY_CLIENT.order.create({
-            'amount': amount_paise,
-            'currency': 'INR',
-            'payment_capture': '1',
-            'receipt': receipt_id
-        })
-        return JsonResponse({
-            'razorpay_order_id': razorpay_order['id'],
-            'amount': amount_paise,
-            'currency': 'INR',
-            'key': settings.RAZORPAY_KEY_ID
-        })
-    except Exception as e:
-        error_msg = str(e)
-        if "Amount exceeds maximum amount allowed" in error_msg:
-            error_msg = "The order amount exceeds the limit for this Razorpay test account. Please try with a cheaper item (e.g., under ₹50,000) or check your Razorpay dashboard settings."
-        return JsonResponse({'error': error_msg}, status=500)
-
-
-@login_required
-@never_cache
-@transaction.atomic
-def verify_razorpay_payment(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
-    if not RAZORPAY_CLIENT:
-        return JsonResponse({'error': 'Razorpay client not configured.'}, status=500)
-        
-    data = json.loads(request.body)
-    payment_id = data.get('razorpay_payment_id')
-    razorpay_order_id = data.get('razorpay_order_id')
-    signature = data.get('razorpay_signature')
-    address_id = data.get('address_id')
-    
-    if not all([payment_id, razorpay_order_id, signature, address_id]):
-        return JsonResponse({'error': 'Missing payment details'}, status=400)
-    
-    # Verify signature
-    params_dict = {
-        'razorpay_order_id': razorpay_order_id,
-        'razorpay_payment_id': payment_id,
-        'razorpay_signature': signature
-    }
-    
-    try:
-        RAZORPAY_CLIENT.utility.verify_payment_signature(params_dict)
-    except:
-        return JsonResponse({'error': 'Payment verification failed'}, status=400)
-    
-    try:
-        with transaction.atomic():
-            # Create the order
-            address = get_object_or_404(Address, id=address_id, user=request.user)
-            address_data = {
-                'full_name': address.full_name,
-                'street': address.street,
-                'city': address.city,
-                'state': address.state,
-                'postal_code': address.postal_code,
-                'country': address.country,
-                'phone': address.phone,
-            }
-            
-            cart, _ = Cart.objects.get_or_create(user=request.user)
-            items = cart.items.select_related('product', 'variant').all()
-            
-            if not items.exists():
-                return JsonResponse({'error': 'Cart is empty'}, status=400)
-
-            subtotal = sum(item.total_price for item in items)
-            shipping = Decimal('99.00')
-            if subtotal >= Decimal('20000.00'):
-                shipping = Decimal('0.00')
-            elif subtotal >= Decimal('5000.00'):
-                shipping = Decimal('49.00')
-            
-            discount = Decimal('0')
-            if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
-                if cart.coupon.discount_type == 'percentage':
-                    discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
-                    if cart.coupon.max_discount_amount:
-                        discount = min(discount, cart.coupon.max_discount_amount)
-                else:
-                    discount = cart.coupon.discount_value
-                    
-            taxable_amount = subtotal - discount
-            if taxable_amount < Decimal('0'): taxable_amount = Decimal('0')
-            tax = round(taxable_amount * TAX_RATE, 2)
-            total = taxable_amount + tax + shipping
-            
-            # Generate estimated delivery date
-            days_to_delivery = random.randint(3, 7)
-            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
-            
-            order = Order.objects.create(
-                user=request.user,
-                address_snapshot=json.dumps(address_data),
-                payment_method='razorpay',
-                subtotal=subtotal,
-                tax=tax,
-                shipping_charge=shipping,
-                discount=discount,
-                total_amount=total,
-                status='Pending',
-                scheduled_delivery_date=estimated_delivery_date,
-                coupon_code=cart.coupon.code if cart.coupon else None,
-                razorpay_order_id=razorpay_order_id,
-                razorpay_payment_id=payment_id,
-                razorpay_signature=signature,
-            )
-            
-            if cart.coupon:
-                cart.coupon.used_count += 1
-                cart.coupon.save()
-            
-            for item in items:
-                # Check stock again within the transaction
-                available_stock = item.variant.stock if item.variant else item.product.stock
-                if available_stock < item.quantity:
-                     # This should ideally trigger a refund logic if possible, 
-                     # but for now we raise an exception to rollback the order creation.
-                     raise ValueError(f"Insufficient stock for {item.product.name} after payment.")
-                     
-                if item.variant:
-                    price_at_purchase = item.variant.effective_discount_price
-                else:
-                    price_at_purchase = item.product.discount_price if item.product.discount_price else item.product.price
-                    
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    variant=item.variant,
-                    quantity=item.quantity,
-                    price=price_at_purchase,
-                )
-                
-                # Decrement Stock
-                if item.variant:
-                    item.variant.stock -= item.quantity
-                    item.variant.save()
-                else:
-                    item.product.stock -= item.quantity
-                    item.product.save()
-                    
-            # Clear cart
-            cart.items.all().delete()
-            
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('order_success', args=[order.id])
-            })
-    except Exception as e:
-        # If order creation fails AFTER payment verification (e.g. stock issue), 
-        # we credit the amount back to the user's wallet since we can't easily auto-refund.
-        try:
-            with transaction.atomic():
-                wallet, _ = Wallet.objects.get_or_create(user=request.user)
-                wallet.balance += total
-                wallet.save()
-                
-                WalletTransaction.objects.create(
-                    wallet=wallet,
-                    transaction_type='Credit',
-                    amount=total,
-                    description=f'Refund for failed Razorpay Order (ID: {razorpay_order_id})'
-                )
-            error_msg = f"Payment was successful but order creation failed: {str(e)}. The amount of ₹{total} has been credited to your TimeHub Wallet."
-            return JsonResponse({'error': error_msg}, status=400)
-        except Exception as wallet_e:
-            return JsonResponse({'error': f'An unexpected error occurred during order processing. Please contact support with Payment ID: {payment_id}'}, status=500)
 
 
 @login_required

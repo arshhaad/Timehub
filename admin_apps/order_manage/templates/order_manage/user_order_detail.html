@@ -161,8 +161,20 @@ display:inline-flex; align-items:center; gap:6px; }
             <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
+
+        {% if order.status == 'Return Requested' or order.status == 'Returned' %}
+        <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Return Stage</label>
+            <select name="return_status" class="status-select-big" style="width:auto; padding-top:8px; padding-bottom:8px; min-width:160px; border-color: var(--primary-bg);">
+                {% for val, label in return_status_choices %}
+                <option value="{{ val }}" {% if order.return_status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
         <div id="refund-method-container"
-            style="display:{% if order.status == 'Returned' %}flex{% else %}none{% endif %}; align-items:center; gap:8px;">
+            style="display:{% if order.status == 'Returned' or order.return_status == 'Returned' %}flex{% else %}none{% endif %}; align-items:center; gap:8px;">
             <select name="refund_method" class="status-select-big"
                 style="width:auto; padding-top:8px; padding-bottom:8px;">
                 <option value="Cash" {% if order.refund_method == 'Cash' %}selected{% endif %}>Paid Cash</option>

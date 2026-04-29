@@ -163,7 +163,7 @@
                     </td>
                     <td>
                         {% if order.status == 'Return Requested' or order.return_reason %}
-                            <span class="status-badge req-Return"><i class="fas fa-undo"></i> Return</span>
+                            <a href="{% url 'admin_return_requests' %}?q={{ order.id }}" class="status-badge req-Return" style="text-decoration: none;"><i class="fas fa-undo"></i> Return</a>
                         {% elif order.reschedule_reason %}
                             <a href="{% url 'process_reschedule' order.id %}?next={{ request.get_full_path|urlencode }}" class="status-badge req-Reschedule" style="text-decoration: none; display: inline-block; cursor: pointer; transition: all 0.2s;"><i class="fas fa-calendar-alt"></i> Reschedule</a>
                         {% elif order.cancel_reason %}
@@ -193,6 +193,11 @@
                             {% if order.reschedule_reason %}
                                 <span class="status-badge" style="background: {% if order.reschedule_status == 'Pending' %}#fef3c7{% elif order.reschedule_status == 'Approved' %}#dcfce7{% else %}#fee2e2{% endif %}; color: {% if order.reschedule_status == 'Pending' %}#d97706{% elif order.reschedule_status == 'Approved' %}#166534{% else %}#991b1b{% endif %};">
                                     {{ order.reschedule_status|default:"Pending" }}
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; padding: 0 4px;">Order: {{ order.status }}</span>
+                            {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
+                                <span class="status-badge" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-bg); border: 1px solid rgba(255, 106, 0, 0.2);">
+                                    {{ order.return_status|default:"Requested" }}
                                 </span>
                                 <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; padding: 0 4px;">Order: {{ order.status }}</span>
                             {% else %}

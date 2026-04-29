@@ -81,27 +81,26 @@ def order_detail(request, order_id):
     # Handle status update from the detail page
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        new_return_status = request.POST.get('return_status')
         new_date = request.POST.get('scheduled_delivery_date')
         
         valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
         if new_status in valid_statuses:
+            # Traditional status logic
             if new_status == 'Returned' and order.status != 'Returned':
-                from django.utils import timezone
-                order.refund_processed_at = timezone.now()
-                order.refund_method = request.POST.get('refund_method')
-                
-                if order.payment_method in ['razorpay', 'wallet']:
-                    wallet, _ = Wallet.objects.get_or_create(user=order.user)
-                    wallet.balance += order.total_amount
-                    wallet.save()
-                    WalletTransaction.objects.create(
-                        wallet=wallet,
-                        transaction_type='Credit',
-                        amount=order.total_amount,
-                        description=f'Refund for returned Order #{order.id}'
-                    )
+                # This is a legacy transition, we now prefer return_status flow but keeping for safety
+                process_full_return(order, request.POST.get('refund_method'))
             
             order.status = new_status
+            
+            # New Return Status logic
+            if new_return_status and new_return_status in [c[0] for c in Order.RETURN_STATUS_CHOICES]:
+                order.return_status = new_return_status
+                if new_return_status == 'Returned' and order.status != 'Returned':
+                    order.status = 'Returned'
+                    process_full_return(order, request.POST.get('refund_method') or 'Wallet')
+                elif new_return_status == 'Rejected':
+                    order.status = 'Delivered'
             
             # Update delivery date if provided
             if new_date:
@@ -128,9 +127,40 @@ def order_detail(request, order_id):
         'address': address,
         'active_menu': 'orders',
         'status_choices': Order.STATUS_CHOICES,
+        'return_status_choices': Order.RETURN_STATUS_CHOICES,
         'timeline_steps': timeline_steps,
     }
     return render(request, 'order_manage/user_order_detail.html', context)
+
+def process_full_return(order, refund_method):
+    """Helper to process refund and stock restore when a return is finalized."""
+    from django.utils import timezone
+    if order.status == 'Returned':
+        return # already processed
+        
+    order.refund_processed_at = timezone.now()
+    order.refund_method = refund_method
+    
+    if order.payment_method in ['razorpay', 'wallet']:
+        wallet, _ = Wallet.objects.get_or_create(user=order.user)
+        wallet.balance += order.total_amount
+        wallet.save()
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            transaction_type='Credit',
+            amount=order.total_amount,
+            description=f'Refund for returned Order #{order.id}'
+        )
+    
+    # Increment Stock for all items in the order
+    for item in order.items.filter(is_cancelled=False):
+        if item.variant:
+            item.variant.stock += item.quantity
+            item.variant.save()
+        else:
+            product = item.product
+            product.stock += item.quantity
+            product.save()
 
 
 @login_required
@@ -155,6 +185,16 @@ def update_order_status(request, order_id):
                     amount=order.total_amount,
                     description=f'Refund for returned Order #{order.id}'
                 )
+            
+            # Increment Stock for all items in the order
+            for item in order.items.filter(is_cancelled=False):
+                if item.variant:
+                    item.variant.stock += item.quantity
+                    item.variant.save()
+                else:
+                    product = item.product
+                    product.stock += item.quantity
+                    product.save()
                 
         order.status = new_status
         order.save()
@@ -184,9 +224,13 @@ def cancel_order_item(request, item_id):
             item.save()
             
             # Restore stock
-            product = item.product
-            product.stock += item.quantity
-            product.save()
+            if item.variant:
+                item.variant.stock += item.quantity
+                item.variant.save()
+            else:
+                product = item.product
+                product.stock += item.quantity
+                product.save()
             
             # We don't automatically cancel the order here 
             order.update_totals()
@@ -444,6 +488,60 @@ def process_reschedule(request, order_id):
     if next_url:
         return redirect(next_url)
     return redirect('admin_user_reschedule')
+@login_required
+def return_requests(request):
+    """View to list all pending return requests."""
+    search_query = request.GET.get('q', '').strip()
+    
+    # Show orders that have a return status set (Requested, Processing, Pickup Scheduled, Returned, Rejected)
+    orders = Order.objects.exclude(return_status='None').order_by('-created_at')
+    
+    if search_query:
+        orders = orders.filter(
+            Q(id__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(user__first_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'orders': page_obj,
+        'query': search_query,
+        'active_menu': 'return_requests'
+    }
+    return render(request, 'order_manage/return_request.html', context)
+
+
+@login_required
+@require_POST
+def process_return(request, order_id):
+    """Process a return request (Accept/Reject)."""
+    order = get_object_or_404(Order, id=order_id)
+    action = request.POST.get('action')
+    
+    if action == 'approve':
+        # Default to full return for simple one-click approval from list
+        order.status = 'Returned'
+        order.return_status = 'Returned'
+        process_full_return(order, 'Wallet')
+        order.save()
+        messages.success(request, f"Return request for Order #{order.id} has been approved and refunded.")
+    
+    elif action == 'reject':
+        order.status = 'Delivered'
+        order.return_status = 'Rejected'
+        order.save()
+        messages.info(request, f"Return request for Order #{order.id} has been rejected.")
+    
+    else:
+        messages.error(request, "Invalid action.")
+        
+    return redirect('admin_return_requests')
+
+
 @login_required
 def sales_report(request):
     if not request.user.is_superuser:

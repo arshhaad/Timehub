@@ -54,7 +54,8 @@ def signup_view(request):
 
         # form invalid → fall through and re-render
     else:
-        form = SignupForm()
+        ref_code = request.GET.get('ref', '')
+        form = SignupForm(initial={'referral_code': ref_code})
 
     return render(request, 'accounts/signup.html', {'form': form})
 
@@ -102,6 +103,7 @@ def login_view(request):
 
             # all good — log in
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, f'Successfully signed in as {user.email}. Welcome back!')
             return redirect('landing_view')
 
     else:

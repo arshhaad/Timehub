@@ -973,6 +973,41 @@
             box-shadow: 0 4px 16px rgba(255, 106, 0, 0.35);
         }
 
+        /* Professional Alert Styles */
+        .alert {
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            animation: slideDown 0.4s ease;
+            border: 1px solid transparent;
+        }
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+        .alert-error, .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        .alert i { font-size: 1.1rem; }
+
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to   { opacity: 1; transform: translateY(0);     }
@@ -1204,7 +1239,6 @@
             }
         }
 
-        /* MODAL VALIDATION */
         .modal-field.is-invalid .form-control {
             border-color: #ef4444;
             background: rgba(239, 68, 68, 0.04);
@@ -1216,6 +1250,53 @@
             font-weight: 600;
             margin-top: 4px;
             display: none;
+        }
+
+        /* =========================================
+           RESPONSIVE DESIGN (MEDIA QUERIES)
+        ========================================= */
+
+        @media (max-width: 1200px) {
+            .container { padding: 0 30px; }
+            .checkout-grid { grid-template-columns: 1fr 380px; gap: 30px; }
+        }
+
+        @media (max-width: 1024px) {
+            .checkout-grid { grid-template-columns: 1fr; }
+            .checkout-right { order: -1; } /* Summary on top for tablet/mobile */
+            .summary-card { position: static; margin-bottom: 30px; }
+            .nav-links { display: none; }
+            .page-header h1 { font-size: 1.8rem; }
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 0; }
+            .container { padding: 0 20px; }
+            .page-header { padding: 10px 0 20px; }
+            .section-card { padding: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            
+            .promo-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .promo-input-wrap { width: 100%; }
+            .promo-input { flex: 1; width: auto; }
+            
+            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+            .footer-bottom { flex-direction: column; gap: 20px; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 15px; }
+            .page-header h1 { font-size: 1.5rem; }
+            .summary-title { font-size: 1.1rem; }
+            .price-row.total-row .val { font-size: 1.2rem; }
+            .place-order-btn { padding: 15px; font-size: 0.95rem; }
+            
+            .pay-card-label { padding: 14px; gap: 12px; }
+            .pay-icon { width: 34px; height: 34px; font-size: 1rem; }
+            .pay-name { font-size: 0.9rem; }
+            .pay-desc { font-size: 0.75rem; }
+            
+            .toast { min-width: 280px; right: 15px; left: 15px; width: auto; top: 15px; }
         }
     </style>
 </head>
@@ -1244,19 +1325,6 @@
     </header>
 
     <div class="container">
-        <!-- MESSAGES -->
-        {% if messages %}
-        <div style="margin-top: 20px;">
-            {% for message in messages %}
-            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}warning{% endif %}">
-                <i
-                    class="fas fa-{% if 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
         <!-- BREADCRUMB BAR -->
         <div class="breadcrumb-bar">
             <a href="{% url 'cart_view' %}" class="back-link" id="backToCartBtn">
@@ -1329,37 +1397,51 @@
                             <h2>Payment Method</h2>
                         </div>
                         <div class="payment-list">
-                            <!-- Razorpay (mocked UI) -->
+                            <!-- Razorpay -->
                             <input type="radio" name="payment_method" id="pay_razorpay" value="razorpay"
                                 class="pay-radio">
                             <label for="pay_razorpay" class="pay-card-label">
-                                <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                                <div class="pay-icon">
+                                    <img src="https://razorpay.com/favicon.png" style="width: 20px; height: 20px;" alt="Razorpay">
+                                </div>
                                 <div class="pay-info">
-                                    <div class="pay-name">Razorpay</div>
-                                    <div class="pay-desc">Secure online payment using cards, UPI, or net banking.</div>
+                                    <div class="pay-name" style="display: flex; align-items: center; gap: 8px;">
+                                        Razorpay 
+                                        <span class="pay-badge" style="background: rgba(51,153,255,0.1); color: #3399ff;">Secure</span>
+                                    </div>
+                                    <div class="pay-desc">Pay securely via Cards, UPI, Netbanking or Wallets.</div>
+                                </div>
+                                <div style="margin-left: auto; display: flex; gap: 4px; opacity: 0.6;">
+                                    <i class="fab fa-cc-visa" style="font-size: 1.2rem;"></i>
+                                    <i class="fab fa-cc-mastercard" style="font-size: 1.2rem;"></i>
+                                    <i class="fas fa-mobile-alt" style="font-size: 1.1rem;"></i>
                                 </div>
                             </label>
 
-                            <!-- TimeHub Wallet (mocked UI) -->
+                            <!-- TimeHub Wallet -->
                             <input type="radio" name="payment_method" id="pay_wallet" value="wallet" class="pay-radio">
                             <label for="pay_wallet" class="pay-card-label">
                                 <div class="pay-icon"><i class="fas fa-wallet"></i></div>
                                 <div class="pay-info">
                                     <div class="pay-name">TimeHub Wallet</div>
-                                    <div class="pay-desc">Pay using your TimeHub wallet balance.</div>
+                                    <div class="pay-desc">Use your available balance for instant checkout.</div>
+                                </div>
+                                <div style="margin-left: auto; color: var(--primary-color); font-weight: 700; font-size: 0.85rem;">
+                                    ₹{{ request.user.wallet.balance|default:"0.00" }}
                                 </div>
                             </label>
 
-                            <!-- Cash on Delivery (ACTIVE) -->
+                            <!-- Cash on Delivery -->
                             <input type="radio" name="payment_method" id="pay_cod" value="cod" class="pay-radio"
                                 checked>
                             <label for="pay_cod" class="pay-card-label">
                                 <div class="pay-icon"><i class="fas fa-money-bill-wave"></i></div>
                                 <div class="pay-info">
-                                    <div class="pay-name">Cash on Delivery <span class="pay-badge">Available</span>
+                                    <div class="pay-name" style="display: flex; align-items: center; gap: 8px;">
+                                        Cash on Delivery 
+                                        <span class="pay-badge">Available</span>
                                     </div>
-                                    <div class="pay-desc">Pay with cash when the watch is delivered to your address.
-                                    </div>
+                                    <div class="pay-desc">Pay when the watch is delivered to your doorstep.</div>
                                 </div>
                             </label>
                         </div>
@@ -1671,7 +1753,9 @@
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
 
-            const icon = type === 'error' ? 'exclamation-circle' : (type === 'success' ? 'check-circle' : 'info-circle');
+            const icon = type === 'success' ? 'check-circle' : 
+                         (type === 'error' || type === 'danger' ? 'exclamation-circle' : 
+                         (type === 'warning' ? 'exclamation-triangle' : 'info-circle'));
 
             toast.innerHTML = `
                 <i class="fas fa-${icon}"></i>
@@ -1966,15 +2050,6 @@
                 if(viewLinkContainer) viewLinkContainer.style.display = 'block';
             }
         }
-            const el = document.getElementById(id);
-            const parent = el.closest('.modal-field');
-            if (parent) parent.classList.add('is-invalid');
-            const errEl = parent ? parent.querySelector('.field-error-msg') : null;
-            if (errEl) {
-                errEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${msg}`;
-                errEl.style.display = 'flex';
-            }
-        }
 
         function clearFieldErrors() {
             document.querySelectorAll('.modal-field').forEach(f => f.classList.remove('is-invalid'));
@@ -2182,103 +2257,18 @@
             const paymentMethod = paymentRadio.value;
             const btn = document.getElementById('placeOrderBtn');
 
-            if (paymentMethod === 'razorpay') {
-                e.preventDefault();
-                handleRazorpayPayment(checkedAddress.value);
-                return;
-            }
-
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
             btn.disabled = true;
         });
 
-        function handleRazorpayPayment(addressId) {
-            const btn = document.getElementById('placeOrderBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing...';
-            btn.disabled = true;
-
-            fetch("{% url 'razorpay_init' %}", {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) {
-                    showToast(data.error, 'error');
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-                    btn.disabled = false;
-                    return;
-                }
-
-                const options = {
-                    "key": data.key,
-                    "amount": data.amount,
-                    "currency": data.currency,
-                    "name": "TimeHub",
-                    "description": "Secure Luxury Watch Purchase",
-                    "order_id": data.razorpay_order_id,
-                    "handler": function (response) {
-                        verifyPayment(response, addressId);
-                    },
-                    "prefill": {
-                        "name": "{{ request.user.get_full_name|default:request.user.email }}",
-                        "email": "{{ request.user.email }}",
-                        "contact": "{{ request.user.phone_number|default:'' }}"
-                    },
-                    "theme": {
-                        "color": "#ff6a00"
-                    },
-                    "modal": {
-                        "ondismiss": function() {
-                            btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-                            btn.disabled = false;
-                        }
-                    }
-                };
-                const rzp = new Razorpay(options);
-                rzp.open();
-            })
-            .catch(err => {
-                showToast('Could not connect to payment gateway.', 'error');
-                btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-                btn.disabled = false;
-            });
-        }
-
-        function verifyPayment(response, addressId) {
-            const btn = document.getElementById('placeOrderBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
-            fetch("{% url 'razorpay_verify' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_signature: response.razorpay_signature,
-                    address_id: addressId
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    showToast(data.error || 'Payment verification failed.', 'error');
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                showToast('Verification failed. Please contact support.', 'error');
-                btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-                btn.disabled = false;
-            });
-        }
+        // Initialize Django Messages as Toasts
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if messages %}
+                {% for message in messages %}
+                    showToast("{{ message|escapejs }}", "{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}");
+                {% endfor %}
+            {% endif %}
+        });
     </script>
 </body>
-
 </html>

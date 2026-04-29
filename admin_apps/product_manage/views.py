@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.http import JsonResponse
 from user_apps.core.models import Collection, Product, ProductImage, ProductVariant, Color
+from admin_apps.offers.models import ProductOffer, CategoryOffer, ReferralOffer, Coupon
 from PIL import Image, ImageOps
 import io
 
@@ -491,3 +492,75 @@ def product_list(request):
         'active_menu': 'products'
     }
     return render(request, "product.html", context)
+
+@never_cache
+@superuser_required
+def offers_list(request):
+    """View to list and manage all offers."""
+    product_offers = ProductOffer.objects.all().order_by('-created_at')
+    category_offers = CategoryOffer.objects.all().order_by('-created_at')
+    
+    all_products = Product.objects.filter(is_deleted=False).order_by('name')
+    all_categories = Collection.objects.filter(is_deleted=False).order_by('name')
+    
+    referral_offer = ReferralOffer.objects.filter(is_active=True).first()
+    
+    context = {
+        'product_offers': product_offers,
+        'category_offers': category_offers,
+        'referral_offer': referral_offer,
+        'all_products': all_products,
+        'all_categories': all_categories,
+        'active_menu': 'offers'
+    }
+    return render(request, "offers.html", context)
+
+@never_cache
+@superuser_required
+def add_product_offer(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        discount = request.POST.get('discount')
+        valid_from = request.POST.get('valid_from')
+        valid_to = request.POST.get('valid_to')
+        
+        if not all([product_id, discount, valid_from, valid_to]):
+            messages.error(request, "All fields are required.")
+            return redirect('admin_offers_list')
+            
+        is_active = request.POST.get('is_active') == 'on'
+        
+        ProductOffer.objects.create(
+            product_id=product_id,
+            discount_percentage=discount,
+            valid_from=valid_from,
+            valid_to=valid_to,
+            is_active=is_active
+        )
+        messages.success(request, "Product offer added successfully.")
+    return redirect('admin_offers_list')
+
+@never_cache
+@superuser_required
+def add_category_offer(request):
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        discount = request.POST.get('discount')
+        valid_from = request.POST.get('valid_from')
+        valid_to = request.POST.get('valid_to')
+        
+        if not all([category_id, discount, valid_from, valid_to]):
+            messages.error(request, "All fields are required.")
+            return redirect('admin_offers_list')
+            
+        is_active = request.POST.get('is_active') == 'on'
+        
+        CategoryOffer.objects.create(
+            category_id=category_id,
+            discount_percentage=discount,
+            valid_from=valid_from,
+            valid_to=valid_to,
+            is_active=is_active
+        )
+        messages.success(request, "Category offer added successfully.")
+    return redirect('admin_offers_list')

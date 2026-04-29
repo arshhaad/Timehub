@@ -9,6 +9,70 @@
 {% block auth_title %}Sign Up{% endblock %}
 {% block auth_subtitle %}Create your account to get started{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Referral Code field styles */
+    .referral-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .referral-input-wrapper input {
+        width: 100%;
+        padding-right: 80px !important; /* room for paste btn */
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .paste-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(124, 58, 237, 0.12);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        color: #a78bfa;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        line-height: 1;
+    }
+
+    .paste-btn:hover {
+        background: rgba(124, 58, 237, 0.25);
+        border-color: #7c3aed;
+        color: #c4b5fd;
+    }
+
+    .paste-btn.pasted {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .paste-btn svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    .referral-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+</style>
+{% endblock %}
+
 {% block auth_content %}
 <form method="post" novalidate id="signup-form">
     {% csrf_token %}
@@ -49,6 +113,28 @@
                 style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
         <input type="tel" name="phone_number" id="id_phone_number" placeholder="+91 98765 43210"
             value="{{ form.phone_number.value|default:'' }}">
+    </div>
+
+    <!-- Referral Code -->
+    <div class="form-group">
+        <label for="id_referral_code">Referral Code <span
+                style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+        <div class="referral-input-wrapper">
+            <input type="text" name="referral_code" id="id_referral_code" placeholder="e.g. TH-ABC123"
+                value="{{ form.referral_code.value|default:'' }}"
+                autocomplete="off" maxlength="50">
+            <button type="button" class="paste-btn" id="pasteReferralBtn" title="Paste from clipboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                </svg>
+                Paste
+            </button>
+        </div>
+        <div class="referral-hint">Have a friend's referral code? Paste it here to get a reward.</div>
+        {% for error in form.referral_code.errors %}
+        <div class="field-error">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <!-- Password -->
@@ -155,5 +241,48 @@
             }
         });
     });
+
+    // Referral code — paste from clipboard
+    const pasteBtn = document.getElementById('pasteReferralBtn');
+    const referralInput = document.getElementById('id_referral_code');
+
+    if (pasteBtn && referralInput) {
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                // Try modern Clipboard API first
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    referralInput.value = text.trim().toUpperCase();
+                } else {
+                    // Fallback: focus & execCommand
+                    referralInput.focus();
+                    document.execCommand('paste');
+                }
+
+                // Visual feedback
+                pasteBtn.classList.add('pasted');
+                pasteBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Pasted!`;
+
+                setTimeout(() => {
+                    pasteBtn.classList.remove('pasted');
+                    pasteBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                        </svg>
+                        Paste`;
+                }, 2000);
+
+            } catch (err) {
+                // If clipboard access was denied, just focus the field so user can paste manually
+                referralInput.focus();
+                referralInput.placeholder = 'Ctrl+V to paste here';
+            }
+        });
+    }
 </script>
 {% endblock %}
