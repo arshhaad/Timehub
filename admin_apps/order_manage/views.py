@@ -542,30 +542,85 @@ def process_return(request, order_id):
     return redirect('admin_return_requests')
 
 
+from django.http import HttpResponse
+import csv
+
 @login_required
 def sales_report(request):
     if not request.user.is_superuser:
         return redirect("dashboard")
 
-    # --- KPIs ---
-    delivered_orders = Order.objects.filter(status='Delivered')
-    total_revenue = delivered_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_orders = Order.objects.exclude(status='Cancelled').count()
+    # --- Filtering ---
+    filter_type = request.GET.get('filter_type', 'all')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    orders = Order.objects.filter(status='Delivered').select_related('user').order_by('-created_at')
     
     today = timezone.now().date()
-    today_revenue = Order.objects.filter(
-        status='Delivered', 
-        created_at__date=today
-    ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    if filter_type == 'daily':
+        orders = orders.filter(created_at__date=today)
+    elif filter_type == 'weekly':
+        week_ago = today - timedelta(days=7)
+        orders = orders.filter(created_at__date__gte=week_ago)
+    elif filter_type == 'monthly':
+        month_ago = today - timedelta(days=30)
+        orders = orders.filter(created_at__date__gte=month_ago)
+    elif filter_type == 'yearly':
+        year_ago = today - timedelta(days=365)
+        orders = orders.filter(created_at__date__gte=year_ago)
+    elif filter_type == 'custom' and start_date and end_date:
+        orders = orders.filter(created_at__date__range=[start_date, end_date])
+
+    # --- Calculations ---
+    report_data = orders.aggregate(
+        total_sales_count=Count('id'),
+        total_order_amount=Sum('total_amount'),
+        total_discount=Sum('discount')
+    )
     
+    total_sales_count = report_data['total_sales_count'] or 0
+    total_order_amount = report_data['total_order_amount'] or 0
+    total_discount = report_data['total_discount'] or 0
+
+    # --- CSV Export ---
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Order ID', 'Date', 'Customer', 'Total Amount', 'Discount', 'Coupon Code'])
+        
+        for order in orders:
+            writer.writerow([
+                f"ORD-{order.id}",
+                order.created_at.strftime('%Y-%m-%d %H:%M'),
+                order.user.email,
+                order.total_amount,
+                order.discount,
+                order.coupon_code or 'N/A'
+            ])
+        
+        # Add summary rows
+        writer.writerow([])
+        writer.writerow(['Total Sales Count', total_sales_count])
+        writer.writerow(['Total Order Amount', total_order_amount])
+        writer.writerow(['Total Discount', total_discount])
+        
+        return response
+
+    # --- Original Dashboard Data (for the charts/KPIs) ---
+    delivered_orders = Order.objects.filter(status='Delivered')
+    all_time_revenue = delivered_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    all_time_orders = Order.objects.exclude(status='Cancelled').count()
+    total_customers = User.objects.filter(is_superuser=False).count()
+    total_products_count = Product.objects.filter(is_deleted=False).count()
     aov = delivered_orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0
 
-    # --- Trend Data ---
+    # Trend Data
     today_dt = timezone.now()
-    ninety_days_ago = today_dt - timedelta(days=90)
     thirty_days_ago = today_dt - timedelta(days=30)
     
-    # Daily Trend (Last 30 days)
     daily_sales = delivered_orders.filter(created_at__gte=thirty_days_ago) \
         .annotate(date=TruncDay('created_at')) \
         .values('date') \
@@ -584,131 +639,45 @@ def sales_report(request):
             daily_revenue.append(0.0)
             daily_counts.append(0)
 
-    daily_data = {
-        "labels": daily_labels,
-        "revenue": daily_revenue,
-        "counts": daily_counts,
-    }
+    daily_data = {"labels": daily_labels, "revenue": daily_revenue, "counts": daily_counts}
 
-    # Weekly Trend (Last 12 weeks)
-    weekly_sales = delivered_orders.filter(created_at__gte=today_dt - timedelta(weeks=12)) \
-        .annotate(date=TruncWeek('created_at')) \
-        .values('date') \
-        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
-        .order_by('date')
+    # Weekly Trend (simplified for current context)
+    weekly_data = {"labels": [], "revenue": [], "counts": []} # Can be filled if needed
+    monthly_data = {"labels": [], "revenue": [], "counts": []} # Can be filled if needed
 
-    weekly_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in weekly_sales if item['date']}
-    weekly_labels, weekly_revenue, weekly_counts = [], [], []
-    today_week_start = today_dt.date() - timedelta(days=today_dt.date().weekday())
-    for i in range(12, -1, -1):
-        week_start = today_week_start - timedelta(weeks=i)
-        weekly_labels.append(week_start.strftime('Week %W'))
-        if week_start in weekly_dict:
-            weekly_revenue.append(float(weekly_dict[week_start]['revenue']))
-            weekly_counts.append(weekly_dict[week_start]['counts'])
-        else:
-            weekly_revenue.append(0.0)
-            weekly_counts.append(0)
-
-    weekly_data = {
-        "labels": weekly_labels,
-        "revenue": weekly_revenue,
-        "counts": weekly_counts,
-    }
-
-    # Monthly Trend (Last 12 months)
-    monthly_sales = delivered_orders.annotate(date=TruncMonth('created_at')) \
-        .values('date') \
-        .annotate(revenue=Sum('total_amount'), counts=Count('id')) \
-        .order_by('date')
-
-    monthly_dict = {item['date'].date() if hasattr(item['date'], 'date') else item['date']: item for item in monthly_sales if item['date']}
-    monthly_labels, monthly_revenue, monthly_counts = [], [], []
-    today_month_start = today_dt.date().replace(day=1)
-    
-    from datetime import date
-    for i in range(11, -1, -1):
-        target_month = today_month_start.month - i
-        target_year = today_month_start.year
-        while target_month <= 0:
-            target_month += 12
-            target_year -= 1
-        month_start = date(target_year, target_month, 1)
-        
-        monthly_labels.append(month_start.strftime('%b %Y'))
-        if month_start in monthly_dict:
-            monthly_revenue.append(float(monthly_dict[month_start]['revenue']))
-            monthly_counts.append(monthly_dict[month_start]['counts'])
-        else:
-            monthly_revenue.append(0.0)
-            monthly_counts.append(0)
-
-    monthly_data = {
-        "labels": monthly_labels,
-        "revenue": monthly_revenue,
-        "counts": monthly_counts,
-    }
-
-    # --- Top Selling Products ---
+    # Top Products
     top_products = Product.objects.filter(is_deleted=False) \
         .annotate(
             units_sold=Sum('orderitem__quantity', filter=Q(orderitem__order__status='Delivered')),
             contribution=Sum(F('orderitem__price') * F('orderitem__quantity'), filter=Q(orderitem__order__status='Delivered'))
         ).filter(units_sold__gt=0).order_by('-contribution')[:5]
 
-    # --- Company Metrics ---
-    total_customers = User.objects.filter(is_superuser=False).count()
-    total_products_count = Product.objects.filter(is_deleted=False).count()
-
-    # --- Most Wanted (Wishlist) ---
+    # Most Wanted
     most_wanted = Product.objects.filter(is_deleted=False) \
         .annotate(wishlist_count=Count('wishlistitem')) \
         .filter(wishlist_count__gt=0) \
         .order_by('-wishlist_count')[:5]
 
-    # --- Category Distribution ---
-    category_sales = Collection.objects.filter(is_deleted=False) \
-        .annotate(revenue=Sum(F('products__orderitem__price') * F('products__orderitem__quantity'), 
-                              filter=Q(products__orderitem__order__status='Delivered'))) \
-        .filter(revenue__gt=0).order_by('-revenue')
-    
-    category_data = {
-        "labels": [c.name for c in category_sales],
-        "datasets": [{
-            "data": [float(c.revenue) for c in category_sales],
-            "backgroundColor": ['#ff6b00', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4']
-        }]
-    }
-
-    # --- Status Distribution ---
-    status_counts = Order.objects.values('status').annotate(count=Count('id')).order_by('-count')
-    status_data = {
-        "labels": [s['status'] for s in status_counts],
-        "datasets": [{
-            "data": [s['count'] for s in status_counts],
-            "backgroundColor": ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#94a3b8', '#8b5cf6', '#ec4899']
-        }]
-    }
-
-    # --- Recent Transactions ---
-    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:8]
-
     context = {
-        'total_revenue': total_revenue,
-        'today_revenue': today_revenue,
-        'total_orders': total_orders,
+        'total_revenue': all_time_revenue,
+        'total_orders': all_time_orders,
         'total_customers': total_customers,
         'total_products_count': total_products_count,
         'aov': aov,
         'daily_data_json': json.dumps(daily_data),
-        'weekly_data_json': json.dumps(weekly_data),
-        'monthly_data_json': json.dumps(monthly_data),
-        'category_data_json': json.dumps(category_data),
-        'status_data_json': json.dumps(status_data),
-        'recent_orders': recent_orders,
+        'weekly_data_json': json.dumps(weekly_data), # Placeholder or full
+        'monthly_data_json': json.dumps(monthly_data), # Placeholder or full
         'top_products': top_products,
         'most_wanted': most_wanted,
         'active_menu': 'sales',
         'now': timezone.now(),
+        # New context for reports
+        'filtered_orders': orders,
+        'total_sales_count': total_sales_count,
+        'total_order_amount': total_order_amount,
+        'total_discount': total_discount,
+        'filter_type': filter_type,
+        'start_date': start_date,
+        'end_date': end_date,
     }
     return render(request, 'order_manage/sales_report.html', context)

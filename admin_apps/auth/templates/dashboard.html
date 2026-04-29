@@ -248,6 +248,70 @@
     }
     .alert-dot { width: 6px; height: 6px; background-color: #ea580c; border-radius: 50%; }
 
+    /* Chart Panel */
+    .chart-panel {
+        background-color: var(--card-bg);
+        padding: 24px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        margin-bottom: 35px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .chart-filters {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chart-filter-btn {
+        background: #f3f4f6;
+        border: none;
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .chart-filter-btn.active {
+        background-color: var(--primary-bg);
+        color: #ffffff;
+    }
+
+    .ledger-btn {
+        background-color: #000;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+    }
+
+    .ledger-btn:hover {
+        opacity: 0.8;
+        transform: translateY(-2px);
+    }
+
     @media (max-width: 1024px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -272,14 +336,20 @@
 </div>
 {% endblock %}
 
+
 {% block content %}
 <div class="page-header">
     <div>
         <h1>Dashboard Overview</h1>
         <p>Welcome back. Here's what's happening with your store today.</p>
     </div>
-    <div class="date-pill">
-        {{ now|date:"l, F j, Y" }}
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <a href="{% url 'sales_report' %}" class="ledger-btn">
+            <i class="fas fa-file-invoice"></i> Generate Ledger Book
+        </a>
+        <div class="date-pill">
+            {{ now|date:"l, F j, Y" }}
+        </div>
     </div>
 </div>
 
@@ -327,6 +397,20 @@
         </div>
         <div class="stat-title">Total Products</div>
         <div class="stat-value">{{ total_products }}</div>
+    </div>
+</div>
+
+<!-- Sales Trend Chart -->
+<div class="chart-panel">
+    <div class="chart-header">
+        <div class="chart-title">Sales Revenue Trends</div>
+        <div class="chart-filters">
+            <button class="chart-filter-btn active" data-period="daily">Daily</button>
+            <button class="chart-filter-btn" data-period="monthly">Monthly</button>
+        </div>
+    </div>
+    <div style="height: 300px;">
+        <canvas id="salesChart"></canvas>
     </div>
 </div>
 

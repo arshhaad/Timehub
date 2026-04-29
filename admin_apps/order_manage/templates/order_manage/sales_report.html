@@ -349,6 +349,134 @@
     @media (max-width: 480px) {
         .kpi-grid { grid-template-columns: 1fr; }
     }
+    /* ── Sales Ledger Table ── */
+    .ledger-panel {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        margin-top: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+    }
+    .ledger-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .filter-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-group label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    .form-control {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.88rem;
+        transition: var(--transition);
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-bg);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+    }
+    .btn-apply {
+        background: var(--primary-bg);
+        color: #fff;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-apply:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+    .report-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background: #f9fafb;
+        color: var(--text-muted);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .report-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+    .report-table tr:hover {
+        background: #fcfcfc;
+    }
+    .export-btns {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .btn-csv {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+    .btn-pdf {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    @media print {
+        .sidebar, .page-header, .kpi-grid, .chart-panel, .dashboard-row, .filter-form, .export-btns {
+            display: none !important;
+        }
+        .ledger-panel {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+        }
+        .report-table th, .report-table td {
+            border: 1px solid #eee;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -453,6 +581,97 @@
         <div class="stat-value" data-raw="{{ aov }}" data-prefix="₹" data-float="true">
             ₹{{ aov|floatformat:2 }}
         </div>
+    </div>
+</div>
+
+{# ── Sales Ledger & Filtering ── #}
+<div class="ledger-panel">
+    <div class="ledger-header">
+        <div class="panel-title">
+            <i class="fas fa-list-alt" style="color:var(--primary-bg);"></i>
+            Sales Ledger
+        </div>
+        <div class="export-btns">
+            <a href="?filter_type={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export=csv" class="btn-export btn-csv">
+                <i class="fas fa-file-excel"></i> Download Excel
+            </a>
+            <a href="#" onclick="window.print(); return false;" class="btn-export btn-pdf">
+                <i class="fas fa-file-pdf"></i> Print PDF
+            </a>
+        </div>
+    </div>
+
+    <form method="GET" class="filter-form">
+        <div class="form-group">
+            <label>Filter By</label>
+            <select name="filter_type" class="form-control" onchange="toggleCustomDates(this.value)">
+                <option value="all"     {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                <option value="daily"   {% if filter_type == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly"  {% if filter_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if filter_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                <option value="yearly"  {% if filter_type == 'yearly' %}selected{% endif %}>Yearly</option>
+                <option value="custom"  {% if filter_type == 'custom' %}selected{% endif %}>Custom Range</option>
+            </select>
+        </div>
+        <div id="custom-date-inputs" style="display: {% if filter_type == 'custom' %}flex{% else %}none{% endif %}; gap: 12px;">
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+        </div>
+        <button type="submit" class="btn-apply">Apply Filters</button>
+    </form>
+
+    <div class="report-table-wrap" style="margin-top: 24px;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Subtotal</th>
+                    <th>Discount</th>
+                    <th>Tax</th>
+                    <th>Shipping</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in filtered_orders %}
+                <tr>
+                    <td style="font-weight: 700;">#ORD-{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"d M Y, H:i" }}</td>
+                    <td>{{ order.user.email }}</td>
+                    <td>₹{{ order.subtotal }}</td>
+                    <td style="color: #dc2626;">-₹{{ order.discount }}</td>
+                    <td>₹{{ order.tax }}</td>
+                    <td>₹{{ order.shipping_charge }}</td>
+                    <td style="font-weight: 700; color: var(--text-main);">₹{{ order.total_amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="empty-state">No records found for the selected period.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if filtered_orders %}
+            <tfoot style="background: #f9fafb; font-weight: 700;">
+                <tr>
+                    <td colspan="2">Summary ({{ total_sales_count }} Orders)</td>
+                    <td></td>
+                    <td></td>
+                    <td style="color: #dc2626;">-₹{{ total_discount|floatformat:2 }}</td>
+                    <td></td>
+                    <td></td>
+                    <td style="font-size: 1.1rem; color: var(--primary-bg);">₹{{ total_order_amount|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
     </div>
 </div>
 
@@ -800,11 +1019,22 @@ document.querySelectorAll('.alert').forEach(alert => {
     }, 5000);
 });
 
+// ── Custom Date Toggle ────────────────────────────────────────────────────────
+function toggleCustomDates(val) {
+    const customDiv = document.getElementById('custom-date-inputs');
+    if (customDiv) {
+        customDiv.style.display = val === 'custom' ? 'flex' : 'none';
+    }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     buildChart(dailyData);
     runCounters();
     runProgressBars();
+    
+    const filterSelect = document.querySelector('select[name="filter_type"]');
+    if (filterSelect) toggleCustomDates(filterSelect.value);
 });
 </script>
 {% endblock %}

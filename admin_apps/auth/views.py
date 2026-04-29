@@ -91,6 +91,44 @@ def dashboard(request):
 
     low_stock = Product.objects.filter(stock__lt=5).order_by("stock")[:5]
 
+    # --- Chart Data (Revenue Trends) ---
+    # Daily (Last 7 days)
+    daily_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=7)) \
+        .annotate(date=timezone.db.models.functions.TruncDay('created_at')) \
+        .values('date') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('date')
+    
+    daily_labels = [(now - timedelta(days=i)).strftime('%b %d') for i in range(6, -1, -1)]
+    daily_rev_map = {s['date'].date(): float(s['revenue']) for s in daily_sales}
+    daily_values = [daily_rev_map.get((now - timedelta(days=i)).date(), 0.0) for i in range(6, -1, -1)]
+
+    # Monthly (Last 6 months)
+    monthly_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=180)) \
+        .annotate(month=timezone.db.models.functions.TruncMonth('created_at')) \
+        .values('month') \
+        .annotate(revenue=Sum('total_amount')) \
+        .order_by('month')
+    
+    monthly_labels = []
+    monthly_values = []
+    for i in range(5, -1, -1):
+        month_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        monthly_labels.append(month_date.strftime('%b %Y'))
+        # Find in map
+        val = 0.0
+        for s in monthly_sales:
+            if s['month'].year == month_date.year and s['month'].month == month_date.month:
+                val = float(s['revenue'])
+                break
+        monthly_values.append(val)
+
+    import json
+    chart_data = {
+        'daily': {'labels': daily_labels, 'values': daily_values},
+        'monthly': {'labels': monthly_labels, 'values': monthly_values},
+    }
+
     context = {
         "total_revenue": total_revenue,
         "total_orders": total_orders,
@@ -106,6 +144,7 @@ def dashboard(request):
         "now": now,
         "user": request.user,
         "active_menu": "dashboard",
+        "chart_data_json": json.dumps(chart_data),
     }
     return render(request, "dashboard.html", context)
 

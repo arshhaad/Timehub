@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.core.mail import send_mail
@@ -19,20 +19,22 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             
-            # Handle referral code
+            # Handle referral code — validate before proceeding
             ref_code = form.cleaned_data.get('referral_code')
             if ref_code:
                 try:
                     referrer = CustomUser.objects.get(referral_code=ref_code)
                     user.referred_by = referrer
                 except CustomUser.DoesNotExist:
-                    # Optional: You could add an error to the form if the code is invalid
-                    # For now, we'll just ignore invalid codes
-                    pass
+                    form.add_error('referral_code', 'Invalid referral code. Please check and try again.')
+                    return render(request, 'accounts/signup.html', {'form': form})
 
             # deactivate until email verified
             user.is_active = False
             user.save()
+
+            # Clear session referral code after successful use
+            request.session.pop('referral_code', None)
 
             # create OTP
             otp_obj = EmailOTP.objects.create(user=user)
@@ -54,7 +56,8 @@ def signup_view(request):
 
         # form invalid → fall through and re-render
     else:
-        ref_code = request.GET.get('ref', '')
+        # Token URL approach: check session first, then fall back to ?ref= param
+        ref_code = request.session.get('referral_code', '') or request.GET.get('ref', '')
         form = SignupForm(initial={'referral_code': ref_code})
 
     return render(request, 'accounts/signup.html', {'form': form})
@@ -192,3 +195,21 @@ def reset_password(request):
         return redirect('login')
 
     return render(request, 'accounts/reset_password.html', {'form': form})
+
+
+@never_cache
+def referral_redirect(request, referral_code):
+    """
+    Referral Token URL approach:
+    /accounts/ref/<code>/ stores the referral code in the session and redirects
+    to signup so the form is pre-filled automatically — even if the user navigates
+    away and comes back.
+    """
+    if request.user.is_authenticated:
+        return redirect('landing_view')
+
+    # Store in session so it survives page navigation before signup
+    request.session['referral_code'] = referral_code
+
+    # Redirect to signup with the ?ref= param as a visible pre-fill fallback
+    return redirect(f"{reverse('signup')}?ref={referral_code}")

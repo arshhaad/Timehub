@@ -10,4 +10,6 @@ urlpatterns = [
     path('forgot-password/', auth.forgot_password, name='forgot-password'),
     path('verify-otp-reset/', otp_verify.verify_otp_reset, name='verify-otp-reset'),
     path('reset-password/', auth.reset_password, name='reset-password'),
+    # Referral token URL — shareable link e.g. /accounts/ref/TH-ABC12345/
+    path('ref/<str:referral_code>/', auth.referral_redirect, name='referral_redirect'),
 ]

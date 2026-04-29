@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, reverse
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from .models import Address
@@ -51,6 +51,7 @@ def dashboard(request):
         'stats': stats,
         'recent_orders': recent_orders,
         'referral_code': user.referral_code,
+        "referral_url": request.build_absolute_uri(reverse('referral_redirect', args=[user.referral_code])),
     }
     
     return render(request, 'user_dashboard.html', context)
