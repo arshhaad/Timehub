@@ -251,10 +251,10 @@
                 {% endif %}
             </div>
             <div class="item-price">
-                ${% if item.product.discount_price %}{{ item.product.discount_price|floatformat:2 }}{% else %}{{ item.product.price|floatformat:2 }}{% endif %}
+                ₹{% if item.product.discount_price %}{{ item.product.discount_price|floatformat:2 }}{% else %}{{ item.product.price|floatformat:2 }}{% endif %}
             </div>
             <div class="item-actions">
-                <button class="btn-move-cart" data-product-id="{{ item.product.id }}" data-item-id="{{ item.id }}">
+                <button class="btn-move-cart" data-product-id="{{ item.product.uuid }}" data-item-id="{{ item.id }}">
                     Move to Cart <i class="fas fa-shopping-cart"></i>
                 </button>
                 <button class="remove-btn" data-item-id="{{ item.id }}" title="Remove from Wishlist">
@@ -341,7 +341,7 @@
                             this.style.borderColor = '#10b981';
                             this.style.color = '#fff';
                             setTimeout(() => {
-                                location.reload(); // Reload to remove the item from the populated wishlist
+                                window.location.href = "{% url 'cart_view' %}"; 
                             }, 800);
                         } else {
                             showToast(data.error || 'Failed to move to cart', 'error');
