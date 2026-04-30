@@ -1,8 +1,10 @@
 from django.db import models
 from django.conf import settings
 from decimal import Decimal
+import uuid
 
 class Collection(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
@@ -14,12 +16,13 @@ class Collection(models.Model):
 
 class Color(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    hex_code = models.CharField(max_length=7) # e.g. #000000
+    hex_code = models.CharField(max_length=7) 
 
     def __str__(self):
         return self.name
 
 class Product(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     GENDER_CHOICES = (
         ('Men', 'Men'),
         ('Women', 'Women'),
@@ -168,6 +171,7 @@ class ProductVariant(models.Model):
 
 
 class Order(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('CONFIRMED', 'Confirmed'),
@@ -228,22 +232,27 @@ class Order(models.Model):
         active_items = self.items.filter(is_cancelled=False)
         self.subtotal = sum(item.price * item.quantity for item in active_items)
         
-        # 3% tax as per project standard
-        self.tax = round(self.subtotal * Decimal('0.03'), 2)
-        
-        # Calculate shipping based on subtotal (Standard: Free for high-value orders)
-        shipping = Decimal('99.00')
-        if self.subtotal >= Decimal('20000.00'):
+        # Calculate shipping based on subtotal
+        if self.subtotal == 0:
             shipping = Decimal('0.00')
         elif self.subtotal >= Decimal('5000.00'):
-            shipping = Decimal('49.00')
+            shipping = Decimal('0.00') # Free shipping for orders above 5000
+        else:
+            shipping = Decimal('49.00') # Standard shipping for orders under 5000
         self.shipping_charge = shipping
+
+        # Tax should be calculated on the discounted amount (net price)
+        taxable_amount = max(Decimal('0'), self.subtotal - self.discount)
         
-        # Total amount
-        self.total_amount = self.subtotal + self.tax + self.shipping_charge - self.discount
+        # 3% tax as per project standard
+        self.tax = round(taxable_amount * Decimal('0.03'), 2)
+        
+        # Total amount = (Subtotal - Discount) + Tax + Shipping
+        self.total_amount = taxable_amount + self.tax + self.shipping_charge
         self.save()
 
 class OrderItem(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)

@@ -1,4 +1,5 @@
 {% extends 'base_user.html' %}
+{% load core_extras %}
 
 {% block title %}My Cart - TimeHub{% endblock %}
 
@@ -323,8 +324,32 @@
             </div>
             <div class="summary-row">
                 <span>Shipping</span>
-                <span id="cart-shipping-container">{% if shipping == 0 %}<span style="color:#22c55e; font-weight:700;">Free</span>{% else %}₹<span id="cart-shipping">{{ shipping|floatformat:2 }}</span>{% endif %}</span>
+                <span id="cart-shipping-container" style="text-align: right;">
+                    {% if shipping == 0 %}
+                        <span style="color:#22c55e; font-weight:700;">Free</span>
+                    {% else %}
+                        ₹<span id="cart-shipping">{{ shipping|floatformat:2 }}</span>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">(Free above ₹5,000)</div>
+                    {% endif %}
+                </span>
             </div>
+
+            <!-- Free Shipping Progress Bar -->
+            <div id="shipping-progress-container" style="margin: 15px 0 20px 0; display: {% if subtotal >= 5000 %}none{% else %}block{% endif %};">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px;">
+                    <span style="color: var(--text-muted);">Free Shipping Goal</span>
+                    <span style="color: var(--primary-color); font-weight: 700;">Add ₹<span id="shipping-needed">{{ 5000|subtract:subtotal|floatformat:0 }}</span> more</span>
+                </div>
+                <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);">
+                    <div id="shipping-progress-bar" style="height: 100%; width: {{ subtotal|percentage_of:5000 }}%; background: linear-gradient(to right, var(--primary-color), #f97316); border-radius: 10px; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+            {% if subtotal >= 5000 %}
+            <div id="free-shipping-unlocked" style="background: rgba(34, 197, 94, 0.1); border: 1px dashed rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-truck-fast" style="color: #22c55e;"></i>
+                <span style="color: #22c55e; font-size: 0.8rem; font-weight: 700;">Free Shipping Unlocked!</span>
+            </div>
+            {% endif %}
             
             <div class="summary-row total">
                 <span>Total</span>
@@ -381,10 +406,41 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const shippingEl = document.getElementById('cart-shipping-container');
                     const shipVal = parseFloat(data.shipping);
+                    const subtotalVal = parseFloat(data.subtotal);
+                    
                     if (shipVal === 0) {
                         shippingEl.innerHTML = '<span style="color:#22c55e; font-weight:700;">Free</span>';
+                        if (document.getElementById('shipping-progress-container')) 
+                            document.getElementById('shipping-progress-container').style.display = 'none';
+                        
+                        // Show unlocked message if not already there
+                        if (!document.getElementById('free-shipping-unlocked')) {
+                            const unlockedHtml = `
+                                <div id="free-shipping-unlocked" style="background: rgba(34, 197, 94, 0.1); border: 1px dashed rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-truck-fast" style="color: #22c55e;"></i>
+                                    <span style="color: #22c55e; font-size: 0.8rem; font-weight: 700;">Free Shipping Unlocked!</span>
+                                </div>`;
+                            shippingEl.closest('.cart-summary-card').insertBefore(
+                                document.createRange().createContextualFragment(unlockedHtml),
+                                document.getElementById('cart-total').closest('.summary-row')
+                            );
+                        }
                     } else {
-                        shippingEl.innerHTML = `₹<span id="cart-shipping">${shipVal.toFixed(2)}</span>`;
+                        shippingEl.innerHTML = `₹<span id="cart-shipping">${shipVal.toFixed(2)}</span><div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">(Free above ₹5,000)</div>`;
+                        
+                        // Update progress bar
+                        const progressContainer = document.getElementById('shipping-progress-container');
+                        if (progressContainer) {
+                            progressContainer.style.display = 'block';
+                            const needed = Math.max(0, 5000 - subtotalVal);
+                            const percent = Math.min(100, (subtotalVal / 5000) * 100);
+                            document.getElementById('shipping-needed').textContent = needed.toFixed(0);
+                            document.getElementById('shipping-progress-bar').style.width = percent + '%';
+                        }
+                        
+                        // Remove unlocked message
+                        const unlocked = document.getElementById('free-shipping-unlocked');
+                        if (unlocked) unlocked.remove();
                     }
                     
                     document.getElementById('cart-total').textContent = parseFloat(data.total).toFixed(2);

@@ -260,8 +260,8 @@ def toggle_compare_mode(request):
     request.session.modified = True
     return JsonResponse({'success': True, 'mode': is_active})
 
-def product_details(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
+def product_details(request, product_uuid):
+    product = get_object_or_404(Product, uuid=product_uuid)
     
     # Check if the product is active or if its collection/itself is deleted
     if not product.is_active or product.is_deleted or (product.collection and product.collection.is_deleted):

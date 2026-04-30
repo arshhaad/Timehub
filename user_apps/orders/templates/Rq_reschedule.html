@@ -87,7 +87,7 @@
 <div class="container">
 
     <div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
-    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+    <a href="{% url 'order_detail' order_uuid=order.uuid %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
 </div>
 
 <div class="page-header-alt">
@@ -103,7 +103,7 @@
         </p>
     </div>
 
-    <form action="{% url 'reschedule_order' order.id %}" method="POST">
+    <form action="{% url 'reschedule_order' order_uuid=order.uuid %}" method="POST">
         {% csrf_token %}
         <label for="scheduled_date" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:700; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">New Delivery Date</label>
         <input type="date" name="scheduled_date" id="scheduled_date" min="{{ today|date:'Y-m-d' }}">
@@ -116,7 +116,7 @@
 
         
         <div class="btn-group">
-            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">
+            <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action-alt btn-outline-alt">
                 <i class="fas fa-chevron-left"></i> Go Back
             </a>
             <button type="submit" class="btn-action-alt btn-primary-alt">

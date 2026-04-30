@@ -105,6 +105,74 @@
         .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
         .cat-table th:nth-child(2), .cat-table td:nth-child(2) { display: none; }
     }
+
+    /* Pagination Styles */
+    .pagination-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px;
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .pagination-info {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .pagination-btns {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .page-btn {
+        height: 38px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 700;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .page-btn:hover:not(.disabled) {
+        background: #f8fafc;
+        color: #000;
+        border-color: #cbd5e1;
+    }
+
+    .page-btn.active {
+        background: #000;
+        color: #fff;
+        border-color: #000;
+    }
+
+    .page-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f1f5f9;
+    }
+
+    .page-btn i {
+        font-size: 0.75rem;
+    }
+
+    /* Adjust table panel radius to accommodate pagination below it */
+    .table-panel {
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        margin-bottom: 0;
+    }
 </style>
 {% endblock %}
 
@@ -191,6 +259,48 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrap">
+        <div class="pagination-info">
+            Showing {{ categories.start_index }} to {{ categories.end_index }} of {{ categories.paginator.count }} categories
+        </div>
+        <div class="pagination-btns">
+            {% if categories.has_previous %}
+            <a href="?page=1{% if query %}&q={{ query }}{% endif %}" class="page-btn" title="First Page">
+                <i class="fas fa-angles-left"></i>
+            </a>
+            <a href="?page={{ categories.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn" title="Previous Page">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled"><i class="fas fa-angles-left"></i></span>
+            <span class="page-btn disabled"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
+
+            <div style="display: flex; gap: 4px;">
+                {% for n in categories.paginator.page_range %}
+                    {% if categories.number == n %}
+                        <span class="page-btn active">{{ n }}</span>
+                    {% elif n > categories.number|add:'-3' and n < categories.number|add:'3' %}
+                        <a href="?page={{ n }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">{{ n }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if categories.has_next %}
+            <a href="?page={{ categories.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn" title="Next Page">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="?page={{ categories.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" class="page-btn" title="Last Page">
+                <i class="fas fa-angles-right"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled"><i class="fas fa-chevron-right"></i></span>
+            <span class="page-btn disabled"><i class="fas fa-angles-right"></i></span>
+            {% endif %}
         </div>
     </div>
 

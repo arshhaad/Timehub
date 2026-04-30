@@ -1579,6 +1579,7 @@
                                 </span>
                                 <span class="val {% if shipping == 0 %}free-shipping{% endif %}" id="summaryShipping">
                                     {% if shipping == 0 %}FREE{% else %}₹{{ shipping|floatformat:2 }}{% endif %}
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Free above ₹5,000)</div>
                                 </span>
                             </div>
                             <div class="price-row">

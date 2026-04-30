@@ -20,13 +20,13 @@ def signup_view(request):
             user = form.save(commit=False)
             
             # Handle referral code — validate before proceeding
-            ref_code = form.cleaned_data.get('referral_code')
+            ref_code = form.cleaned_data.get('entered_referral_code')
             if ref_code:
                 try:
                     referrer = CustomUser.objects.get(referral_code=ref_code)
                     user.referred_by = referrer
                 except CustomUser.DoesNotExist:
-                    form.add_error('referral_code', 'Invalid referral code. Please check and try again.')
+                    form.add_error('entered_referral_code', 'Invalid referral code. Please check and try again.')
                     return render(request, 'accounts/signup.html', {'form': form})
 
             # deactivate until email verified
@@ -58,7 +58,7 @@ def signup_view(request):
     else:
         # Token URL approach: check session first, then fall back to ?ref= param
         ref_code = request.session.get('referral_code', '') or request.GET.get('ref', '')
-        form = SignupForm(initial={'referral_code': ref_code})
+        form = SignupForm(initial={'entered_referral_code': ref_code})
 
     return render(request, 'accounts/signup.html', {'form': form})
 

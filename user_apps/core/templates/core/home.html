@@ -1030,6 +1030,178 @@
         .search-close:hover {
             color: var(--primary-color);
         }
+        /* REFERRAL SECTION */
+        .referral-section {
+            padding: 100px 6%;
+            background: linear-gradient(135deg, #0f0f12 0%, #15151a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .referral-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .ref-badge {
+            background: rgba(255, 106, 0, 0.1);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 106, 0, 0.2);
+        }
+
+        .ref-content h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .ref-content h2 span {
+            color: var(--primary-color);
+        }
+
+        .ref-content p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        .ref-rewards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .ref-reward-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .ref-reward-item:hover {
+            border-color: rgba(255, 106, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .ref-reward-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 106, 0, 0.15);
+            color: var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .ref-reward-info h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ref-reward-info p {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0;
+        }
+
+        .ref-code-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 8px 8px 8px 24px;
+            border-radius: 40px;
+            width: fit-content;
+        }
+
+        .ref-code-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .ref-code-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+            margin-right: 20px;
+        }
+
+        .copy-btn {
+            background: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #e05e00;
+            color: #fff;
+        }
+
+        .ref-image {
+            position: relative;
+            text-align: right;
+        }
+
+        .ref-image img {
+            max-width: 90%;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @media (max-width: 992px) {
+            .referral-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .ref-content p { margin: 0 auto 40px; }
+            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
+            .ref-code-box { margin: 0 auto; }
+            .ref-image { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .ref-content h2 { font-size: 2.2rem; }
+            .ref-rewards-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 
@@ -1130,68 +1302,45 @@
         </div>
     </section>
 
-    <!-- PREMIUM CATEGORIES (WHITE THEME & SCROLLABLE) -->
-    <section class="premium-categories">
-        <div class="container">
-            <div class="section-header">
-                <h2>Our Collections</h2>
-                <p>Scroll to explore our wide range of luxury timepieces.</p>
+    <!-- REFERRAL SECTION -->
+    <section class="referral-section">
+        <div class="referral-container">
+            <div class="ref-content">
+                <div class="ref-badge">Referral Rewards</div>
+                <h2>Spread the <span>TimeHub</span> Elegance</h2>
+                <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium craftsmanship is better shared.</p>
+                <div class="ref-rewards-grid">
+                    <div class="ref-reward-item">
+                        <div class="ref-reward-icon"><i class="fas fa-user-plus"></i></div>
+                        <div class="ref-reward-info">
+                            <h4>You Get</h4>
+                            <p>₹100 Credit</p>
+                        </div>
+                    </div>
+                    <div class="ref-reward-item">
+                        <div class="ref-reward-icon"><i class="fas fa-gift"></i></div>
+                        <div class="ref-reward-info">
+                            <h4>They Get</h4>
+                            <p>₹100 + 50% OFF</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ref-action">
+                    {% if user.is_authenticated %}
+                        <div class="ref-code-box">
+                            <span class="ref-code-label">Your Code:</span>
+                            <span class="ref-code-value" id="refCodeText">{{ request.user.referral_code }}</span>
+                            <button class="copy-btn" onclick="copyRefCode('{{ request.user.referral_code }}', this)">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'signup' %}" class="btn btn-primary">Join & Start Earning <i class="fas fa-arrow-right"></i></a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="round-cat-grid">
-                <a href="{% url 'product_listing' %}?q=automatic" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/automatic_cat.png' %}" alt="Automatic">
-                    </div>
-                    <div class="round-cat-name">Automatic</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=mechanical" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical">
-                    </div>
-                    <div class="round-cat-name">Mechanical</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=analog" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/chronograph_cat.png' %}" alt="Analog">
-                    </div>
-                    <div class="round-cat-name">Analog</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=luxury" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury">
-                    </div>
-                    <div class="round-cat-name">Luxury</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=sports" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/sport_category.png' %}" alt="Sports">
-                    </div>
-                    <div class="round-cat-name">Sports</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=smart" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/smart_category.png' %}" alt="Smart">
-                    </div>
-                    <div class="round-cat-name">Smart</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=digital" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/digital_category.png' %}" alt="Digital">
-                    </div>
-                    <div class="round-cat-name">Digital</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=casual" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual">
-                    </div>
-                    <div class="round-cat-name">Casual</div>
-                </a>
-                <a href="{% url 'product_listing' %}?q=premium" class="round-cat-item">
-                    <div class="round-cat-img-wrap">
-                        <img src="{% static 'images/luxury_category.png' %}" alt="Premium">
-                    </div>
-                    <div class="round-cat-name">Premium</div>
-                </a>
+            <div class="ref-image">
+                <img src="{% static 'images/art_watch.png' %}" alt="Referral Program">
             </div>
         </div>
     </section>
@@ -1205,7 +1354,7 @@
             </div>
             <div class="card-grid">
                 {% for p in products %}
-                <a href="{% url 'product_details' p.id %}" class="product-card"
+                <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card"
                     style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
                     <div class="card-top">
                         {% if p.stock == 0 %}
@@ -1216,7 +1365,7 @@
                         <span class="card-badge">Sale</span>
                         {% endif %}
                         <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
-                            onclick="toggleWishlist(event, {{ p.id }}, this)" style="border:none; color:inherit;">
+                            onclick="toggleWishlist(event, '{{ p.uuid }}', this)" style="border:none; color:inherit;">
                             <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
                         </button>
                         {% if p.image %}
@@ -1239,7 +1388,7 @@
                         <span class="price">₹{{ p.price }}</span>
                         {% endif %}
                     </div>
-                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault(); event.stopPropagation(); addToCart({{ p.id }}, this);">
+                    <button class="btn btn-primary add-cart-btn" onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
                         <i class="fas fa-cart-plus"></i> Add to Cart
                     </button>
                 </a>
@@ -1288,8 +1437,8 @@
         <div class="container trust-grid">
             <div class="trust-item">
                 <i class="fas fa-shipping-fast"></i>
-                <h4>Free Shipping</h4>
-                <p>On all orders above ₹9,999</p>
+                <h4>Free Shipping (₹5,000+)</h4>
+                <p>On all orders above ₹5,000</p>
             </div>
             <div class="trust-item">
                 <i class="fas fa-shield-alt"></i>
@@ -1353,6 +1502,72 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PREMIUM CATEGORIES (WHITE THEME & SCROLLABLE) -->
+    <section class="premium-categories">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Collections</h2>
+                <p>Scroll to explore our wide range of luxury timepieces.</p>
+            </div>
+            <div class="round-cat-grid">
+                <a href="{% url 'product_listing' %}?q=automatic" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/automatic_cat.png' %}" alt="Automatic">
+                    </div>
+                    <div class="round-cat-name">Automatic</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=mechanical" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical">
+                    </div>
+                    <div class="round-cat-name">Mechanical</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=analog" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/chronograph_cat.png' %}" alt="Analog">
+                    </div>
+                    <div class="round-cat-name">Analog</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=luxury" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury">
+                    </div>
+                    <div class="round-cat-name">Luxury</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=sports" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/sport_category.png' %}" alt="Sports">
+                    </div>
+                    <div class="round-cat-name">Sports</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=smart" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/smart_category.png' %}" alt="Smart">
+                    </div>
+                    <div class="round-cat-name">Smart</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=digital" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/digital_category.png' %}" alt="Digital">
+                    </div>
+                    <div class="round-cat-name">Digital</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=casual" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual">
+                    </div>
+                    <div class="round-cat-name">Casual</div>
+                </a>
+                <a href="{% url 'product_listing' %}?q=premium" class="round-cat-item">
+                    <div class="round-cat-img-wrap">
+                        <img src="{% static 'images/luxury_category.png' %}" alt="Premium">
+                    </div>
+                    <div class="round-cat-name">Premium</div>
+                </a>
             </div>
         </div>
     </section>
@@ -1604,6 +1819,19 @@
                     btn.style.pointerEvents = 'auto';
                 });
         };
+        function copyRefCode(code, btn) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.style.background = '#10b981';
+                btn.style.color = '#fff';
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
     </script>
 </body>
 

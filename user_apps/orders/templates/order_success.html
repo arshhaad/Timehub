@@ -297,10 +297,10 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-                <a href="{% url 'order_detail' order.id %}" class="btn btn-outline" id="viewDetailBtn">
+                <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn btn-outline" id="viewDetailBtn">
                     <i class="fas fa-receipt"></i> View Order Details
                 </a>
-                <a href="{% url 'track_order' order.id %}" class="btn btn-outline" id="trackOrderBtn">
+                <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn btn-outline" id="trackOrderBtn">
                     <i class="fas fa-location-dot"></i> Track Order
                 </a>
                 <a href="{% url 'product_listing' %}" class="btn btn-primary" id="continueShoppingBtn">

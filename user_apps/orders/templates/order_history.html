@@ -63,24 +63,42 @@
     .alert-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
     .alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 
-    /* MINI TRACKER */
+    /* PROFESSIONAL MINI TRACKER */
     .mini-tracker {
-        display: flex; justify-content: space-between; align-items: center;
-        margin: 25px 0 10px; padding: 15px 20px;
-        background: rgba(255,255,255,0.02); border-radius: 12px;
-        border: 1px solid var(--border-color); position: relative; overflow: hidden;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        margin: 25px 0 10px; padding: 25px 30px;
+        background: rgba(255,255,255,0.01); border-radius: 16px;
+        border: 1px solid var(--border-color); position: relative;
     }
     .mini-tracker-line {
-        position: absolute; top: 21px; left: 10%; right: 10%; height: 2px;
-        background: var(--border-color); z-index: 1;
+        position: absolute; top: 34px; left: 10%; right: 10%; height: 2px;
+        background: rgba(255,255,255,0.05); z-index: 1;
     }
-    .mini-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-align: center; }
-    .mini-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--border-color); transition: var(--transition); }
-    .mini-step.completed .mini-dot { background: var(--primary-color); border-color: var(--primary-color); box-shadow: 0 0 10px rgba(255,106,0,0.5); }
-    .mini-step.active .mini-dot { background: var(--card-bg); border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255,106,0,0.2); }
-    .mini-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-    .mini-date { font-size: 0.65rem; color: var(--primary-color); font-weight: 700; white-space: nowrap; }
+    .mini-tracker-fill {
+        position: absolute; top: 0; left: 0; height: 100%;
+        background: var(--primary-color); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .mini-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; flex: 1; text-align: center; }
+    
+    .mini-dot-outer {
+        width: 18px; height: 18px; border-radius: 50%; background: var(--bg-color); border: 2px solid var(--border-color); 
+        display: flex; align-items: center; justify-content: center; transition: all 0.4s ease; position: relative;
+    }
+    .mini-dot-inner { width: 6px; height: 6px; border-radius: 50%; background: var(--border-color); transition: all 0.4s ease; }
+
+    /* Active/Completed States */
+    .mini-step.completed .mini-dot-outer { border-color: var(--primary-color); background: var(--primary-color); }
+    .mini-step.completed .mini-dot-inner { background: #000; }
+    
+    .mini-step.active .mini-dot-outer { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(255,106,0,0.15); }
+    .mini-step.active .mini-dot-inner { background: var(--primary-color); transform: scale(1.2); }
+
+    .mini-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px; transition: color 0.3s ease; }
+    .mini-date { font-size: 0.65rem; color: var(--primary-color); font-weight: 800; margin-top: 2px; }
+    
     .mini-step.completed .mini-label, .mini-step.active .mini-label { color: #fff; }
+    .mini-step.active .mini-label { color: var(--primary-color); }
 </style>
 {% endblock %}
 
@@ -111,7 +129,7 @@
 {% if orders %}
     {% for order in orders %}
     <div class="order-card">
-        <a href="{% url 'order_detail' order.id %}" class="order-header" style="text-decoration: none; color: inherit;">
+        <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="order-header" style="text-decoration: none; color: inherit;">
             <div class="order-meta">
                 <div class="meta-item">
                     <span class="label">Order ID</span>
@@ -135,7 +153,7 @@
             {% for item in order.items.all|slice:":3" %}
             <div class="item-row">
                 <div class="item-img">
-                    <a href="{% url 'order_detail' order.id %}" style="display: block; width: 100%; height: 100%;">
+                    <a href="{% url 'order_detail' order_uuid=order.uuid %}" style="display: block; width: 100%; height: 100%;">
                         {% if item.product.image %}
                             <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
                         {% else %}
@@ -145,7 +163,7 @@
                 </div>
                 <div class="item-info">
                     <div class="item-name">
-                        <a href="{% url 'order_detail' order.id %}" style="color: inherit; text-decoration: none;">
+                        <a href="{% url 'order_detail' order_uuid=order.uuid %}" style="color: inherit; text-decoration: none;">
                             {{ item.product.name }}
                         </a>
                     </div>
@@ -163,28 +181,37 @@
 
         {% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
         <div class="mini-tracker">
-            <div class="mini-tracker-line"></div>
+            <div class="mini-tracker-line">
+                <div class="mini-tracker-fill" 
+                    {% if order.status == 'Pending' %} style="width: 0%;"
+                    {% elif order.status == 'Processing' %} style="width: 25%;"
+                    {% elif order.status == 'Shipped' %} style="width: 50%;"
+                    {% elif order.status == 'Out for Delivery' %} style="width: 75%;"
+                    {% elif order.status == 'Delivered' %} style="width: 100%;"
+                    {% endif %}>
+                </div>
+            </div>
             <div class="mini-step {% if order.status == 'Pending' %}active{% elif order.status != 'Pending' %}completed{% endif %}">
-                <div class="mini-dot"></div>
+                <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Pending</div>
             </div>
             <div class="mini-step {% if order.status == 'Processing' %}active{% elif order.status == 'Shipped' or order.status == 'Out for Delivery' or order.status == 'Delivered' %}completed{% endif %}">
-                <div class="mini-dot"></div>
+                <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Processing</div>
             </div>
             <div class="mini-step {% if order.status == 'Shipped' %}active{% elif order.status in 'Out for Delivery,Delivered' %}completed{% endif %}">
-                <div class="mini-dot"></div>
+                <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Shipped</div>
             </div>
             <div class="mini-step {% if order.status == 'Out for Delivery' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
-                <div class="mini-dot"></div>
+                <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Delivery</div>
                 {% if order.scheduled_delivery_date %}
                 <div class="mini-date">{{ order.scheduled_delivery_date|date:"M d" }}</div>
                 {% endif %}
             </div>
             <div class="mini-step {% if order.status == 'Delivered' %}active completed{% endif %}">
-                <div class="mini-dot"></div>
+                <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Delivered</div>
                 {% if order.scheduled_delivery_date %}
                 <div class="mini-date" style="color: var(--text-muted);">by {{ order.scheduled_delivery_date|date:"M d" }}</div>
@@ -194,14 +221,14 @@
         {% endif %}
 
         <div class="order-actions">
-            <a href="{% url 'order_detail' order.id %}" class="btn-action btn-primary-alt">View Details</a>
-            <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
+            <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action btn-primary-alt">View Details</a>
+            <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
                 <i class="fas fa-location-dot"></i> Track Order
             </a>
 
             {% if order.status in 'Pending,Processing' %}
                 {% if order.reschedule_status != 'Rejected' and order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
-                <a href="{% url 'reschedule_order' order.id %}" class="btn-action btn-outline-alt" style="border-color:var(--primary-color); color:var(--primary-color);">
+                <a href="{% url 'reschedule_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt" style="border-color:var(--primary-color); color:var(--primary-color);">
                     <i class="fas fa-calendar-alt"></i> Reschedule
                 </a>
                 {% elif order.reschedule_status == 'Rejected' %}

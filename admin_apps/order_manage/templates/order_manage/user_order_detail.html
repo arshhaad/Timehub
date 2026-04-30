@@ -4,6 +4,7 @@
 {% block title %}Order #{{ order.id|stringformat:"05d" }} - TimeHub Admin{% endblock %}
 
 {% block extra_css %}
+<style>
 /* ── Page header ── */
 .back-link { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:.875rem;
 font-weight:600; text-decoration:none; margin-bottom:24px; transition:var(--transition); }
@@ -111,6 +112,7 @@ display:inline-flex; align-items:center; gap:6px; }
 
 @media (max-width:1100px) { .detail-grid { grid-template-columns:1fr; } }
 @media (max-width:768px) { .info-grid { grid-template-columns:1fr; } }
+</style>
 {% endblock %}
 
 {% block topbar_left %}
@@ -283,10 +285,10 @@ display:inline-flex; align-items:center; gap:6px; }
                                 </div>
                             </td>
                             <td style="text-align:center; font-weight:600;">{{ item.quantity }}</td>
-                            <td class="item-price">
-                                ₹{{ item.total_price|floatformat:2 }}
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">Unit: ₹{{ item.price|floatformat:2 }}</div>
-                            </td>
+                                    <td class="item-total">
+                                        ₹{{ item.total_price|floatformat:2 }}
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">₹{{ item.price|floatformat:2 }} × {{ item.quantity }}</div>
+                                    </td>
                             <td style="text-align:center;">
                                 {% if item.is_cancelled %}
                                 <span class="status-badge s-Cancelled"
@@ -333,12 +335,20 @@ display:inline-flex; align-items:center; gap:6px; }
                     <span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">Tax</span>
+                    <span class="summary-label">Tax (3%)</span>
                     <span class="summary-value">₹{{ order.tax|floatformat:2 }}</span>
                 </div>
-                <div class="summary-row">
-                    <span class="summary-label">Shipping</span>
-                    <span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span>
+                <div class="summary-row" style="align-items: flex-start;">
+                    <span class="summary-label" style="margin-top: 2px;">Shipping</span>
+                    <span class="summary-value" style="text-align: right;">
+                        {% if order.shipping_charge == 0 %}
+                            <span style="color: #16a34a; font-weight: 700;">Free</span>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Free above ₹5,000)</div>
+                        {% else %}
+                            ₹{{ order.shipping_charge|floatformat:2 }}
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Standard Rate)</div>
+                        {% endif %}
+                    </span>
                 </div>
                 {% if order.discount > 0 %}
                 <div class="summary-row">
@@ -347,7 +357,7 @@ display:inline-flex; align-items:center; gap:6px; }
                 </div>
                 {% endif %}
                 <div class="summary-row summary-total">
-                    <span class="summary-label">Total</span>
+                    <span class="summary-label">Total Amount</span>
                     <span class="summary-value">₹{{ order.total_amount|floatformat:2 }}</span>
                 </div>
             </div>

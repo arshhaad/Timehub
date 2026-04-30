@@ -117,11 +117,11 @@
 
     <!-- Referral Code -->
     <div class="form-group">
-        <label for="id_referral_code">Referral Code <span
+        <label for="id_entered_referral_code">Referral Code <span
                 style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
         <div class="referral-input-wrapper">
-            <input type="text" name="referral_code" id="id_referral_code" placeholder="e.g. TH-ABC123"
-                value="{{ form.referral_code.value|default:'' }}"
+            <input type="text" name="entered_referral_code" id="id_entered_referral_code" placeholder="e.g. TH-ABC123"
+                value="{{ form.entered_referral_code.value|default:'' }}"
                 autocomplete="off" maxlength="50">
             <button type="button" class="paste-btn" id="pasteReferralBtn" title="Paste from clipboard">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -132,7 +132,7 @@
             </button>
         </div>
         <div class="referral-hint">Have a friend's referral code? Paste it here to get a reward.</div>
-        {% for error in form.referral_code.errors %}
+        {% for error in form.entered_referral_code.errors %}
         <div class="field-error">{{ error }}</div>
         {% endfor %}
     </div>
@@ -244,7 +244,7 @@
 
     // Referral code — paste from clipboard
     const pasteBtn = document.getElementById('pasteReferralBtn');
-    const referralInput = document.getElementById('id_referral_code');
+    const referralInput = document.getElementById('id_entered_referral_code');
 
     if (pasteBtn && referralInput) {
         pasteBtn.addEventListener('click', async () => {

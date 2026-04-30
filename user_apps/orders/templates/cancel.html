@@ -97,7 +97,7 @@
 
 {% block content %}
 <div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
-    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+    <a href="{% url 'order_detail' order_uuid=order.uuid %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
 </div>
 
 <div class="page-header-alt">
@@ -110,13 +110,13 @@
         <i class="fas fa-exclamation-triangle"></i> Are you sure you want to cancel this entire order? This action cannot be undone.
     </p>
 
-    <form action="{% url 'cancel_order' order.id %}" method="POST">
+    <form action="{% url 'cancel_order' order_uuid=order.uuid %}" method="POST">
         {% csrf_token %}
         <label for="reason" style="display:block; margin-bottom:10px; color:var(--text-muted); font-weight:600;">Reason for Cancellation</label>
         <textarea name="reason" id="reason" placeholder="Please tell us why you are cancelling..." rows="4" required></textarea>
         
         <div class="btn-group">
-            <a href="{% url 'order_detail' order.id %}" class="btn-action-alt btn-outline-alt">Go Back</a>
+            <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action-alt btn-outline-alt">Go Back</a>
             <button type="submit" class="btn-action-alt btn-danger-alt">Yes, Cancel Order</button>
         </div>
     </form>

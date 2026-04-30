@@ -22,7 +22,7 @@ except ImportError:
     RAZORPAY_CLIENT = None
 
 
-SHIPPING_CHARGE = Decimal('99.00')
+SHIPPING_CHARGE = Decimal('49.00')
 TAX_RATE = Decimal('0.03')  # 3% GST
 
 
@@ -32,10 +32,11 @@ def get_cart_totals(cart):
     subtotal = sum(item.total_price for item in items)
     
     # Shipping logic
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'):
+    if subtotal == 0:
         shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
         shipping = Decimal('49.00')
     
     # Discount logic
@@ -79,10 +80,11 @@ def checkout_page(request):
         return redirect('cart_view')
 
     subtotal = sum(item.total_price for item in items)
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'):
-        shipping = Decimal('0.00') # Free shipping for large orders
+    if subtotal == 0:
+        shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
         shipping = Decimal('49.00')
     
     tax = Decimal('0')
@@ -212,7 +214,7 @@ def checkout_page(request):
         if payment_method == 'razorpay':
             return redirect('payments:start_payment', order_id=order.id)
 
-        return redirect('order_success', order_id=order.id)
+        return redirect('order_success', order_uuid=order.uuid)
 
     # Provide an estimated delivery date (randomly 1-7 days from today) for display
     days_to_add = random.randint(1, 7)
@@ -242,8 +244,8 @@ def checkout_page(request):
 
 @login_required
 @never_cache
-def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+def order_success(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     order_items = order.items.select_related('product').all()
     try:
         address = json.loads(order.address_snapshot)
@@ -272,16 +274,21 @@ def order_history(request):
 
 
 @login_required
-def order_detail(request, order_id):
+def order_detail(request, order_uuid):
     if request.user.is_staff or request.user.is_superuser:
-        order = get_object_or_404(Order, id=order_id)
+        order = get_object_or_404(Order, uuid=order_uuid)
     else:
-        order = get_object_or_404(Order, id=order_id, user=request.user)
+        order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     items = order.items.select_related('product').all()
+    address = {}
     try:
         address = json.loads(order.address_snapshot)
     except:
-        address = {}
+        pass
+    
+    # Auto-fix totals for pending/processing/shipped orders to reflect latest logic
+    if order.status in ['Pending', 'Processing', 'Shipped']:
+        order.update_totals()
     
     from datetime import datetime
     return render(request, 'order_detail.html', {
@@ -293,13 +300,13 @@ def order_detail(request, order_id):
 
 
 @login_required
-def cancel_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+def cancel_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     
     if request.method == 'GET':
         if order.status not in ['Pending', 'Processing']:
             messages.error(request, 'This order cannot be cancelled')
-            return redirect('order_detail', order_id=order.id)
+            return redirect('order_detail', order_uuid=order.uuid)
         return render(request, 'cancel.html', {'order': order})
         
     if request.method == 'POST' and order.status in ['Pending', 'Processing']:
@@ -340,15 +347,15 @@ def cancel_order(request, order_id):
         messages.success(request, f'Order #{order.id} has been cancelled.')
     else:
         messages.error(request, 'This order cannot be cancelled.')
-    return redirect('order_detail', order_id=order.id)
+    return redirect('order_detail', order_uuid=order.uuid)
 
 
 @login_required
-def cancel_order_item(request, item_id):
+def cancel_order_item(request, item_uuid):
     if request.method != 'POST':
         return redirect('order_history')
         
-    item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
+    item = get_object_or_404(OrderItem, uuid=item_uuid, order__user=request.user)
     order = item.order
     
     if order.status in ['Pending', 'Processing'] and not item.is_cancelled:
@@ -390,21 +397,21 @@ def cancel_order_item(request, item_id):
     else:
         messages.error(request, 'This item cannot be cancelled.')
         
-    return redirect('order_detail', order_id=order.id)
+    return redirect('order_detail', order_uuid=order.uuid)
 
 
 @login_required
-def return_order(request, order_id):
+def return_order(request, order_uuid):
     if request.method != 'POST':
         return redirect('order_history')
         
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     
     if order.status == 'Delivered':
         reason = request.POST.get('reason')
         if not reason:
             messages.error(request, 'Please provide a reason for the return.')
-            return redirect('order_detail', order_id=order.id)
+            return redirect('order_detail', order_uuid=order.uuid)
             
         order.status = 'Return Requested'
         order.return_status = 'Requested'
@@ -414,17 +421,21 @@ def return_order(request, order_id):
     else:
         messages.error(request, 'This order is not eligible for return.')
         
-    return redirect('order_detail', order_id=order.id)
+    return redirect('order_detail', order_uuid=order.uuid)
 
 
 @login_required
-def download_invoice(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+def download_invoice(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     items = order.items.filter(is_cancelled=False)
     try:
         address = json.loads(order.address_snapshot)
     except:
         address = {}
+        
+    # Auto-fix totals for pending/processing/shipped orders to reflect latest logic
+    if order.status in ['Pending', 'Processing', 'Shipped']:
+        order.update_totals()
         
     return render(request, 'invoice.html', {
         'order': order,
@@ -433,24 +444,24 @@ def download_invoice(request, order_id):
     })
 
 @login_required
-def reschedule_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+def reschedule_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     
     if order.status not in ['Pending', 'Processing']:
         messages.error(request, f"Order cannot be rescheduled as it is currently {order.status}.")
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
 
     if order.reschedule_count >= 1:
         messages.error(request, "This order has already been successfully rescheduled once and cannot be changed again.")
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
 
     if order.reschedule_status == 'Pending':
         messages.error(request, "A reschedule request is already pending for this order.")
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
 
     if order.reschedule_status == 'Rejected':
         messages.error(request, "Your previous reschedule request was declined and cannot be resubmitted for this order.")
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
 
     if request.method == 'GET':
         from datetime import datetime
@@ -471,7 +482,7 @@ def reschedule_order(request, order_id):
                     date_obj = datetime.strptime(new_date, '%Y-%m-%d').date()
                     if date_obj < datetime.now().date():
                         messages.error(request, "Delivery date cannot be in the past.")
-                        return redirect('reschedule_order', order_id=order.id)
+                        return redirect('reschedule_order', order_uuid=order.uuid)
                     order.requested_reschedule_date = date_obj
 
                 if new_time:
@@ -488,16 +499,16 @@ def reschedule_order(request, order_id):
         else:
             messages.error(request, "A valid and detailed reason is required to reschedule.")
         
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
     return redirect('order_history')
 
 @login_required
-def track_order(request, order_id):
+def track_order(request, order_uuid):
     from django.shortcuts import get_object_or_404
     if request.user.is_staff or request.user.is_superuser:
-        order = get_object_or_404(Order, id=order_id)
+        order = get_object_or_404(Order, uuid=order_uuid)
     else:
-        order = get_object_or_404(Order, id=order_id, user=request.user)
+        order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
         
     items = order.items.select_related('product').all()
     try:
@@ -529,7 +540,7 @@ def add_address(request):
             return JsonResponse({
                 'success': True,
                 'address': {
-                    'id': address.id,
+                    'uuid': str(address.uuid),
                     'full_name': address.full_name,
                     'street': address.street,
                     'city': address.city,
@@ -551,7 +562,7 @@ def add_address(request):
 
 
 @login_required
-def edit_address(request, id):
+def edit_address(request, address_uuid):
     """AJAX endpoint to edit an address from checkout page."""
     if request.method == 'POST':
         try:
@@ -559,7 +570,7 @@ def edit_address(request, id):
         except json.JSONDecodeError:
             data = request.POST
             
-        address = get_object_or_404(Address, id=id, user=request.user)
+        address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
 
         from user_apps.edit.forms import AddressForm
         form = AddressForm(data, instance=address)
@@ -572,7 +583,7 @@ def edit_address(request, id):
             return JsonResponse({
                 'success': True,
                 'address': {
-                    'id': updated_address.id,
+                    'uuid': str(updated_address.uuid),
                     'full_name': updated_address.full_name,
                     'street': updated_address.street,
                     'city': updated_address.city,
@@ -635,9 +646,12 @@ def apply_coupon(request):
     cart.save()
     
     # Recalculate to return new totals
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'): shipping = Decimal('0.00')
-    elif subtotal >= Decimal('5000.00'): shipping = Decimal('49.00')
+    if subtotal == 0:
+        shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
+        shipping = Decimal('49.00')
     
     discount = Decimal('0')
     if coupon.discount_type == 'percentage':
@@ -675,9 +689,12 @@ def remove_coupon(request):
     items = cart.items.all()
     subtotal = sum(item.total_price for item in items) if items.exists() else Decimal('0')
     
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'): shipping = Decimal('0.00')
-    elif subtotal >= Decimal('5000.00'): shipping = Decimal('49.00')
+    if subtotal == 0:
+        shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
+        shipping = Decimal('49.00')
     
     tax = round(subtotal * TAX_RATE, 2)
     total = subtotal + tax + shipping

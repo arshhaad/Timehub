@@ -361,16 +361,8 @@
     </header>
 
     <div class="container">
-        <!-- Message handling -->
-        {% if messages %}
-        <div style="margin-top:20px;">
-            {% for message in messages %}
-            <div style="background: rgba(255,106,0,0.1); border: 1px solid var(--primary-color); padding: 15px; border-radius: 8px; color: #fff;">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+        <!-- Professional Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
 
         <div class="breadcrumb">
             <a href="/"><i class="fas fa-home"></i> Home</a>
@@ -642,17 +634,17 @@
                         <button class="qty-btn" id="qtyPlus">+</button>
                     </div>
                     
-                    <button class="btn btn-outline wishlist-btn {% if is_in_wishlist %}active{% endif %}" title="Add to Wishlist" onclick="toggleWishlist(event, {{ product.id }}, this)">
+                    <button class="btn btn-outline wishlist-btn {% if is_in_wishlist %}active{% endif %}" title="Add to Wishlist" onclick="toggleWishlist(event, '{{ product.uuid }}', this)">
                         <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart"></i>
                     </button>
                     
-                    <button class="btn btn-outline add-cart-btn" onclick="window.addToCart({{ product.id }});" {% if product.stock == 0 %}disabled{% endif %}>
+                    <button class="btn btn-outline add-cart-btn" onclick="window.addToCart('{{ product.uuid }}');" {% if product.stock == 0 %}disabled{% endif %}>
                         <i class="fas fa-shopping-cart"></i> 
                         {% if product.stock > 0 %}Add to Cart{% else %}Sold Out{% endif %}
                     </button>
                 </div>
 
-                <button class="buy-now-btn" onclick="window.buyNow({{ product.id }});" {% if product.stock == 0 %}disabled{% endif %}>
+                <button class="buy-now-btn" onclick="window.buyNow('{{ product.uuid }}');" {% if product.stock == 0 %}disabled{% endif %}>
                     {% if product.stock > 0 %}Buy Now{% else %}Out of Stock{% endif %}
                 </button>
 
@@ -664,7 +656,7 @@
                     </div>
                     <div class="trust-item">
                         <i class="fas fa-truck"></i>
-                        <span>Free Global Shipping</span>
+                        <span>Free Shipping (₹5,000+)</span>
                     </div>
                     <div class="trust-item">
                         <i class="fas fa-undo-alt"></i>
@@ -776,7 +768,7 @@
             
             <div class="product-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;">
                 {% for related in related_products %}
-                <a href="{% url 'product_details' related.id %}" class="product-card" style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); position: relative; transition: var(--transition); display: block;">
+                <a href="{% url 'product_details' product_uuid=related.uuid %}" class="product-card" style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); position: relative; transition: var(--transition); display: block;">
                     <div class="card-image-wrap" style="height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border-radius: var(--radius-md); margin-bottom: 20px; overflow: hidden;">
                         {% if related.image %}
                         <img src="{{ related.image.url }}" alt="{{ related.name }}" style="max-width: 80%; transition: var(--transition);">
@@ -802,7 +794,7 @@
             <div style="font-size: 1.2rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.discount_price|default:product.price }}</div>
             <div style="font-size: 0.7rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.discount_price %}₹{{ product.price }}{% endif %}</div>
         </div>
-        <button class="btn btn-primary" style="flex: 1; border-radius: 12px; height: 50px; font-size: 0.9rem;" onclick="window.addToCart({{ product.id }});" id="sticky-cart-btn">
+        <button class="btn btn-primary" style="flex: 1; border-radius: 12px; height: 50px; font-size: 0.9rem;" onclick="window.addToCart('{{ product.uuid }}');" id="sticky-cart-btn">
             <i class="fas fa-shopping-cart"></i> Add to Cart
         </button>
     </div>
@@ -1378,6 +1370,40 @@
                 btn.style.pointerEvents = 'auto';
             });
         };
+    </script>
+    <script>
+        // Global Toast System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'success' ? 'check-circle' : 
+                         (type === 'error' || type === 'danger' ? 'exclamation-circle' : 
+                         (type === 'warning' ? 'exclamation-triangle' : 'info-circle'));
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div class="toast-message">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('active'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 600);
+            }, 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if messages %}
+                {% for message in messages %}
+                    showToast("{{ message|escapejs }}", "{{ message.tags|default:'success' }}");
+                {% endfor %}
+            {% endif %}
+        });
     </script>
 </body>
 </html>

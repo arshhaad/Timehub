@@ -128,13 +128,7 @@
         <h1>Verify Email Change</h1>
         <p>We've sent a 6-digit verification code to <span class="email-highlight">{{ new_email }}</span>. Please enter it below to confirm your change.</p>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert">
-                    <i class="fas fa-exclamation-circle"></i> {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+
 
         <form method="post">
             {% csrf_token %}

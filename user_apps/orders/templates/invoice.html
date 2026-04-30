@@ -78,7 +78,7 @@
                 <td>
                    Subtotal: ₹{{ order.subtotal|floatformat:2 }}<br>
                    Tax (3%): ₹{{ order.tax|floatformat:2 }}<br>
-                   Shipping: ₹{{ order.shipping_charge|floatformat:2 }}<br>
+                   Shipping: {% if order.shipping_charge == 0 %}FREE{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %} (Free above ₹5,000)<br>
                    {% if order.discount > 0 %}
                    Discount: -₹{{ order.discount|floatformat:2 }}<br>
                    {% endif %}

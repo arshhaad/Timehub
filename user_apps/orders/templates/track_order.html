@@ -44,7 +44,11 @@
 
     .tracker-line {
         position: absolute;
-        top: 66px; left: 10%; right: 10%; height: 3px;
+        top: 68px; 
+        /* Dynamic calculation: Start at center of first step, end at center of last step */
+        left: var(--line-start, 10%); 
+        right: var(--line-start, 10%); 
+        height: 2px;
         background: rgba(255,255,255,0.1);
         z-index: 1;
     }
@@ -125,7 +129,7 @@
 
 {% block content %}
 <div class="breadcrumb-alt" style="padding-bottom: 30px; font-size: 0.9rem; color: var(--text-muted);">
-    <a href="{% url 'order_detail' order.id %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
+    <a href="{% url 'order_detail' order_uuid=order.uuid %}" style="text-decoration: none; color: inherit; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='inherit'"><i class="fas fa-chevron-left"></i> Back to Order Details</a>
 </div>
 
 <div class="page-header-alt">
@@ -151,7 +155,7 @@
 
     <!-- TRACKER TIMELINE (IMAGE STYLE) -->
     {% if order.status != 'Cancelled' and order.status != 'Returned' and order.status != 'Return Requested' %}
-    <div class="status-tracker-box">
+    <div class="status-tracker-box" style="--line-start: 10%;">
         
         <div class="tracker-line">
             <div class="tracker-line-fill" 
@@ -201,11 +205,11 @@
         </div>
     </div>
     {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
-    <div class="status-tracker-box">
+    <div class="status-tracker-box" style="--line-start: 12.5%;">
         
         <div class="tracker-line">
             <div class="tracker-line-fill" 
-                {% if order.status == 'Return Requested' %} style="width: 33%;"
+                {% if order.status == 'Return Requested' %} style="width: 0%;"
                 {% elif order.status == 'Returned' %} style="width: 100%;"
                 {% else %} style="width: 0%;" {% endif %}>
             </div>
@@ -290,7 +294,14 @@
                         </div>
                         <div class="price-row-alt">
                             <span>Shipping</span>
-                            <span>{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span>
+                            <span>
+                                {% if order.shipping_charge == 0 %}
+                                    <span style="color: #22c55e; font-weight: 700;">Free</span>
+                                {% else %}
+                                    ₹{{ order.shipping_charge|floatformat:2 }}
+                                    <small style="display: block; font-size: 0.65rem; opacity: 0.7;">(Standard Rate)</small>
+                                {% endif %}
+                            </span>
                         </div>
                         <div class="price-row-alt total-alt">
                             <span>Total Amount</span>

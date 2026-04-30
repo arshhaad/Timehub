@@ -1014,6 +1014,177 @@
                 font-size: 0.8rem;
             }
         }
+        /* REFERRAL SECTION */
+        .referral-section {
+            padding: 100px 6%;
+            background: linear-gradient(135deg, #0f0f12 0%, #15151a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .referral-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .ref-badge {
+            background: rgba(255, 106, 0, 0.1);
+            color: var(--accent);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 106, 0, 0.2);
+        }
+
+        .ref-content h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .ref-content h2 span {
+            color: var(--accent);
+        }
+
+        .ref-content p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        .ref-rewards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .ref-reward-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .ref-reward-item:hover {
+            border-color: rgba(255, 106, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .ref-reward-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 106, 0, 0.15);
+            color: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .ref-reward-info h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ref-reward-info p {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0;
+        }
+
+        .ref-code-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 8px 8px 8px 24px;
+            border-radius: 40px;
+            width: fit-content;
+        }
+
+        .ref-code-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .ref-code-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+            margin-right: 20px;
+        }
+
+        .copy-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .ref-image {
+            position: relative;
+            text-align: right;
+        }
+
+        .ref-image img {
+            max-width: 90%;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @media (max-width: 992px) {
+            .referral-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .ref-content p { margin: 0 auto 40px; }
+            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
+            .ref-code-box { margin: 0 auto; }
+            .ref-image { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .ref-content h2 { font-size: 2.2rem; }
+            .ref-rewards-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 
@@ -1101,67 +1272,50 @@
         </div>
     </section>
 
-    <!-- STATS -->
-    <section class="stats">
-        <div class="stat-item">
-            <h3>50,000 +</h3>
-            <p>Happy Customers</p>
-        </div>
-        <div class="stat-item">
-            <h3>2,500 +</h3>
-            <p>Trusted Partners</p>
-        </div>
-        <div class="stat-item">
-            <h3>100 %</h3>
-            <p>Authenticity Guaranteed</p>
-        </div>
-        <div class="stat-item">
-            <h3>24/7</h3>
-            <p>Expert Support</p>
-        </div>
-    </section>
-
-    <!-- ART OF TIMEKEEPING -->
-    <section class="art-section">
-        <div class="art-image">
-            <img src="{% static 'images/art_watch.png' %}" alt="Luxury watch in hand">
-        </div>
-        <div class="art-content">
-            <h2>The Art of <br><span>Timekeeping</span></h2>
-            <p>At TimeHub, we believe a watch is more than just a tool to tell time—it's a statement of character, a
-                piece of history, and a legacy passed down through generations. Our commitment to authenticity and craft
-                ensures that every timepiece in our collection meets the highest standards of excellence.</p>
-
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-certificate"></i></div>
-                    <div class="feature-text">
-                        <h4>Certified Authentic</h4>
-                        <p>Every watch is inspected by certified horologists to ensure absolute authenticity and perfect
-                            condition.</p>
+    <!-- REFERRAL SECTION -->
+    <section class="referral-section">
+        <div class="referral-container">
+            <div class="ref-content">
+                <div class="ref-badge">Referral Rewards</div>
+                <h2>Spread the <span>TimeHub</span> Elegance</h2>
+                <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium craftsmanship is better shared.</p>
+                <div class="ref-rewards-grid">
+                    <div class="ref-reward-item">
+                        <div class="ref-reward-icon"><i class="fas fa-user-plus"></i></div>
+                        <div class="ref-reward-info">
+                            <h4>You Get</h4>
+                            <p>₹100 Credit</p>
+                        </div>
+                    </div>
+                    <div class="ref-reward-item">
+                        <div class="ref-reward-icon"><i class="fas fa-gift"></i></div>
+                        <div class="ref-reward-info">
+                            <h4>They Get</h4>
+                            <p>₹100 + 50% OFF</p>
+                        </div>
                     </div>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-gem"></i></div>
-                    <div class="feature-text">
-                        <h4>Expert Curated</h4>
-                        <p>Our experts search the world to offer a selection of the most sought-after models in the
-                            finest condition.</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                    <div class="feature-text">
-                        <h4>Lifetime Warranty</h4>
-                        <p>We stand behind the quality of our watches with comprehensive lifetime warranties for total
-                            peace of mind.</p>
-                    </div>
+                <div class="ref-action">
+                    {% if user.is_authenticated %}
+                        <div class="ref-code-box">
+                            <span class="ref-code-label">Your Code:</span>
+                            <span class="ref-code-value" id="refCodeText">{{ request.user.referral_code }}</span>
+                            <button class="copy-btn" onclick="copyRefCode('{{ request.user.referral_code }}', this)">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'signup' %}" class="btn btn-primary">Join & Start Earning <i class="fas fa-arrow-right"></i></a>
+                    {% endif %}
                 </div>
             </div>
-
-            <a href="#" class="link-arrow">Learn More About Us <i class="fa-solid fa-arrow-right"></i></a>
+            <div class="ref-image">
+                <img src="{% static 'images/art_watch.png' %}" alt="Referral Program">
+            </div>
         </div>
     </section>
+
+
 
     <!-- THE COLLECTION -->
     <section class="collection-section">
@@ -1171,7 +1325,7 @@
         </div>
         <div class="cards-grid">
             {% for p in products|slice:":3" %}
-            <a href="{% url 'product_details' p.id %}" class="product-card" style="text-decoration:none; color:inherit; display:block;">
+            <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card" style="text-decoration:none; color:inherit; display:block;">
                 {% if forloop.counter == 1 %}
                 <div class="card-badge">Top Choice</div>
                 {% elif forloop.counter == 2 %}
@@ -1229,8 +1383,8 @@
         <div class="why-grid">
             <div class="why-card">
                 <div class="why-icon"><i class="fa-solid fa-truck-fast"></i></div>
-                <h4>Free Shipping</h4>
-                <p>On all orders over $500</p>
+                <h4>Free Shipping (₹5,000+)</h4>
+                <p>On all orders over ₹5,000</p>
             </div>
             <div class="why-card">
                 <div class="why-icon"><i class="fa-solid fa-shield-check"></i></div>
@@ -1303,6 +1457,26 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats">
+        <div class="stat-item">
+            <h3>50,000 +</h3>
+            <p>Happy Customers</p>
+        </div>
+        <div class="stat-item">
+            <h3>2,500 +</h3>
+            <p>Trusted Partners</p>
+        </div>
+        <div class="stat-item">
+            <h3>100 %</h3>
+            <p>Authenticity Guaranteed</p>
+        </div>
+        <div class="stat-item">
+            <h3>24/7</h3>
+            <p>Expert Support</p>
         </div>
     </section>
 
@@ -1403,7 +1577,17 @@
         }
 
         mobileToggle.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);        function copyRefCode(code, btn) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
     </script>
 </body>
 

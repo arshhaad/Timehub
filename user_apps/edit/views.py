@@ -89,8 +89,8 @@ def add_address(request):
 
 @login_required
 @never_cache
-def edit_address(request, id):
-    address = get_object_or_404(Address, id=id, user=request.user)
+def edit_address(request, address_uuid):
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
     next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
 
     if request.method == 'POST':
@@ -99,7 +99,7 @@ def edit_address(request, id):
             address = form.save(commit=False)
 
             if address.is_default:
-                Address.objects.filter(user=request.user).exclude(id=id).update(is_default=False)
+                Address.objects.filter(user=request.user).exclude(uuid=address_uuid).update(is_default=False)
 
             address.save()
             messages.success(request, 'Address updated successfully!')
@@ -111,15 +111,15 @@ def edit_address(request, id):
 
 @login_required
 @never_cache
-def delete_address(request, id):
-    address = get_object_or_404(Address, id=id, user=request.user)
+def delete_address(request, address_uuid):
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
     address.delete()
     return redirect('address_list')
 
 @login_required
 @never_cache
-def toggle_default_address(request, id):
-    address = get_object_or_404(Address, id=id, user=request.user)
+def toggle_default_address(request, address_uuid):
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
     
     if not address.is_default:
         # Unset others and set this one
@@ -282,10 +282,11 @@ def cart_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product').all()
     subtotal = sum(item.total_price for item in items)
-    shipping = Decimal('99.00')
-    if subtotal >= Decimal('20000.00'):
+    if subtotal == 0:
         shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
         shipping = Decimal('49.00')
     
     tax = round(subtotal * Decimal('0.03'), 2)
@@ -311,9 +312,9 @@ def cart_view(request):
     })
 
 @login_required
-def add_to_cart(request, product_id):
+def add_to_cart(request, product_uuid):
     if request.method == 'POST':
-        product = get_object_or_404(Product, id=product_id)
+        product = get_object_or_404(Product, uuid=product_uuid)
         
         try:
             data = json.loads(request.body)
@@ -409,10 +410,11 @@ def update_cart(request, item_id):
             cart = cart_item.cart
             items = cart.items.select_related('product').all()
             subtotal = sum(item.total_price for item in items)
-            shipping = Decimal('99.00')
-            if subtotal >= Decimal('20000.00'):
+            if subtotal == 0:
                 shipping = Decimal('0.00')
             elif subtotal >= Decimal('5000.00'):
+                shipping = Decimal('0.00')
+            else:
                 shipping = Decimal('49.00')
             
             tax = round(subtotal * Decimal('0.03'), 2)
@@ -452,12 +454,12 @@ def wishlist_view(request):
         'items': items
     })
 
-def toggle_wishlist(request, product_id):
+def toggle_wishlist(request, product_uuid):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please login to modify your wishlist.'})
         
     if request.method == 'POST':
-        product = get_object_or_404(Product, id=product_id)
+        product = get_object_or_404(Product, uuid=product_uuid)
         wishlist, created = Wishlist.objects.get_or_create(user=request.user)
         
         wishlist_item = WishlistItem.objects.filter(wishlist=wishlist, product=product).first()
@@ -503,10 +505,11 @@ def save_for_later(request, item_id):
         cart = request.user.cart
         items = cart.items.select_related('product').all()
         subtotal = sum(item.total_price for item in items)
-        shipping = Decimal('99.00')
-        if subtotal >= Decimal('20000.00'):
+        if subtotal == 0:
             shipping = Decimal('0.00')
         elif subtotal >= Decimal('5000.00'):
+            shipping = Decimal('0.00')
+        else:
             shipping = Decimal('49.00')
         
         tax = round(subtotal * Decimal('0.03'), 2)

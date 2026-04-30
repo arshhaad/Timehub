@@ -211,10 +211,10 @@
         <p>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
     </div>
     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="{% url 'track_order' order.id %}" class="btn-action btn-outline-alt">
+        <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
             <i class="fas fa-location-dot"></i> Track Order
         </a>
-        <a href="{% url 'download_invoice' order.id %}" target="_blank" class="btn-action btn-primary-alt">
+        <a href="{% url 'download_invoice' order_uuid=order.uuid %}" target="_blank" class="btn-action btn-primary-alt">
             <i class="fas fa-file-invoice"></i> Download Invoice
         </a>
     </div>
@@ -393,7 +393,7 @@
                             </td>
                             <td style="text-align:right;">
                                 {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
-                                <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item.id %}', '{{ item.product.name|escapejs }}')">Cancel</button>
+                                <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
                                 {% elif item.is_cancelled %}
                                 <span class="status-badge s-Cancelled" style="font-size: 0.65rem; padding: 2px 8px;">Cancelled</span>
                                 {% endif %}
@@ -494,7 +494,18 @@
             <div class="card-body" style="padding: 20px 24px;">
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span></div>
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (3%)</span><span class="summary-value">₹{{ order.tax|floatformat:2 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Shipping</span><span class="summary-value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge|floatformat:2 }}{% else %}<span style="color: #22c55e; font-weight: 700;">Free</span>{% endif %}</span></div>
+                <div class="summary-row" style="padding: 8px 0; align-items: flex-start;">
+                    <span class="summary-label" style="margin-top: 2px;">Shipping</span>
+                    <span class="summary-value" style="text-align: right;">
+                        {% if order.shipping_charge == 0 %}
+                            <span style="color: #22c55e; font-weight: 700;">Free</span>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Free above ₹5,000)</div>
+                        {% else %}
+                            ₹{{ order.shipping_charge|floatformat:2 }}
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Standard Rate)</div>
+                        {% endif %}
+                    </span>
+                </div>
                 {% if order.discount > 0 %}
                 <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>
                 {% endif %}
@@ -539,7 +550,7 @@
             <h3>Cancel Order?</h3>
             <p>Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
         </div>
-        <form action="{% url 'cancel_order' order.id %}" method="POST">
+        <form action="{% url 'cancel_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
             <span class="modal-label">Reason for cancellation</span>
             <textarea name="reason" placeholder="Explain why you are cancelling..." rows="3" required></textarea>
@@ -585,7 +596,7 @@
             <h3>Return Order</h3>
             <p>Provide a reason for return. Our specialized team will review and contact you within 24 hours.</p>
         </div>
-        <form action="{% url 'return_order' order.id %}" method="POST">
+        <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
             <span class="modal-label">Detailed Return Reason</span>
             <textarea name="reason" placeholder="Describe the issue in detail..." rows="3" required></textarea>
@@ -613,7 +624,7 @@
             </p>
             {% endif %}
         </div>
-        <form action="{% url 'reschedule_order' order.id %}" method="POST">
+        <form action="{% url 'reschedule_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div>

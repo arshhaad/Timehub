@@ -2405,7 +2405,7 @@
                 {% if products %}
                 <div class="product-grid" id="productGrid">
                     {% for product in products %}
-                    <a href="{% url 'product_details' product.id %}"
+                    <a href="{% url 'product_details' product_uuid=product.uuid %}"
                         class="product-card {% if product.id in current_compare_ids %}compare-selected{% endif %}"
                         style="text-decoration:none; color:inherit;" data-id="{{ product.id }}"
                         data-name="{{ product.name|escapejs }}" {% if product.image %}data-image="{{ product.image.url }}"{% endif %} id="product-card-{{ product.id }}">
@@ -2431,7 +2431,7 @@
 
                             <button type="button"
                                 class="wishlist-btn {% if product.id in wishlist_product_ids %}active{% endif %}"
-                                onclick="toggleWishlist(event, {{ product.id }}, this)" aria-label="Toggle Wishlist">
+                                onclick="toggleWishlist(event, '{{ product.uuid }}', this)" aria-label="Toggle Wishlist">
                                 <i
                                     class="{% if product.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
                             </button>
@@ -2452,7 +2452,7 @@
                             <div class="action-buttons-row" style="display:flex; gap:10px; margin-top:10px;">
                                 {% if product.stock > 0 %}
                                 <button class="btn btn-primary add-cart"
-                                    onclick="event.preventDefault(); event.stopPropagation(); window.addToCart({{ product.id }}, this);"
+                                    onclick="event.preventDefault(); event.stopPropagation(); window.addToCart('{{ product.uuid }}', this);"
                                     style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px;">
                                     <i class="fas fa-shopping-bag"></i> Cart
                                 </button>
@@ -2463,7 +2463,7 @@
                                 </button>
                                 {% endif %}
                                 <button class="btn btn-outline buy-now"
-                                    onclick="event.preventDefault(); event.stopPropagation(); window.buyNow({{ product.id }}, this);"
+                                    onclick="event.preventDefault(); event.stopPropagation(); window.buyNow('{{ product.uuid }}', this);"
                                     style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
                                     Buy Now
                                 </button>

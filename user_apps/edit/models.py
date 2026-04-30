@@ -4,7 +4,10 @@ from user_apps.core.models import Product
 
 User = get_user_model()
 
+import uuid
+
 class Address(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
     full_name = models.CharField(max_length=255)
     street = models.CharField(max_length=255)

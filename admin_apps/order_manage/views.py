@@ -77,6 +77,10 @@ def order_detail(request, order_id):
         address = json.loads(order.address_snapshot)
     except Exception:
         address = {}
+        
+    # Auto-fix totals for pending/processing/shipped orders to reflect latest logic
+    if order.status in ['Pending', 'Processing', 'Shipped']:
+        order.update_totals()
 
     # Handle status update from the detail page
     if request.method == 'POST':
