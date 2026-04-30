@@ -17,41 +17,46 @@ def signup_view(request):
         form = SignupForm(request.POST)
 
         if form.is_valid():
-            user = form.save(commit=False)
+            # Get data but don't save to DB yet
+            email = form.cleaned_data.get('email')
             
-            # Handle referral code — validate before proceeding
-            ref_code = form.cleaned_data.get('entered_referral_code')
-            if ref_code:
-                try:
-                    referrer = CustomUser.objects.get(referral_code=ref_code)
-                    user.referred_by = referrer
-                except CustomUser.DoesNotExist:
-                    form.add_error('entered_referral_code', 'Invalid referral code. Please check and try again.')
-                    return render(request, 'accounts/signup.html', {'form': form})
+            # Store signup data in session
+            request.session['pending_signup_data'] = {
+                'email': email,
+                'first_name': form.cleaned_data.get('first_name'),
+                'last_name': form.cleaned_data.get('last_name'),
+                'phone_number': form.cleaned_data.get('phone_number'),
+                'password': form.cleaned_data.get('password1'), # Store raw temporarily in session
+                'entered_referral_code': form.cleaned_data.get('entered_referral_code'),
+            }
 
-            # deactivate until email verified
-            user.is_active = False
-            user.save()
-
-            # Clear session referral code after successful use
-            request.session.pop('referral_code', None)
-
-            # create OTP
-            otp_obj = EmailOTP.objects.create(user=user)
+            # create OTP for this email
+            otp_obj = EmailOTP.objects.create(email=email)
 
             # send email
             send_mail(
-                subject='Your OTP Code',
-                message=f'Your OTP is {otp_obj.otp}',
+                subject='Verify Your TimeHub Account ⏱',
+                message=f"""Hello from TimeHub!
+                
+                Welcome to the world of premium timepieces. 
+                
+                🔐 YOUR VERIFICATION CODE:
+                
+                        {otp_obj.otp}
+                        
+                ⏳ This code is valid for 1 minute.
+                🚫 Do not share this code with anyone.
+                
+                If you did not request this, please ignore this email.
+                
+                The TimeHub Team 🚀""",
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[user.email],
+                recipient_list=[email],
             )
 
             # store email in session (for verification step)
-            request.session['verify_email'] = user.email
-
-            messages.success(request, 'OTP sent to your email')
-
+            request.session['verify_email'] = email
+            messages.success(request, 'Verification code sent to your email.')
             return redirect('verify-otp')
 
         # form invalid → fall through and re-render

@@ -96,7 +96,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class EmailOTP(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="otps")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="otps", null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
     otp = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -112,7 +113,13 @@ class EmailOTP(models.Model):
     def save(self, *args, **kwargs):
         if not self.otp:
             self.otp = self.generate_otp()
-        EmailOTP.objects.filter(user=self.user).delete()
+        
+        # Clean up old OTPs for this user or email
+        if self.user:
+            EmailOTP.objects.filter(user=self.user).delete()
+        elif self.email:
+            EmailOTP.objects.filter(email=self.email).delete()
+            
         super().save(*args, **kwargs)
 
 

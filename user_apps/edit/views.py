@@ -301,6 +301,9 @@ def cart_view(request):
             has_stock_issues = True
             break
             
+    shipping_needed = max(0, Decimal('5000.00') - subtotal)
+    shipping_percentage = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
+
     return render(request, 'cart.html', {
         'cart': cart,
         'items': items,
@@ -308,7 +311,9 @@ def cart_view(request):
         'shipping': shipping,
         'tax': tax,
         'total': total,
-        'has_stock_issues': has_stock_issues
+        'has_stock_issues': has_stock_issues,
+        'shipping_needed': shipping_needed,
+        'shipping_percentage': shipping_percentage
     })
 
 @login_required
@@ -370,7 +375,7 @@ def add_to_cart(request, product_uuid):
         # Total cart items count
         cart_count = sum(item.quantity for item in cart.items.all())
                 
-        return JsonResponse({'success': True, 'message': 'Added to cart', 'cart_count': cart_count})
+        return JsonResponse({'success': True, 'message': 'Added to cart', 'cart_count': cart_count, 'item_id': cart_item.id})
         
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 

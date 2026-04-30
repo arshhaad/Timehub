@@ -470,17 +470,46 @@
             border-color: rgba(255, 106, 0, 0.3);
         }
 
-        .card-badge {
+        .badge-container {
             position: absolute;
             top: 20px;
             left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2;
+        }
+
+        .card-badge {
+            display: inline-block;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(5px);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
+        }
+
+        .offer-badge {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            background: #22c55e;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+            animation: pulse 2s infinite;
             z-index: 2;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .product-img-wrap {
@@ -1326,12 +1355,20 @@
         <div class="cards-grid">
             {% for p in products|slice:":3" %}
             <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card" style="text-decoration:none; color:inherit; display:block;">
-                {% if forloop.counter == 1 %}
-                <div class="card-badge">Top Choice</div>
-                {% elif forloop.counter == 2 %}
-                <div class="card-badge">Top Reviews</div>
-                {% else %}
-                <div class="card-badge">Exclusive</div>
+                <div class="badge-container">
+                    {% if forloop.counter == 1 %}
+                    <div class="card-badge">Top Choice</div>
+                    {% elif forloop.counter == 2 %}
+                    <div class="card-badge">Top Reviews</div>
+                    {% else %}
+                    <div class="card-badge">Exclusive</div>
+                    {% endif %}
+                </div>
+                
+                {% if p.offer_badge_text %}
+                <div class="offer-badge">
+                    {{ p.offer_badge_text }}
+                </div>
                 {% endif %}
                 
                 <div class="product-img-wrap">
@@ -1344,10 +1381,14 @@
                 <div class="product-info">
                     <h3>{{ p.name }}</h3>
                     <div class="product-price">
-                        {% if p.discount_price %}
-                        From ₹{{ p.discount_price }}
+                        {% if p.has_offer %}
+                        <span style="color: #fff; margin-right: 10px;">₹{{ p.display_price }}</span>
+                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{ p.price }}</span>
+                        {% elif p.discount_price %}
+                        <span style="color: #fff; margin-right: 10px;">₹{{ p.discount_price }}</span>
+                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{ p.price }}</span>
                         {% else %}
-                        From ₹{{ p.price }}
+                        ₹{{ p.price }}
                         {% endif %}
                     </div>
                 </div>

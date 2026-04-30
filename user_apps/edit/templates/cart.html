@@ -1,5 +1,5 @@
 {% extends 'base_user.html' %}
-{% load core_extras %}
+{% load static %}
 
 {% block title %}My Cart - TimeHub{% endblock %}
 
@@ -338,10 +338,10 @@
             <div id="shipping-progress-container" style="margin: 15px 0 20px 0; display: {% if subtotal >= 5000 %}none{% else %}block{% endif %};">
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px;">
                     <span style="color: var(--text-muted);">Free Shipping Goal</span>
-                    <span style="color: var(--primary-color); font-weight: 700;">Add ₹<span id="shipping-needed">{{ 5000|subtract:subtotal|floatformat:0 }}</span> more</span>
+                    <span style="color: var(--primary-color); font-weight: 700;">Add ₹<span id="shipping-needed">{{ shipping_needed|floatformat:0 }}</span> more</span>
                 </div>
                 <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);">
-                    <div id="shipping-progress-bar" style="height: 100%; width: {{ subtotal|percentage_of:5000 }}%; background: linear-gradient(to right, var(--primary-color), #f97316); border-radius: 10px; transition: width 0.5s ease;"></div>
+                    <div id="shipping-progress-bar" style="height: 100%; width: {{ shipping_percentage }}%; background: linear-gradient(to right, var(--primary-color), #f97316); border-radius: 10px; transition: width 0.5s ease;"></div>
                 </div>
             </div>
             {% if subtotal >= 5000 %}

@@ -421,7 +421,7 @@
                 <i class="fas fa-credit-card"></i> Payment Methods
             </button>
         </div>
-        <span class="count-badge" id="tabCount">{{ orders.count }} records</span>
+        <span class="count-badge" id="tabCount">{{ total_orders_count }} records</span>
     </div>
 
     <!-- ====== TAB: PAYMENT HISTORY ====== -->
@@ -429,7 +429,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2><i class="fas fa-receipt"></i> Payment History</h2>
-                <span class="count-badge">{{ orders.count }} orders</span>
+                <span class="count-badge">{{ total_orders_count }} orders</span>
             </div>
             {% if orders %}
             <div class="table-responsive" style="overflow-x: auto;">
@@ -499,7 +499,7 @@
                                 <span style="font-size:0.75rem;">{{ order.created_at|time:"h:i A" }}</span>
                             </td>
                             <td data-label="Action">
-                                <a href="{% url 'order_detail' order.id %}"
+                                <a href="{% url 'order_detail' order.uuid %}"
                                    style="font-size:0.8rem; font-weight:700; color: var(--primary-color); text-decoration:none; transition: var(--transition);"
                                    onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
                                     View <i class="fas fa-arrow-right" style="font-size:0.7rem;"></i>
@@ -518,6 +518,28 @@
                 <p>Your payment history will appear here once you place your first order.</p>
             </div>
             {% endif %}
+
+            {% if orders.has_other_pages %}
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                {% if orders.has_previous %}
+                    <a href="?orders_page={{ orders.previous_page_number }}" style="padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'"><i class="fas fa-chevron-left"></i> Prev</a>
+                {% endif %}
+
+                {% for i in orders.paginator.page_range %}
+                    {% if orders.number == i %}
+                        <span style="padding: 8px 14px; background: var(--primary-color); border-radius: 10px; color: #000; font-size: 0.85rem; font-weight: 800;">{{ i }}</span>
+                    {% elif i > orders.number|add:'-3' and i < orders.number|add:'3' %}
+                        <a href="?orders_page={{ i }}" style="padding: 8px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if orders.has_next %}
+                    <a href="?orders_page={{ orders.next_page_number }}" style="padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'">Next <i class="fas fa-chevron-right"></i></a>
+                {% endif %}
+
+                <span style="color: var(--text-muted); font-size: 0.78rem; margin-left: 8px;">Page {{ orders.number }} of {{ orders.paginator.num_pages }}</span>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -526,7 +548,7 @@
         <div class="panel">
             <div class="panel-header">
                 <h2><i class="fas fa-gift"></i> Cashbacks &amp; Wallet Credits</h2>
-                <span class="count-badge">{{ transactions|length }} transactions</span>
+                <span class="count-badge">{{ total_tx_count }} transactions</span>
             </div>
 
             {% if transactions %}
@@ -574,6 +596,25 @@
                 <div class="empty-icon"><i class="fas fa-gift"></i></div>
                 <h3>No cashbacks or credits yet</h3>
                 <p>Refunds, cashbacks, and wallet credits will appear here. Cancel an eligible order or receive a refund to see entries.</p>
+            </div>
+             {% endif %}
+
+            {% if transactions.has_other_pages %}
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                {% if transactions.has_previous %}
+                    <a href="?tx_page={{ transactions.previous_page_number }}" style="padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'"><i class="fas fa-chevron-left"></i> Prev</a>
+                {% endif %}
+                {% for i in transactions.paginator.page_range %}
+                    {% if transactions.number == i %}
+                        <span style="padding: 8px 14px; background: var(--primary-color); border-radius: 10px; color: #000; font-size: 0.85rem; font-weight: 800;">{{ i }}</span>
+                    {% elif i > transactions.number|add:'-3' and i < transactions.number|add:'3' %}
+                        <a href="?tx_page={{ i }}" style="padding: 8px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if transactions.has_next %}
+                    <a href="?tx_page={{ transactions.next_page_number }}" style="padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: var(--transition);" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'">Next <i class="fas fa-chevron-right"></i></a>
+                {% endif %}
+                <span style="color: var(--text-muted); font-size: 0.78rem; margin-left: 8px;">Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}</span>
             </div>
             {% endif %}
         </div>
@@ -664,8 +705,8 @@
 
         // Update count badge
         const countMap = {
-            payments: '{{ orders.count }} records',
-            cashbacks: '{{ transactions|length }} records',
+            payments: '{{ total_orders_count }} records',
+            cashbacks: '{{ total_tx_count }} records',
             methods: 'Active'
         };
         document.getElementById('tabCount').textContent = countMap[tabName] || '';

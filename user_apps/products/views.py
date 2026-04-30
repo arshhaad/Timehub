@@ -6,7 +6,8 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage
+from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage, Cart
+from admin_apps.offers.models import Coupon
 
 def product_list(request):
     # Base queryset: Active and not deleted
@@ -340,7 +341,69 @@ def product_details(request, product_uuid):
     # Add wishlist status
     if request.user.is_authenticated:
         from user_apps.core.models import WishlistItem
+        from admin_apps.offers.models import Coupon
         is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
         context['is_in_wishlist'] = is_in_wishlist
+        
+        # Get active coupons for display
+        active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=timezone.now(), valid_to__gte=timezone.now())
+        context['available_coupons'] = active_coupons
+    
+    # Calculate savings based on display_price
+    context['savings'] = product.price - product.display_price
 
     return render(request, 'product_details.html', context)
+
+
+def validate_coupon_product(request):
+    """AJAX view to validate a coupon for a specific product price on the detail page."""
+    import json
+    from decimal import Decimal
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+        
+    try:
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+        product_uuid = data.get('product_uuid')
+    except:
+        return JsonResponse({'success': False, 'error': 'Invalid data'})
+        
+    if not code:
+        return JsonResponse({'success': False, 'error': 'Please enter a coupon code'})
+        
+    product = get_object_or_404(Product, uuid=product_uuid)
+    price = product.display_price # Price after product/category offers
+    
+    try:
+        coupon = Coupon.objects.get(code__iexact=code, is_active=True)
+    except Coupon.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid or expired coupon code'})
+        
+    # Basic validation (can't check cart subtotal yet, so we check product price)
+    if price < coupon.min_purchase_amount:
+        return JsonResponse({'success': False, 'error': f'Minimum purchase of ₹{coupon.min_purchase_amount} required'})
+        
+    if request.user.is_authenticated:
+        is_valid, error_message = coupon.is_valid_for_user(request.user)
+        if not is_valid:
+            return JsonResponse({'success': False, 'error': error_message})
+    
+    # Calculate discount
+    discount = Decimal('0')
+    if coupon.discount_type == 'percentage':
+        discount = (price * coupon.discount_value) / Decimal('100')
+        if coupon.max_discount_amount:
+            discount = min(discount, coupon.max_discount_amount)
+    else:
+        discount = coupon.discount_value
+        
+    final_price = max(Decimal('0'), price - discount)
+    
+    return JsonResponse({
+        'success': True,
+        'final_price': str(final_price),
+        'discount_amount': str(discount),
+        'message': f'Coupon {coupon.code} applied! Save an extra ₹{discount}'
+    })

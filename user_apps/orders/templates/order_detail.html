@@ -471,10 +471,14 @@
                                 <button class="btn-action btn-danger-alt" onclick="openCancelOrderModal()" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.08);">
                                     <i class="fas fa-ban"></i> Cancel Order
                                 </button>
-                            {% elif order.status == 'Delivered' %}
+                            {% elif order.status == 'Delivered' and order.return_status == 'None' %}
                                 <button class="btn-action btn-primary-alt" onclick="openReturnModal()" style="border-radius: 10px; padding: 16px; width: 100%;">
                                     <i class="fas fa-undo"></i> Request Order Return
                                 </button>
+                            {% elif order.status == 'Return Requested' or order.status == 'Returned' or order.return_status != 'None' %}
+                                <div class="btn-action" style="border-radius: 10px; padding: 16px; width: 100%; background: rgba(255, 170, 0, 0.05); border: 1px dashed rgba(255, 170, 0, 0.3); color: #ffaa00; cursor: default;">
+                                    <i class="fas fa-info-circle"></i> Return Status: {{ order.get_return_status_display }}
+                                </div>
                             {% endif %}
                         </div>
                     </div>

@@ -73,13 +73,33 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 @ensure_csrf_cookie
 def checkout_page(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('product').all()
+    
+    # Buy Now functionality: if an item_id is provided, only checkout that item
+    buy_now_id = request.GET.get('buy_now_id')
+    if buy_now_id:
+        request.session['buy_now_id'] = buy_now_id
+    else:
+        # Check if we are in a buy_now session (from a previous GET or failed POST)
+        # But if the user came from the cart, we should clear it
+        if 'buy_now_id' in request.session and not request.GET:
+             del request.session['buy_now_id']
+             
+    current_buy_now_id = request.session.get('buy_now_id')
+    
+    if current_buy_now_id:
+        items = cart.items.filter(id=current_buy_now_id).select_related('product', 'variant')
+        if not items.exists():
+            del request.session['buy_now_id']
+            return redirect('cart_view')
+    else:
+        items = cart.items.select_related('product', 'variant').all()
 
     if not items.exists():
         messages.warning(request, 'Your cart is empty. Add items before checking out.')
         return redirect('cart_view')
 
     subtotal = sum(item.total_price for item in items)
+    total_quantity = sum(item.quantity for item in items)
     if subtotal == 0:
         shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
@@ -124,11 +144,12 @@ def checkout_page(request):
                 'items': items, 'subtotal': subtotal, 'tax': tax,
                 'shipping': shipping, 'discount': discount, 'total': total,
                 'cart': cart, 'addresses': addresses, 'default_address': default_address,
+                'total_quantity': total_quantity,
             })
 
         address = get_object_or_404(Address, id=address_id, user=request.user)
 
-        # Snapshot address in JSON so order history is preserved even if address changes
+        # Snapshot address in JSON
         address_data = {
             'full_name': address.full_name,
             'street': address.street,
@@ -140,11 +161,11 @@ def checkout_page(request):
         }
 
         with transaction.atomic():
-            # Generate estimated delivery date (3–7 days from now) and save it
+            # Generate estimated delivery date
             days_to_delivery = random.randint(3, 7)
             estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
 
-            # Wallet deduction if applicable
+            # Wallet deduction
             if payment_method == 'wallet':
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
                 if wallet.balance < total:
@@ -153,6 +174,7 @@ def checkout_page(request):
                         'items': items, 'subtotal': subtotal, 'tax': tax,
                         'shipping': shipping, 'discount': discount, 'total': total,
                         'cart': cart, 'addresses': addresses, 'default_address': default_address,
+                        'total_quantity': total_quantity,
                     })
                 wallet.balance -= total
                 wallet.save()
@@ -190,7 +212,7 @@ def checkout_page(request):
                     messages.error(request, f"Sorry, only {available_stock} units of {item.product.name} are available.")
                     raise Exception("Insufficient stock")
 
-                price_at_purchase = item.variant.effective_discount_price if item.variant else (item.product.discount_price or item.product.price)
+                price_at_purchase = item.variant.display_price if item.variant else item.product.display_price
                 
                 OrderItem.objects.create(
                     order=order,
@@ -208,22 +230,23 @@ def checkout_page(request):
                     item.product.stock -= item.quantity
                     item.product.save()
 
-            # Clear cart
-            cart.items.all().delete()
+            # Clear items that were ordered
+            items.delete()
+            if current_buy_now_id:
+                del request.session['buy_now_id']
 
         if payment_method == 'razorpay':
             return redirect('payments:start_payment', order_id=order.id)
 
         return redirect('order_success', order_uuid=order.uuid)
 
-    # Provide an estimated delivery date (randomly 1-7 days from today) for display
+    # Provide an estimated delivery date
     days_to_add = random.randint(1, 7)
     estimated_delivery = timezone.now() + timedelta(days=days_to_add)
 
-    # Fetch active coupons for the modal
+    # Fetch active coupons
     now = timezone.now()
     active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=now, valid_to__gte=now)
-    # Exclude those that reached usage limit
     active_coupons = [c for c in active_coupons if c.is_valid]
 
     return render(request, 'checkout_page.html', {
@@ -238,6 +261,8 @@ def checkout_page(request):
         'default_address': default_address,
         'estimated_delivery': estimated_delivery,
         'active_coupons': active_coupons,
+        'total_quantity': total_quantity,
+        'is_buy_now': bool(current_buy_now_id)
     })
 
 

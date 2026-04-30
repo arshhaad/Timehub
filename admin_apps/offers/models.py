@@ -26,7 +26,7 @@ class Coupon(models.Model):
     
     def is_valid_for_user(self, user):
         """Checks if the coupon is valid specifically for a given user."""
-        from user_apps.orders.models import Order
+        from user_apps.core.models import Order
         
         now = timezone.now()
         if not self.is_active:

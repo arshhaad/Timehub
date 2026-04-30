@@ -7,12 +7,14 @@ from ..models import CustomUser, EmailOTP
 from django.utils import timezone
 from datetime import timedelta
 from django.views.decorators.cache import never_cache
+from django.db import transaction
 from admin_apps.offers.services import process_referee_reward
 
 
 @never_cache
 def verify_otp(request):
     email = request.session.get('verify_email')
+    pending_data = request.session.get('pending_signup_data')
 
     if not email:
         return redirect('signup')
@@ -20,51 +22,85 @@ def verify_otp(request):
     if request.method == "POST":
         otp_input = request.POST.get("otp")
 
-        try:
-            user = CustomUser.objects.get(email=email)
-            otp_obj = user.otps.latest('created_at')
+        # Try to find OTP by email first (for new signups) or by user (for re-verification)
+        otp_obj = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+        
+        # If not found by email, it might be an existing user re-verifying (if applicable)
+        if not otp_obj:
+            user_obj = CustomUser.objects.filter(email=email).first()
+            if user_obj:
+                otp_obj = user_obj.otps.order_by('-created_at').first()
 
-            if otp_obj.is_expired:
-                messages.error(request, "OTP expired. Please request a new one.")
-                return redirect("verify-otp")
+        if not otp_obj:
+            messages.error(request, "No verification code found. Please request a new one.")
+            return redirect("verify-otp")
 
-            if otp_obj.otp != otp_input:
-                messages.error(request, "Invalid OTP. Please try again.")
-                return redirect("verify-otp")
+        if otp_obj.is_expired:
+            messages.error(request, "Code expired. Please request a new one.")
+            return redirect("verify-otp")
 
-            # success — activate user
-            user.is_active = True
-            user.save()
+        if otp_obj.otp != otp_input:
+            messages.error(request, "Invalid code. Please try again.")
+            return redirect("verify-otp")
 
-            # clean up
+        # SUCCESS — Handle User Creation or Activation
+        with transaction.atomic():
+            if pending_data:
+                # CREATE NEW USER from session data
+                user = CustomUser.objects.create_user(
+                    email=pending_data['email'],
+                    password=pending_data['password'],
+                    first_name=pending_data['first_name'],
+                    last_name=pending_data['last_name'],
+                    phone_number=pending_data['phone_number']
+                )
+                
+                # Handle Referral
+                ref_code = pending_data.get('entered_referral_code')
+                if ref_code:
+                    try:
+                        referrer = CustomUser.objects.get(referral_code=ref_code)
+                        user.referred_by = referrer
+                        user.save()
+                    except CustomUser.DoesNotExist:
+                        pass # Should have been validated in signup, but safe check
+                
+                del request.session['pending_signup_data']
+            else:
+                # ACTIVATE EXISTING USER (if they were already in DB)
+                user = CustomUser.objects.filter(email=email).first()
+                if user:
+                    user.is_active = True
+                    user.save()
+                else:
+                    messages.error(request, "Registration data lost. Please sign up again.")
+                    return redirect("signup")
+
+            # Clean up
             otp_obj.delete()
             del request.session['verify_email']
+            request.session.pop('referral_code', None)
 
-            # auto login
+            # Auto login
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            # Process referral reward for referee
+            # Process referral reward
             process_referee_reward(user)
 
-            messages.success(request, f"Email verified! Welcome to TimeHub, {user.first_name or user.email}. 🎉")
+            messages.success(request, f"Verification successful! Welcome to TimeHub, {user.first_name or user.email}. 🎉")
             return redirect("home")
-
-        except CustomUser.DoesNotExist:
-            messages.error(request, "User not found. Please sign up again.")
-            return redirect("signup")
-        except EmailOTP.DoesNotExist:
-            messages.error(request, "No OTP found. Please request a new one.")
-            return redirect("verify-otp")
 
     # Get latest OTP for timer
     seconds_left = 0
-    try:
-        user = CustomUser.objects.get(email=email)
-        otp_obj = user.otps.latest('created_at')
+    otp_obj = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+    if not otp_obj:
+        user_obj = CustomUser.objects.filter(email=email).first()
+        if user_obj:
+            otp_obj = user_obj.otps.order_by('-created_at').first()
+            
+    if otp_obj:
         expiry_time = otp_obj.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
         seconds_left = max(0, int((expiry_time - timezone.now()).total_seconds()))
-    except (CustomUser.DoesNotExist, EmailOTP.DoesNotExist):
-        pass
 
     return render(request, "accounts/verify_otp.html", {
         "email": email,
@@ -80,40 +116,33 @@ def resend_otp(request):
     if not email:
         return redirect('signup') if not is_reset else redirect('forgot-password')
 
-    try:
-        user = CustomUser.objects.get(email=email)
-    except CustomUser.DoesNotExist:
-        messages.error(request, "User not found.")
-        return redirect('signup')
+    # Cooldown check
+    last_otp = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+    if not last_otp:
+        user_obj = CustomUser.objects.filter(email=email).first()
+        if user_obj:
+            last_otp = user_obj.otps.order_by('-created_at').first()
 
-    last_otp = user.otps.order_by('-created_at').first()
-
-    # cooldown check
     if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < settings.RESET_OTP_COOLDWON_SEC:
-        messages.error(request, "Please wait before requesting another OTP.")
+        messages.error(request, "Please wait before requesting another code.")
         return redirect("verify-otp") if not is_reset else redirect("verify-otp-reset")
 
-    otp_obj = EmailOTP.objects.create(user=user)
+    # Create new OTP (either by email or user)
+    user_obj = CustomUser.objects.filter(email=email).first()
+    if user_obj:
+        otp_obj = EmailOTP.objects.create(user=user_obj)
+    else:
+        otp_obj = EmailOTP.objects.create(email=email)
 
     send_mail(
-        "Your OTP Code",
-        f"""Hello from TimeHub,
+        "Your Verification Code - TimeHub ⏱",
+        f"""Hello,
+        
+Your verification code is: {otp_obj.otp}
 
-We received a request to verify your OTP.
+This code is valid for 1 minute. 
 
-🔐 Your One-Time Password (OTP) is: {otp_obj.otp}
-
-This OTP is valid for 1 minute. Please do not share it with anyone for security reasons.
----
-🌟 About TimeHub
-
-At TimeHub, we bring you a curated collection of premium timepieces crafted with precision, elegance, and timeless design. Every watch tells a story — of craftsmanship, innovation, and style.
-
-Whether you're looking for luxury, performance, or everyday elegance, TimeHub is your trusted destination.
-
-If you did not request this OTP, you can safely ignore this email. Your account remains secure.
-
-Need help? Our support team is always here for you.
+If you did not request this, please ignore this email.
 
 Best regards,
 The TimeHub Team""",
@@ -121,13 +150,13 @@ The TimeHub Team""",
         [email],
     )
 
-    messages.success(request, "OTP resent successfully!")
+    messages.success(request, "New code sent successfully!")
     return redirect("verify-otp") if not is_reset else redirect("verify-otp-reset")
 
 
 @never_cache
 def verify_otp_reset(request):
-    """OTP verification step for the password-reset flow."""
+    """OTP verification step for the password-reset flow (Existing Users Only)."""
     email = request.session.get('reset_email')
 
     if not email:
@@ -141,27 +170,22 @@ def verify_otp_reset(request):
             otp_obj = user.otps.latest('created_at')
 
             if otp_obj.is_expired:
-                messages.error(request, 'OTP expired. Please request a new one.')
+                messages.error(request, 'Code expired. Please request a new one.')
                 return redirect('verify-otp-reset')
 
             if otp_obj.otp != otp_input:
-                messages.error(request, 'Invalid OTP. Please try again.')
+                messages.error(request, 'Invalid code. Please try again.')
                 return redirect('verify-otp-reset')
 
-            # Mark verified and clean up OTP record
             otp_obj.delete()
             request.session['otp_verified'] = True
-
             return redirect('reset-password')
 
-        except CustomUser.DoesNotExist:
-            messages.error(request, 'User not found.')
-            return redirect('forgot-password')
-        except EmailOTP.DoesNotExist:
-            messages.error(request, 'No OTP found. Please request a new one.')
+        except (CustomUser.DoesNotExist, EmailOTP.DoesNotExist):
+            messages.error(request, 'Invalid request or code expired.')
             return redirect('forgot-password')
 
-    # Get latest OTP for timer
+    # Timer logic for reset
     seconds_left = 0
     try:
         user = CustomUser.objects.get(email=email)

@@ -91,6 +91,134 @@
 
         .image-view-badge { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 6px; z-index: 20;}
 
+        .badge {
+            background: var(--primary-color);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .offer-badge {
+            background: #22c55e;
+            color: #fff;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Coupon Section Styles */
+        .coupon-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(249, 136, 34, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 25px 0;
+            transition: var(--transition);
+        }
+
+        .coupon-panel:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .coupon-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .coupon-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coupon-input {
+            flex: 1;
+            background: #111115 !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 10px !important;
+            padding: 10px 15px !important;
+            color: #fff !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .coupon-input:focus {
+            border-color: var(--primary-color) !important;
+        }
+
+        .apply-coupon-btn {
+            background: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .apply-coupon-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .available-coupons {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .coupon-chip {
+            background: rgba(249, 136, 34, 0.1);
+            border: 1px solid rgba(249, 136, 34, 0.2);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .coupon-chip:hover {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .coupon-success-msg {
+            color: #22c55e;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+            font-weight: 600;
+        }
+
         /* RIGHT INFO */
         .product-info { padding-top: 10px; position: sticky; top: 100px; align-self: start; }
         .brand-name { color: var(--primary-color); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
@@ -436,7 +564,13 @@
                 </div>
 
                 <div class="price-wrap" id="price-wrap-container">
-                    {% if product.discount_price %}
+                    {% if product.has_offer %}
+                    <span id="main-price">₹{{ product.display_price }}</span>
+                    <span class="discount" id="old-price">₹{{ product.price }}</span>
+                    <span id="savings-badge" style="color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;">
+                        Save ₹{{ savings|floatformat:0 }} 
+                    </span>
+                    {% elif product.discount_price %}
                     <span id="main-price">₹{{ product.discount_price }}</span>
                     <span class="discount" id="old-price">₹{{ product.price }}</span>
                     <span id="savings-badge" style="color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;">
@@ -448,22 +582,46 @@
                     <span id="savings-badge" style="display:none; color: #22c55e; font-size: 0.96rem; font-weight: 700; background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 6px; margin-left: 10px;"></span>
                     {% endif %}
                     
-                    {% if product.stock > 0 %}
-                    <span id="stock-badge" class="stock-label stock-in">In Stock ({{ product.stock }})</span>
-                    {% else %}
-                    <span id="stock-badge" class="stock-label stock-out">Out of Stock</span>
+                    {% if product.offer_badge_text %}
+                    <div style="margin-left: 10px;">
+                        <span class="offer-badge">
+                            <i class="fas fa-tag"></i> {{ product.offer_badge_text }}
+                        </span>
+                    </div>
                     {% endif %}
                 </div>
 
-                <div class="coupon-section" style="background: rgba(255,106,0,0.05); border: 1px dashed var(--primary-color); padding: 12px 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-tag" style="color: var(--primary-color); font-size: 1.2rem;"></i>
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;">Extra 10% Off</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Use code: <span style="color: var(--primary-color); font-weight: 800;">TIME10</span></div>
-                        </div>
+                <div class="stock-info" style="margin-bottom: 25px;">
+                    {% if product.stock > 0 %}
+                    <span class="stock-label stock-in"><i class="fas fa-check-circle"></i> In Stock ({{ product.stock }} units)</span>
+                    {% else %}
+                    <span class="stock-label stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                    {% endif %}
+                </div>
+
+                <!-- Coupon Section -->
+                <div class="coupon-panel">
+                    <div class="coupon-header">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Apply Coupon</span>
                     </div>
-                    <button onclick="navigator.clipboard.writeText('TIME10').then(() => { let orig = this.innerText; this.innerText = 'Copied!'; setTimeout(() => this.innerText = orig, 2000); })" style="background: var(--primary-color); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: 0.3s;">Copy</button>
+                    <div class="coupon-input-group">
+                        <input type="text" id="couponCode" class="coupon-input" placeholder="Enter Coupon Code" maxlength="50">
+                        <button class="apply-coupon-btn" onclick="applyCouponDetails()">Apply</button>
+                    </div>
+                    <div id="couponSuccess" class="coupon-success-msg">
+                        <i class="fas fa-check-circle"></i> Coupon Applied! Final price shown above.
+                    </div>
+                    
+                    {% if available_coupons %}
+                    <div class="available-coupons">
+                        {% for coupon in available_coupons %}
+                        <div class="coupon-chip" onclick="document.getElementById('couponCode').value='{{ coupon.code }}'; applyCouponDetails();">
+                            {{ coupon.code }} - {{ coupon.discount_percentage }}% OFF
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Highlights Section -->
@@ -1219,6 +1377,63 @@
             }
         });
 
+        let activeCoupon = null;
+
+        window.applyCouponDetails = function() {
+            const code = document.getElementById('couponCode').value.trim();
+            if (!code) {
+                showToast('Please enter a coupon code', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('.apply-coupon-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '...';
+            btn.disabled = true;
+
+            fetch("{% url 'validate_coupon_product' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    code: code,
+                    product_uuid: "{{ product.uuid }}"
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+                if (data.success) {
+                    activeCoupon = {
+                        code: code,
+                        discount_amount: parseFloat(data.discount_amount)
+                    };
+                    
+                    // Re-trigger price update with current price
+                    const mainPrice = parseFloat(document.getElementById('main-price').textContent.replace('₹', ''));
+                    const oldPrice = document.getElementById('old-price').textContent.replace('₹', '') || mainPrice;
+                    updatePriceUI(mainPrice, oldPrice);
+                    
+                    document.getElementById('couponSuccess').style.display = 'block';
+                    document.getElementById('couponSuccess').textContent = data.message;
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.error || 'Invalid coupon', 'error');
+                    document.getElementById('couponSuccess').style.display = 'none';
+                    activeCoupon = null;
+                }
+            })
+            .catch(err => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                showToast('Connection error', 'error');
+            });
+        };
+
         function updatePriceUI(newPrice, oldPrice) {
             const mainPriceEl = document.getElementById('main-price');
             const stickyPriceEl = document.getElementById('sticky-price');
@@ -1226,11 +1441,21 @@
             const stickyOldPriceEl = document.getElementById('sticky-old-price');
             const savingsBadge = document.getElementById('savings-badge');
 
-            if (mainPriceEl) mainPriceEl.textContent = '₹' + newPrice;
-            if (stickyPriceEl) stickyPriceEl.textContent = '₹' + newPrice;
+            let displayPrice = parseFloat(newPrice);
+            
+            // Apply active coupon discount if any
+            if (activeCoupon) {
+                // If it's a fixed discount from validation, we use it. 
+                // Note: Percentage coupons might need recalibration on variant change.
+                // For simplicity, we'll re-validate or just use the amount for now.
+                displayPrice = Math.max(0, displayPrice - activeCoupon.discount_amount);
+            }
+
+            if (mainPriceEl) mainPriceEl.textContent = '₹' + displayPrice.toFixed(2);
+            if (stickyPriceEl) stickyPriceEl.textContent = '₹' + displayPrice.toFixed(2);
 
             if (oldPrice && oldPrice !== newPrice) {
-                const savings = parseFloat(oldPrice) - parseFloat(newPrice);
+                const totalSavings = parseFloat(oldPrice) - displayPrice;
                 if (oldPriceEl) {
                     oldPriceEl.textContent = '₹' + oldPrice;
                     oldPriceEl.style.display = 'inline-block';
@@ -1239,8 +1464,8 @@
                     stickyOldPriceEl.textContent = '₹' + oldPrice;
                     stickyOldPriceEl.style.display = 'inline-block';
                 }
-                if (savingsBadge && savings > 0) {
-                    savingsBadge.textContent = `Save ₹${savings.toFixed(0)}`;
+                if (savingsBadge && totalSavings > 0) {
+                    savingsBadge.textContent = `Save ₹${totalSavings.toFixed(0)}`;
                     savingsBadge.style.display = 'inline-flex';
                 } else if (savingsBadge) {
                     savingsBadge.style.display = 'none';
@@ -1356,7 +1581,7 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    window.location.href = "{% url 'checkout_page' %}";
+                    window.location.href = "{% url 'checkout_page' %}?buy_now_id=" + data.item_id;
                 } else {
                     alert(data.error || 'Failed to process Buy Now');
                     btn.innerHTML = originalHtml;

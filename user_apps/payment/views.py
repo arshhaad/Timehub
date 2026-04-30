@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.views.decorators.cache import never_cache
 from django.db.models import Sum
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from user_apps.core.models import Order, OrderItem, CartItem, Wallet, WalletTransaction
 from .models import Payment
@@ -16,16 +17,44 @@ from admin_apps.offers.services import process_referrer_reward
 def payment_list(request):
     """Shows all payments made by the user and their cashback/wallet credits."""
     user = request.user
-    orders = Order.objects.filter(user=user).order_by('-created_at')
-    total_spent = orders.aggregate(total=Sum('total_amount'))['total'] or 0
+    orders_qs = Order.objects.filter(user=user).order_by('-created_at')
+    total_spent = orders_qs.aggregate(total=Sum('total_amount'))['total'] or 0
     wallet = Wallet.objects.filter(user=user).first()
-    transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-timestamp') if wallet else []
-    
+    total_cashback = WalletTransaction.objects.filter(
+        wallet=wallet, transaction_type='Credit'
+    ).aggregate(total=Sum('amount'))['total'] or 0 if wallet else 0
+    transactions_qs = WalletTransaction.objects.filter(wallet=wallet).order_by('-timestamp') if wallet else []
+
+    # Paginate orders (10 per page)
+    orders_paginator = Paginator(orders_qs, 10)
+    orders_page = request.GET.get('orders_page', 1)
+    try:
+        orders = orders_paginator.page(orders_page)
+    except PageNotAnInteger:
+        orders = orders_paginator.page(1)
+    except EmptyPage:
+        orders = orders_paginator.page(orders_paginator.num_pages)
+
+    # Paginate transactions (15 per page)
+    tx_paginator = Paginator(transactions_qs, 15)
+    tx_page = request.GET.get('tx_page', 1)
+    try:
+        transactions = tx_paginator.page(tx_page)
+    except PageNotAnInteger:
+        transactions = tx_paginator.page(1)
+    except EmptyPage:
+        transactions = tx_paginator.page(tx_paginator.num_pages)
+
     context = {
         'orders': orders,
+        'orders_paginator': orders_paginator,
         'total_spent': total_spent,
+        'total_cashback': total_cashback,
         'wallet': wallet,
         'transactions': transactions,
+        'tx_paginator': tx_paginator,
+        'total_orders_count': orders_qs.count(),
+        'total_tx_count': transactions_qs.count() if wallet else 0,
     }
     return render(request, 'payments/payment_list.html', context)
 
@@ -52,7 +81,7 @@ def start_payment(request, order_id):
         })
     except Exception as e:
         print(f"Razorpay Order Creation Error: {e}")
-        return redirect('order_detail', order_id=order.id)
+        return redirect('order_detail', order_uuid=order.uuid)
 
     payment = Payment.objects.create(
         order=order,
