@@ -220,11 +220,16 @@
 {% endblock %}
 
 {% block topbar_left %}
-<div class="topbar-title">Customer Intel Console</div>
-<div class="admin-nav-crumbs" style="margin-top: 2px;">
-    <a href="{% url 'user_list' %}">Directory</a>
-    <span class="sep"><i class="fas fa-chevron-right"></i></span>
-    <span class="curr">{{ customer.get_full_name|default:customer.email }}</span>
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'user_list' %}">Users</a>
+        <span class="sep"><i class="fas fa-chevron-right"></i></span>
+        <span class="curr">{{ customer.get_full_name|default:customer.email }}</span>
+    </div>
+    <form action="{% url 'user_list' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Search users..." value="{{ request.GET.q|default:'' }}">
+    </form>
 </div>
 {% endblock %}
 
@@ -245,7 +250,7 @@
                 </div>
             {% endif %}
             <div class="profile-names">
-                <h1>{% if customer.first_name %}{{ customer.first_name }} {{ customer.last_name }}{% else %}{{ customer.email }}{% endif %}</h1>
+                <h1>{{ customer.get_full_name|default:customer.email }}</h1>
                 <div class="profile-meta">
                     <span><i class="far fa-envelope"></i> {{ customer.email }}</span>
                     <span><i class="fas fa-phone"></i> {{ customer.phone_number|default:"No Contact" }}</span>
@@ -295,7 +300,7 @@
         <div class="stat-box">
             <span class="stat-label">Verification</span>
             <div class="stat-val" style="font-size: 1.1rem; padding-top: 10px;">
-                {% if customer.is_email_verified %}Verified Account{% else %}Unverified{% endif %}
+                {% if customer.is_active %}Verified Account{% else %}Unverified{% endif %}
             </div>
         </div>
     </div>
@@ -321,7 +326,7 @@
                         <tr>
                             <td style="font-weight: 700;">#ORD-{{ order.id|stringformat:"05d" }}</td>
                             <td>{{ order.created_at|date:"d M Y" }}</td>
-                            <td style="font-weight: 700;">₹{{ order.total_price }}</td>
+                            <td style="font-weight: 700;">₹{{ order.total_amount }}</td>
                             <td>
                                 <span class="badge-premium" style="background: #f1f5f9; color: #475569;">{{ order.status }}</span>
                             </td>
@@ -344,7 +349,7 @@
                 <div class="address-card">
                     <div class="address-info">
                         <h3>{{ address.full_name|default:"Primary Address" }}</h3>
-                        <p>{{ address.street_address }}<br>{{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+                        <p>{{ address.street }}<br>{{ address.city }}, {{ address.state }} - {{ address.postal_code }}</p>
                     </div>
                 </div>
                 {% empty %}

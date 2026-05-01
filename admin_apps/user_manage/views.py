@@ -117,6 +117,8 @@ def user_profiles(request, user_id):
     orders = customer.orders.all().prefetch_related('items__product').order_by('-created_at')
     total_spent = orders.aggregate(total=Sum('total_amount'))['total'] or 0
     addresses = Address.objects.filter(user=customer)
+    # Wallet fetching
+    wallet, _ = Wallet.objects.get_or_create(user=customer)
     
     # Notifications sent by admin
     notifications = customer.notifications.order_by('-created_at')[:5]
@@ -126,6 +128,7 @@ def user_profiles(request, user_id):
         'orders': orders,
         'total_spent': total_spent,
         'addresses': addresses,
+        'wallet': wallet,
         'wishlist': [],
         'notifications': notifications,
         'active_menu': 'users'
