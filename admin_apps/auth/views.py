@@ -72,25 +72,30 @@ def dashboard(request):
     orders_change = pct_change(last_30_orders, prev_30_orders)
 
     # --- Customers ---
-    total_customers = User.objects.filter(is_superuser=False, is_staff=False).count()
-    last_30_customers = User.objects.filter(is_superuser=False, is_staff=False, created_at__gte=last_30_start).count()
-    prev_30_customers = User.objects.filter(is_superuser=False, is_staff=False, created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
+    total_customers = User.objects.filter(is_superuser=False, is_staff=False, is_active=True).count()
+    last_30_customers = User.objects.filter(is_superuser=False, is_staff=False, is_active=True, created_at__gte=last_30_start).count()
+    prev_30_customers = User.objects.filter(is_superuser=False, is_staff=False, is_active=True, created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
     customers_change = pct_change(last_30_customers, prev_30_customers)
 
     # --- Products ---
-    total_products = Product.objects.count()
-    last_30_products = Product.objects.filter(created_at__gte=last_30_start).count()
-    prev_30_products = Product.objects.filter(created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
+    total_products = Product.objects.filter(is_deleted=False).count()
+    last_30_products = Product.objects.filter(is_deleted=False, created_at__gte=last_30_start).count()
+    prev_30_products = Product.objects.filter(is_deleted=False, created_at__gte=prev_30_start, created_at__lt=last_30_start).count()
     products_change = pct_change(last_30_products, prev_30_products)
 
     recent_orders = Order.objects.select_related('user').prefetch_related('items__product').order_by("-created_at")[:10]
 
-    # Top selling = products with most order items
-    top_selling = Product.objects.annotate(
+    # Top selling = products with most order items (Exclude deleted)
+    top_selling = Product.objects.filter(is_deleted=False).annotate(
         order_count=Count('orderitem')
     ).order_by('-order_count')[:4]
 
-    low_stock = Product.objects.filter(stock__lt=5).order_by("stock")[:5]
+    # Low Stock Alerts (Exclude deleted/inactive, threshold < 5)
+    low_stock = Product.objects.filter(
+        is_deleted=False, 
+        is_active=True, 
+        stock__lt=5
+    ).order_by("stock")[:5]
 
     # --- Chart Data (Revenue Trends) ---
     # Daily (Last 7 days)

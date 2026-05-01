@@ -4,10 +4,11 @@ from admin_apps.offers.models import ReferralOffer
 from user_apps.core.models import Wallet, WalletTransaction
 
 def process_referee_reward(user):
-    """Credit initial signup reward to the new user who joined using a referral code."""
+    """Credit rewards to both the new user AND the referrer immediately on signup."""
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
     if referral_offer and user.referred_by:
         with transaction.atomic():
+            # 1. Reward the New User (Referee)
             wallet, created = Wallet.objects.get_or_create(user=user)
             wallet.balance += referral_offer.referee_signup_reward
             wallet.save()
@@ -18,15 +19,25 @@ def process_referee_reward(user):
                 amount=referral_offer.referee_signup_reward,
                 description=f"Referral signup reward (Initial part) - Referred by {user.referred_by.email}"
             )
+
+            # 2. Reward the Referrer (Immediately on join)
+            referrer_wallet, _ = Wallet.objects.get_or_create(user=user.referred_by)
+            referrer_wallet.balance += referral_offer.referrer_reward
+            referrer_wallet.save()
+
+            WalletTransaction.objects.create(
+                wallet=referrer_wallet,
+                transaction_type='Credit',
+                amount=referral_offer.referrer_reward,
+                description=f"Referral reward: {user.email} joined using your code"
+            )
             return True
     return False
 
 def process_referrer_reward(referee):
-    """Credit rewards to both referrer and referee when the referee makes their first purchase."""
-    referrer = referee.referred_by
-    if not referrer:
-        return False
-        
+    """Credit remaining reward to the referee when they make their first purchase."""
+    # Referrer reward was already handled in process_referee_reward on join.
+    
     # Check if this is the referee's first PAID order
     from user_apps.core.models import Order
     paid_orders_count = Order.objects.filter(user=referee, is_paid=True).count()
@@ -36,19 +47,7 @@ def process_referrer_reward(referee):
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
     if referral_offer:
         with transaction.atomic():
-            # Reward Referrer
-            referrer_wallet, _ = Wallet.objects.get_or_create(user=referrer)
-            referrer_wallet.balance += referral_offer.referrer_reward
-            referrer_wallet.save()
-            
-            WalletTransaction.objects.create(
-                wallet=referrer_wallet,
-                transaction_type='Credit',
-                amount=referral_offer.referrer_reward,
-                description=f"Referral reward for {referee.email}'s first purchase"
-            )
-
-            # Reward Referee (Remaining part)
+            # Reward Referee (Remaining part for completing purchase)
             referee_wallet, _ = Wallet.objects.get_or_create(user=referee)
             referee_wallet.balance += referral_offer.referee_order_reward
             referee_wallet.save()

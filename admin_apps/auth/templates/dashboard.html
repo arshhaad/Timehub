@@ -622,13 +622,27 @@
             </div>
             <div class="item-list">
                 {% for alert in low_stock %}
-                <div class="alert-item">
+                <div class="list-item">
+                    <div class="item-img-placeholder">
+                        {% if alert.image %}
+                        <img src="{{ alert.image.url }}" alt="{{ alert.name }}"
+                            style="width:100%; height:100%; object-fit:cover;">
+                        {% endif %}
+                    </div>
                     <div class="item-info">
                         <div class="item-name">{{ alert.name }}</div>
-                        <div class="item-cat">SKU: {{ alert.id|stringformat:"04d" }}</div>
+                        <div class="item-cat">{{ alert.collection.name }}</div>
                     </div>
-                    <div class="alert-stock">
-                        <span class="alert-dot"></span> {{ alert.stock }} left
+                    <div class="item-stats">
+                        {% if alert.stock == 0 %}
+                        <span class="alert-stock" style="color: #dc2626; background-color: #fee2e2;">
+                            <span class="alert-dot" style="background-color: #dc2626;"></span> Out of Stock
+                        </span>
+                        {% else %}
+                        <span class="alert-stock">
+                            <span class="alert-dot"></span> {{ alert.stock }} left
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
                 {% empty %}
