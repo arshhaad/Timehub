@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from user_apps.core.models import Collection, Product, ProductImage, ProductVariant, Color
 from admin_apps.offers.models import ProductOffer, CategoryOffer, ReferralOffer, Coupon
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from PIL import Image, ImageOps
 import io
 
@@ -348,37 +350,56 @@ def product_list(request):
             
             collection = get_object_or_404(Collection, id=collection_id)
             
-            product = Product.objects.create(
-                name=name, collection=collection, price=price,
-                discount_price=discount_price,
-                stock=stock, description=description,
-                is_active=is_active,
-                brand=brand, gender=gender, occasion=occasion,
-                strap_material=strap_material, strap_color=strap_color,
-                dial_color=dial_color, function=function, features=features,
-            )
-            
-            if colors:
-                product.colors.set(colors)
-            
-            # Process up to 3 numbered image slots
-            for i in range(1, 4):
-                img_file = request.FILES.get(f"product_image_{i}")
-                if img_file:
-                    processed_file = process_product_image(img_file)
-                    if processed_file:
-                        is_main = (i == 1)
-                        img_obj = ProductImage.objects.create(
-                            product=product, image=processed_file, is_main=is_main
-                        )
-                        if is_main:
-                            product.image = img_obj.image
-                            product.save()
-            
-            # Save variants
-            _save_variants(product, request)
+            try:
+                with transaction.atomic():
+                    product = Product.objects.create(
+                        name=name, collection=collection, price=price,
+                        discount_price=discount_price,
+                        stock=stock, description=description,
+                        is_active=is_active,
+                        brand=brand, gender=gender, occasion=occasion,
+                        strap_material=strap_material, strap_color=strap_color,
+                        dial_color=dial_color, function=function, features=features,
+                    )
+                    
+                    if colors:
+                        product.colors.set(colors)
+                    
+                    # Process up to 3 numbered image slots
+                    for i in range(1, 4):
+                        img_file = request.FILES.get(f"product_image_{i}")
+                        if img_file:
+                            processed_file = process_product_image(img_file)
+                            if processed_file:
+                                is_main = (i == 1)
+                                img_obj = ProductImage.objects.create(
+                                    product=product, image=processed_file, is_main=is_main
+                                )
+                                if is_main:
+                                    product.image = img_obj.image
+                                    product.save()
+                    
+                    # Save variants
+                    _save_variants(product, request)
 
-            messages.success(request, f"Product '{name}' created successfully.")
+                    # Product is visible only if at least one variant is listed
+                    product.is_active = is_active and product.variants.filter(is_active=True).exists()
+                    product.save()
+
+                    # Mandatory Validation
+                    if not product.variants.filter(is_active=True).exists():
+                        raise ValidationError("Product must have at least one variant")
+                    if not product.images.exists():
+                        raise ValidationError("At least one image is required")
+
+                messages.success(request, f"Product '{name}' created successfully.")
+            except ValidationError as e:
+                messages.error(request, str(e.message))
+                return redirect("product_list")
+            except Exception as e:
+                messages.error(request, f"Error creating product: {str(e)}")
+                return redirect("product_list")
+                
             return redirect("product_list")
 
         elif action == "edit_product":
@@ -415,50 +436,69 @@ def product_list(request):
                 messages.error(request, "Invalid numeric values for price or stock.")
                 return redirect("product_list")
 
-            product.name = name
-            product.price = price
-            product.discount_price = discount_price
-            product.stock = stock
-            colors = request.POST.getlist("colors")
-            product.colors.set(colors)
-            product.collection = get_object_or_404(Collection, id=request.POST.get("collection_id"))
-            product.description = request.POST.get("description", "")
-            product.is_active = request.POST.get("is_active") == "on"
-            
-            # Extra fields
-            product.brand = request.POST.get("brand", product.brand)
-            product.gender = request.POST.get("gender", product.gender)
-            product.occasion = request.POST.get("occasion", product.occasion)
-            product.strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
-            product.strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
-            product.dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
-            product.function = request.POST.get("function", product.function)
-            product.features = request.POST.get("features", product.features)
-            product.save()
-            
-            # Process image updates
-            for i in range(1, 4):
-                img_file = request.FILES.get(f"product_image_{i}")
-                if img_file:
-                    processed_file = process_product_image(img_file)
-                    if processed_file:
-                        is_main = (i == 1)
-                        if is_main:
-                            # If new main image uploaded, sync with Product model
-                            ProductImage.objects.filter(product=product, is_main=True).update(is_main=False)
-                        
-                        img_obj = ProductImage.objects.create(
-                            product=product, image=processed_file, is_main=is_main
-                        )
+            try:
+                with transaction.atomic():
+                    product.name = name
+                    product.price = price
+                    product.discount_price = discount_price
+                    product.stock = stock
+                    colors = request.POST.getlist("colors")
+                    product.colors.set(colors)
+                    product.collection = get_object_or_404(Collection, id=request.POST.get("collection_id"))
+                    product.description = request.POST.get("description", "")
+                    product.is_active = request.POST.get("is_active") == "on"
+                    
+                    # Extra fields
+                    product.brand = request.POST.get("brand", product.brand)
+                    product.gender = request.POST.get("gender", product.gender)
+                    product.occasion = request.POST.get("occasion", product.occasion)
+                    product.strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
+                    product.strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
+                    product.dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
+                    product.function = request.POST.get("function", product.function)
+                    product.features = request.POST.get("features", product.features)
+                    product.save()
+                    
+                    # Process image updates
+                    for i in range(1, 4):
+                        img_file = request.FILES.get(f"product_image_{i}")
+                        if img_file:
+                            processed_file = process_product_image(img_file)
+                            if processed_file:
+                                is_main = (i == 1)
+                                if is_main:
+                                    # If new main image uploaded, sync with Product model
+                                    ProductImage.objects.filter(product=product, is_main=True).update(is_main=False)
+                                
+                                img_obj = ProductImage.objects.create(
+                                    product=product, image=processed_file, is_main=is_main
+                                )
 
-                        if is_main:
-                            product.image = img_obj.image
-                            product.save()
+                                if is_main:
+                                    product.image = img_obj.image
+                                    product.save()
 
-            # Save variants
-            _save_variants(product, request)
+                    # Save variants
+                    _save_variants(product, request)
 
-            messages.success(request, f"Product '{product.name}' updated successfully.")
+                    # Product is visible only if at least one variant is listed
+                    product.is_active = (request.POST.get("is_active") == "on") and product.variants.filter(is_active=True).exists()
+                    product.save()
+
+                    # Mandatory Validation
+                    if not product.variants.filter(is_active=True).exists():
+                        raise ValidationError("Product must have at least one variant")
+                    if not product.images.exists():
+                        raise ValidationError("At least one image is required")
+
+                messages.success(request, f"Product '{product.name}' updated successfully.")
+            except ValidationError as e:
+                messages.error(request, str(e.message))
+                return redirect("product_list")
+            except Exception as e:
+                messages.error(request, f"Error updating product: {str(e)}")
+                return redirect("product_list")
+                
             return redirect("product_list")
 
         elif action == "delete_product":

@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product, Wallet, WalletTransaction
+from user_apps.core.models import Cart, CartItem, Order, OrderItem, Product, Wallet, WalletTransaction, Review
 from admin_apps.offers.models import Coupon
 from user_apps.edit.models import Address
 from django.conf import settings
@@ -41,13 +41,39 @@ def get_cart_totals(cart):
     
     # Discount logic
     discount = Decimal('0')
-    if cart.coupon and cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
-        if cart.coupon.discount_type == 'percentage':
-            discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
-            if cart.coupon.max_discount_amount:
-                discount = min(discount, cart.coupon.max_discount_amount)
+    if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
+        # Determine items that are applicable for this coupon
+        if cart.coupon.applicable_collection:
+            applicable_items = [item for item in items if item.product.collection == cart.coupon.applicable_collection]
         else:
-            discount = cart.coupon.discount_value
+            applicable_items = list(items)
+
+        # Sort items by price descending to apply discount to most expensive items first if there's a count limit
+        applicable_items.sort(key=lambda x: (x.variant.display_price if x.variant else x.product.display_price), reverse=True)
+        
+        # If there's a limit on how many items can be discounted
+        if cart.coupon.max_items_count:
+            # We need to handle quantities. If one item has quantity 5 but limit is 2, only 2 get discounted.
+            discounted_subtotal = Decimal('0')
+            remaining_limit = cart.coupon.max_items_count
+            for item in applicable_items:
+                if remaining_limit <= 0: break
+                item_price = item.variant.display_price if item.variant else item.product.display_price
+                take_qty = min(item.quantity, remaining_limit)
+                discounted_subtotal += item_price * take_qty
+                remaining_limit -= take_qty
+            applicable_subtotal = discounted_subtotal
+        else:
+            applicable_subtotal = sum(item.total_price for item in applicable_items)
+
+        if applicable_subtotal >= cart.coupon.min_purchase_amount:
+            if cart.coupon.discount_type == 'percentage':
+                discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
+                if cart.coupon.max_discount_amount:
+                    discount = min(discount, cart.coupon.max_discount_amount)
+            else:
+                discount = min(cart.coupon.discount_value, applicable_subtotal)
+    
     # Referral First Order Discount
     referral_discount = get_referral_first_order_discount(cart.user, subtotal)
     discount += referral_discount
@@ -98,6 +124,17 @@ def checkout_page(request):
         messages.warning(request, 'Your cart is empty. Add items before checking out.')
         return redirect('cart_view')
 
+    # Availability Validation
+    for item in items:
+        # Check if product itself is active
+        if not item.product.is_active:
+            messages.error(request, f"Sorry, '{item.product.name}' is no longer available.")
+            return redirect('cart_view')
+        # Check if specific variant is active
+        if item.variant and not item.variant.is_active:
+            messages.error(request, f"Sorry, the selected variant for '{item.product.name}' is no longer available.")
+            return redirect('cart_view')
+
     subtotal = sum(item.total_price for item in items)
     total_quantity = sum(item.quantity for item in items)
     if subtotal == 0:
@@ -110,15 +147,27 @@ def checkout_page(request):
     tax = Decimal('0')
     discount = Decimal('0')
     if cart.coupon:
-        if cart.coupon.is_valid and subtotal >= cart.coupon.min_purchase_amount:
-            if cart.coupon.discount_type == 'percentage':
-                discount = (subtotal * cart.coupon.discount_value) / Decimal('100')
-                if cart.coupon.max_discount_amount:
-                    discount = min(discount, cart.coupon.max_discount_amount)
+        is_valid, _ = cart.coupon.is_valid_for_user(request.user)
+        if is_valid:
+            if cart.coupon.applicable_collection:
+                applicable_items = items.filter(product__collection=cart.coupon.applicable_collection)
+                applicable_subtotal = sum(item.total_price for item in applicable_items)
             else:
-                discount = cart.coupon.discount_value
+                applicable_subtotal = subtotal
+
+            if applicable_subtotal >= cart.coupon.min_purchase_amount:
+                if cart.coupon.discount_type == 'percentage':
+                    discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
+                    if cart.coupon.max_discount_amount:
+                        discount = min(discount, cart.coupon.max_discount_amount)
+                else:
+                    discount = min(cart.coupon.discount_value, applicable_subtotal)
+            else:
+                # Min amount not met
+                cart.coupon = None
+                cart.save()
         else:
-            # Coupon no longer valid or min amount not met
+            # Coupon no longer valid
             cart.coupon = None
             cart.save()
             
@@ -207,6 +256,11 @@ def checkout_page(request):
                 cart.coupon.save()
 
             for item in items:
+                # Double check availability during placement
+                if not item.product.is_active or (item.variant and not item.variant.is_active):
+                    messages.error(request, f"'{item.product.name}' is no longer available.")
+                    raise Exception("Item unavailable")
+
                 available_stock = item.variant.stock if item.variant else item.product.stock
                 if available_stock < item.quantity:
                     messages.error(request, f"Sorry, only {available_stock} units of {item.product.name} are available.")
@@ -315,11 +369,20 @@ def order_detail(request, order_uuid):
     if order.status in ['Pending', 'Processing', 'Shipped']:
         order.update_totals()
     
+    from user_apps.core.models import Review
+    reviewed_product_ids = set()
+    if request.user.is_authenticated:
+        reviewed_product_ids = set(Review.objects.filter(
+            user=request.user, 
+            product__in=[item.product for item in items]
+        ).values_list('product_id', flat=True))
+    
     from datetime import datetime
     return render(request, 'order_detail.html', {
         'order': order,
         'items': items,
         'address': address,
+        'reviewed_product_ids': reviewed_product_ids,
         'today': datetime.now()
     })
 
@@ -433,16 +496,44 @@ def return_order(request, order_uuid):
     order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
     
     if order.status == 'Delivered':
+        item_ids = request.POST.getlist('item_ids')
         reason = request.POST.get('reason')
+        
         if not reason:
             messages.error(request, 'Please provide a reason for the return.')
             return redirect('order_detail', order_uuid=order.uuid)
             
-        order.status = 'Return Requested'
-        order.return_status = 'Requested'
-        order.return_reason = reason
-        order.save()
-        messages.success(request, 'Return request submitted successfully.')
+        if not item_ids:
+            messages.error(request, 'Please select at least one item to return.')
+            return redirect('order_detail', order_uuid=order.uuid)
+
+        with transaction.atomic():
+            items_to_return = order.items.filter(id__in=item_ids, is_returned=False, is_cancelled=False)
+            if not items_to_return.exists():
+                messages.error(request, 'Selected items are not eligible for return.')
+                return redirect('order_detail', order_uuid=order.uuid)
+                
+            for item in items_to_return:
+                item.is_returned = True
+                item.return_reason = reason
+                item.save()
+            
+            # If all non-cancelled items are now returned, update order status
+            remaining_items = order.items.filter(is_cancelled=False, is_returned=False)
+            if not remaining_items.exists():
+                order.status = 'Return Requested'
+                order.return_status = 'Requested'
+                order.return_reason = reason
+                order.save()
+            else:
+                # Partial return logic: we could add a "Partially Returned" status if desired
+                # For now, we'll keep it as Return Requested but maybe mark the order differently
+                order.return_status = 'Requested'
+                if not order.return_reason:
+                    order.return_reason = f"Partial Return: {reason}"
+                order.save()
+                
+            messages.success(request, 'Return request for selected items submitted successfully.')
     else:
         messages.error(request, 'This order is not eligible for return.')
         
@@ -663,8 +754,29 @@ def apply_coupon(request):
     if not is_valid:
         return JsonResponse({'success': False, 'error': error_message})
         
-    if subtotal < coupon.min_purchase_amount:
-        return JsonResponse({'success': False, 'error': f'Minimum purchase of ₹{coupon.min_purchase_amount} required'})
+    # Determine items that are applicable for this coupon
+    if coupon.applicable_collection:
+        applicable_items_list = [item for item in items if item.product.collection == coupon.applicable_collection]
+    else:
+        applicable_items_list = list(items)
+
+    # Sort items by price descending
+    applicable_items_list.sort(key=lambda x: (x.variant.display_price if x.variant else x.product.display_price), reverse=True)
+    
+    if coupon.max_items_count:
+        applicable_subtotal = Decimal('0')
+        remaining_limit = coupon.max_items_count
+        for item in applicable_items_list:
+            if remaining_limit <= 0: break
+            item_price = item.variant.display_price if item.variant else item.product.display_price
+            take_qty = min(item.quantity, remaining_limit)
+            applicable_subtotal += item_price * take_qty
+            remaining_limit -= take_qty
+    else:
+        applicable_subtotal = sum(item.total_price for item in applicable_items_list)
+
+    if applicable_subtotal < coupon.min_purchase_amount:
+        return JsonResponse({'success': False, 'error': f'Minimum purchase of ₹{coupon.min_purchase_amount} required for matching items'})
         
     # Apply coupon to cart
     cart.coupon = coupon
@@ -680,11 +792,11 @@ def apply_coupon(request):
     
     discount = Decimal('0')
     if coupon.discount_type == 'percentage':
-        discount = (subtotal * coupon.discount_value) / Decimal('100')
+        discount = (applicable_subtotal * coupon.discount_value) / Decimal('100')
         if coupon.max_discount_amount:
             discount = min(discount, coupon.max_discount_amount)
     else:
-        discount = coupon.discount_value
+        discount = min(coupon.discount_value, applicable_subtotal)
         
     taxable = max(Decimal('0'), subtotal - discount)
     tax = round(taxable * TAX_RATE, 2)
@@ -733,6 +845,50 @@ def remove_coupon(request):
         'shipping': str(shipping),
         'total': str(total)
     })
+@login_required
+def submit_review(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        order_id = request.POST.get('order_id')
+        rating = request.POST.get('rating', 5)
+        comment = request.POST.get('comment', '').strip()
+        
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Verify that the user has actually bought and received this product
+        has_purchased = OrderItem.objects.filter(
+            order__user=request.user,
+            order__status='Delivered',
+            product=product
+        ).exists()
+        
+        if not has_purchased:
+            messages.error(request, "You can only review products you have purchased and received.")
+            return redirect('order_history')
+            
+        existing_review = Review.objects.filter(user=request.user, product=product).exists()
+        
+        if existing_review:
+            messages.error(request, "A user can submit only one review and rating per product.")
+        else:
+            Review.objects.create(
+                product=product,
+                user=request.user,
+                rating=int(rating),
+                comment=comment
+            )
+            messages.success(request, f"Thank you for reviewing {product.name}!")
+            
+        next_url = request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
+        elif order_id:
+            order = Order.objects.filter(id=order_id).first()
+            if order:
+                return redirect('order_detail', order_uuid=order.uuid)
+                
+    return redirect('order_history')
+
 @login_required
 @never_cache
 def available_coupons(request):

@@ -2,6 +2,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Coupon Management
+    path('coupons/', views.coupon_manage, name='coupon_manage'),
+    path('coupons/add/', views.add_coupon, name='add_coupon'),
+    path('coupons/<int:coupon_id>/edit/', views.edit_coupon, name='edit_coupon'),
+    path('coupons/<int:coupon_id>/delete/', views.delete_coupon, name='delete_coupon'),
+
     # General Offers (Product & Category)
     path('', views.offers_list, name='admin_offers_list'),
     path('product/add/', views.add_product_offer, name='add_product_offer'),
@@ -11,10 +17,4 @@ urlpatterns = [
     
     # Referral Settings
     path('referral/update/', views.update_referral_offer, name='update_referral_offer'),
-    
-    # Coupon Management
-    path('coupons/', views.coupon_manage, name='coupon_manage'),
-    path('coupons/add/', views.add_coupon, name='add_coupon'),
-    path('coupons/<int:coupon_id>/edit/', views.edit_coupon, name='edit_coupon'),
-    path('coupons/<int:coupon_id>/delete/', views.delete_coupon, name='delete_coupon'),
 ]

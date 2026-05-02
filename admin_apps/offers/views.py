@@ -172,6 +172,8 @@ def add_coupon(request):
                 valid_from=valid_from,
                 valid_to=valid_to,
                 usage_limit=usage_limit if usage_limit else None,
+                usage_limit_per_user=request.POST.get('usage_limit_per_user', 1),
+                max_items_count=request.POST.get('max_items_count') if request.POST.get('max_items_count') else None,
                 is_first_order_only=is_first_order,
                 is_referral_only=is_referral,
                 applicable_collection_id=collection_id if collection_id else None
@@ -200,6 +202,11 @@ def edit_coupon(request, coupon_id):
         
         usage_limit = request.POST.get('usage_limit')
         coupon.usage_limit = usage_limit if usage_limit else None
+        
+        coupon.usage_limit_per_user = request.POST.get('usage_limit_per_user', 1)
+        
+        max_items = request.POST.get('max_items_count')
+        coupon.max_items_count = max_items if max_items else None
         
         coupon.is_first_order_only = request.POST.get('is_first_order_only') == 'on'
         coupon.is_referral_only = request.POST.get('is_referral_only') == 'on'

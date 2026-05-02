@@ -129,7 +129,9 @@
                     <div class="meta-item"><i class="fas fa-shopping-bag"></i> Min purchase: ₹{{ coupon.min_purchase_amount }}</div>
                     {% if coupon.max_discount_amount %}<div class="meta-item"><i class="fas fa-arrow-down"></i> Max discount: ₹{{ coupon.max_discount_amount }}</div>{% endif %}
                     <div class="meta-item"><i class="fas fa-calendar-alt"></i> {{ coupon.valid_from|date:"M d" }} - {{ coupon.valid_to|date:"M d, Y" }}</div>
-                    <div class="meta-item"><i class="fas fa-users"></i> Usage: {{ coupon.used_count }} / {{ coupon.usage_limit|default:"∞" }}</div>
+                    <div class="meta-item"><i class="fas fa-users"></i> Total Usage: {{ coupon.used_count }} / {{ coupon.usage_limit|default:"∞" }}</div>
+                    <div class="meta-item"><i class="fas fa-user-tag"></i> Per User Limit: {{ coupon.usage_limit_per_user }}</div>
+                    <div class="meta-item"><i class="fas fa-layer-group"></i> Max Items: {{ coupon.max_items_count|default:"∞" }}</div>
                 </div>
             </div>
             <div class="coupon-footer">
@@ -147,6 +149,8 @@
                         '{{ coupon.valid_from|date:'Y-m-d\TH:i' }}',
                         '{{ coupon.valid_to|date:'Y-m-d\TH:i' }}',
                         '{{ coupon.usage_limit|default:'' }}',
+                        '{{ coupon.usage_limit_per_user }}',
+                        '{{ coupon.max_items_count|default:'' }}',
                         '{{ coupon.is_first_order_only|yesno:'true,false' }}',
                         '{{ coupon.is_referral_only|yesno:'true,false' }}',
                         '{{ coupon.applicable_collection.id|default:'' }}',
@@ -218,9 +222,19 @@
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
-                    <label>Usage Limit</label>
-                    <input type="number" name="usage_limit" id="f_limit" class="form-control" placeholder="Total uses">
+                    <label>Total Usage Limit</label>
+                    <input type="number" name="usage_limit" id="f_limit" class="form-control" placeholder="Total uses across all users">
                 </div>
+                <div class="form-group">
+                    <label>Limit Per User</label>
+                    <input type="number" name="usage_limit_per_user" id="f_user_limit" class="form-control" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Max Items Applicable</label>
+                    <input type="number" name="max_items_count" id="f_max_items" class="form-control" placeholder="Optional">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label>Target Collection</label>
                     <select name="applicable_collection" id="f_collection" class="form-control">
@@ -258,9 +272,9 @@
         document.body.style.overflow = 'hidden';
     }
 
-    function editCoupon(id, code, type, value, min, max, from, to, limit, first, referral, collection, active) {
+    function editCoupon(id, code, type, value, min, max, from, to, limit, user_limit, max_items, first, referral, collection, active) {
         document.getElementById('modalTitle').innerText = 'Edit Coupon';
-        document.getElementById('couponForm').action = `/adminpanel/coupons/${id}/edit/`;
+        document.getElementById('couponForm').action = `/adminpanel/offers/coupons/${id}/edit/`;
         document.getElementById('submitBtn').innerText = 'Update Coupon';
         document.getElementById('activeToggle').style.display = 'flex';
         
@@ -272,6 +286,8 @@
         document.getElementById('f_from').value = from;
         document.getElementById('f_to').value = to;
         document.getElementById('f_limit').value = limit;
+        document.getElementById('f_user_limit').value = user_limit;
+        document.getElementById('f_max_items').value = max_items;
         document.getElementById('f_first').checked = (first === 'true');
         document.getElementById('f_referral').checked = (referral === 'true');
         document.getElementById('f_collection').value = collection;

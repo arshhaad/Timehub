@@ -89,7 +89,29 @@ def order_detail(request, order_id):
         new_date = request.POST.get('scheduled_delivery_date')
         
         valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
+        
+        # Define allowed transitions
+        ALLOWED_TRANSITIONS = {
+            'Pending': ['Confirmed', 'Cancelled', 'Processing'],
+            'Confirmed': ['Shipped', 'Cancelled', 'Processing'],
+            'Processing': ['Shipped', 'Cancelled'],
+            'Shipped': ['Out for Delivery'],
+            'Out for Delivery': ['Delivered'],
+            'Delivered': ['Return Requested', 'Returned'],
+            'Return Requested': ['Returned', 'Delivered'], # Delivered if rejected
+            'Cancelled': [],
+            'Returned': [],
+        }
+
         if new_status in valid_statuses:
+            # Check if transition is allowed
+            current_status = order.status
+            if new_status != current_status:
+                allowed_next = ALLOWED_TRANSITIONS.get(current_status, [])
+                if new_status not in allowed_next:
+                    messages.error(request, f"Invalid transition: Cannot change status from {current_status} to {new_status}.")
+                    return redirect('admin_order_detail', order_id=order.id)
+
             # Traditional status logic
             if new_status == 'Returned' and order.status != 'Returned':
                 # This is a legacy transition, we now prefer return_status flow but keeping for safety
@@ -173,7 +195,29 @@ def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     new_status = request.POST.get('status')
     valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
+    
+    # Define allowed transitions
+    ALLOWED_TRANSITIONS = {
+        'Pending': ['Confirmed', 'Cancelled', 'Processing'],
+        'Confirmed': ['Shipped', 'Cancelled', 'Processing'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Out for Delivery'],
+        'Out for Delivery': ['Delivered'],
+        'Delivered': ['Return Requested', 'Returned'],
+        'Return Requested': ['Returned', 'Delivered'],
+        'Cancelled': [],
+        'Returned': [],
+    }
+
     if new_status in valid_statuses:
+        # Check if transition is allowed
+        current_status = order.status
+        if new_status != current_status:
+            allowed_next = ALLOWED_TRANSITIONS.get(current_status, [])
+            if new_status not in allowed_next:
+                messages.error(request, f"Invalid transition: Cannot change status from {current_status} to {new_status}.")
+                return redirect('admin_order_list')
+
         if new_status == 'Returned' and order.status != 'Returned':
             from django.utils import timezone
             order.refund_processed_at = timezone.now()

@@ -14,6 +14,8 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text="Total number of times this coupon can be used by all users")
+    usage_limit_per_user = models.PositiveIntegerField(default=1, help_text="How many times a single user can use this coupon")
+    max_items_count = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum number of items in a cart this coupon can apply to")
     used_count = models.PositiveIntegerField(default=0)
     is_first_order_only = models.BooleanField(default=False, help_text="Only for the user's very first order")
     is_referral_only = models.BooleanField(default=False, help_text="Only for users who joined via referral")
@@ -36,9 +38,14 @@ class Coupon(models.Model):
         if self.valid_to < now:
             return False, "This coupon has expired."
         if self.usage_limit is not None and self.used_count >= self.usage_limit:
-            return False, "This coupon has reached its usage limit."
+            return False, "This coupon has reached its total usage limit."
             
         if user and user.is_authenticated:
+            # Check per-user usage limit
+            user_usage_count = Order.objects.filter(user=user, coupon_code=self.code).exclude(status='Cancelled').count()
+            if user_usage_count >= self.usage_limit_per_user:
+                return False, f"You have already used this coupon {user_usage_count} times."
+
             # First order check (any non-cancelled order counts)
             if self.is_first_order_only:
                 if Order.objects.filter(user=user).exclude(status='Cancelled').exists():

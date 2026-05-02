@@ -92,3 +92,4 @@ class AddressForm(forms.ModelForm):
             if len(postal_code) < 4:
                 raise forms.ValidationError("Postal code must be at least 4 characters.")
         return postal_code
+        

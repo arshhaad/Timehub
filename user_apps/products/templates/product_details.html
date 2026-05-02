@@ -909,11 +909,47 @@
             </div>
             
             <div class="tab-content" id="tab-reviews">
-                <div style="text-align:center; padding: 40px 0;">
-                    <i class="far fa-star" style="font-size:3rem; color:var(--text-muted); padding-bottom:20px;"></i>
-                    <h3>Customer Reviews</h3>
-                    <p style="margin-top:10px;">Reviews are currently being consolidated. Please check back later.</p>
+                <div style="padding: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h3>Customer Reviews</h3>
+                        {% if can_review %}
+                        <button class="btn btn-primary" onclick="openReviewModal()" style="padding: 10px 20px; font-size: 0.9rem;">Write a Review</button>
+                        {% elif has_reviewed %}
+                        <span style="font-size: 0.85rem; color: var(--primary-color); font-weight: 700;"><i class="fas fa-check-circle"></i> You have reviewed this product</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if reviews %}
+                        <div style="display: grid; gap: 20px;">
+                            {% for review in reviews %}
+                            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <strong style="color: #fff;">{{ review.user.get_full_name|default:review.user.email }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">{{ review.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div style="color: var(--primary-color); margin-bottom: 10px; font-size: 0.9rem;">
+                                    {% with ''|center:5 as range %}
+                                    {% for _ in range %}
+                                        {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                        {% else %}
+                                        <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                <p style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">{{ review.comment }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="text-align:center; padding: 40px 0;">
+                            <i class="far fa-star" style="font-size:3rem; color:var(--text-muted); padding-bottom:20px;"></i>
+                            <p style="margin-top:10px;">No reviews yet. Be the first to review this product!</p>
+                        </div>
+                    {% endif %}
                 </div>
+            </div>
         <!-- Related Products Section -->
         <section class="related-section" style="padding-top: 80px; border-top: 1px solid var(--border-color); margin-top: 60px;">
             <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px;">
@@ -1629,6 +1665,55 @@
                 {% endfor %}
             {% endif %}
         });
+    </script>
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background: var(--bg-card); width: 90%; max-width: 500px; border-radius: var(--radius-lg); padding: 30px; border: 1px solid var(--border-color); position: relative;">
+            <button onclick="closeReviewModal()" style="position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: var(--transition);"><i class="fas fa-times"></i></button>
+            <h3 style="margin-bottom: 20px; color: #fff; font-family: 'Outfit', sans-serif;">Write a Review</h3>
+            
+            <form action="{% url 'submit_review' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 600;">Rating</label>
+                    <div class="star-rating" style="color: var(--text-muted); font-size: 1.8rem; cursor: pointer; display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px;">
+                        <input type="radio" name="rating" id="star5" value="5" style="display:none;" required><label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star4" value="4" style="display:none;"><label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star3" value="3" style="display:none;"><label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star2" value="2" style="display:none;"><label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" id="star1" value="1" style="display:none;"><label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-muted); font-weight: 600;">Comment</label>
+                    <textarea name="comment" rows="4" style="width: 100%; background: #111115; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; color: #fff; outline: none; resize: none; transition: var(--transition);" required placeholder="What did you like or dislike about this product?"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">Submit Review</button>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .star-rating label { cursor: pointer; transition: color 0.2s; }
+        .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: var(--primary-color); }
+        textarea:focus { border-color: var(--primary-color) !important; }
+    </style>
+    
+    <script>
+        function openReviewModal() { document.getElementById('reviewModal').style.display = 'flex'; }
+        function closeReviewModal() { document.getElementById('reviewModal').style.display = 'none'; }
+        
+        // Close modal on clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('reviewModal')) {
+                closeReviewModal();
+            }
+        }
     </script>
 </body>
 </html>

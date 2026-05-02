@@ -256,8 +256,8 @@ display:inline-flex; align-items:center; gap:6px; }
                 <div class="card-title"><i class="fas fa-box-open"></i> Order Items</div>
                 <span style="font-size:.8rem; color:var(--text-muted); font-weight:600;">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
             </div>
-            <div class="card-body">
-                <table class="items-table">
+            <div class="card-body" style="overflow-x: auto;">
+                <table class="items-table" style="min-width: 500px;">
                     <thead>
                         <tr>
                             <th style="width:40%;">Product</th>

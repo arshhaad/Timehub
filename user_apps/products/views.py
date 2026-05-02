@@ -325,6 +325,9 @@ def product_details(request, product_uuid):
             materials.append(m_name)
             seen_material.add(m_name.lower())
 
+    # Add reviews
+    reviews = product.reviews.all().order_by('-created_at')
+    
     context = {
         'product': product,
         'images': images,
@@ -336,14 +339,28 @@ def product_details(request, product_uuid):
         'strap_colors': strap_colors,
         'dial_colors': dial_colors,
         'materials': materials,
+        'reviews': reviews,
     }
 
-    # Add wishlist status
+    # Add wishlist status and review permission
     if request.user.is_authenticated:
-        from user_apps.core.models import WishlistItem
+        from user_apps.core.models import WishlistItem, OrderItem
         from admin_apps.offers.models import Coupon
+        
         is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
         context['is_in_wishlist'] = is_in_wishlist
+        
+        can_review = OrderItem.objects.filter(
+            order__user=request.user,
+            order__status='Delivered',
+            product=product
+        ).exists()
+        
+        has_reviewed = product.reviews.filter(user=request.user).exists()
+        
+        context['can_review'] = can_review and not has_reviewed
+        context['has_reviewed'] = has_reviewed
+
         
         # Get active coupons for display
         active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=timezone.now(), valid_to__gte=timezone.now())

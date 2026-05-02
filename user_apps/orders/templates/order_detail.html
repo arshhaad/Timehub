@@ -358,10 +358,15 @@
                 <div class="card-title"><i class="fas fa-shopping-bag"></i> Order Items</div>
                 <span style="font-size:.8rem; color:var(--text-muted); font-weight:600;">{{ items.count }} item{{ items.count|pluralize }}</span>
             </div>
-            <div class="card-body">
-                <table class="items-table">
+            <div class="card-body" style="overflow-x: auto;">
+                <table class="items-table" style="min-width: 500px;">
                     <thead>
                         <tr>
+                            {% if order.status == 'Delivered' and order.return_status == 'None' %}
+                            <th style="width:40px;">
+                                <input type="checkbox" id="selectAllItems" onclick="toggleSelectAll(this)">
+                            </th>
+                            {% endif %}
                             <th style="width:50%;">Product</th>
                             <th style="text-align:center;">Qty</th>
                             <th style="text-align:right;">Total</th>
@@ -370,7 +375,14 @@
                     </thead>
                     <tbody>
                         {% for item in items %}
-                        <tr>
+                        <tr class="item-row" data-item-id="{{ item.id }}" data-item-name="{{ item.product.name }}">
+                            {% if order.status == 'Delivered' and order.return_status == 'None' %}
+                            <td>
+                                {% if not item.is_returned and not item.is_cancelled %}
+                                <input type="checkbox" name="selected_items" value="{{ item.id }}" class="item-checkbox" onchange="updateReturnButton()">
+                                {% endif %}
+                            </td>
+                            {% endif %}
                             <td>
                                 <div class="item-product">
                                     <div class="item-thumb">
@@ -392,11 +404,23 @@
                                 <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">₹{{ item.price|floatformat:2 }} each</div>
                             </td>
                             <td style="text-align:right;">
-                                {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
-                                <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
-                                {% elif item.is_cancelled %}
-                                <span class="status-badge s-Cancelled" style="font-size: 0.65rem; padding: 2px 8px;">Cancelled</span>
-                                {% endif %}
+                                <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                                    {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
+                                    <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
+                                    {% elif item.is_cancelled %}
+                                    <span class="status-badge s-Cancelled" style="font-size: 0.65rem; padding: 2px 8px;">Cancelled</span>
+                                    {% elif item.is_returned %}
+                                    <span class="status-badge s-Returned" style="font-size: 0.65rem; padding: 2px 8px;">Returned</span>
+                                    {% elif order.status == 'Delivered' %}
+                                        {% if item.product.id in reviewed_product_ids %}
+                                            <span style="font-size: 0.75rem; color: var(--primary-color); font-weight: 700; padding: 6px 12px;"><i class="fas fa-check-circle"></i> Reviewed</span>
+                                        {% else %}
+                                            <button class="btn-action btn-primary-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openReviewModal('{{ item.product.id }}', '{{ item.product.name|escapejs }}')">
+                                                <i class="fas fa-star"></i> Rate & Review
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -472,8 +496,8 @@
                                     <i class="fas fa-ban"></i> Cancel Order
                                 </button>
                             {% elif order.status == 'Delivered' and order.return_status == 'None' %}
-                                <button class="btn-action btn-primary-alt" onclick="openReturnModal()" style="border-radius: 10px; padding: 16px; width: 100%;">
-                                    <i class="fas fa-undo"></i> Request Order Return
+                                <button id="returnSelectedBtn" class="btn-action btn-primary-alt" onclick="openReturnModal()" style="border-radius: 10px; padding: 16px; width: 100%; opacity: 0.5; pointer-events: none;">
+                                    <i class="fas fa-undo"></i> Select Items to Return
                                 </button>
                             {% elif order.status == 'Return Requested' or order.status == 'Returned' or order.return_status != 'None' %}
                                 <div class="btn-action" style="border-radius: 10px; padding: 16px; width: 100%; background: rgba(255, 170, 0, 0.05); border: 1px dashed rgba(255, 170, 0, 0.3); color: #ffaa00; cursor: default;">
@@ -600,13 +624,51 @@
             <h3>Return Order</h3>
             <p>Provide a reason for return. Our specialized team will review and contact you within 24 hours.</p>
         </div>
-        <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST">
+        <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST" id="returnForm">
             {% csrf_token %}
+            <div id="selectedItemsContainer"></div>
             <span class="modal-label">Detailed Return Reason</span>
-            <textarea name="reason" placeholder="Describe the issue in detail..." rows="3" required></textarea>
+            <textarea name="reason" placeholder="Describe why you are returning these items..." rows="3" required></textarea>
             <div class="btn-group">
                 <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Cancel</button>
-                <button type="submit" class="btn-action btn-primary-alt">Submit Request</button>
+                <button type="submit" class="btn-action btn-primary-alt">Submit Return Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="reviewModal">
+    <div class="modal-box">
+        <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
+        <div class="modal-brand">
+            <div class="modal-brand-icon">T</div>
+            <span class="modal-brand-name">TimeHub Feedback</span>
+        </div>
+        <div class="modal-header">
+            <h3>Rate & Review</h3>
+            <p id="reviewProductName">Product Name</p>
+        </div>
+        <form id="reviewForm" method="POST" action="{% url 'submit_review' %}">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" id="reviewProductId">
+            <input type="hidden" name="order_id" value="{{ order.id }}">
+            
+            <span class="modal-label">Your Rating</span>
+            <div style="display: flex; gap: 10px; margin: 15px 0; font-size: 1.5rem; color: #fbbf24; cursor: pointer;">
+                <input type="hidden" name="rating" id="ratingValue" value="5">
+                <i class="fas fa-star rating-star" data-value="1" onclick="setRating(1)"></i>
+                <i class="fas fa-star rating-star" data-value="2" onclick="setRating(2)"></i>
+                <i class="fas fa-star rating-star" data-value="3" onclick="setRating(3)"></i>
+                <i class="fas fa-star rating-star" data-value="4" onclick="setRating(4)"></i>
+                <i class="fas fa-star rating-star" data-value="5" onclick="setRating(5)"></i>
+            </div>
+            
+            <span class="modal-label">Your Review</span>
+            <textarea name="comment" placeholder="Tell us about your experience..." rows="4" required></textarea>
+            
+            <div class="btn-group">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Cancel</button>
+                <button type="submit" class="btn-action btn-primary-alt">Post Review</button>
             </div>
         </form>
     </div>
@@ -663,7 +725,64 @@
         document.getElementById('cancelItemModal').classList.add('active');
     }
     function openRescheduleModal() { document.getElementById('rescheduleModal').classList.add('active'); }
-    function openReturnModal() { document.getElementById('returnModal').classList.add('active'); }
+    
+    function openReturnModal() { 
+        const selected = document.querySelectorAll('.item-checkbox:checked');
+        const container = document.getElementById('selectedItemsContainer');
+        container.innerHTML = '';
+        
+        selected.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'item_ids';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+        
+        document.getElementById('returnModal').classList.add('active'); 
+    }
+
+    function openReviewModal(productId, productName) {
+        document.getElementById('reviewProductId').value = productId;
+        document.getElementById('reviewProductName').textContent = productName;
+        document.getElementById('reviewModal').classList.add('active');
+        setRating(5);
+    }
+
+    function setRating(val) {
+        document.getElementById('ratingValue').value = val;
+        document.querySelectorAll('.rating-star').forEach(star => {
+            if (parseInt(star.dataset.value) <= val) {
+                star.classList.remove('fa-regular');
+                star.classList.add('fas');
+            } else {
+                star.classList.remove('fas');
+                star.classList.add('fa-regular');
+            }
+        });
+    }
+
+    function toggleSelectAll(masterCb) {
+        document.querySelectorAll('.item-checkbox').forEach(cb => {
+            cb.checked = masterCb.checked;
+        });
+        updateReturnButton();
+    }
+
+    function updateReturnButton() {
+        const selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
+        const btn = document.getElementById('returnSelectedBtn');
+        if (selectedCount > 0) {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            btn.innerHTML = `<i class="fas fa-undo"></i> Return ${selectedCount} Selected Item${selectedCount > 1 ? 's' : ''}`;
+        } else {
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+            btn.innerHTML = `<i class="fas fa-undo"></i> Select Items to Return`;
+        }
+    }
+
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
     
     window.onclick = function(event) {
