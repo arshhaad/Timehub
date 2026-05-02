@@ -5,7 +5,6 @@ from user_apps.core.models import Product
 # Create your views here.
 
 # landing page
-@never_cache
 def landing_view(request):
     if request.user.is_authenticated:
         return redirect("home")
@@ -43,5 +42,6 @@ def home_view(request):
         
     return render(request, 'core/home.html', context)
 
+@never_cache
 def about_view(request):
     return render(request, 'core/about.html')
