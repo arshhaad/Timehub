@@ -25,19 +25,22 @@
     .card-title i { color: var(--primary-color); font-size: .9rem; }
     .card-body { padding: 24px; }
 
-    /* Items Table */
-    .items-table { width:100%; border-collapse:collapse; }
-    .items-table th { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); padding:0 0 14px; border-bottom:1px solid var(--border-color); text-align: left; }
-    .items-table th:last-child { text-align:right; }
-    .items-table td { padding:16px 0; border-bottom:1px solid var(--border-color); vertical-align:middle; font-size:.875rem; color: #fff; }
-    .items-table tbody tr:last-child td { border-bottom:none; }
-    
-    .item-product { display:flex; align-items:center; gap:14px; }
-    .item-thumb { width:52px; height:52px; border-radius:10px; background:rgba(255,255,255,0.03); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:1.2rem; border:1px solid var(--border-color); }
-    .item-name { font-weight:700; font-size:.875rem; display:block; color: #fff; }
-    .item-meta { font-size:.8rem; color:var(--text-muted); margin-top:2px; display:block; }
-    .item-price { font-weight:700; text-align:right; }
-    .item-total { font-weight:800; text-align:right; }
+    /* Items Table Styles */
+    .items-table { width: 100%; border-collapse: collapse; }
+    .items-table th { padding: 16px 20px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-color); text-align: left; }
+    .item-row { border-bottom: 1px solid var(--border-color); transition: background 0.3s ease; }
+    .item-row:hover { background: rgba(255,255,255,0.01); }
+    .item-product { display: flex; align-items: center; gap: 16px; }
+    .item-thumb { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.03); flex-shrink: 0; border: 1px solid var(--border-color); }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .item-name { display: block; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .item-meta { display: block; font-size: 0.8rem; color: var(--text-muted); }
+    .mobile-label { display: none; }
+
+    /* Action Buttons Small Version */
+    .btn-sm { padding: 6px 14px !important; font-size: 0.7rem !important; border-radius: 8px !important; width: auto !important; flex: none !important; }
+    .action-flex-container { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+    .reviewed-badge { font-size: 0.7rem; color: var(--primary-color); font-weight: 700; }
 
     /* Summary */
     .summary-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:.875rem; }
@@ -67,7 +70,6 @@
     .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
     .s-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
     .s-Cancelled, .s-Returned { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-    .s-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
 
     /* Action Buttons */
     .btn-group { display: flex; gap: 12px; margin-top: 24px; }
@@ -79,486 +81,279 @@
     .btn-danger-alt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
     .btn-danger-alt:hover { background: #ef4444; color: #fff; }
 
-    /* Modals - Adapted for Base User */
     /* Pro-Style Modals */
-    .modal-overlay { 
-        display: none; 
-        position: fixed; 
-        inset: 0; 
-        background: rgba(0, 0, 0, 0.7); 
-        backdrop-filter: blur(12px); 
-        z-index: 2000; 
-        align-items: center; 
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
     .modal-overlay.active { display: flex; opacity: 1; }
-    
-    .modal-box { 
-        background: #111; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        border-radius: 28px; 
-        padding: 40px; 
-        width: 90%; 
-        max-width: 480px; 
-        box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05); 
-        transform: scale(0.95) translateY(20px);
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        position: relative;
-    }
+    .modal-box { background: #111; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; padding: 40px; width: 90%; max-width: 480px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); transform: scale(0.95) translateY(20px); transition: all 0.4s; position: relative; }
     .modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
-    
-    .modal-close-btn {
-        position: absolute;
-        top: 32px;
-        right: 32px;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,0.03);
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid rgba(255,255,255,0.05);
-        z-index: 10;
-    }
-    .modal-close-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: rotate(90deg); }
-
-    .modal-brand {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 24px;
-        opacity: 0.8;
-    }
-    .modal-brand-icon {
-        width: 22px;
-        height: 22px;
-        background: var(--primary-color);
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #000;
-        font-weight: 800;
-        font-size: 0.7rem;
-    }
-    .modal-brand-name {
-        font-family: 'Outfit', sans-serif;
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: #fff;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-
-    .modal-header { margin-bottom: 24px; }
-    .modal-box h3 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .modal-box p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
-
-    .modal-box textarea, .modal-box input { 
-        width: 100%; 
-        background: rgba(255,255,255,0.02); 
-        border: 1px solid rgba(255,255,255,0.1); 
-        border-radius: 16px; 
-        padding: 18px; 
-        color: #fff; 
-        margin: 10px 0 20px 0; 
-        font-family: inherit; 
-        resize: none; 
-        outline: none; 
-        transition: all 0.3s;
-        box-sizing: border-box;
-    }
-    .modal-box textarea:focus, .modal-box input:focus { 
-        border-color: var(--primary-color); 
-        background: rgba(255, 106, 0, 0.05);
-        box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.15);
-    }
-    
+    .modal-close-btn { position: absolute; top: 24px; right: 24px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); color: var(--text-muted); cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
     .modal-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 20px; }
+    .modal-header h3 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 800; color: #fff; }
+    .modal-header p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
 
     /* Info Grid */
     .info-item label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); display:block; margin-bottom:4px; }
     .info-item p { font-size:.9rem; font-weight:600; color:#fff; }
 
-    @media (max-width: 1100px) { .detail-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 992px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 768px) {
-        .page-header { flex-direction: column; align-items: flex-start; }
-        .stepper { flex-direction: column; gap: 20px; align-items: flex-start; padding: 30px; }
+        .stepper { flex-direction: column; gap: 24px; align-items: flex-start; }
         .stepper-item { flex-direction: row; text-align: left; gap: 16px; width: 100%; }
-        .stepper-item:not(:last-child)::after { top: 40px; left: 20px; right: auto; bottom: -24px; width: 2px; height: auto; }
+        .stepper-item:not(:last-child)::after { top: 38px; left: 19px; right: auto; bottom: -28px; width: 2px; height: auto; }
         .stepper-icon { margin-bottom: 0; }
-        .stepper-desc { margin: 0; max-width: none; }
+    }
+
+    @media (max-width: 600px) {
+        .items-table { display: block; }
+        .desktop-only-thead { display: none; }
+        .items-table tbody { display: block; }
+        .item-row { display: block; padding: 16px; }
+        .item-row td { display: block; padding: 0 !important; border: none; text-align: left !important; margin-bottom: 12px; }
+        .mobile-label { display: inline-block; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; width: 80px; text-transform: uppercase; }
+        .action-flex-container { justify-content: flex-start; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-
     <a href="{% url 'order_history' %}" class="back-link">
-    <i class="fas fa-arrow-left"></i> Back to Orders
-</a>
+        <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
 
-<div class="page-header">
-    <div>
-        <h1>Order #{{ order.id|stringformat:"05d" }}</h1>
-        <p>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
-    </div>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
-            <i class="fas fa-location-dot"></i> Track Order
-        </a>
-        <a href="{% url 'download_invoice' order_uuid=order.uuid %}" target="_blank" class="btn-action btn-primary-alt">
-            <i class="fas fa-file-invoice"></i> Download Invoice
-        </a>
-    </div>
-</div>
-
-<!-- Stepper Container -->
-{% if order.status == 'Cancelled' %}
-<div class="card" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-    <div class="card-body" style="text-align: center; padding: 40px;">
-        <div class="stepper-icon" style="margin: 0 auto 16px; background: #ef4444; color: #fff; border:none; width: 50px; height: 50px; font-size: 1.2rem;">
-            <i class="fas fa-times"></i>
-        </div>
-        <h2 style="color: #ef4444; margin-bottom: 8px;">Order Cancelled</h2>
-        {% if order.cancel_reason %}<p style="color: var(--text-muted);">Reason: {{ order.cancel_reason }}</p>{% endif %}
-    </div>
-</div>
-{% elif order.status == 'Return Requested' or order.status == 'Returned' %}
-<div class="stepper">
-    <!-- Step 1: Return Requested -->
-    <div class="stepper-item {% if order.return_status != 'None' %}done{% else %}current{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-undo"></i></div>
+    <div class="page-header">
         <div>
+            <h1>Order #{{ order.id|stringformat:"05d" }}</h1>
+            <p>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
+                <i class="fas fa-location-dot"></i> Track Order
+            </a>
+            <a href="{% url 'download_invoice' order_uuid=order.uuid %}" target="_blank" class="btn-action btn-primary-alt">
+                <i class="fas fa-file-invoice"></i> Download Invoice
+            </a>
+        </div>
+    </div>
+
+    <!-- Stepper -->
+    {% if order.status == 'Cancelled' %}
+    <div class="card" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+        <div class="card-body" style="text-align: center; padding: 40px;">
+            <div class="stepper-icon" style="margin: 0 auto 16px; background: #ef4444; color: #fff; border:none; width: 50px; height: 50px; font-size: 1.2rem;">
+                <i class="fas fa-times"></i>
+            </div>
+            <h2 style="color: #ef4444; margin-bottom: 8px;">Order Cancelled</h2>
+            {% if order.cancel_reason %}<p style="color: var(--text-muted);">Reason: {{ order.cancel_reason }}</p>{% endif %}
+        </div>
+    </div>
+    {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
+    <div class="stepper">
+        <div class="stepper-item {% if order.return_status != 'None' %}done{% else %}current{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-undo"></i></div>
             <div class="stepper-label">Return Requested</div>
-            <div class="stepper-desc">Request received</div>
         </div>
-    </div>
-    <!-- Step 2: Return Processing -->
-    <div class="stepper-item 
-        {% if order.return_status == 'Requested' %}current
-        {% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-cog"></i></div>
-        <div>
-            <div class="stepper-label">Return Processing</div>
-            <div class="stepper-desc">Verifying items</div>
-        </div>
-    </div>
-    <!-- Step 3: Pick Up Scheduled -->
-    <div class="stepper-item 
-        {% if order.return_status == 'Processing' %}current
-        {% elif order.return_status in 'Pickup Scheduled,Returned' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
-        <div>
-            <div class="stepper-label">Pickup Scheduled</div>
-            <div class="stepper-desc">Agent will contact you</div>
-        </div>
-    </div>
-    <!-- Step 4: Product Returned -->
-    <div class="stepper-item 
-        {% if order.return_status == 'Pickup Scheduled' %}current
-        {% elif order.return_status == 'Returned' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
-        <div>
-            <div class="stepper-label">Product Returned</div>
-            <div class="stepper-desc">Return complete</div>
-        </div>
-    </div>
-</div>
-{% if order.return_reason %}
-<div class="card" style="border-width: 1px; border-color: var(--border-color); background: rgba(255, 255, 255, 0.02); margin-bottom: 24px;">
-    <div class="card-body" style="padding: 16px 24px;">
-        <p style="color: #fff; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; display:flex; align-items:center; gap:8px;">
-            <i class="fas fa-info-circle" style="color: var(--primary-color);"></i> Return Reason
-        </p>
-        <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.9rem; line-height: 1.5;">{{ order.return_reason }}</p>
-    </div>
-</div>
-{% endif %}
-{% else %}
-<div class="stepper">
-    <!-- Step 1: Pending -->
-    <div class="stepper-item {% if order.status == 'Pending' %}current{% else %}done{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-receipt"></i></div>
-        <div>
-            <div class="stepper-label">Pending</div>
-            <div class="stepper-desc">Awaiting confirmation</div>
-        </div>
-    </div>
-    <!-- Step 2: Processing -->
-    <div class="stepper-item 
-        {% if order.status == 'Processing' %}current
-        {% elif order.status in 'Shipped,Out for Delivery,Delivered' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-box-archive"></i></div>
-        <div>
+        <div class="stepper-item {% if order.return_status == 'Requested' %}current{% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-cog"></i></div>
             <div class="stepper-label">Processing</div>
-            <div class="stepper-desc">Packing your items</div>
+        </div>
+        <div class="stepper-item {% if order.return_status == 'Processing' %}current{% elif order.return_status in 'Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stepper-label">Pickup Scheduled</div>
+        </div>
+        <div class="stepper-item {% if order.return_status == 'Pickup Scheduled' %}current{% elif order.return_status == 'Returned' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
+            <div class="stepper-label">Returned</div>
         </div>
     </div>
-    <!-- Step 3: Shipped -->
-    <div class="stepper-item 
-        {% if order.status == 'Shipped' %}current
-        {% elif order.status in 'Out for Delivery,Delivered' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-truck-fast"></i></div>
-        <div>
+    {% else %}
+    <div class="stepper">
+        <div class="stepper-item {% if order.status == 'Pending' %}current{% else %}done{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-receipt"></i></div>
+            <div class="stepper-label">Pending</div>
+        </div>
+        <div class="stepper-item {% if order.status == 'Processing' %}current{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-box-archive"></i></div>
+            <div class="stepper-label">Processing</div>
+        </div>
+        <div class="stepper-item {% if order.status == 'Shipped' %}current{% elif order.status in 'Out for Delivery,Delivered' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-truck-fast"></i></div>
             <div class="stepper-label">Shipped</div>
-            <div class="stepper-desc">On its way</div>
         </div>
-    </div>
-    <!-- Step 4: Out for Delivery -->
-    <div class="stepper-item 
-        {% if order.status == 'Out for Delivery' %}current
-        {% elif order.status == 'Delivered' %}done
-        {% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-truck-ramp-box"></i></div>
-        <div>
+        <div class="stepper-item {% if order.status == 'Out for Delivery' %}current{% elif order.status == 'Delivered' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-truck-ramp-box"></i></div>
             <div class="stepper-label">Out for Delivery</div>
-            <div class="stepper-desc">
-                Arriving today<br>
-                {% if order.scheduled_delivery_date %}
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Est. {{ order.scheduled_delivery_date|date:"b d, Y" }}</span>
-                {% endif %}
-            </div>
         </div>
-    </div>
-    <!-- Step 5: Delivered -->
-    <div class="stepper-item {% if order.status == 'Delivered' %}done{% else %}pending{% endif %}">
-        <div class="stepper-icon"><i class="fas fa-circle-check"></i></div>
-        <div>
+        <div class="stepper-item {% if order.status == 'Delivered' %}done{% else %}pending{% endif %}">
+            <div class="stepper-icon"><i class="fas fa-circle-check"></i></div>
             <div class="stepper-label">Delivered</div>
-            <div class="stepper-desc">
-                Order completed<br>
-                {% if order.scheduled_delivery_date %}
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">by {{ order.scheduled_delivery_date|date:"b d, Y" }}</span>
-                {% endif %}
-            </div>
         </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-<div class="detail-grid">
-    <!-- LEFT COLUMN -->
-    <div>
-        <!-- Order Items -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title"><i class="fas fa-shopping-bag"></i> Order Items</div>
-                <span style="font-size:.8rem; color:var(--text-muted); font-weight:600;">{{ items.count }} item{{ items.count|pluralize }}</span>
+    <div class="detail-grid">
+        <!-- LEFT COLUMN -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Order Items -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-shopping-bag"></i> Order Items</div>
+                    <span style="font-size:.8rem; color:var(--text-muted); font-weight:600;">{{ items.count }} item{{ items.count|pluralize }}</span>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="table-responsive-wrapper">
+                        <table class="items-table">
+                            <thead class="desktop-only-thead">
+                                <tr>
+                                    <th style="padding: 16px 24px; width: 45%;">Product</th>
+                                    <th style="text-align:center; width: 10%;">Qty</th>
+                                    <th style="text-align:right; width: 20%;">Total</th>
+                                    <th style="text-align:right; padding: 16px 24px; width: 25%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr class="item-row">
+                                    <td class="td-product" style="padding: 16px 24px;">
+                                        <div class="item-product">
+                                            <div class="item-thumb">
+                                                {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                                {% else %}
+                                                <i class="fas fa-clock"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="item-details">
+                                                <span class="item-name" style="font-size: 0.875rem;">{{ item.product.name }}</span>
+                                                <span class="item-meta" style="font-size: 0.75rem;">{{ item.product.brand }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:center; font-weight:700;">
+                                        <span class="mobile-label">Quantity:</span>
+                                        {{ item.quantity }}
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <span class="mobile-label">Total:</span>
+                                        <div class="total-price-group">
+                                            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">₹{{ item.total_price|floatformat:2 }}</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">₹{{ item.price|floatformat:2 }} ea</div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right; padding: 16px 24px;">
+                                        <div class="action-flex-container">
+                                            {% if not item.is_cancelled and not item.is_returned %}
+                                                {% if order.status == 'Pending' or order.status == 'CONFIRMED' or order.status == 'Processing' %}
+                                                    <button class="btn-action btn-danger-alt btn-sm" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
+                                                {% elif order.status == 'Delivered' %}
+                                                    {% if item.product.id in reviewed_product_ids %}
+                                                        <span class="reviewed-badge"><i class="fas fa-check-circle"></i> Reviewed</span>
+                                                    {% else %}
+                                                        <button class="btn-action btn-primary-alt btn-sm" onclick="openReviewModal('{{ item.product.id }}', '{{ item.product.name|escapejs }}')">Rate</button>
+                                                    {% endif %}
+                                                    {% if order.return_status == 'None' %}
+                                                        <button class="btn-action btn-outline-alt btn-sm" onclick="openItemReturnModal('{{ item.id }}', '{{ item.product.name|escapejs }}')">Return</button>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% elif item.is_cancelled %}
+                                                <span class="status-badge s-Cancelled">Cancelled</span>
+                                            {% elif item.is_returned %}
+                                                <span class="status-badge s-Returned">Returned</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body" style="overflow-x: auto;">
-                <table class="items-table" style="min-width: 500px;">
-                    <thead>
-                        <tr>
-                            {% if order.status == 'Delivered' and order.return_status == 'None' %}
-                            <th style="width:40px;">
-                                <input type="checkbox" id="selectAllItems" onclick="toggleSelectAll(this)">
-                            </th>
-                            {% endif %}
-                            <th style="width:50%;">Product</th>
-                            <th style="text-align:center;">Qty</th>
-                            <th style="text-align:right;">Total</th>
-                            <th style="text-align:right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                        <tr class="item-row" data-item-id="{{ item.id }}" data-item-name="{{ item.product.name }}">
-                            {% if order.status == 'Delivered' and order.return_status == 'None' %}
-                            <td>
-                                {% if not item.is_returned and not item.is_cancelled %}
-                                <input type="checkbox" name="selected_items" value="{{ item.id }}" class="item-checkbox" onchange="updateReturnButton()">
-                                {% endif %}
-                            </td>
-                            {% endif %}
-                            <td>
-                                <div class="item-product">
-                                    <div class="item-thumb">
-                                        {% if item.product.image %}
-                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
-                                        {% else %}
-                                        <i class="fas fa-clock"></i>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <span class="item-name">{{ item.product.name }}</span>
-                                        <span class="item-meta">{{ item.product.brand }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="text-align:center; font-weight:700;">{{ item.quantity }}</td>
-                            <td class="item-total">
-                                ₹{{ item.total_price|floatformat:2 }}
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 4px;">₹{{ item.price|floatformat:2 }} each</div>
-                            </td>
-                            <td style="text-align:right;">
-                                <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-                                    {% if not item.is_cancelled and order.status in 'Pending,Processing' %}
-                                    <button class="btn-action btn-danger-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
-                                    {% elif item.is_cancelled %}
-                                    <span class="status-badge s-Cancelled" style="font-size: 0.65rem; padding: 2px 8px;">Cancelled</span>
-                                    {% elif item.is_returned %}
-                                    <span class="status-badge s-Returned" style="font-size: 0.65rem; padding: 2px 8px;">Returned</span>
-                                    {% elif order.status == 'Delivered' %}
-                                        {% if item.product.id in reviewed_product_ids %}
-                                            <span style="font-size: 0.75rem; color: var(--primary-color); font-weight: 700; padding: 6px 12px;"><i class="fas fa-check-circle"></i> Reviewed</span>
-                                        {% else %}
-                                            <button class="btn-action btn-primary-alt" style="padding: 6px 12px; font-size: 0.75rem;" onclick="openReviewModal('{{ item.product.id }}', '{{ item.product.name|escapejs }}')">
-                                                <i class="fas fa-star"></i> Rate & Review
-                                            </button>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- Order Information & Actions Highlighting -->
-        <div class="card" style="border-left: 4px solid var(--primary-color); background: linear-gradient(to right, rgba(230, 92, 0, 0.05), transparent);">
-            <div class="card-body">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; align-items: start;">
-                    
-                    <div class="info-item">
-                        <label style="font-size: 0.75rem; letter-spacing: 0.15em; font-weight: 700;">PAYMENT METHOD</label>
-                        <p style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-top: 6px;">{{ order.get_payment_method_display }}</p>
-                    </div>
-
-                    <div class="info-item">
-                        <label style="font-size: 0.75rem; letter-spacing: 0.15em; font-weight: 700;">CURRENT STATUS</label>
-                        <div style="margin-top: 8px;">
-                            <span class="status-badge s-{{ order.status|cut:' ' }}" style="font-size: 0.9rem; padding: 6px 18px; border-radius: 8px;">{{ order.status }}</span>
-                        </div>
-                    </div>
-
-                    {% if order.scheduled_delivery_date %}
-                    <div class="info-item" style="grid-column: 1 / -1; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px dashed rgba(230, 92, 0, 0.3);">
-                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: var(--primary-color);">SCHEDULED DELIVERY</label>
-                        <p style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 8px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-calendar-check" style="color: var(--primary-color);"></i>
-                            {{ order.scheduled_delivery_date|date:"F d, Y" }} <span style="font-weight: 500; font-size: 1rem; color: var(--text-muted);">at</span> {{ order.scheduled_delivery_time|time:"g:i A" }}
-                        </p>
-                    </div>
-                    {% endif %}
-
-                    {% if order.reschedule_status == 'Pending' and order.requested_reschedule_date %}
-                    <div class="info-item" style="grid-column: 1 / -1; padding: 20px; background: rgba(255, 170, 0, 0.05); border-radius: 16px; border: 1px dashed rgba(255, 170, 0, 0.3);">
-                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: #fbbf24;">PENDING RESCHEDULE REQUEST</label>
-                        <p style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-top: 8px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-history" style="color: #fbbf24;"></i>
-                            Requested for: {{ order.requested_reschedule_date|date:"F d, Y" }} at {{ order.requested_reschedule_time|time:"g:i A" }}
-                        </p>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;">Awaiting admin approval.</p>
-                    </div>
-                    {% endif %}
-
+            <!-- Order Details Box (Status/Payment) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-info-circle"></i> Order Details & Status</div>
+                </div>
+                <div class="card-body">
                     {% if order.refund_processed_at %}
-                    <div class="info-item" style="grid-column: 1 / -1; margin-top: -10px;">
-                        <label style="font-size: 0.7rem; letter-spacing: 0.15em; font-weight: 700; color: #ef4444;">REFUND PROCESSED</label>
-                        <p style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 4px;">
-                            {{ order.refund_processed_at|date:"F d, Y g:i A" }} <span style="font-weight: 400; color: var(--text-muted);">via</span> {{ order.refund_method|default:"Original Method" }}
-                        </p>
+                    <div style="padding: 16px; background: rgba(239, 68, 68, 0.05); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.1); margin-bottom: 24px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #ef4444; text-transform: uppercase;">Refund Processed</label>
+                        <p style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 4px;">{{ order.refund_processed_at|date:"F d, Y g:i A" }}</p>
                     </div>
                     {% endif %}
 
-                    <div class="info-item" style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--border-color);">
-                        <div class="btn-group" style="margin-top: 0; gap: 16px;">
-                            {% if order.status in 'Pending,Processing' %}
-                                {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' and order.reschedule_status != 'Rejected' %}
-                                    <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()" style="border-radius: 10px; padding: 14px;">
-                                        <i class="fas fa-calendar-days"></i> Reschedule Delivery
-                                    </button>
-                                {% elif order.reschedule_status == 'Rejected' %}
-                                    <div class="btn-action" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.8rem; flex: 1.5; cursor: default;">
-                                        <i class="fas fa-exclamation-triangle"></i> Reschedule Request Rejected
-                                    </div>
-                                {% elif order.reschedule_count >= 1 %}
-                                    <div class="btn-action btn-outline-alt" style="border-radius: 10px; padding: 14px; opacity: 0.7; cursor: default; border-style: dashed;">
-                                        <i class="fas fa-check-circle" style="color: var(--primary-color);"></i> Delivery Date Finalized
-                                    </div>
+                    {% if order.reschedule_status == 'Pending' %}
+                    <div style="padding: 16px; background: rgba(255, 170, 0, 0.05); border-radius: 12px; border: 1px dashed rgba(255, 170, 0, 0.3); margin-bottom: 24px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #fbbf24; text-transform: uppercase;">Pending Reschedule</label>
+                        <p style="color: #fff; font-weight: 800;">{{ order.requested_reschedule_date|date:"F d, Y" }} at {{ order.requested_reschedule_time|time:"g:i A" }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px;">
+                        <div class="info-item">
+                            <label>PAYMENT METHOD</label>
+                            <p>{{ order.get_payment_method_display }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>CURRENT STATUS</label>
+                            <div><span class="status-badge s-{{ order.status|cut:' ' }}">{{ order.status }}</span></div>
+                        </div>
+                        <div class="info-item">
+                            <label>SCHEDULED DELIVERY</label>
+                            <p>
+                                {% if order.scheduled_delivery_date %}
+                                    {{ order.scheduled_delivery_date|date:"F d, Y" }}
+                                    {% if order.scheduled_delivery_time %} at {{ order.scheduled_delivery_time|time:"g:i A" }}{% endif %}
+                                {% else %}
+                                    Estimated within 5-7 business days
                                 {% endif %}
-                                <button class="btn-action btn-danger-alt" onclick="openCancelOrderModal()" style="border-radius: 10px; padding: 14px; background: rgba(239, 68, 68, 0.08);">
-                                    <i class="fas fa-ban"></i> Cancel Order
-                                </button>
-                            {% elif order.status == 'Delivered' and order.return_status == 'None' %}
-                                <button id="returnSelectedBtn" class="btn-action btn-primary-alt" onclick="openReturnModal()" style="border-radius: 10px; padding: 16px; width: 100%; opacity: 0.5; pointer-events: none;">
-                                    <i class="fas fa-undo"></i> Select Items to Return
-                                </button>
-                            {% elif order.status == 'Return Requested' or order.status == 'Returned' or order.return_status != 'None' %}
-                                <div class="btn-action" style="border-radius: 10px; padding: 16px; width: 100%; background: rgba(255, 170, 0, 0.05); border: 1px dashed rgba(255, 170, 0, 0.3); color: #ffaa00; cursor: default;">
-                                    <i class="fas fa-info-circle"></i> Return Status: {{ order.get_return_status_display }}
-                                </div>
-                            {% endif %}
+                            </p>
                         </div>
                     </div>
 
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-        <!-- Order Stats (Summary) -->
-        <div class="card">
-            <div class="card-header" style="padding: 18px 24px;">
-                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-receipt"></i> ORDER SUMMARY</div>
-            </div>
-            <div class="card-body" style="padding: 20px 24px;">
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Tax (3%)</span><span class="summary-value">₹{{ order.tax|floatformat:2 }}</span></div>
-                <div class="summary-row" style="padding: 8px 0; align-items: flex-start;">
-                    <span class="summary-label" style="margin-top: 2px;">Shipping</span>
-                    <span class="summary-value" style="text-align: right;">
-                        {% if order.shipping_charge == 0 %}
-                            <span style="color: #22c55e; font-weight: 700;">Free</span>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Free above ₹5,000)</div>
-                        {% else %}
-                            ₹{{ order.shipping_charge|floatformat:2 }}
-                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(Standard Rate)</div>
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-wrap: wrap;">
+                        {% if order.status == 'Pending' or order.status == 'CONFIRMED' or order.status == 'Processing' %}
+                            {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
+                                <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()"><i class="fas fa-calendar-alt"></i> Reschedule</button>
+                            {% endif %}
+                            <button class="btn-action btn-danger-alt" onclick="openCancelOrderModal()"><i class="fas fa-ban"></i> Cancel Full Order</button>
                         {% endif %}
-                    </span>
-                </div>
-                {% if order.discount > 0 %}
-                <div class="summary-row" style="padding: 8px 0;"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>
-                {% endif %}
-                <div class="summary-row summary-total" style="padding-top: 18px; margin-top: 10px; border-top: 1px solid var(--border-color);">
-                    <span class="summary-label">Total Amount</span>
-                    <span class="summary-value" style="font-size: 1.25rem;">₹{{ order.total_amount|floatformat:2 }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Shipping Address -->
-        <div class="card">
-            <div class="card-header" style="padding: 18px 24px;">
-                <div class="card-title" style="font-size: 0.9rem;"><i class="fas fa-location-dot"></i> SHIPPING ADDRESS</div>
+        <!-- RIGHT COLUMN -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Summary -->
+            <div class="card">
+                <div class="card-header"><div class="card-title"><i class="fas fa-receipt"></i> ORDER SUMMARY</div></div>
+                <div class="card-body">
+                    <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span></div>
+                    <div class="summary-row"><span class="summary-label">Tax (3%)</span><span class="summary-value">₹{{ order.tax|floatformat:2 }}</span></div>
+                    <div class="summary-row">
+                        <span class="summary-label">Shipping</span>
+                        <span class="summary-value">{% if order.shipping_charge == 0 %}Free{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
+                    </div>
+                    {% if order.discount > 0 %}<div class="summary-row"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>{% endif %}
+                    <div class="summary-row summary-total"><span class="summary-label">Total Amount</span><span class="summary-value">₹{{ order.total_amount|floatformat:2 }}</span></div>
+                </div>
             </div>
-            <div class="card-body" style="padding: 24px;">
-                <p style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-user-circle" style="opacity: 0.5;"></i> {{ address.full_name }}
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
-                    <span>{{ address.street }}</span>
-                    <span>{{ address.city }}, {{ address.state }} {{ address.postal_code }}</span>
-                    <span style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-top: 4px;">{{ address.country }}</span>
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); color: #fff; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-phone-alt" style="font-size: 0.8rem; color: var(--primary-color);"></i> {{ address.phone }}
+
+            <!-- Address -->
+            <div class="card">
+                <div class="card-header"><div class="card-title"><i class="fas fa-location-dot"></i> SHIPPING ADDRESS</div></div>
+                <div class="card-body">
+                    <p style="font-weight: 800; color: #fff; margin-bottom: 8px;">{{ address.full_name }}</p>
+                    <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                        {{ address.street }}<br>
+                        {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                        {{ address.country }}
+                        <div style="margin-top: 12px; color: #fff; font-weight: 600;"><i class="fas fa-phone-alt" style="color: var(--primary-color);"></i> {{ address.phone }}</div>
                     </div>
                 </div>
             </div>
@@ -570,21 +365,14 @@
 <div class="modal-overlay" id="cancelOrderModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-brand">
-            <div class="modal-brand-icon">T</div>
-            <span class="modal-brand-name">TimeHub Official</span>
-        </div>
-        <div class="modal-header">
-            <h3>Cancel Order?</h3>
-            <p>Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
-        </div>
+        <div class="modal-header"><h3>Cancel Order?</h3><p>This action cannot be undone.</p></div>
         <form action="{% url 'cancel_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
-            <span class="modal-label">Reason for cancellation</span>
-            <textarea name="reason" placeholder="Explain why you are cancelling..." rows="3" required></textarea>
+            <span class="modal-label">Reason</span>
+            <textarea name="reason" rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Keep Order</button>
-                <button type="submit" class="btn-action btn-danger-alt">Confirm Cancellation</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-danger-alt">Confirm</button>
             </div>
         </form>
     </div>
@@ -593,21 +381,14 @@
 <div class="modal-overlay" id="cancelItemModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-brand">
-            <div class="modal-brand-icon">T</div>
-            <span class="modal-brand-name">TimeHub Official</span>
-        </div>
-        <div class="modal-header">
-            <h3>Cancel <span id="cancelItemName"></span></h3>
-            <p>Remove this item specifically from your order breakdown.</p>
-        </div>
+        <div class="modal-header"><h3>Cancel <span id="cancelItemName"></span></h3></div>
         <form id="cancelItemForm" method="POST">
             {% csrf_token %}
-            <span class="modal-label">Reason for cancelling item</span>
-            <textarea name="reason" placeholder="Why remove this item?" rows="3" required></textarea>
+            <span class="modal-label">Reason</span>
+            <textarea name="reason" rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Keep Item</button>
-                <button type="submit" class="btn-action btn-danger-alt">Remove Item</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-danger-alt">Remove</button>
             </div>
         </form>
     </div>
@@ -616,22 +397,14 @@
 <div class="modal-overlay" id="returnModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-brand">
-            <div class="modal-brand-icon">T</div>
-            <span class="modal-brand-name">TimeHub Official</span>
-        </div>
-        <div class="modal-header">
-            <h3>Return Order</h3>
-            <p>Provide a reason for return. Our specialized team will review and contact you within 24 hours.</p>
-        </div>
-        <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST" id="returnForm">
+        <div class="modal-header"><h3>Return Items</h3></div>
+        <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST"><div id="selectedItemsContainer"></div>
             {% csrf_token %}
-            <div id="selectedItemsContainer"></div>
-            <span class="modal-label">Detailed Return Reason</span>
-            <textarea name="reason" placeholder="Describe why you are returning these items..." rows="3" required></textarea>
+            <span class="modal-label">Reason</span>
+            <textarea name="reason" rows="3" required></textarea>
             <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Cancel</button>
-                <button type="submit" class="btn-action btn-primary-alt">Submit Return Request</button>
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-primary-alt">Submit</button>
             </div>
         </form>
     </div>
@@ -640,36 +413,21 @@
 <div class="modal-overlay" id="reviewModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-brand">
-            <div class="modal-brand-icon">T</div>
-            <span class="modal-brand-name">TimeHub Feedback</span>
-        </div>
-        <div class="modal-header">
-            <h3>Rate & Review</h3>
-            <p id="reviewProductName">Product Name</p>
-        </div>
-        <form id="reviewForm" method="POST" action="{% url 'submit_review' %}">
+        <div class="modal-header"><h3>Rate Product</h3><p id="reviewProductName"></p></div>
+        <form method="POST" action="{% url 'submit_review' %}">
             {% csrf_token %}
             <input type="hidden" name="product_id" id="reviewProductId">
             <input type="hidden" name="order_id" value="{{ order.id }}">
-            
-            <span class="modal-label">Your Rating</span>
-            <div style="display: flex; gap: 10px; margin: 15px 0; font-size: 1.5rem; color: #fbbf24; cursor: pointer;">
+            <div style="display: flex; gap: 10px; margin: 15px 0; color: #fbbf24; cursor: pointer; font-size: 1.5rem;">
                 <input type="hidden" name="rating" id="ratingValue" value="5">
-                <i class="fas fa-star rating-star" data-value="1" onclick="setRating(1)"></i>
-                <i class="fas fa-star rating-star" data-value="2" onclick="setRating(2)"></i>
-                <i class="fas fa-star rating-star" data-value="3" onclick="setRating(3)"></i>
-                <i class="fas fa-star rating-star" data-value="4" onclick="setRating(4)"></i>
-                <i class="fas fa-star rating-star" data-value="5" onclick="setRating(5)"></i>
+                <i class="fas fa-star rating-star" onclick="setRating(1)"></i>
+                <i class="fas fa-star rating-star" onclick="setRating(2)"></i>
+                <i class="fas fa-star rating-star" onclick="setRating(3)"></i>
+                <i class="fas fa-star rating-star" onclick="setRating(4)"></i>
+                <i class="fas fa-star rating-star" onclick="setRating(5)"></i>
             </div>
-            
-            <span class="modal-label">Your Review</span>
-            <textarea name="comment" placeholder="Tell us about your experience..." rows="4" required></textarea>
-            
-            <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Cancel</button>
-                <button type="submit" class="btn-action btn-primary-alt">Post Review</button>
-            </div>
+            <textarea name="comment" rows="4" required></textarea>
+            <div class="btn-group"><button type="submit" class="btn-action btn-primary-alt">Submit</button></div>
         </form>
     </div>
 </div>
@@ -677,43 +435,16 @@
 <div class="modal-overlay" id="rescheduleModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-brand">
-            <div class="modal-brand-icon">T</div>
-            <span class="modal-brand-name">TimeHub Official</span>
-        </div>
-        <div class="modal-header">
-            <h3>Reschedule Delivery</h3>
-            <p>Select your preferred delivery window and provide a valid reason.</p>
-            {% if order.scheduled_delivery_date %}
-            <p style="color: var(--primary-color); font-weight: 700; margin-top: 12px; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">
-                <i class="fas fa-truck"></i> Current Estimated Delivery: {{ order.scheduled_delivery_date|date:"F d, Y" }}
-            </p>
-            {% endif %}
-        </div>
+        <div class="modal-header"><h3>Reschedule</h3></div>
         <form action="{% url 'reschedule_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div>
-                    <span class="modal-label">Delivery Date</span>
-                    <input type="date" name="scheduled_date" min="{{ today|date:'Y-m-d' }}">
-                </div>
-                <div>
-                    <span class="modal-label">Delivery Time</span>
-                    <input type="time" name="scheduled_time">
-                </div>
-            </div>
-            
-            <span class="modal-label">Reason for reschedule</span>
-            <textarea name="reschedule_reason" placeholder="Detailed reason (min 8 chars)..." rows="3" required></textarea>
-            
-            <div class="btn-group">
-                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Go Back</button>
-                <button type="submit" class="btn-action btn-primary-alt">Confirm Change</button>
-            </div>
+            <input type="date" name="scheduled_date" required>
+            <input type="time" name="scheduled_time" required>
+            <textarea name="reschedule_reason" rows="3" required></textarea>
+            <div class="btn-group"><button type="submit" class="btn-action btn-primary-alt">Confirm</button></div>
         </form>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -725,69 +456,21 @@
         document.getElementById('cancelItemModal').classList.add('active');
     }
     function openRescheduleModal() { document.getElementById('rescheduleModal').classList.add('active'); }
-    
-    function openReturnModal() { 
-        const selected = document.querySelectorAll('.item-checkbox:checked');
-        const container = document.getElementById('selectedItemsContainer');
-        container.innerHTML = '';
-        
-        selected.forEach(cb => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'item_ids';
-            input.value = cb.value;
-            container.appendChild(input);
-        });
-        
-        document.getElementById('returnModal').classList.add('active'); 
+    function openItemReturnModal(itemId, itemName) {
+        document.getElementById('selectedItemsContainer').innerHTML = `<input type="hidden" name="item_ids" value="${itemId}">`;
+        document.getElementById('returnModal').classList.add('active');
     }
-
     function openReviewModal(productId, productName) {
         document.getElementById('reviewProductId').value = productId;
         document.getElementById('reviewProductName').textContent = productName;
         document.getElementById('reviewModal').classList.add('active');
-        setRating(5);
     }
-
-    function setRating(val) {
-        document.getElementById('ratingValue').value = val;
-        document.querySelectorAll('.rating-star').forEach(star => {
-            if (parseInt(star.dataset.value) <= val) {
-                star.classList.remove('fa-regular');
-                star.classList.add('fas');
-            } else {
-                star.classList.remove('fas');
-                star.classList.add('fa-regular');
-            }
-        });
-    }
-
-    function toggleSelectAll(masterCb) {
-        document.querySelectorAll('.item-checkbox').forEach(cb => {
-            cb.checked = masterCb.checked;
-        });
-        updateReturnButton();
-    }
-
-    function updateReturnButton() {
-        const selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
-        const btn = document.getElementById('returnSelectedBtn');
-        if (selectedCount > 0) {
-            btn.style.opacity = '1';
-            btn.style.pointerEvents = 'auto';
-            btn.innerHTML = `<i class="fas fa-undo"></i> Return ${selectedCount} Selected Item${selectedCount > 1 ? 's' : ''}`;
-        } else {
-            btn.style.opacity = '0.5';
-            btn.style.pointerEvents = 'none';
-            btn.innerHTML = `<i class="fas fa-undo"></i> Select Items to Return`;
-        }
-    }
-
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-    
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay')) closeModals();
+    function setRating(v) {
+        document.getElementById('ratingValue').value = v;
+        const stars = document.querySelectorAll('.rating-star');
+        stars.forEach((s, i) => s.classList.toggle('fas', i < v));
+        stars.forEach((s, i) => s.classList.toggle('far', i >= v));
     }
 </script>
 {% endblock %}
-
