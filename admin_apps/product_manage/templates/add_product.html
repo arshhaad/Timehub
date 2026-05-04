@@ -1,0 +1,829 @@
+{% extends "order_manage/base.html" %}
+{% load static %}
+
+{% block title %}Add New Product - TimeHub{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <a href="{% url 'product_list' %}">Inventory</a>
+        <span class="sep">/</span>
+        <span class="curr">Add Product</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<style>
+    :root {
+        --primary-bg: #ff6b00;
+        --text-main: #111827;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --card-bg: #ffffff;
+        --radius-lg: 16px;
+        --radius-md: 12px;
+        --transition: all 0.2s ease;
+    }
+
+    .form-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-header {
+        padding: 24px 32px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+    }
+
+    .form-header h3 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .modal-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        background: #f8fafc;
+        padding: 0 20px;
+    }
+
+    .modal-tab {
+        padding: 16px 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+        transition: var(--transition);
+    }
+
+    .modal-tab:hover { color: var(--text-main); }
+    .modal-tab.active { color: var(--primary-bg); }
+
+    .modal-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-bg);
+        border-radius: 3px 3px 0 0;
+    }
+
+    .tab-panel { display: none; padding: 32px; }
+    .tab-panel.active { display: block; }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: span 2; }
+    .form-group label { font-size: 0.85rem; font-weight: 700; color: #4b5563; }
+
+    .form-control {
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: var(--transition);
+        width: 100%;
+        outline: none;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-bg);
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.05);
+    }
+
+    /* Variant Professional Styling */
+    .variant-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .variant-header h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .variant-header p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .btn-add-variant {
+        background: #000;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-add-variant:hover { background: #1f2937; transform: translateY(-1px); }
+
+    .variant-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .variant-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        position: relative;
+        transition: var(--transition);
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .variant-card:hover {
+        border-color: var(--primary-bg);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+    }
+
+    .variant-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .variant-badge {
+        background: #f1f5f9;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .variant-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .variant-images-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .variant-img-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+    }
+
+    .variant-img-slot {
+        aspect-ratio: 1;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    .variant-img-slot:hover { border-color: var(--primary-bg); background: #fff; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .variant-img-slot img { width: 100%; height: 100%; object-fit: cover; }
+    .variant-img-slot i { font-size: 1rem; color: #94a3b8; }
+    .variant-img-slot .preview-container { position: absolute; inset: 0; display: none; }
+    .variant-img-slot .preview-container img { width: 100%; height: 100%; object-fit: cover; }
+    .variant-img-slot.has-image .preview-container { display: block; }
+    .variant-img-slot.has-image i { display: none; }
+
+    /* Image Slots */
+    .image-slots {
+        display: flex;
+        gap: 20px;
+    }
+    .image-slot-container { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .image-slot {
+        height: 250px;
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius-md);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        transition: var(--transition);
+        background: #f8fafc;
+        overflow: hidden;
+    }
+    .image-slot:hover { border-color: var(--primary-bg); background: #fff; transform: translateY(-3px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.1); }
+    .image-slot i { font-size: 1.5rem; color: #94a3b8; margin-bottom: 8px; }
+    .image-slot span { font-size: 0.8rem; font-weight: 600; color: #64748b; }
+    .image-slot img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    
+    .slot-clear {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
+        background: rgba(239, 68, 68, 0.9);
+        color: #fff;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        z-index: 10;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .slot-clear:hover { transform: scale(1.1); background: #dc2626; }
+
+    .form-footer {
+        padding: 24px 32px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        background: #f8fafc;
+    }
+
+    .btn-outline {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+    .btn-primary {
+        background: #000;
+        color: #fff;
+        padding: 10px 32px;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .btn-primary:hover { background: #1f2937; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+
+    .cropper-modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+        z-index: 10000; display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .cropper-modal-overlay.active { display: flex; }
+    .cropper-modal-content {
+        background: #fff; border-radius: 20px; padding: 24px;
+        width: 90%; max-width: 600px;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h3>Add New Premium Product</h3>
+        <a href="{% url 'product_list' %}" class="btn btn-outline" style="font-size: 0.8rem;">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="modal-tabs">
+        <div class="modal-tab active" data-tab="general">General Info</div>
+        <div class="modal-tab" data-tab="specs">Specifications</div>
+        <div class="modal-tab" data-tab="variants">Variants & Stock</div>
+        <div class="modal-tab" data-tab="images">Product Images</div>
+    </div>
+
+    <form id="productForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+            <!-- General Tab -->
+            <div id="tab-general" class="tab-panel active">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Product Name</label>
+                        <input type="text" name="name" id="formName" class="form-control" required placeholder="Enter product name...">
+                    </div>
+                    <div class="form-group">
+                        <label>Brand</label>
+                        <input type="text" name="brand" id="formBrand" class="form-control" value="TimeHub" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="collection_id" id="formCategory" class="form-control" required>
+                            <option value="">Select Category</option>
+                            {% for cat in all_categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Base Price</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" name="price" id="formPrice" class="form-control" required step="0.01" style="flex: 2;">
+                            <select name="price_unit" class="form-control" style="flex: 1; min-width: 80px;">
+                                <option value="1">₹</option>
+                                <option value="1000">K</option>
+                                <option value="100000">Lakh</option>
+                                <option value="10000000">Cr</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Discounted Price</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" name="discount_price" id="formDiscountPrice" class="form-control" step="0.01" style="flex: 2;">
+                            <select name="discount_price_unit" class="form-control" style="flex: 1; min-width: 80px;">
+                                <option value="1">₹</option>
+                                <option value="1000">K</option>
+                                <option value="100000">Lakh</option>
+                                <option value="10000000">Cr</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Stock (Auto-calculated)</label>
+                        <input type="number" name="stock" id="formStock" class="form-control" readonly style="background: #f1f5f9; color: #64748b;" placeholder="Sum of variants...">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 30px;">
+                            <input type="checkbox" name="is_active" id="formActive" checked style="width: 18px; height: 18px;">
+                            Active for Sale
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Specs Tab -->
+            <div id="tab-specs" class="tab-panel">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender" id="formGender" class="form-control">
+                            <option value="Men">Men</option>
+                            <option value="Women">Women</option>
+                            <option value="Unisex">Unisex</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Occasion</label>
+                        <select name="occasion" id="formOccasion" class="form-control">
+                            <option value="Casual">Casual</option>
+                            <option value="Formal">Formal</option>
+                            <option value="Sport">Sport</option>
+                            <option value="Luxury">Luxury</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Function</label>
+                        <select name="function" id="formFunction" class="form-control">
+                            <option value="Analog">Analog</option>
+                            <option value="Digital">Digital</option>
+                            <option value="Chronograph">Chronograph</option>
+                            <option value="Smart">Smart</option>
+                        </select>
+                    </div>
+                    <div class="form-group full">
+                        <label>Features</label>
+                        <textarea name="features" id="formFeatures" class="form-control" placeholder="Water Resistant 50m, Sapphire Glass..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variants Tab -->
+            <div id="tab-variants" class="tab-panel">
+                <div class="variant-header">
+                    <div>
+                        <h4>Product Configurations</h4>
+                        <p>Manage sizes, materials, and stock for each unique variation.</p>
+                    </div>
+                    <button type="button" class="btn-add-variant" onclick="addVariantRow()">
+                        <i class="fas fa-plus"></i> Add New Variant
+                    </button>
+                </div>
+
+                <div id="variantList" class="variant-list">
+                    <!-- Cards will be injected by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Images Tab -->
+            <div id="tab-images" class="tab-panel">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.9rem; font-weight: 700;">Product Photography</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">Upload up to 3 high-quality images and link them to variants.</p>
+                </div>
+                <div class="image-slots" style="display: flex; gap: 15px;">
+                    {% for i in "123"|make_list %}
+                    <div class="image-slot-container" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <div class="image-slot" onclick="document.getElementById('inputSlot{{ i }}').click()" style="height: 250px; cursor: pointer; position: relative; border: 1px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <input type="file" id="inputSlot{{ i }}" style="display:none" accept="image/*" onchange="handleImageInput(event, {{ i }})">
+                            <div id="previewWrap{{ i }}" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Slot {{ i }}</span>
+                            </div>
+                            <div class="slot-clear" id="clearImg{{ i }}" onclick="clearImageSlot(event, {{ i }})"><i class="fas fa-times"></i></div>
+                        </div>
+                        <div class="variant-link-group">
+                            <label style="font-size: 0.7rem; color: #64748b; margin-bottom: 4px; display: block;">Link to Variant</label>
+                            <select name="product_image_variant_{{ i }}" id="variantSelect{{ i }}" class="form-control" style="font-size: 0.75rem; padding: 6px;">
+                                <option value="all">All Variants / General</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <button type="button" class="btn btn-outline" onclick="window.location.href='{% url 'product_list' %}'">Cancel</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">Create Product</button>
+        </div>
+    </form>
+</div>
+
+<!-- Cropper Modal -->
+<div id="cropperContainer" class="cropper-modal-overlay">
+    <div class="cropper-modal-content">
+        <div style="height: 400px; background: #eee; margin-bottom: 20px;">
+            <img id="cropperImage" style="max-width: 100%; display: block;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-outline" onclick="cancelCrop()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="applyCrop()">Apply Crop</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    const COLORS_LIST = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
+    const MATERIALS_LIST = ['Leather', 'Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber'];
+
+    // Tab logic
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+        });
+    });
+
+    let cropper = null;
+    let activeCropSource = null; // e.g., { type: 'main', slot: 1 } or { type: 'variant', idx: 0, subIdx: 1, input: el }
+    const croppedBlobs = new Map();
+
+    function handleImageInput(e, slot) {
+        const file = e.target.files[0];
+        if (!file) return;
+        activeCropSource = { type: 'main', slot: slot };
+        openCropper(file);
+    }
+
+    function previewVariantImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Extract indices from name (variant_image_0_1)
+        const nameParts = input.name.split('_');
+        const idx = nameParts[2];
+        const subIdx = nameParts[3];
+        
+        activeCropSource = { type: 'variant', idx: idx, subIdx: subIdx, input: input };
+        openCropper(file);
+    }
+
+    function openCropper(file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.getElementById('cropperImage');
+            if (cropper) cropper.destroy();
+            img.src = event.target.result;
+            document.getElementById('cropperContainer').classList.add('active');
+            img.onload = () => {
+                cropper = new Cropper(img, { 
+                    aspectRatio: 1, 
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function cancelCrop() {
+        document.getElementById('cropperContainer').classList.remove('active');
+        if (cropper) cropper.destroy();
+        activeCropSource = null;
+    }
+
+    function applyCrop() {
+        if (!cropper || !activeCropSource) return;
+        cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            
+            if (activeCropSource.type === 'main') {
+                croppedBlobs.set(`main_${activeCropSource.slot}`, blob);
+                showSlotPreview(activeCropSource.slot, url);
+            } else {
+                croppedBlobs.set(`variant_${activeCropSource.idx}_${activeCropSource.subIdx}`, blob);
+                
+                const slot = activeCropSource.input.closest('.variant-img-slot');
+                const preview = slot.querySelector('.preview-container');
+                preview.innerHTML = `<img src="${url}">`; 
+                slot.classList.add('has-image');
+            }
+            
+            cancelCrop();
+        }, 'image/jpeg', 0.92);
+    }
+
+    function showSlotPreview(slot, url) {
+        const wrap = document.getElementById(`previewWrap${slot}`);
+        wrap.innerHTML = `<img src="${url}" class="preview-img">`;
+        document.getElementById(`clearImg${slot}`).style.display = 'flex';
+    }
+
+    function clearImageSlot(e, slot) {
+        e.stopPropagation();
+        const wrap = document.getElementById(`previewWrap${slot}`);
+        const labels = ['Primary Image', 'Second View', 'Third View'];
+        wrap.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><span>${labels[slot-1]}</span>`;
+        document.getElementById(`inputSlot${slot}`).value = '';
+        document.getElementById(`clearImg${slot}`).style.display = 'none';
+        croppedBlobs.delete(`main_${slot}`);
+    }
+
+    // Variants
+    let variantCounter = 0;
+
+    function calculateTotalStock() {
+        let total = 0;
+        document.querySelectorAll('input[name="variant_stock[]"]').forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        document.getElementById('formStock').value = total;
+    }
+
+    function renumberVariants() {
+        const cards = document.querySelectorAll('.variant-card');
+        const total = cards.length;
+        cards.forEach((card, i) => {
+            const badge = card.querySelector('.variant-badge');
+            if (badge) badge.textContent = `Configuration #${total - i}`;
+        });
+    }
+
+    function updateVariantSelectors() {
+        const variants = [];
+        document.querySelectorAll('.variant-card').forEach(card => {
+            const skuInput = card.querySelector('input[name="variant_sku[]"]');
+            const sku = skuInput ? (skuInput.value || 'Unnamed Variant') : 'Unnamed Variant';
+            const idxInput = card.querySelector('input[name="variant_image_idx[]"]');
+            const idx = idxInput ? idxInput.value : '';
+            if(idx !== '') variants.push({ sku, idx });
+        });
+
+        for(let i=1; i<=3; i++) {
+            const select = document.getElementById(`variantSelect${i}`);
+            if(!select) continue;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">All Variants / General</option>';
+            variants.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.idx;
+                opt.textContent = v.sku;
+                select.appendChild(opt);
+            });
+            if([...select.options].some(o => o.value === currentVal)) select.value = currentVal;
+        }
+    }
+
+    function addVariantRow() {
+        const idx = variantCounter++;
+        const card = document.createElement('div');
+        card.className = 'variant-card';
+        card.innerHTML = `
+            <div class="variant-card-header">
+                <div class="variant-badge">Configuration #${idx + 1}</div>
+                <button type="button" class="btn-icon" onclick="removeVariant(this)" style="color: #ef4444; border:none; background:none; cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:var(--transition);">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            <input type="hidden" name="variant_image_idx[]" value="${idx}">
+            <div class="variant-grid">
+                <div class="form-group">
+                    <label>SKU / Model Name</label>
+                    <input type="text" name="variant_sku[]" class="form-control" placeholder="e.g. Classic Silver 42mm" oninput="updateVariantSelectors()">
+                </div>
+                <div class="form-group">
+                    <label>Material</label>
+                    <select name="variant_strap_material[]" class="form-control">
+                        <option value="">Select Material</option>
+                        ${MATERIALS_LIST.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Stock Quantity</label>
+                    <input type="number" name="variant_stock[]" class="form-control" value="0" min="0" oninput="calculateTotalStock()">
+                </div>
+                <div class="form-group">
+                    <label>Strap Color</label>
+                    <select name="variant_strap_color[]" class="form-control">
+                        <option value="">Select Color</option>
+                        ${COLORS_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Dial Color</label>
+                    <select name="variant_dial_color[]" class="form-control">
+                        <option value="">Select Color</option>
+                        ${COLORS_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Unique Features / Description</label>
+                <textarea name="variant_description[]" class="form-control" rows="2" placeholder="Describe what makes this variant special..."></textarea>
+            </div>
+            
+            <div class="variant-images-section">
+                <label style="font-size: 0.75rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Product Variant Image <span style="color:#ef4444">*</span></label>
+                <div class="variant-img-grid">
+                    ${[1, 2, 3].map(i => `
+                        <div class="variant-img-slot" data-slot-idx="${idx}" data-slot-sub="${i}" onclick="this.querySelector('input').click()">
+                            <i class="fas fa-plus"></i>
+                            <div class="preview-container"></div>
+                            <input type="file" name="variant_image_${idx}_${i}" style="display:none" accept="image/*" onchange="previewVariantImage(this)">
+                        </div>
+                    `).join('')}
+                </div>
+                <p class="variant-img-error" style="color:#ef4444; font-size:0.78rem; font-weight:600; margin-top:6px; display:none;"><i class="fas fa-exclamation-circle"></i> At least one product variant image is required.</p>
+            </div>
+        `;
+        document.getElementById('variantList').prepend(card);
+        renumberVariants();
+        updateVariantSelectors();
+        calculateTotalStock();
+    }
+
+    function removeVariant(btn) {
+        const card = btn.closest('.variant-card');
+        const idx = card.querySelector('input[name="variant_image_idx[]"]').value;
+        
+        // Clean up any cropped blobs for this variant
+        for (let i = 1; i <= 3; i++) {
+            croppedBlobs.delete(`variant_${idx}_${i}`);
+        }
+        
+        card.remove();
+        renumberVariants();
+        updateVariantSelectors();
+        calculateTotalStock();
+    }
+
+    function previewVariantImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { 
+                const slot = input.closest('.variant-img-slot');
+                const preview = slot.querySelector('.preview-container');
+                preview.innerHTML = `<img src="${e.target.result}">`; 
+                slot.classList.add('has-image');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Form Submit
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate: each variant must have at least one image (file input OR cropped blob)
+        let variantImageValid = true;
+        document.querySelectorAll('.variant-card').forEach(card => {
+            const idxInput = card.querySelector('input[name="variant_image_idx[]"]');
+            const idx = idxInput ? idxInput.value : null;
+            const errMsg = card.querySelector('.variant-img-error');
+            const slots = card.querySelectorAll('.variant-img-slot');
+
+            const hasFileInput = Array.from(card.querySelectorAll('input[type="file"]'))
+                .some(inp => inp.files && inp.files.length > 0);
+
+            const hasCroppedBlob = idx !== null && (
+                croppedBlobs.has('variant_' + idx + '_1') ||
+                croppedBlobs.has('variant_' + idx + '_2') ||
+                croppedBlobs.has('variant_' + idx + '_3')
+            );
+
+            if (!hasFileInput && !hasCroppedBlob) {
+                slots.forEach(s => s.style.outline = '2px solid #ef4444');
+                if (errMsg) errMsg.style.display = 'block';
+                variantImageValid = false;
+            } else {
+                slots.forEach(s => s.style.outline = '');
+                if (errMsg) errMsg.style.display = 'none';
+            }
+        });
+
+        if (!variantImageValid) {
+            const firstErr = document.querySelector('.variant-img-error[style*="block"]');
+            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        const formData = new FormData(this);
+        
+        // Append cropped blobs
+        croppedBlobs.forEach((blob, key) => {
+            formData.append(key, blob, key + '.jpg');
+        });
+        
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(async r => {
+            if(r.ok || r.redirected) {
+                window.location.href = '{% url "product_list" %}';
+            } else {
+                const data = await r.json().catch(() => null);
+                if (data && data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Failed to save product. Ensure all variants have stock and details.');
+                }
+                btn.disabled = false;
+                btn.innerText = 'Create Product';
+            }
+        }).catch(() => {
+            alert('Connection error');
+            btn.disabled = false;
+        });
+    });
+
+    // Initial variant
+    document.addEventListener('DOMContentLoaded', () => {
+        addVariantRow();
+    });
+</script>
+{% endblock %}

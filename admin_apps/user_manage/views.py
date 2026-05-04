@@ -180,7 +180,7 @@ def admin_user_wallet(request, user_id):
         'transactions': transactions,
         'active_menu': 'wallet',
     }
-    return render(request, "user_wallat.html", context)
+    return render(request, "user_wallet.html", context)
 
 @superuser_required
 def wallet_list(request):

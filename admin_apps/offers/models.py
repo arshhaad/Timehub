@@ -53,8 +53,7 @@ class Coupon(models.Model):
             
             # Referral check
             if self.is_referral_only:
-                # Check if user has a profile and was referred
-                if not hasattr(user, 'profile') or not getattr(user.profile, 'referred_by', None):
+                if not getattr(user, 'referred_by', None):
                     return False, "This coupon is only for users joined via referral."
             
                     
@@ -63,9 +62,10 @@ class Coupon(models.Model):
                 from user_apps.core.models import Cart
                 cart = Cart.objects.filter(user=user).first()
                 if cart:
-                    has_matching_item = cart.items.filter(product__collection=self.applicable_collection).exists()
+                    collection_ids = self.applicable_collection.get_all_descendant_ids()
+                    has_matching_item = cart.items.filter(product__collection__id__in=collection_ids).exists()
                     if not has_matching_item:
-                        return False, f"This coupon is only valid for items in the '{self.applicable_collection.name}' collection."
+                        return False, f"This coupon is only valid for items in the '{self.applicable_collection.name}' category."
                 else:
                     return False, "Your cart is empty."
                     

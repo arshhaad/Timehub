@@ -22,7 +22,7 @@
         --glass: rgba(255, 255, 255, 0.8);
     }
 
-    body { background-color: var(--bg-main); font-family: 'Outfit', sans-serif; color: var(--text-main); }
+    .offers-wrapper { background-color: var(--bg-main); font-family: 'Outfit', sans-serif; color: var(--text-main); margin: -40px; padding: 40px; min-height: calc(100vh - 80px); }
 
     .page-header {
         display: flex; flex-direction: column; gap: 8px; margin-bottom: 40px;
@@ -120,9 +120,9 @@
     .referral-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
     .referral-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 28px; align-items: flex-end; }
 
-    .input-group { position: relative; }
-    .input-group i { position: absolute; left: 16px; top: 44px; color: var(--text-muted); }
-    .input-group .form-control { padding-left: 44px; }
+    .input-wrapper { position: relative; }
+    .input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .input-wrapper .form-control { padding-left: 44px; }
 
     /* Modals & Forms */
     .form-overlay {
@@ -169,24 +169,15 @@
     @keyframes shakeIn { 0%{transform:translateX(-8px)} 25%{transform:translateX(8px)} 50%{transform:translateX(-4px)} 75%{transform:translateX(4px)} 100%{transform:translateX(0)} }
 </style>
 {% endblock %}
-{% endblock %}
 
 {% block content %}
+<div class="offers-wrapper">
 <div class="page-header">
     <h1 class="page-title">Offer Management</h1>
     <p class="page-desc">Maximize conversion by strategically layering product and category discounts. The TimeHub engine automatically selects the highest active discount for every customer.</p>
 </div>
 
-{% if messages %}
-<div style="margin-bottom: 32px;">
-    {% for message in messages %}
-    <div style="padding: 16px 24px; border-radius: 16px; margin-bottom: 12px; font-weight: 600; display: flex; align-items: center; gap: 12px; {% if message.tags == 'success' %}background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;{% else %}background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% endif %}">
-        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-        {{ message }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+
 
 <div class="offer-grid">
     <!-- PRODUCT OFFERS -->
@@ -236,10 +227,9 @@
                                 <button class="btn-circle btn-edit" onclick="editProductOffer('{{ offer.id }}', '{{ offer.product.id }}', '{{ offer.discount_percentage }}', '{{ offer.valid_from|date:'Y-m-d\TH:i' }}', '{{ offer.valid_to|date:'Y-m-d\TH:i' }}', {{ offer.is_active|yesno:'true,false' }})" title="Edit Offer">
                                     <i class="fas fa-pen-nib"></i>
                                 </button>
-                                <form action="{% url 'delete_offer' 'product' offer.id %}" method="POST" onsubmit="return confirm('Permanently remove this product offer?')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn-circle btn-delete" title="Delete Offer"><i class="fas fa-trash-alt"></i></button>
-                                </form>
+                                <button type="button" class="btn-circle btn-delete" title="Delete Offer" onclick="confirmDeleteOffer('{% url 'delete_offer' 'product' offer.id %}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -300,10 +290,9 @@
                                 <button class="btn-circle btn-edit" onclick="editCategoryOffer('{{ offer.id }}', '{{ offer.category.id }}', '{{ offer.discount_percentage }}', '{{ offer.valid_from|date:'Y-m-d\TH:i' }}', '{{ offer.valid_to|date:'Y-m-d\TH:i' }}', {{ offer.is_active|yesno:'true,false' }})" title="Edit Offer">
                                     <i class="fas fa-pen-nib"></i>
                                 </button>
-                                <form action="{% url 'delete_offer' 'category' offer.id %}" method="POST" onsubmit="return confirm('Permanently remove this category offer?')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn-circle btn-delete" title="Delete Offer"><i class="fas fa-trash-alt"></i></button>
-                                </form>
+                                <button type="button" class="btn-circle btn-delete" title="Delete Offer" onclick="confirmDeleteOffer('{% url 'delete_offer' 'category' offer.id %}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -337,28 +326,36 @@
     
     <form action="{% url 'update_referral_offer' %}" method="POST" class="referral-form">
         {% csrf_token %}
-        <div class="form-group input-group" style="margin:0;">
-            <label>Referrer Reward</label>
-            <i class="fas fa-wallet"></i>
-            <input type="number" name="referrer_reward" class="form-control" placeholder="E.g. 100" value="{{ referral_offer.referrer_reward|default:'' }}" required>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referrer Reward</label>
+            <div class="input-wrapper">
+                <i class="fas fa-wallet"></i>
+                <input type="number" name="referrer_reward" class="form-control" placeholder="E.g. 100" value="{{ referral_offer.referrer_reward|default:'' }}" required>
+            </div>
             <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Reward for the existing user.</small>
         </div>
-        <div class="form-group input-group" style="margin:0;">
-            <label>Referee Signup</label>
-            <i class="fas fa-user-plus"></i>
-            <input type="number" name="referee_signup_reward" class="form-control" placeholder="E.g. 20" value="{{ referral_offer.referee_signup_reward|default:'' }}" required>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Signup</label>
+            <div class="input-wrapper">
+                <i class="fas fa-user-plus"></i>
+                <input type="number" name="referee_signup_reward" class="form-control" placeholder="E.g. 20" value="{{ referral_offer.referee_signup_reward|default:'' }}" required>
+            </div>
             <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Initial bonus for the new user.</small>
         </div>
-        <div class="form-group input-group" style="margin:0;">
-            <label>Referee Order</label>
-            <i class="fas fa-shopping-cart"></i>
-            <input type="number" name="referee_order_reward" class="form-control" placeholder="E.g. 80" value="{{ referral_offer.referee_order_reward|default:'' }}" required>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Order</label>
+            <div class="input-wrapper">
+                <i class="fas fa-shopping-cart"></i>
+                <input type="number" name="referee_order_reward" class="form-control" placeholder="E.g. 80" value="{{ referral_offer.referee_order_reward|default:'' }}" required>
+            </div>
             <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Reward after their first order.</small>
         </div>
-        <div class="form-group input-group" style="margin:0;">
-            <label>Referee Discount</label>
-            <i class="fas fa-percent"></i>
-            <input type="number" name="referee_discount_percent" class="form-control" placeholder="E.g. 50" value="{{ referral_offer.referee_discount_percent|default:'50' }}" required>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Discount</label>
+            <div class="input-wrapper">
+                <i class="fas fa-percent"></i>
+                <input type="number" name="referee_discount_percent" class="form-control" placeholder="E.g. 50" value="{{ referral_offer.referee_discount_percent|default:'50' }}" required>
+            </div>
             <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Discount on first purchase.</small>
         </div>
         <div class="form-group" style="margin:0; align-self: center;">
@@ -383,7 +380,7 @@
                 <h2 class="modal-title" id="productModalTitle" style="font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em;">New Product Offer</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Define custom discounts for specific products.</p>
             </div>
-            <button class="close-modal" onclick="document.getElementById('productModal').style.display='none'"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="hideModal('productModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="{% url 'add_product_offer' %}" method="POST" id="productOfferForm">
             {% csrf_token %}
@@ -430,9 +427,9 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
             <div>
                 <h2 class="modal-title" id="categoryModalTitle" style="font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em;">New Category Offer</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Apply sitewide discounts to entire collections.</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Apply sitewide discounts to entire categories.</p>
             </div>
-            <button class="close-modal" onclick="document.getElementById('categoryModal').style.display='none'"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="hideModal('categoryModal')"><i class="fas fa-times"></i></button>
         </div>
         <form action="{% url 'add_category_offer' %}" method="POST" id="categoryOfferForm">
             {% csrf_token %}
@@ -471,6 +468,25 @@
             <button type="submit" class="btn-submit" id="categorySubmitBtn" style="background: #3b82f6;">Launch Category Offer</button>
         </form>
     </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="form-overlay" onclick="closeModal(event, 'deleteConfirmModal')">
+    <div class="modal-content" onclick="event.stopPropagation()" style="width: 400px; text-align: center; padding: 40px;">
+        <div style="font-size: 3.5rem; color: #ef4444; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 style="font-weight: 900; font-size: 1.6rem; margin-bottom: 12px;">Delete Offer?</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 32px;">
+            Are you sure you want to permanently delete this offer? This action cannot be undone.
+        </p>
+        <form method="POST" id="deleteOfferForm">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn-submit" onclick="hideModal('deleteConfirmModal')" style="flex:1; background: #f1f5f9; color: var(--text-main); box-shadow: none; margin-top: 0;">Cancel</button>
+                <button type="submit" class="btn-submit" style="flex:1; background: #ef4444; margin-top: 0;">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
 </div>
 
 <script>
@@ -525,9 +541,13 @@
 
     function closeModal(e, id) {
         if (e.target.id === id) {
-            document.getElementById(id).style.display = 'none';
-            document.body.style.overflow = 'auto';
+            hideModal(id);
         }
+    }
+
+    function hideModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto';
     }
     
     window.addEventListener('keydown', function(e) {
@@ -601,5 +621,11 @@
     document.getElementById('categoryOfferForm').addEventListener('submit', function(e) {
         if (!validateOfferForm('categoryOfferForm')) e.preventDefault();
     });
+
+    function confirmDeleteOffer(url) {
+        const form = document.getElementById('deleteOfferForm');
+        form.action = url;
+        document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
 </script>
 {% endblock %}

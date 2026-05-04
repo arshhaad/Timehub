@@ -596,6 +596,57 @@
             transform: scale(1.08);
         }
 
+        /* Unavailable Product Styling */
+        .product-card.is-unavailable img {
+            filter: grayscale(1) opacity(0.5);
+        }
+
+        .unavailable-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .unavailable-text {
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transform: rotate(-15deg);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .unavailable-strip {
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-align: center;
+            padding: 5px 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            z-index: 100;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .badge-container {
             position: absolute;
             top: 15px;
@@ -1716,13 +1767,14 @@
         .compare-empty-slot {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             background: rgba(255, 255, 255, 0.02);
             border: 1px dashed rgba(255, 255, 255, 0.12);
             border-radius: 12px;
             padding: 8px 14px;
             min-width: 140px;
-            color: var(--text-muted);
+            height: 56px;
+            color: rgba(255,255,255,0.05);
             font-size: 0.78rem;
             font-weight: 600;
             flex-shrink: 0;
@@ -2133,32 +2185,7 @@
         <div class="drawer-scroll">
             <form id="unifiedFilterForm" method="GET" action="{% url 'product_listing' %}">
                 {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-                {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
-
-                <!-- Sorting (Pinned to top) -->
-                <div class="filter-accordion active">
-                    <button type="button" class="acc-header">
-                        <h4>Sort Collection</h4>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="acc-content">
-                        <div class="sort-select-wrap">
-                            <select name="sort" class="sort-select"
-                                onchange="document.getElementById('unifiedFilterForm').submit()">
-                                <option value="newest" {% if sort == 'newest' or not sort %}selected{% endif %}>Newest
-                                    Arrival</option>
-                                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to
-                                    High</option>
-                                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to
-                                    Low</option>
-                                <option value="name_az" {% if sort == 'name_az' %}selected{% endif %}>Name: A to Z
-                                </option>
-                                <option value="name_za" {% if sort == 'name_za' %}selected{% endif %}>Name: Z to A
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                <input type="hidden" id="hiddenSortInput" name="sort" value="{{ sort|default:'newest' }}">
 
                 <!-- Collection/Categories -->
                 <div class="filter-accordion active">
@@ -2408,6 +2435,15 @@
                                 <span class="switch-slider"></span>
                             </label>
                         </div>
+                        <div class="sort-wrapper">
+                            <select name="sort_header" class="sort-select" onchange="syncSortAndSubmit(this.value)">
+                                <option value="newest" {% if sort == 'newest' or not sort %}selected{% endif %}>Newest Arrival</option>
+                                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="name_az" {% if sort == 'name_az' %}selected{% endif %}>Name: A to Z</option>
+                                <option value="name_za" {% if sort == 'name_za' %}selected{% endif %}>Name: Z to A</option>
+                            </select>
+                        </div>
                         <div class="results-meta">
                             <span>Showing</span> {{ products.start_index }} - {{ products.end_index }} of {{ products.paginator.count }} items
                         </div>
@@ -2435,10 +2471,20 @@
                 <div class="product-grid" id="productGrid">
                     {% for product in products %}
                     <a href="{% url 'product_details' product_uuid=product.uuid %}"
-                        class="product-card {% if product.id in current_compare_ids %}compare-selected{% endif %}"
+                        class="product-card {% if product.id in current_compare_ids %}compare-selected{% endif %} {% if not product.is_active or product.stock == 0 %}is-unavailable{% endif %}"
                         style="text-decoration:none; color:inherit;" data-id="{{ product.id }}"
                         data-name="{{ product.name|escapejs }}" {% if product.image %}data-image="{{ product.image.url }}"{% endif %} id="product-card-{{ product.id }}">
+                        
+                        {% if not product.is_active or product.stock == 0 %}
+                        <div class="unavailable-strip">Unavailable</div>
+                        {% endif %}
+
                         <div class="card-image-wrap">
+                            {% if not product.is_active or product.stock == 0 %}
+                            <div class="unavailable-overlay">
+                                <span class="unavailable-text">Unavailable</span>
+                            </div>
+                            {% endif %}
                             <!-- Selection indicator overlay -->
                             <div class="compare-select-indicator" id="indicator-{{ product.id }}">
                                 <i class="fas fa-check"></i>
@@ -2452,7 +2498,7 @@
 
                             <div class="badge-container">
                                 {% if product.stock == 0 %}
-                                <span class="badge" style="background: #333; color: #fff;">Sold Out</span>
+                                <span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>
                                 {% elif product.badge %}
                                 <span class="badge">{{ product.badge }}</span>
                                 {% elif product.discount_price %}
@@ -2489,8 +2535,14 @@
                                 {% endif %}
                             </div>
 
+                            {% if not product.is_active or product.stock == 0 %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-exclamation-circle"></i> Currently Unavailable
+                            </div>
+                            {% endif %}
+
                             <div class="action-buttons-row" style="display:flex; gap:10px; margin-top:10px;">
-                                {% if product.stock > 0 %}
+                                {% if product.is_active and product.stock > 0 %}
                                 <button class="btn btn-primary add-cart"
                                     onclick="event.preventDefault(); event.stopPropagation(); window.addToCart('{{ product.uuid }}', this);"
                                     style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px;">
@@ -2499,14 +2551,21 @@
                                 {% else %}
                                 <button class="btn btn-primary add-cart out-of-stock" disabled
                                     style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; gap:5px; width:auto; border-radius:30px; background:#374151; color:#9ca3af; cursor:not-allowed;">
-                                    <i class="fas fa-exclamation-triangle"></i> Out
+                                    <i class="fas fa-exclamation-triangle"></i> Unavailable
                                 </button>
                                 {% endif %}
+                                {% if product.is_active and product.stock > 0 %}
                                 <button class="btn btn-outline buy-now"
                                     onclick="event.preventDefault(); event.stopPropagation(); window.buyNow('{{ product.uuid }}', this);"
                                     style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid var(--primary-color); color:var(--primary-color); background:transparent; border-radius:30px;">
                                     Buy Now
                                 </button>
+                                {% else %}
+                                <button class="btn btn-outline buy-now" disabled
+                                    style="flex:1; padding:10px 5px; font-size:0.85rem; display:flex; justify-content:center; align-items:center; border:1px solid #374151; color:#9ca3af; background:transparent; border-radius:30px; cursor:not-allowed; opacity: 0.6;">
+                                    N/A
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </a>
@@ -2603,6 +2662,22 @@
         const openDrawer = () => { sidebarDrawer.classList.add('active'); overlay.classList.add('active'); };
         const closeAll = () => { sidebarDrawer.classList.remove('active'); overlay.classList.remove('active'); };
 
+        function syncSortAndSubmit(val) {
+            const filterForm = document.getElementById('unifiedFilterForm');
+            if (filterForm) {
+                // Ensure there's a sort hidden input in the form
+                let sortInput = filterForm.querySelector('input[name="sort"]');
+                if (!sortInput) {
+                    sortInput = document.createElement('input');
+                    sortInput.type = 'hidden';
+                    sortInput.name = 'sort';
+                    filterForm.appendChild(sortInput);
+                }
+                sortInput.value = val;
+                filterForm.submit();
+            }
+        }
+
         document.getElementById('openDrawer')?.addEventListener('click', openDrawer);
         overlay.addEventListener('click', closeAll);
 
@@ -2614,7 +2689,13 @@
             }
         });
 
-        // Mobile Menu Toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            {% if messages %}
+                {% for message in messages %}
+                    showToast("{{ message|escapejs }}", "{{ message.tags|default:'success' }}");
+                {% endfor %}
+            {% endif %}
+        });
         const mobileToggle = document.getElementById('mobileToggle');
         const mobileMenu = document.getElementById('mobileMenu');
         const closeMenu = document.getElementById('closeMenu');
@@ -2784,7 +2865,7 @@
             for (let i = 0; i < slotsLeft; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'compare-empty-slot';
-                slot.innerHTML = `<i class="fas fa-plus-circle" style="color:var(--primary-color); opacity:0.5;"></i><span>Select a product</span>`;
+                slot.innerHTML = `<i class="fas fa-plus" style="font-size: 0.8rem; opacity: 0.2;"></i>`;
                 row.appendChild(slot);
             }
 

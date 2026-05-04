@@ -305,9 +305,9 @@
                     <input type="number" name="max_items_count" id="f_max_items" class="form-control" placeholder="Optional">
                 </div>
                 <div class="form-group">
-                    <label>Target Collection</label>
+                    <label>Target Category</label>
                     <select name="applicable_collection" id="f_collection" class="form-control">
-                        <option value="">All Collections</option>
+                        <option value="">All Categories</option>
                         {% for c in all_categories %}
                         <option value="{{ c.id }}">{{ c.name }}</option>
                         {% endfor %}

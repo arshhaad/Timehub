@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice_{{ order.id|stringformat:"05d" }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { padding: 40px; color: #1a1a1a; line-height: 1.5; background: #fff; }
+        .invoice-box { max-width: 800px; margin: auto; border: 1px solid #eee; padding: 40px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 50px; }
+        .logo { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #000; }
+        .logo span { color: #ff6a00; }
+        
+        .inv-meta { text-align: right; }
+        .inv-meta h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; color: #eee; text-transform: uppercase; margin-bottom: 10px; }
+        .inv-meta p { font-size: 0.9rem; color: #666; font-weight: 600; }
+
+        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .address-block h3 { font-size: 0.75rem; text-transform: uppercase; color: #999; letter-spacing: 1px; margin-bottom: 12px; }
+        .address-block p { font-size: 0.95rem; font-weight: 600; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th { background: #f9f9f9; padding: 15px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #666; border-bottom: 2px solid #eee; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        
+        .total-section { margin-left: auto; width: 300px; }
+        .total-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.9rem; }
+        .total-row.grand-total { border-top: 2px solid #000; margin-top: 10px; padding-top: 15px; font-weight: 800; font-size: 1.2rem; }
+
+        .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 0.8rem; color: #999; }
+        
+        @media print {
+            body { padding: 0; }
+            .invoice-box { border: none; }
+            .btn-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div style="max-width: 800px; margin: 0 auto 20px; text-align: right;">
+        <button onclick="window.print()" class="btn-print" style="padding: 10px 20px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+            Print Invoice
+        </button>
+    </div>
+
+    <div class="invoice-box">
+        <div class="header">
+            <div class="logo">TimeHub<span>.</span></div>
+            <div class="inv-meta">
+                <h1>Invoice</h1>
+                <p>Order #{{ order.id|stringformat:"05d" }}</p>
+                <p>Date: {{ order.created_at|date:"d M, Y" }}</p>
+            </div>
+        </div>
+
+        <div class="address-grid">
+            <div class="address-block">
+                <h3>Sold By</h3>
+                <p>TimeHub Private Limited</p>
+                <p>42 Luxury Plaza, Jubilee Hills</p>
+                <p>Hyderabad, TS 500033</p>
+                <p>GSTIN: 36AAAAA0000A1Z5</p>
+            </div>
+            <div class="address-block">
+                <h3>Shipping To</h3>
+                <p>{{ address.full_name }}</p>
+                <p>{{ address.street }}</p>
+                <p>{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
+                <p>{{ address.country }}</p>
+                <p>T: {{ address.phone }}</p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Unit Price</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 700;">{{ item.product.name }}</div>
+                        <div style="font-size: 0.75rem; color: #888;">{{ item.product.brand }}</div>
+                    </td>
+                    <td style="text-align: center;">{{ item.quantity }}</td>
+                    <td style="text-align: right;">₹{{ item.price|floatformat:2 }}</td>
+                    <td style="text-align: right;">₹{{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-row"><span>Subtotal</span><span>₹{{ order.subtotal|floatformat:2 }}</span></div>
+            <div class="total-row"><span>Tax (3% GST)</span><span>₹{{ order.tax|floatformat:2 }}</span></div>
+            <div class="total-row"><span>Shipping</span><span>₹{{ order.shipping_charge|floatformat:2 }}</span></div>
+            {% if order.discount > 0 %}
+            <div class="total-row" style="color: #16a34a;"><span>Discount</span><span>-₹{{ order.discount|floatformat:2 }}</span></div>
+            {% endif %}
+            <div class="total-row grand-total"><span>Total</span><span>₹{{ order.total_amount|floatformat:2 }}</span></div>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for choosing TimeHub. This is a computer generated invoice and does not require a signature.</p>
+            <p style="margin-top: 5px;">support@timehub.com | www.timehub.com</p>
+        </div>
+    </div>
+
+</body>
+</html>

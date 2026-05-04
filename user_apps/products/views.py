@@ -10,8 +10,8 @@ from user_apps.core.models import Product, Collection, ComparisonHistory, Produc
 from admin_apps.offers.models import Coupon
 
 def product_list(request):
-    # Base queryset: Active and not deleted
-    products = Product.objects.filter(is_active=True, is_deleted=False).annotate(
+    # Base queryset: Show active products AND inactive products (to show as unavailable)
+    products = Product.objects.filter(is_deleted=False).annotate(
         effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
     )
     
@@ -93,12 +93,12 @@ def product_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Total count for "All Watches"
-    total_products = Product.objects.filter(is_active=True, is_deleted=False).count()
+    # Total count for "All Watches" (including inactive but not deleted)
+    total_products = Product.objects.filter(is_deleted=False).count()
     
     # Get Max Price for the slider
     # Get Max Price for the slider based on effective price
-    max_price_db = Product.objects.filter(is_active=True, is_deleted=False).annotate(
+    max_price_db = Product.objects.filter(is_deleted=False).annotate(
         effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
     ).aggregate(Max('effective_price'))['effective_price__max'] or 1000
     
@@ -114,7 +114,7 @@ def product_list(request):
     compare_ids = request.session.get('compare_list', [])
     compare_products = Product.objects.filter(id__in=compare_ids, is_active=True, is_deleted=False)
     
-    # Slider Percentages (Python Pre-calc)
+    # Slider Percentages 
     min_price_val = float(min_price or 0)
     max_price_val = float(max_price or max_price_db)
     min_percent = (min_price_val / float(max_price_db)) * 100 if max_price_db else 0
@@ -204,7 +204,7 @@ def compare_products(request):
         history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
             
     # Calculate total price for summary
-    total_price = sum(p.price for p in products)
+    total_price = sum(p.display_price for p in products)
     
     fill_count = max(0, 3 - len(products))
     context = {
@@ -365,6 +365,11 @@ def product_details(request, product_uuid):
         # Get active coupons for display
         active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=timezone.now(), valid_to__gte=timezone.now())
         context['available_coupons'] = active_coupons
+
+    # Comparison Data
+    compare_ids = request.session.get('compare_list', [])
+    context['current_compare_ids'] = [int(pid) for pid in compare_ids if str(pid).isdigit()]
+    context['current_compare_products'] = Product.objects.filter(id__in=compare_ids, is_active=True, is_deleted=False)
     
     # Calculate savings based on display_price
     context['savings'] = product.price - product.display_price

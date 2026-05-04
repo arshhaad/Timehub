@@ -12,21 +12,35 @@ class UserEditForm(forms.ModelForm):
 
     def clean_first_name(self):
         first_name = self.cleaned_data.get('first_name')
-        if first_name and not re.match(r'^[a-zA-Z\s]+$', first_name):
-            raise forms.ValidationError("First name can only contain letters and spaces.")
+        if not first_name.strip():
+            raise forms.ValidationError("First name is required.")
+        if not first_name.isalpha():
+            raise forms.ValidationError("First name should only contain letters.")
         return first_name
 
     def clean_last_name(self):
         last_name = self.cleaned_data.get('last_name')
-        if last_name and not re.match(r'^[a-zA-Z\s]+$', last_name):
-            raise forms.ValidationError("Last name can only contain letters and spaces.")
+        if last_name and not last_name.isalpha():
+            raise forms.ValidationError("Last name should only contain letters.")
         return last_name
 
     def clean_phone_number(self):
         phone = self.cleaned_data.get('phone_number')
-        if phone and not re.match(r'^[\+]?[\d\s\-\(\)]{10,15}$', phone):
-            raise forms.ValidationError("Enter a valid phone number (10-15 digits).")
+        if phone:
+            if not phone.isdigit():
+                raise forms.ValidationError("Phone number must contain only digits.")
+            if len(phone) < 10 or len(phone) > 13:
+                raise forms.ValidationError("Phone number must be between 10 and 13 digits.")
         return phone
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            if avatar.size > 2 * 1024 * 1024: # 2MB limit
+                raise forms.ValidationError("Image size should not exceed 2MB.")
+            if not avatar.name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                raise forms.ValidationError("Only PNG, JPG, JPEG, and WEBP images are allowed.")
+        return avatar
 
 class AddressForm(forms.ModelForm):
     class Meta:

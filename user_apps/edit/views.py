@@ -256,9 +256,14 @@ def account_edit(request):
             messages.error(request, 'Please correct the error below.')
     else:
         form = PasswordChangeForm(request.user)
+    
+    status_code = 200
+    if request.method == 'POST' and not form.is_valid():
+        status_code = 400
+
     return render(request, 'account_edit.html', {
         'form': form
-    })
+    }, status=status_code)
 
 @login_required
 @never_cache
@@ -294,12 +299,19 @@ def cart_view(request):
     
     has_stock_issues = False
     for item in items:
-        if item.product.stock == 0 or not item.product.is_active or item.product.is_deleted or item.product.collection.is_deleted:
+        # Check basic availability
+        if not item.product.is_active or item.product.is_deleted or item.product.collection.is_deleted:
             has_stock_issues = True
             break
-        elif item.quantity > item.product.stock:
-            has_stock_issues = True
-            break
+            
+        if item.variant:
+            if not item.variant.is_active or item.variant.stock == 0 or item.quantity > item.variant.stock:
+                has_stock_issues = True
+                break
+        else:
+            if item.product.stock == 0 or item.quantity > item.product.stock:
+                has_stock_issues = True
+                break
             
     shipping_needed = max(0, Decimal('5000.00') - subtotal)
     shipping_percentage = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
@@ -333,10 +345,18 @@ def add_to_cart(request, product_uuid):
         if not product.is_active or product.is_deleted or product.collection.is_deleted:
             return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
             
+        active_variants = product.variants.filter(is_active=True)
+        has_variants = active_variants.exists()
+        
         variant = None
         if variant_id:
             from user_apps.core.models import ProductVariant
-            variant = ProductVariant.objects.filter(id=variant_id, product=product).first()
+            variant = active_variants.filter(id=variant_id).first()
+            if not variant:
+                return JsonResponse({'success': False, 'error': 'Invalid product variant selected'})
+        elif has_variants:
+            # If product has variants but none selected, we can't add to cart from here
+            return JsonResponse({'success': False, 'error': 'Please select a variant (color/strap) for this product'})
         
         # Check stock of variant if it exists, else base product
         available_stock = variant.stock if variant else product.stock
@@ -540,12 +560,14 @@ def wallet_view(request):
     # Calculate professional stats
     total_added = transactions.filter(transaction_type='Credit').aggregate(total=Sum('amount'))['total'] or 0
     total_spent = transactions.filter(transaction_type='Debit').aggregate(total=Sum('amount'))['total'] or 0
+    total_rewards = transactions.filter(transaction_type='Credit', description__icontains='Referral').aggregate(total=Sum('amount'))['total'] or 0
     
     context = {
         'wallet': wallet,
         'transactions': transactions,
         'total_added': total_added,
         'total_spent': total_spent,
+        'total_rewards': total_rewards,
         'active_menu': 'wallet',
     }
-    return render(request, 'wallat.html', context)
+    return render(request, 'wallet.html', context)

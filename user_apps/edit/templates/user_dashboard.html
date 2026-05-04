@@ -397,7 +397,7 @@
             <h2>{{ user.get_full_name|default:user.email }}</h2>
             <div class="profile-contact">
                 <span><i class="fas fa-envelope-open-text"></i> {{ user.email }}</span>
-                <span><i class="fas fa-mobile-retro"></i> {{ user.phone_number|default:"+1 (555) 234-5678" }}</span>
+                <span><i class="fas fa-mobile-retro"></i> {{ user.phone_number|default:"Not provided" }}</span>
             </div>
             <p class="member-since">
                 <i class="fas fa-calendar-check"></i> 

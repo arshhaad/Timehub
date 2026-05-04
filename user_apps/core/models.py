@@ -14,6 +14,13 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
 
+    def get_all_descendant_ids(self):
+        """Returns a list containing this collection's ID and all its descendants' IDs."""
+        descendants = [self.id]
+        for child in self.children.all():
+            descendants.extend(child.get_all_descendant_ids())
+        return descendants
+
 class Color(models.Model):
     name = models.CharField(max_length=50, unique=True)
     hex_code = models.CharField(max_length=7) 
@@ -147,12 +154,21 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    variant = models.ForeignKey('ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='product_images')
     image = models.ImageField(upload_to='product_images/')
     is_main = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Image for {self.product.name}"
+
+class VariantImage(models.Model):
+    variant = models.ForeignKey('ProductVariant', on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='variant_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.variant}"
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
@@ -164,6 +180,7 @@ class ProductVariant(models.Model):
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
     sku = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -247,7 +264,7 @@ class Order(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
-        ('CONFIRMED', 'Confirmed'),
+        ('Confirmed', 'Confirmed'),
         ('Processing', 'Processing'),
         ('Shipped', 'Shipped'),
         ('Out for Delivery', 'Out for Delivery'),
@@ -296,6 +313,7 @@ class Order(models.Model):
     refund_method = models.CharField(max_length=50, blank=True, null=True)
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.email}"

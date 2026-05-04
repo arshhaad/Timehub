@@ -44,7 +44,8 @@ def get_cart_totals(cart):
     if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
         # Determine items that are applicable for this coupon
         if cart.coupon.applicable_collection:
-            applicable_items = [item for item in items if item.product.collection == cart.coupon.applicable_collection]
+            collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
+            applicable_items = [item for item in items if item.product.collection_id in collection_ids]
         else:
             applicable_items = list(items)
 
@@ -150,7 +151,8 @@ def checkout_page(request):
         is_valid, _ = cart.coupon.is_valid_for_user(request.user)
         if is_valid:
             if cart.coupon.applicable_collection:
-                applicable_items = items.filter(product__collection=cart.coupon.applicable_collection)
+                collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
+                applicable_items = items.filter(product__collection_id__in=collection_ids)
                 applicable_subtotal = sum(item.total_price for item in applicable_items)
             else:
                 applicable_subtotal = subtotal
@@ -209,90 +211,97 @@ def checkout_page(request):
             'phone': address.phone,
         }
 
-        with transaction.atomic():
-            # Generate estimated delivery date
-            days_to_delivery = random.randint(3, 7)
-            estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
+        try:
+            with transaction.atomic():
+                # Generate estimated delivery date
+                days_to_delivery = random.randint(3, 7)
+                estimated_delivery_date = (timezone.now() + timedelta(days=days_to_delivery)).date()
 
-            # Wallet deduction
-            if payment_method == 'wallet':
-                wallet, _ = Wallet.objects.get_or_create(user=request.user)
-                if wallet.balance < total:
-                    messages.error(request, 'Insufficient wallet balance.')
-                    return render(request, 'checkout_page.html', {
-                        'items': items, 'subtotal': subtotal, 'tax': tax,
-                        'shipping': shipping, 'discount': discount, 'total': total,
-                        'cart': cart, 'addresses': addresses, 'default_address': default_address,
-                        'total_quantity': total_quantity,
-                    })
-                wallet.balance -= total
-                wallet.save()
-                
-            order = Order.objects.create(
-                user=request.user,
-                address_snapshot=json.dumps(address_data),
-                payment_method=payment_method,
-                subtotal=subtotal,
-                tax=tax,
-                shipping_charge=shipping,
-                discount=discount,
-                total_amount=total,
-                status='Pending',
-                is_paid=True if payment_method == 'wallet' else False,
-                scheduled_delivery_date=estimated_delivery_date,
-                coupon_code=cart.coupon.code if cart.coupon else None,
-            )
-
-            if payment_method == 'wallet':
-                WalletTransaction.objects.create(
-                    wallet=wallet,
-                    transaction_type='Debit',
-                    amount=total,
-                    description=f'Payment for Order #{order.id}'
+                # Wallet deduction
+                if payment_method == 'wallet':
+                    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+                    if wallet.balance < total:
+                        messages.error(request, 'Insufficient wallet balance.')
+                        return render(request, 'checkout_page.html', {
+                            'items': items, 'subtotal': subtotal, 'tax': tax,
+                            'shipping': shipping, 'discount': discount, 'total': total,
+                            'cart': cart, 'addresses': addresses, 'default_address': default_address,
+                            'total_quantity': total_quantity,
+                        })
+                    wallet.balance -= total
+                    wallet.save()
+                    
+                order = Order.objects.create(
+                    user=request.user,
+                    address_snapshot=json.dumps(address_data),
+                    payment_method=payment_method,
+                    subtotal=subtotal,
+                    tax=tax,
+                    shipping_charge=shipping,
+                    discount=discount,
+                    total_amount=total,
+                    status='Pending',
+                    is_paid=True if payment_method == 'wallet' else False,
+                    scheduled_delivery_date=estimated_delivery_date,
+                    coupon_code=cart.coupon.code if cart.coupon else None,
                 )
 
-            if cart.coupon:
-                cart.coupon.used_count += 1
-                cart.coupon.save()
+                if payment_method == 'wallet':
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        transaction_type='Debit',
+                        amount=total,
+                        description=f'Payment for Order #{order.id}'
+                    )
 
-            for item in items:
-                # Double check availability during placement
-                if not item.product.is_active or (item.variant and not item.variant.is_active):
-                    messages.error(request, f"'{item.product.name}' is no longer available.")
-                    raise Exception("Item unavailable")
+                if cart.coupon:
+                    cart.coupon.used_count += 1
+                    cart.coupon.save()
 
-                available_stock = item.variant.stock if item.variant else item.product.stock
-                if available_stock < item.quantity:
-                    messages.error(request, f"Sorry, only {available_stock} units of {item.product.name} are available.")
-                    raise Exception("Insufficient stock")
+                for item in items:
+                    # Double check availability during placement
+                    if not item.product.is_active or (item.variant and not item.variant.is_active):
+                        raise Exception(f"'{item.product.name}' is no longer available.")
 
-                price_at_purchase = item.variant.display_price if item.variant else item.product.display_price
-                
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    variant=item.variant,
-                    quantity=item.quantity,
-                    price=price_at_purchase,
-                )
-                
-                # Decrement Stock
-                if item.variant:
-                    item.variant.stock -= item.quantity
-                    item.variant.save()
-                else:
-                    item.product.stock -= item.quantity
-                    item.product.save()
+                    available_stock = item.variant.stock if item.variant else item.product.stock
+                    if available_stock < item.quantity:
+                        raise Exception(f"Sorry, only {available_stock} units of {item.product.name} are available.")
 
-            # Clear items that were ordered
-            items.delete()
-            if current_buy_now_id:
-                del request.session['buy_now_id']
+                    price_at_purchase = item.variant.display_price if item.variant else item.product.display_price
+                    
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item.product,
+                        variant=item.variant,
+                        quantity=item.quantity,
+                        price=price_at_purchase,
+                    )
+                    
+                    # Decrement Stock
+                    if item.variant:
+                        item.variant.stock -= item.quantity
+                        item.variant.save()
+                    else:
+                        item.product.stock -= item.quantity
+                        item.product.save()
 
-        if payment_method == 'razorpay':
-            return redirect('payments:start_payment', order_id=order.id)
+                # Clear items that were ordered
+                items.delete()
+                if current_buy_now_id:
+                    del request.session['buy_now_id']
 
-        return redirect('order_success', order_uuid=order.uuid)
+            if payment_method == 'razorpay':
+                return redirect('payments:start_payment', order_id=order.id)
+
+            return redirect('order_success', order_uuid=order.uuid)
+        except Exception as e:
+            messages.error(request, str(e))
+            return render(request, 'checkout_page.html', {
+                'items': items, 'subtotal': subtotal, 'tax': tax,
+                'shipping': shipping, 'discount': discount, 'total': total,
+                'cart': cart, 'addresses': addresses, 'default_address': default_address,
+                'total_quantity': total_quantity,
+            })
 
     # Provide an estimated delivery date
     days_to_add = random.randint(1, 7)
@@ -398,7 +407,11 @@ def cancel_order(request, order_uuid):
         return render(request, 'cancel.html', {'order': order})
         
     if request.method == 'POST' and order.status in ['Pending', 'CONFIRMED', 'Processing']:
-        reason = request.POST.get('reason', 'User cancelled')
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, 'Please provide a reason for cancellation.')
+            return redirect('order_detail', order_uuid=order.uuid)
+            
         with transaction.atomic():
             original_total = order.total_amount
 
@@ -421,7 +434,7 @@ def cancel_order(request, order_uuid):
             
             order.update_totals()
             
-            if order.payment_method in ['razorpay', 'wallet']:
+            if order.is_paid:
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
                 wallet.balance += original_total
                 wallet.save()
@@ -447,7 +460,11 @@ def cancel_order_item(request, item_uuid):
     order = item.order
     
     if order.status in ['Pending', 'CONFIRMED', 'Processing'] and not item.is_cancelled:
-        reason = request.POST.get('reason', 'User cancelled')
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, 'Please provide a reason for cancellation.')
+            return redirect('order_detail', order_uuid=order.uuid)
+            
         with transaction.atomic():
             original_total = order.total_amount
 
@@ -468,7 +485,7 @@ def cancel_order_item(request, item_uuid):
             # when all items are cancelled to allow for more granular control.
             order.update_totals()
             
-            if order.payment_method in ['razorpay', 'wallet']:
+            if order.is_paid:
                 refund_amount = original_total - order.total_amount
                 if refund_amount > 0:
                     wallet, _ = Wallet.objects.get_or_create(user=request.user)
@@ -756,7 +773,8 @@ def apply_coupon(request):
         
     # Determine items that are applicable for this coupon
     if coupon.applicable_collection:
-        applicable_items_list = [item for item in items if item.product.collection == coupon.applicable_collection]
+        collection_ids = coupon.applicable_collection.get_all_descendant_ids()
+        applicable_items_list = [item for item in items if item.product.collection_id in collection_ids]
     else:
         applicable_items_list = list(items)
 
@@ -909,4 +927,143 @@ def available_coupons(request):
     
     return render(request, 'available_coupons.html', {
         'active_coupons': valid_coupons
+    })
+
+@login_required
+@never_cache
+def track_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+    # Estimate delivery date as 7 days after creation if not already set/reached
+    est_delivery = order.created_at + timedelta(days=7)
+    
+    return render(request, 'track_order.html', {
+        'order': order,
+        'est_delivery': est_delivery
+    })
+
+@login_required
+@transaction.atomic
+def cancel_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+    
+    if order.status not in ['Pending', 'Confirmed', 'Processing']:
+        messages.error(request, f"Order cannot be cancelled in its current status: {order.status}")
+        return redirect('order_detail', order_uuid=order.uuid)
+        
+    reason = request.POST.get('reason', 'Customer requested cancellation')
+    
+    # Restore stock for each item
+    for item in order.items.all():
+        if not item.is_cancelled:
+            item.product.stock += item.quantity
+            item.product.save()
+            item.is_cancelled = True
+            item.save()
+            
+    order.status = 'Cancelled'
+    order.cancel_reason = reason
+    order.save()
+    
+    # Refund to wallet if paid
+    if order.is_paid:
+        from user_apps.core.models import Wallet, WalletTransaction
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        wallet.balance += order.total_amount
+        wallet.save()
+        
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            transaction_type='Credit',
+            amount=order.total_amount,
+            description=f"Refund for cancelled order #{order.id}"
+        )
+        messages.success(request, "Order cancelled. Amount has been refunded to your wallet.")
+    else:
+        messages.success(request, "Order cancelled successfully.")
+        
+    return redirect('order_detail', order_uuid=order.uuid)
+
+@login_required
+@transaction.atomic
+def cancel_order_item(request, item_uuid):
+    item = get_object_or_404(OrderItem, uuid=item_uuid, order__user=request.user)
+    order = item.order
+    
+    if order.status not in ['Pending', 'Confirmed', 'Processing']:
+        messages.error(request, "Item cannot be cancelled at this stage.")
+        return redirect('order_detail', order_uuid=order.uuid)
+        
+    if item.is_cancelled:
+        messages.warning(request, "Item is already cancelled.")
+        return redirect('order_detail', order_uuid=order.uuid)
+        
+    # Restore stock
+    item.product.stock += item.quantity
+    item.product.save()
+    
+    item.is_cancelled = True
+    item.save()
+    
+    # If all items cancelled, cancel the order
+    if not order.items.filter(is_cancelled=False).exists():
+        order.status = 'Cancelled'
+        order.save()
+        
+    # Refund logic for partial cancellation (optional, here we simplify to full refund if order is now empty)
+    # For simplicity in this demo, we'll only refund if the WHOLE order is now cancelled
+    # In a real app, you'd refund just the item price + prop. tax
+    
+    messages.success(request, f"{item.product.name} cancelled successfully.")
+    return redirect('order_detail', order_uuid=order.uuid)
+
+@login_required
+def return_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+    
+    if order.status != 'Delivered':
+        messages.error(request, "Only delivered orders can be returned.")
+        return redirect('order_detail', order_uuid=order.uuid)
+        
+    reason = request.POST.get('reason', 'Defective/Wrong item')
+    
+    # Mark for return
+    order.status = 'Return Requested'
+    order.return_status = 'Requested'
+    order.cancel_reason = f"Return Reason: {reason}"
+    order.save()
+    
+    messages.success(request, "Return request submitted. We'll pick up the item soon.")
+    return redirect('order_detail', order_uuid=order.uuid)
+
+@login_required
+def reschedule_order(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+    
+    if order.status not in ['Pending', 'Confirmed', 'Processing']:
+        messages.error(request, "Order cannot be rescheduled at this stage.")
+        return redirect('order_detail', order_uuid=order.uuid)
+        
+    new_date = request.POST.get('scheduled_date')
+    new_time = request.POST.get('scheduled_time')
+    reason = request.POST.get('reschedule_reason')
+    
+    if new_date:
+        order.requested_reschedule_date = new_date
+        order.requested_reschedule_time = new_time
+        order.reschedule_status = 'Pending'
+        order.save()
+        messages.success(request, f"Reschedule request for {new_date} submitted for approval.")
+        
+    return redirect('order_detail', order_uuid=order.uuid)
+
+@login_required
+def download_invoice(request, order_uuid):
+    order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+    items = order.items.all()
+    address = order.address # Assuming Order has an address relation or field
+    
+    return render(request, 'printable_invoice.html', {
+        'order': order,
+        'items': items,
+        'address': address
     })

@@ -115,6 +115,51 @@
         .mobile-label { display: inline-block; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; width: 80px; text-transform: uppercase; }
         .action-flex-container { justify-content: flex-start; }
     }
+
+    /* Modal Input Styles */
+    .modal-box textarea, .modal-box input:not([type="hidden"]) {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 16px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        margin-top: 12px;
+        color-scheme: dark;
+    }
+    .modal-box textarea:focus, .modal-box input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 0 4px rgba(255, 170, 0, 0.1);
+    }
+    .modal-box textarea::placeholder { color: rgba(255,255,255,0.3); }
+
+    /* Star Rating */
+    .rating-container {
+        display: flex;
+        gap: 12px;
+        margin: 24px 0;
+        justify-content: center;
+    }
+    .rating-star {
+        font-size: 2.2rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: rgba(255, 255, 255, 0.1);
+    }
+    .rating-star.active {
+        color: #fbbf24;
+        text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        transform: scale(1.1);
+    }
+    .rating-star:hover {
+        transform: scale(1.25);
+        color: #fcd34d;
+    }
 </style>
 {% endblock %}
 
@@ -397,14 +442,14 @@
 <div class="modal-overlay" id="returnModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-header"><h3>Return Items</h3></div>
+        <div class="modal-header"><h3>Return Product</h3><p>Please provide a reason for the return.</p></div>
         <form action="{% url 'return_order' order_uuid=order.uuid %}" method="POST"><div id="selectedItemsContainer"></div>
             {% csrf_token %}
-            <span class="modal-label">Reason</span>
-            <textarea name="reason" rows="3" required></textarea>
-            <div class="btn-group">
+            <span class="modal-label">Reason for Return</span>
+            <textarea name="reason" rows="3" placeholder="Explain why you are returning this item..." required></textarea>
+            <div class="btn-group" style="margin-top: 32px;">
                 <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
-                <button type="submit" class="btn-action btn-primary-alt">Submit</button>
+                <button type="submit" class="btn-action btn-primary-alt">Submit Request</button>
             </div>
         </form>
     </div>
@@ -413,21 +458,32 @@
 <div class="modal-overlay" id="reviewModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-header"><h3>Rate Product</h3><p id="reviewProductName"></p></div>
+        <div class="modal-header">
+            <h3>Rate Product</h3>
+            <p id="reviewProductName" style="text-transform: capitalize; color: var(--primary-color); font-weight: 700; font-size: 1.1rem; margin-top: 4px;"></p>
+        </div>
         <form method="POST" action="{% url 'submit_review' %}">
             {% csrf_token %}
             <input type="hidden" name="product_id" id="reviewProductId">
             <input type="hidden" name="order_id" value="{{ order.id }}">
-            <div style="display: flex; gap: 10px; margin: 15px 0; color: #fbbf24; cursor: pointer; font-size: 1.5rem;">
+            
+            <div class="rating-container">
                 <input type="hidden" name="rating" id="ratingValue" value="5">
-                <i class="fas fa-star rating-star" onclick="setRating(1)"></i>
-                <i class="fas fa-star rating-star" onclick="setRating(2)"></i>
-                <i class="fas fa-star rating-star" onclick="setRating(3)"></i>
-                <i class="fas fa-star rating-star" onclick="setRating(4)"></i>
-                <i class="fas fa-star rating-star" onclick="setRating(5)"></i>
+                <i class="fas fa-star rating-star active" onclick="setRating(1)"></i>
+                <i class="fas fa-star rating-star active" onclick="setRating(2)"></i>
+                <i class="fas fa-star rating-star active" onclick="setRating(3)"></i>
+                <i class="fas fa-star rating-star active" onclick="setRating(4)"></i>
+                <i class="fas fa-star rating-star active" onclick="setRating(5)"></i>
             </div>
-            <textarea name="comment" rows="4" required></textarea>
-            <div class="btn-group"><button type="submit" class="btn-action btn-primary-alt">Submit</button></div>
+
+            <span class="modal-label">Your Experience</span>
+            <textarea name="comment" rows="4" placeholder="How was the product? Tell others about your experience..." required></textarea>
+            
+            <div class="btn-group" style="margin-top: 32px;">
+                <button type="submit" class="btn-action btn-primary-alt" style="width: 100%; height: 54px; font-size: 1rem;">
+                    Submit Review
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -435,13 +491,19 @@
 <div class="modal-overlay" id="rescheduleModal">
     <div class="modal-box">
         <div class="modal-close-btn" onclick="closeModals()"><i class="fas fa-times"></i></div>
-        <div class="modal-header"><h3>Reschedule</h3></div>
+        <div class="modal-header"><h3>Reschedule Delivery</h3><p>Choose a new date and time for your delivery.</p></div>
         <form action="{% url 'reschedule_order' order_uuid=order.uuid %}" method="POST">
             {% csrf_token %}
+            <span class="modal-label">Preferred Date</span>
             <input type="date" name="scheduled_date" required>
+            <span class="modal-label">Preferred Time</span>
             <input type="time" name="scheduled_time" required>
-            <textarea name="reschedule_reason" rows="3" required></textarea>
-            <div class="btn-group"><button type="submit" class="btn-action btn-primary-alt">Confirm</button></div>
+            <span class="modal-label">Reason</span>
+            <textarea name="reschedule_reason" rows="3" placeholder="Why do you need to reschedule?" required></textarea>
+            <div class="btn-group" style="margin-top: 32px;">
+                <button type="button" class="btn-action btn-outline-alt" onclick="closeModals()">Back</button>
+                <button type="submit" class="btn-action btn-primary-alt">Confirm Reschedule</button>
+            </div>
         </form>
     </div>
 </div>
@@ -469,8 +531,13 @@
     function setRating(v) {
         document.getElementById('ratingValue').value = v;
         const stars = document.querySelectorAll('.rating-star');
-        stars.forEach((s, i) => s.classList.toggle('fas', i < v));
-        stars.forEach((s, i) => s.classList.toggle('far', i >= v));
+        stars.forEach((s, i) => {
+            if (i < v) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
     }
 </script>
 {% endblock %}

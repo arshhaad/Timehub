@@ -871,10 +871,10 @@
                                 <div class="p-rate">₹{{ product.price }}</div>
                             </div>
                             <div class="p-action-row">
-                                <button class="p-btn p-btn-cart" onclick="addToCart({{ product.id }}, this)">
+                                <button class="p-btn p-btn-cart" onclick="addToCart('{{ product.uuid }}', this)">
                                     <i class="fas fa-shopping-bag"></i> Cart
                                 </button>
-                                <button class="p-btn p-btn-buy" onclick="buyProduct({{ product.id }}, this)">
+                                <button class="p-btn p-btn-buy" onclick="buyProduct('{{ product.uuid }}', this)">
                                     Buy Now
                                 </button>
                             </div>
@@ -986,21 +986,56 @@
     </main>
 
     <script>
-        function processOrder() {
+        async function processOrder() {
             {% if products %}
             const btn = document.getElementById('checkoutBtn');
             btn.classList.add('is-loading');
             btn.disabled = true;
-            setTimeout(() => window.location.href = "{% url 'checkout_page' %}", 1200);
+            
+            const productsData = [
+                {% for p in products %}
+                { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: {{ p.variants.filter.exists|yesno:"true,false" }} }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            
+            let failures = [];
+            for (const p of productsData) {
+                try {
+                    const response = await fetch(`/user/cart/add/${p.id}/`, {
+                        method: 'POST',
+                        headers: { 
+                            'X-CSRFToken': '{{ csrf_token }}', 
+                            'Content-Type': 'application/json' 
+                        },
+                        body: JSON.stringify({ quantity: 1 })
+                    });
+                    const data = await response.json();
+                    if (!data.success) {
+                        failures.push(`${p.name}: ${data.error}`);
+                    }
+                } catch (err) {
+                    failures.push(`${p.name}: Connection error`);
+                }
+            }
+
+            if (failures.length > 0) {
+                alert("Some items could not be added:\n\n" + failures.join("\n"));
+                btn.classList.remove('is-loading');
+                btn.disabled = false;
+                // If some succeeded, we might still want to go to checkout, 
+                // but let's stay here so user can fix issues (select variants).
+            } else {
+                window.location.href = "{% url 'checkout_page' %}";
+            }
             {% endif %}
         }
 
-        function addToCart(id, btn) {
+        function addToCart(uuid, btn) {
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.style.pointerEvents = 'none';
 
-            fetch(`/user/cart/add/${id}/`, {
+            fetch(`/user/cart/add/${uuid}/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quantity: 1 })
@@ -1011,9 +1046,27 @@
                         btn.innerHTML = '<i class="fas fa-check"></i> Added';
                         btn.style.background = '#22c55e';
                         btn.style.color = '#fff';
-                        setTimeout(() => window.location.reload(), 1000);
+                        // Update cart badge if exists
+                        const badge = document.getElementById('cartBadge');
+                        if (badge) {
+                            let count = parseInt(badge.textContent) || 0;
+                            badge.textContent = count + 1;
+                            badge.style.display = 'flex';
+                        }
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.style.background = '';
+                            btn.style.color = '';
+                            btn.style.pointerEvents = 'auto';
+                        }, 2000);
                     } else {
-                        alert(d.error || "Please login to add items.");
+                        if (d.error.includes('variant')) {
+                            if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
+                                window.location.href = `/user/product/${uuid}/`;
+                            }
+                        } else {
+                            alert(d.error || "Please login to add items.");
+                        }
                         btn.innerHTML = originalHtml;
                         btn.style.pointerEvents = 'auto';
                     }
@@ -1025,12 +1078,12 @@
                 });
         }
 
-        function buyProduct(id, btn) {
+        function buyProduct(uuid, btn) {
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.style.pointerEvents = 'none';
 
-            fetch(`/user/cart/add/${id}/`, {
+            fetch(`/user/cart/add/${uuid}/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quantity: 1 })
@@ -1039,7 +1092,13 @@
                 .then(d => {
                     if (d.success) window.location.href = "{% url 'checkout_page' %}";
                     else {
-                        alert(d.error || "Please login to purchase.");
+                        if (d.error.includes('variant')) {
+                            if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
+                                window.location.href = `/user/product/${uuid}/`;
+                            }
+                        } else {
+                            alert(d.error || "Please login to purchase.");
+                        }
                         btn.innerHTML = originalHtml;
                         btn.style.pointerEvents = 'auto';
                     }

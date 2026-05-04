@@ -148,11 +148,26 @@ def order_detail(request, order_id):
         ('Delivered',        'Delivered to customer'),
     ]
 
+    ALLOWED_TRANSITIONS = {
+        'Pending': ['Confirmed', 'Cancelled', 'Processing'],
+        'Confirmed': ['Shipped', 'Cancelled', 'Processing'],
+        'Processing': ['Shipped', 'Cancelled'],
+        'Shipped': ['Out for Delivery'],
+        'Out for Delivery': ['Delivered'],
+        'Delivered': ['Return Requested', 'Returned'],
+        'Return Requested': ['Returned', 'Delivered'],
+        'Cancelled': [],
+        'Returned': [],
+    }
+    
+    allowed_next = ALLOWED_TRANSITIONS.get(order.status, [])
+    allowed_statuses = [s for s in Order.STATUS_CHOICES if s[0] == order.status or s[0] in allowed_next]
+
     context = {
         'order': order,
         'address': address,
         'active_menu': 'orders',
-        'status_choices': Order.STATUS_CHOICES,
+        'status_choices': allowed_statuses,
         'return_status_choices': Order.RETURN_STATUS_CHOICES,
         'timeline_steps': timeline_steps,
     }

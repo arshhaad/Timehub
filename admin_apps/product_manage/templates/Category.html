@@ -180,7 +180,7 @@
     <div class="page-header">
         <div class="header-left">
             <h1>Categories</h1>
-            <p>Organize your products with hierarchical categories and collections.</p>
+            <p>Organize your products with hierarchical categories.</p>
         </div>
         <button class="btn btn-primary" onclick="openModal('addCategoryModal')">
             <i class="fas fa-plus"></i> Add Category
@@ -209,7 +209,6 @@
                 <thead>
                     <tr>
                         <th>Category Name</th>
-                        <th>Parent Category</th>
                         <th>Description</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
@@ -220,17 +219,10 @@
                         <td style="font-weight:700; color:var(--text-main);">
                             <i class="fas fa-folder tree-connector"></i> {{ cat.name }}
                         </td>
-                        <td style="color:var(--text-muted);">
-                            {% if cat.parent %}
-                            <span class="badge badge-count">{{ cat.parent.name }}</span>
-                            {% else %}
-                            <span style="font-size: 0.8rem; opacity: 0.5;">Root</span>
-                            {% endif %}
-                        </td>
                         <td style="color:var(--text-muted); font-size: 0.85rem;">{{ cat.description|default:"No description"|truncatechars:60 }}</td>
                         <td class="action-btns">
                             <button class="action-btn"
-                                onclick="openEditModal('{{ cat.id|escapejs }}', '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}', '{{ cat.parent_id|default:''|escapejs }}')"
+                                onclick="openEditModal('{{ cat.id|escapejs }}', '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}')"
                                 title="Edit">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
@@ -251,7 +243,7 @@
                                     We couldn't find any categories matching "{{ query }}".
                                     <a href="{% url 'category_list' %}" style="color:var(--primary-bg); font-weight:700; text-decoration:none;">Clear Search</a>
                                 {% else %}
-                                    Start by adding your first product collection.
+                                    Start by adding your first product category.
                                 {% endif %}
                             </p>
                         </td>
@@ -324,15 +316,6 @@
                         <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
                     </div>
                     <div class="form-group">
-                        <label>Parent Category (Optional)</label>
-                        <select name="parent_id" class="form-control">
-                            <option value="">-- None (Root) --</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label>Description</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Briefly describe this category..."></textarea>
                     </div>
@@ -363,15 +346,6 @@
                                pattern="^[a-zA-Z0-9 ]+$"
                                title="Only letters, numbers, and spaces are allowed.">
                         <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Parent Category (Optional)</label>
-                        <select name="parent_id" id="edit_cat_parent" class="form-control">
-                            <option value="">-- None (Root) --</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
-                            {% endfor %}
-                        </select>
                     </div>
                     <div class="form-group">
                         <label>Description</label>
@@ -412,11 +386,10 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    function openEditModal(id, name, desc, parentId) {
+    function openEditModal(id, name, desc) {
         document.getElementById('edit_cat_id').value = id;
         document.getElementById('edit_cat_name').value = name;
         document.getElementById('edit_cat_description').value = desc;
-        document.getElementById('edit_cat_parent').value = parentId;
         openModal('editCategoryModal');
     }
 

@@ -45,7 +45,7 @@ def process_referrer_reward(referee):
         return False
 
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
-    if referral_offer:
+    if referral_offer and referee.referred_by:
         with transaction.atomic():
             # Reward Referee (Remaining part for completing purchase)
             referee_wallet, _ = Wallet.objects.get_or_create(user=referee)

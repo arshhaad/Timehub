@@ -5,11 +5,11 @@ from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.http import JsonResponse
-from user_apps.core.models import Collection, Product, ProductImage, ProductVariant, Color
+from user_apps.core.models import Collection, Product, ProductImage, ProductVariant, VariantImage, Color
 from admin_apps.offers.models import ProductOffer, CategoryOffer, ReferralOffer, Coupon
 from django.db import transaction
 from django.core.exceptions import ValidationError
@@ -231,45 +231,57 @@ def _save_variants(product, request):
     """Helper to create/update variants from form arrays."""
     post_data = request.POST
     
+    strap_materials = post_data.getlist("variant_strap_material[]")
     strap_colors = post_data.getlist("variant_strap_color[]")
     dial_colors = post_data.getlist("variant_dial_color[]")
     variant_stocks = post_data.getlist("variant_stock[]")
-    variant_prices = post_data.getlist("variant_price[]")
     variant_skus = post_data.getlist("variant_sku[]")
     variant_ids = post_data.getlist("variant_id[]")
     variant_image_indices = post_data.getlist("variant_image_idx[]")
+    variant_descriptions = post_data.getlist("variant_description[]")
+    
+    # If variant_descriptions is missing or smaller than variant_ids, pad it
+    while len(variant_descriptions) < len(variant_ids):
+        variant_descriptions.append("")
     
     # Track which existing variant IDs were submitted (for soft-deletion of removed ones)
     submitted_ids = set()
+    variant_map = {}
     
-    # Use skus or ids as the base for the loop to ensure we process all submitted rows
-    base_list = variant_skus if len(variant_skus) >= len(variant_ids) else variant_ids
-    
-    for idx in range(len(base_list)):
-        v_id = variant_ids[idx] if idx < len(variant_ids) else ''
-        v_stock_raw = variant_stocks[idx] if idx < len(variant_stocks) else '0'
-        v_sku = variant_skus[idx] if idx < len(variant_skus) else ''
-        
-        # Handle variant image
-        v_image = None
-        if idx < len(variant_image_indices):
-            v_img_idx = variant_image_indices[idx]
-            v_image = request.FILES.get(f"variant_image_{v_img_idx}")
-
+    # Iterate through variants using zip for cleaner code
+    # Since they are submitted as parallel arrays in form rows, zip is perfect here
+    for v_id, v_sku, v_strap_mat, v_strap_col, v_dial_col, v_stock_raw, v_img_idx, v_desc in zip(
+        variant_ids, variant_skus, strap_materials, strap_colors, dial_colors, variant_stocks, variant_image_indices, variant_descriptions
+    ):
         # Parse numeric values
         try:
             v_stock = int(v_stock_raw) if v_stock_raw else 0
         except ValueError:
             v_stock = 0
         
+        
+        variant = None
         if v_id and v_id.isdigit():
             # Update existing variant
             try:
                 variant = ProductVariant.objects.get(id=int(v_id), product=product)
                 variant.stock = v_stock
                 variant.sku = v_sku
-                if v_image:
-                    variant.image = v_image
+                variant.strap_material = v_strap_mat
+                variant.strap_color = v_strap_col
+                variant.dial_color = v_dial_col
+                variant.description = v_desc
+                
+                # Handle up to 3 images
+                for i in range(1, 4):
+                    v_img = request.FILES.get(f"variant_image_{v_img_idx}_{i}")
+                    if v_img:
+                        processed = process_product_image(v_img)
+                        if processed:
+                            if i == 1:
+                                variant.image = processed
+                            VariantImage.objects.create(variant=variant, image=processed)
+
                 variant.is_active = True
                 variant.save()
                 submitted_ids.add(variant.id)
@@ -277,21 +289,46 @@ def _save_variants(product, request):
                 pass
         else:
             # Create new variant
-            if v_sku:
+            if v_sku or v_strap_mat or v_strap_col or v_dial_col:
                 variant = ProductVariant.objects.create(
                     product=product,
                     stock=v_stock,
                     sku=v_sku,
-                    image=v_image
+                    strap_material=v_strap_mat,
+                    strap_color=v_strap_col,
+                    dial_color=v_dial_col,
+                    description=v_desc,
                 )
+                
+                # Handle up to 3 images
+                for i in range(1, 4):
+                    v_img = request.FILES.get(f"variant_image_{v_img_idx}_{i}")
+                    if v_img:
+                        processed = process_product_image(v_img)
+                        if processed:
+                            if i == 1:
+                                variant.image = processed
+                            VariantImage.objects.create(variant=variant, image=processed)
+                
+                variant.save()
                 submitted_ids.add(variant.id)
+        
+        if variant and v_img_idx:
+            variant_map[v_img_idx] = variant
     
     # Soft-delete variants removed from the form
     if submitted_ids:
         product.variants.filter(is_active=True).exclude(id__in=submitted_ids).update(is_active=False)
-    elif len(strap_colors) == 0:
+    elif len(variant_skus) == 0:
         # No variants submitted — soft-delete all active ones
         product.variants.filter(is_active=True).update(is_active=False)
+
+    # Calculate and update total stock for the product
+    total_stock = product.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
+    product.stock = total_stock
+    product.save()
+
+    return variant_map
 
 
 @never_cache
@@ -300,109 +337,7 @@ def product_list(request):
     if request.method == "POST":
         action = request.POST.get("action")
         
-        if action == "add_product":
-            name = request.POST.get("name", "").strip()
-            collection_id = request.POST.get("collection_id")
-            price_raw = request.POST.get("price")
-            discount_price_raw = request.POST.get("discount_price")
-            colors = request.POST.getlist("colors")
-            stock_raw = request.POST.get("stock")
-            description = request.POST.get("description", "").strip()
-            is_active = request.POST.get("is_active") == "on"
-            
-            # Extra fields
-            brand = request.POST.get("brand", "TimeHub").strip()
-            gender = request.POST.get("gender", "Unisex")
-            occasion = request.POST.get("occasion", "Casual")
-            strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
-            strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
-            dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
-            function = request.POST.get("function", "Analog")
-            features = request.POST.get("features", "").strip()
-
-            # Validation
-            if not name:
-                messages.error(request, "Product name is required.")
-                return redirect("product_list")
-            
-            if not collection_id:
-                messages.error(request, "Please select a category.")
-                return redirect("product_list")
-            
-            try:
-                price = float(price_raw) if price_raw else 0.0
-                if price <= 0:
-                    messages.error(request, "Price must be greater than zero.")
-                    return redirect("product_list")
-                
-                discount_price = float(discount_price_raw) if discount_price_raw else None
-                if discount_price is not None and discount_price >= price:
-                    messages.error(request, "Discount price must be less than the original price.")
-                    return redirect("product_list")
-                    
-                stock = int(stock_raw) if stock_raw else 0
-                if stock < 0:
-                    messages.error(request, "Stock cannot be negative.")
-                    return redirect("product_list")
-            except ValueError:
-                messages.error(request, "Invalid numeric values for price or stock.")
-                return redirect("product_list")
-            
-            collection = get_object_or_404(Collection, id=collection_id)
-            
-            try:
-                with transaction.atomic():
-                    product = Product.objects.create(
-                        name=name, collection=collection, price=price,
-                        discount_price=discount_price,
-                        stock=stock, description=description,
-                        is_active=is_active,
-                        brand=brand, gender=gender, occasion=occasion,
-                        strap_material=strap_material, strap_color=strap_color,
-                        dial_color=dial_color, function=function, features=features,
-                    )
-                    
-                    if colors:
-                        product.colors.set(colors)
-                    
-                    # Process up to 3 numbered image slots
-                    for i in range(1, 4):
-                        img_file = request.FILES.get(f"product_image_{i}")
-                        if img_file:
-                            processed_file = process_product_image(img_file)
-                            if processed_file:
-                                is_main = (i == 1)
-                                img_obj = ProductImage.objects.create(
-                                    product=product, image=processed_file, is_main=is_main
-                                )
-                                if is_main:
-                                    product.image = img_obj.image
-                                    product.save()
-                    
-                    # Save variants
-                    _save_variants(product, request)
-
-                    # Product is visible only if at least one variant is listed
-                    product.is_active = is_active and product.variants.filter(is_active=True).exists()
-                    product.save()
-
-                    # Mandatory Validation
-                    if not product.variants.filter(is_active=True).exists():
-                        raise ValidationError("Product must have at least one variant")
-                    if not product.images.exists():
-                        raise ValidationError("At least one image is required")
-
-                messages.success(request, f"Product '{name}' created successfully.")
-            except ValidationError as e:
-                messages.error(request, str(e.message))
-                return redirect("product_list")
-            except Exception as e:
-                messages.error(request, f"Error creating product: {str(e)}")
-                return redirect("product_list")
-                
-            return redirect("product_list")
-
-        elif action == "edit_product":
+        if action == "edit_product":
             prod_id = request.POST.get("product_id")
             product = get_object_or_404(Product, id=prod_id)
             
@@ -414,25 +349,37 @@ def product_list(request):
 
             # Validation
             if not name:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': 'Product name cannot be empty.'}, status=400)
                 messages.error(request, "Product name cannot be empty.")
                 return redirect("product_list")
             
             try:
-                price = float(price_raw) if price_raw else product.price
+                price_unit = float(request.POST.get("price_unit", 1))
+                price = float(price_raw) * price_unit if price_raw else product.price
                 if price <= 0:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'Price must be greater than zero.'}, status=400)
                     messages.error(request, "Price must be greater than zero.")
                     return redirect("product_list")
 
-                discount_price = float(discount_price_raw) if discount_price_raw else None
+                discount_price_unit = float(request.POST.get("discount_price_unit", 1))
+                discount_price = float(discount_price_raw) * discount_price_unit if discount_price_raw else None
                 if discount_price is not None and discount_price >= price:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'Discount price must be less than the original price.'}, status=400)
                     messages.error(request, "Discount price must be less than the original price.")
                     return redirect("product_list")
 
                 stock = int(stock_raw) if stock_raw else product.stock
                 if stock < 0:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'Stock cannot be negative.'}, status=400)
                     messages.error(request, "Stock cannot be negative.")
                     return redirect("product_list")
             except ValueError:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': 'Invalid numeric values for price or stock.'}, status=400)
                 messages.error(request, "Invalid numeric values for price or stock.")
                 return redirect("product_list")
 
@@ -442,8 +389,6 @@ def product_list(request):
                     product.price = price
                     product.discount_price = discount_price
                     product.stock = stock
-                    colors = request.POST.getlist("colors")
-                    product.colors.set(colors)
                     product.collection = get_object_or_404(Collection, id=request.POST.get("collection_id"))
                     product.description = request.POST.get("description", "")
                     product.is_active = request.POST.get("is_active") == "on"
@@ -452,9 +397,10 @@ def product_list(request):
                     product.brand = request.POST.get("brand", product.brand)
                     product.gender = request.POST.get("gender", product.gender)
                     product.occasion = request.POST.get("occasion", product.occasion)
-                    product.strap_material = ", ".join(request.POST.getlist("strap_material")).strip()
-                    product.strap_color = ", ".join(request.POST.getlist("strap_color")).strip()
-                    product.dial_color = ", ".join(request.POST.getlist("dial_color")).strip()
+                    # Extra fields
+                    product.brand = request.POST.get("brand", product.brand)
+                    product.gender = request.POST.get("gender", product.gender)
+                    product.occasion = request.POST.get("occasion", product.occasion)
                     product.function = request.POST.get("function", product.function)
                     product.features = request.POST.get("features", product.features)
                     product.save()
@@ -493,9 +439,13 @@ def product_list(request):
 
                 messages.success(request, f"Product '{product.name}' updated successfully.")
             except ValidationError as e:
-                messages.error(request, str(e.message))
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': str(e.message if hasattr(e, 'message') else e)}, status=400)
+                messages.error(request, str(e.message if hasattr(e, 'message') else e))
                 return redirect("product_list")
             except Exception as e:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'error', 'message': f"Error updating product: {str(e)}"}, status=400)
                 messages.error(request, f"Error updating product: {str(e)}")
                 return redirect("product_list")
                 
@@ -604,3 +554,91 @@ def add_category_offer(request):
         )
         messages.success(request, "Category offer added successfully.")
     return redirect('admin_offers_list')
+
+@never_cache
+@superuser_required
+def add_product(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        collection_id = request.POST.get("collection_id")
+        price_raw = request.POST.get("price")
+        discount_price_raw = request.POST.get("discount_price")
+        stock_raw = request.POST.get("stock")
+        description = request.POST.get("description", "").strip()
+        is_active = request.POST.get("is_active") == "on"
+        
+        brand = request.POST.get("brand", "TimeHub").strip()
+        gender = request.POST.get("gender", "Unisex")
+        occasion = request.POST.get("occasion", "Casual")
+        function = request.POST.get("function", "Analog")
+        features = request.POST.get("features", "").strip()
+
+        if not name or not collection_id:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': 'Name and Category are required.'}, status=400)
+            messages.error(request, "Name and Category are required.")
+            return redirect("add_product")
+        
+        try:
+            price_unit = float(request.POST.get("price_unit", 1))
+            discount_price_unit = float(request.POST.get("discount_price_unit", 1))
+            
+            price = float(price_raw) * price_unit if price_raw else 0.0
+            discount_price = float(discount_price_raw) * discount_price_unit if discount_price_raw else None
+            stock = int(stock_raw) if stock_raw else 0
+            
+            collection = get_object_or_404(Collection, id=collection_id)
+            
+            with transaction.atomic():
+                product = Product.objects.create(
+                    name=name, collection=collection, price=price,
+                    discount_price=discount_price, stock=stock,
+                    description=description, is_active=is_active,
+                    brand=brand, gender=gender, occasion=occasion,
+                    function=function, features=features
+                )
+                
+                # Save variants first to get the mapping
+                variant_map = _save_variants(product, request)
+                
+                # Handle general product images
+                for i in range(1, 4):
+                    img_file = request.FILES.get(f"product_image_{i}")
+                    v_idx = request.POST.get(f"product_image_variant_{i}")
+                    
+                    if img_file:
+                        processed_file = process_product_image(img_file)
+                        if processed_file:
+                            linked_variant = variant_map.get(v_idx) if v_idx and v_idx != 'all' else None
+                            
+                            img_obj = ProductImage.objects.create(
+                                product=product, 
+                                variant=linked_variant,
+                                image=processed_file, 
+                                is_main=(i==1)
+                            )
+                            if i == 1:
+                                product.image = img_obj.image
+                                product.save()
+                
+                if not product.variants.filter(is_active=True).exists():
+                    raise ValidationError("At least one variant is required.")
+                if not product.images.exists():
+                    raise ValidationError("At least one image is required.")
+
+            messages.success(request, f"Product '{name}' added successfully.")
+            return redirect("product_list")
+        except ValidationError as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': str(e.message if hasattr(e, 'message') else e)}, status=400)
+            messages.error(request, str(e))
+        except Exception as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': f"Error: {str(e)}"}, status=400)
+            messages.error(request, f"Error: {str(e)}")
+
+    context = {
+        'all_categories': Collection.objects.filter(is_deleted=False).order_by('name'),
+        'all_colors': Color.objects.all(),
+    }
+    return render(request, "add_product.html", context)
