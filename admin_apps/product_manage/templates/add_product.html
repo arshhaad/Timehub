@@ -1,7 +1,7 @@
 {% extends "order_manage/base.html" %}
 {% load static %}
 
-{% block title %}Add New Product - TimeHub{% endblock %}
+{% block title %}{% if is_edit %}Edit Product - {{ product.name }}{% else %}Add New Product{% endif %} - TimeHub{% endblock %}
 
 {% block topbar_left %}
 <div class="topbar-breadcrumb-search">
@@ -10,7 +10,7 @@
         <span class="sep">/</span>
         <a href="{% url 'product_list' %}">Inventory</a>
         <span class="sep">/</span>
-        <span class="curr">Add Product</span>
+        <span class="curr">{% if is_edit %}Edit Product{% else %}Add Product{% endif %}</span>
     </div>
 </div>
 {% endblock %}
@@ -323,7 +323,7 @@
 {% block content %}
 <div class="form-container">
     <div class="form-header">
-        <h3>Add New Premium Product</h3>
+        <h3>{% if is_edit %}Edit Premium Product{% else %}Add New Premium Product{% endif %}</h3>
         <a href="{% url 'product_list' %}" class="btn btn-outline" style="font-size: 0.8rem;">
             <i class="fas fa-arrow-left"></i> Back to List
         </a>
@@ -344,25 +344,25 @@
                 <div class="form-grid">
                     <div class="form-group full">
                         <label>Product Name</label>
-                        <input type="text" name="name" id="formName" class="form-control" required placeholder="Enter product name...">
+                        <input type="text" name="name" id="formName" class="form-control" required placeholder="Enter product name (e.g. Rolex Submariner Date)" value="{{ product.name|default:'' }}">
                     </div>
                     <div class="form-group">
                         <label>Brand</label>
-                        <input type="text" name="brand" id="formBrand" class="form-control" value="TimeHub" required>
+                        <input type="text" name="brand" id="formBrand" class="form-control" value="{{ product.brand|default:'TimeHub' }}" required>
                     </div>
                     <div class="form-group">
                         <label>Category</label>
                         <select name="collection_id" id="formCategory" class="form-control" required>
                             <option value="">Select Category</option>
                             {% for cat in all_categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            <option value="{{ cat.id }}" {% if product.collection_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Base Price</label>
                         <div style="display: flex; gap: 8px;">
-                            <input type="number" name="price" id="formPrice" class="form-control" required step="0.01" style="flex: 2;">
+                            <input type="number" name="price" id="formPrice" class="form-control" required step="0.01" style="flex: 2;" placeholder="0.00" value="{{ product.price|default:'' }}">
                             <select name="price_unit" class="form-control" style="flex: 1; min-width: 80px;">
                                 <option value="1">₹</option>
                                 <option value="1000">K</option>
@@ -372,9 +372,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Discounted Price</label>
+                        <label>Discounted Price (Optional)</label>
                         <div style="display: flex; gap: 8px;">
-                            <input type="number" name="discount_price" id="formDiscountPrice" class="form-control" step="0.01" style="flex: 2;">
+                            <input type="number" name="discount_price" id="formDiscountPrice" class="form-control" step="0.01" style="flex: 2;" placeholder="0.00" value="{{ product.discount_price|default:'' }}">
                             <select name="discount_price_unit" class="form-control" style="flex: 1; min-width: 80px;">
                                 <option value="1">₹</option>
                                 <option value="1000">K</option>
@@ -385,15 +385,18 @@
                     </div>
                     <div class="form-group">
                         <label>Total Stock (Auto-calculated)</label>
-                        <input type="number" name="stock" id="formStock" class="form-control" readonly style="background: #f1f5f9; color: #64748b;" placeholder="Sum of variants...">
+                        <input type="number" name="stock" id="formStock" class="form-control" readonly style="background: #f8fafc; color: #64748b; font-weight: 700;" placeholder="0" value="{{ product.stock|default:'0' }}">
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 30px;">
-                            <input type="checkbox" name="is_active" id="formActive" checked style="width: 18px; height: 18px;">
-                            Active for Sale
+                            <input type="checkbox" name="is_active" id="formActive" {% if product.is_active or not is_edit %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--primary-bg);">
+                            <span>Active & Visible for Sale</span>
                         </label>
                     </div>
-
+                    <div class="form-group full">
+                        <label>Product Description</label>
+                        <textarea name="description" id="formDescription" class="form-control" rows="4" placeholder="Describe the product's story, craftsmanship, and appeal..." required>{{ product.description|default:'' }}</textarea>
+                    </div>
                 </div>
             </div>
 
@@ -403,32 +406,32 @@
                     <div class="form-group">
                         <label>Gender</label>
                         <select name="gender" id="formGender" class="form-control">
-                            <option value="Men">Men</option>
-                            <option value="Women">Women</option>
-                            <option value="Unisex">Unisex</option>
+                            <option value="Men" {% if product.gender == 'Men' %}selected{% endif %}>Men</option>
+                            <option value="Women" {% if product.gender == 'Women' %}selected{% endif %}>Women</option>
+                            <option value="Unisex" {% if product.gender == 'Unisex' %}selected{% endif %}>Unisex</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Occasion</label>
                         <select name="occasion" id="formOccasion" class="form-control">
-                            <option value="Casual">Casual</option>
-                            <option value="Formal">Formal</option>
-                            <option value="Sport">Sport</option>
-                            <option value="Luxury">Luxury</option>
+                            <option value="Casual" {% if product.occasion == 'Casual' %}selected{% endif %}>Casual</option>
+                            <option value="Formal" {% if product.occasion == 'Formal' %}selected{% endif %}>Formal</option>
+                            <option value="Sport" {% if product.occasion == 'Sport' %}selected{% endif %}>Sport</option>
+                            <option value="Luxury" {% if product.occasion == 'Luxury' %}selected{% endif %}>Luxury</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Function</label>
                         <select name="function" id="formFunction" class="form-control">
-                            <option value="Analog">Analog</option>
-                            <option value="Digital">Digital</option>
-                            <option value="Chronograph">Chronograph</option>
-                            <option value="Smart">Smart</option>
+                            <option value="Analog" {% if product.function == 'Analog' %}selected{% endif %}>Analog</option>
+                            <option value="Digital" {% if product.function == 'Digital' %}selected{% endif %}>Digital</option>
+                            <option value="Chronograph" {% if product.function == 'Chronograph' %}selected{% endif %}>Chronograph</option>
+                            <option value="Smart" {% if product.function == 'Smart' %}selected{% endif %}>Smart</option>
                         </select>
                     </div>
                     <div class="form-group full">
-                        <label>Features</label>
-                        <textarea name="features" id="formFeatures" class="form-control" placeholder="Water Resistant 50m, Sapphire Glass..."></textarea>
+                        <label>Key Features (Bullet points)</label>
+                        <textarea name="features" id="formFeatures" class="form-control" rows="3" placeholder="Water Resistant 50m, Sapphire Glass, Automatic Movement...">{{ product.features|default:'' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -441,7 +444,7 @@
                         <p>Manage sizes, materials, and stock for each unique variation.</p>
                     </div>
                     <button type="button" class="btn-add-variant" onclick="addVariantRow()">
-                        <i class="fas fa-plus"></i> Add New Variant
+                        <i class="fas fa-plus"></i> Add New Configuration
                     </button>
                 </div>
 
@@ -452,36 +455,42 @@
 
             <!-- Images Tab -->
             <div id="tab-images" class="tab-panel">
-                <div style="margin-bottom: 20px;">
-                    <h4 style="font-size: 0.9rem; font-weight: 700;">Product Photography</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-muted);">Upload up to 3 high-quality images and link them to variants.</p>
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 1rem; font-weight: 800; color: var(--text-main);">Product Photography</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Upload up to 3 high-quality images and link them to specific variants or keep them as general images.</p>
                 </div>
-                <div class="image-slots" style="display: flex; gap: 15px;">
+                <div class="image-slots" style="display: flex; gap: 20px;">
                     {% for i in "123"|make_list %}
-                    <div class="image-slot-container" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
-                        <div class="image-slot" onclick="document.getElementById('inputSlot{{ i }}').click()" style="height: 250px; cursor: pointer; position: relative; border: 1px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <input type="file" id="inputSlot{{ i }}" style="display:none" accept="image/*" onchange="handleImageInput(event, {{ i }})">
+                    <div class="image-slot-container" style="flex: 1;">
+                        <div class="image-slot" onclick="document.getElementById('inputSlot{{ i }}').click()">
+                            <input type="file" id="inputSlot{{ i }}" name="product_image_{{ i }}" style="display:none" accept="image/*" onchange="handleImageInput(event, {{ i }})">
                             <div id="previewWrap{{ i }}" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Slot {{ i }}</span>
+                                <i class="fas fa-camera" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 12px;"></i>
+                                <span style="color: #64748b; font-weight: 600;">{% if i == '1' %}Primary View{% else %}Angle {{ i }}{% endif %}</span>
                             </div>
                             <div class="slot-clear" id="clearImg{{ i }}" onclick="clearImageSlot(event, {{ i }})"><i class="fas fa-times"></i></div>
                         </div>
-                        <div class="variant-link-group">
-                            <label style="font-size: 0.7rem; color: #64748b; margin-bottom: 4px; display: block;">Link to Variant</label>
-                            <select name="product_image_variant_{{ i }}" id="variantSelect{{ i }}" class="form-control" style="font-size: 0.75rem; padding: 6px;">
-                                <option value="all">All Variants / General</option>
+                        <div class="variant-link-group" style="margin-top: 12px;">
+                            <label style="font-size: 0.75rem; font-weight: 700; color: #4b5563; margin-bottom: 6px; display: block;">Link to Variant</label>
+                            <select name="product_image_variant_{{ i }}" id="variantSelect{{ i }}" class="form-control" style="font-size: 0.8rem; padding: 10px;">
+                                <option value="all">General / All Variants</option>
                             </select>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
+                <div style="margin-top: 24px; padding: 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; display: flex; gap: 12px;">
+                    <i class="fas fa-info-circle" style="color: #d97706; margin-top: 2px;"></i>
+                    <p style="font-size: 0.8rem; color: #92400e; line-height: 1.5;">
+                        <b>Tip:</b> High-quality images significantly increase conversion rates. Use a square aspect ratio (1:1) for the best appearance on the storefront.
+                    </p>
+                </div>
             </div>
         </div>
 
         <div class="form-footer">
-            <button type="button" class="btn btn-outline" onclick="window.location.href='{% url 'product_list' %}'">Cancel</button>
-            <button type="submit" id="submitBtn" class="btn btn-primary">Create Product</button>
+            <button type="button" class="btn btn-outline" onclick="window.location.href='{% url 'product_list' %}'">Discard Changes</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">{% if is_edit %}Save Changes{% else %}Create Product{% endif %}</button>
         </div>
     </form>
 </div>
@@ -489,12 +498,16 @@
 <!-- Cropper Modal -->
 <div id="cropperContainer" class="cropper-modal-overlay">
     <div class="cropper-modal-content">
-        <div style="height: 400px; background: #eee; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h4 style="font-weight: 800; font-size: 1.1rem;">Perfect Your Image</h4>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Crop to square (1:1)</span>
+        </div>
+        <div style="height: 450px; background: #f1f5f9; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border-color);">
             <img id="cropperImage" style="max-width: 100%; display: block;">
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <button type="button" class="btn btn-outline" onclick="cancelCrop()">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="applyCrop()">Apply Crop</button>
+            <button type="button" class="btn btn-primary" onclick="applyCrop()">Save Selection</button>
         </div>
     </div>
 </div>
@@ -504,7 +517,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
     const COLORS_LIST = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
-    const MATERIALS_LIST = ['Leather', 'Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber'];
+    const MATERIALS_LIST = ['Leather', 'Stainless Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber', 'Nylon', 'Rose Gold'];
+
+    function showToast(msg, type = 'error') {
+        let container = document.getElementById('toastWrap');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastWrap';
+            container.className = 'messages-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `alert-toast ${type}`;
+        toast.innerHTML = `
+            <div class="alert-icon">
+                <i class="fas ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'))}"></i>
+            </div>
+            <div class="alert-body">
+                <span class="alert-text">${msg}</span>
+            </div>
+            <button class="alert-close" onclick="this.parentElement.classList.add('dismissing'); setTimeout(()=>this.parentElement.remove(), 350)">
+                <i class="fas fa-xmark"></i>
+            </button>
+            <div class="alert-progress"></div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('dismissing');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 4000);
+    }
 
     // Tab logic
     document.querySelectorAll('.modal-tab').forEach(tab => {
@@ -517,7 +559,7 @@
     });
 
     let cropper = null;
-    let activeCropSource = null; // e.g., { type: 'main', slot: 1 } or { type: 'variant', idx: 0, subIdx: 1, input: el }
+    let activeCropSource = null;
     const croppedBlobs = new Map();
 
     function handleImageInput(e, slot) {
@@ -531,10 +573,9 @@
         const file = input.files[0];
         if (!file) return;
         
-        // Extract indices from name (variant_image_0_1)
-        const nameParts = input.name.split('_');
-        const idx = nameParts[2];
-        const subIdx = nameParts[3];
+        const slot = input.closest('.variant-img-slot');
+        const idx = slot.dataset.slotIdx;
+        const subIdx = slot.dataset.slotSub;
         
         activeCropSource = { type: 'variant', idx: idx, subIdx: subIdx, input: input };
         openCropper(file);
@@ -578,10 +619,10 @@
             const url = URL.createObjectURL(blob);
             
             if (activeCropSource.type === 'main') {
-                croppedBlobs.set(`main_${activeCropSource.slot}`, blob);
+                croppedBlobs.set(`product_image_${activeCropSource.slot}`, blob);
                 showSlotPreview(activeCropSource.slot, url);
             } else {
-                croppedBlobs.set(`variant_${activeCropSource.idx}_${activeCropSource.subIdx}`, blob);
+                croppedBlobs.set(`variant_image_${activeCropSource.idx}_${activeCropSource.subIdx}`, blob);
                 
                 const slot = activeCropSource.input.closest('.variant-img-slot');
                 const preview = slot.querySelector('.preview-container');
@@ -595,18 +636,18 @@
 
     function showSlotPreview(slot, url) {
         const wrap = document.getElementById(`previewWrap${slot}`);
-        wrap.innerHTML = `<img src="${url}" class="preview-img">`;
+        wrap.innerHTML = `<img src="${url}" class="preview-img" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
         document.getElementById(`clearImg${slot}`).style.display = 'flex';
     }
 
     function clearImageSlot(e, slot) {
         e.stopPropagation();
         const wrap = document.getElementById(`previewWrap${slot}`);
-        const labels = ['Primary Image', 'Second View', 'Third View'];
-        wrap.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><span>${labels[slot-1]}</span>`;
+        const labels = ['Primary View', 'Angle 2', 'Angle 3'];
+        wrap.innerHTML = `<i class="fas fa-camera" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 12px;"></i><span style="color: #64748b; font-weight: 600;">${labels[slot-1]}</span>`;
         document.getElementById(`inputSlot${slot}`).value = '';
         document.getElementById(`clearImg${slot}`).style.display = 'none';
-        croppedBlobs.delete(`main_${slot}`);
+        croppedBlobs.delete(`product_image_${slot}`);
     }
 
     // Variants
@@ -622,10 +663,9 @@
 
     function renumberVariants() {
         const cards = document.querySelectorAll('.variant-card');
-        const total = cards.length;
         cards.forEach((card, i) => {
             const badge = card.querySelector('.variant-badge');
-            if (badge) badge.textContent = `Configuration #${total - i}`;
+            if (badge) badge.textContent = `Configuration #${i + 1}`;
         });
     }
 
@@ -633,7 +673,7 @@
         const variants = [];
         document.querySelectorAll('.variant-card').forEach(card => {
             const skuInput = card.querySelector('input[name="variant_sku[]"]');
-            const sku = skuInput ? (skuInput.value || 'Unnamed Variant') : 'Unnamed Variant';
+            const sku = skuInput ? (skuInput.value || `Unnamed Configuration`) : `Unnamed Configuration`;
             const idxInput = card.querySelector('input[name="variant_image_idx[]"]');
             const idx = idxInput ? idxInput.value : '';
             if(idx !== '') variants.push({ sku, idx });
@@ -643,7 +683,7 @@
             const select = document.getElementById(`variantSelect${i}`);
             if(!select) continue;
             const currentVal = select.value;
-            select.innerHTML = '<option value="all">All Variants / General</option>';
+            select.innerHTML = '<option value="all">General / All Variants</option>';
             variants.forEach(v => {
                 const opt = document.createElement('option');
                 opt.value = v.idx;
@@ -654,81 +694,91 @@
         }
     }
 
-    function addVariantRow() {
+    function addVariantRow(data = null) {
         const idx = variantCounter++;
         const card = document.createElement('div');
         card.className = 'variant-card';
         card.innerHTML = `
             <div class="variant-card-header">
-                <div class="variant-badge">Configuration #${idx + 1}</div>
+                <div class="variant-badge">Configuration #${document.querySelectorAll('.variant-card').length + 1}</div>
                 <button type="button" class="btn-icon" onclick="removeVariant(this)" style="color: #ef4444; border:none; background:none; cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:var(--transition);">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
+            <input type="hidden" name="variant_id[]" value="${data ? data.id : ''}">
             <input type="hidden" name="variant_image_idx[]" value="${idx}">
             <div class="variant-grid">
                 <div class="form-group">
                     <label>SKU / Model Name</label>
-                    <input type="text" name="variant_sku[]" class="form-control" placeholder="e.g. Classic Silver 42mm" oninput="updateVariantSelectors()">
+                    <input type="text" name="variant_sku[]" class="form-control" placeholder="e.g. Classic Silver 42mm" oninput="updateVariantSelectors()" required value="${data ? data.sku : ''}">
                 </div>
                 <div class="form-group">
                     <label>Material</label>
-                    <select name="variant_strap_material[]" class="form-control">
+                    <select name="variant_strap_material[]" class="form-control" required>
                         <option value="">Select Material</option>
-                        ${MATERIALS_LIST.map(m => `<option value="${m}">${m}</option>`).join('')}
+                        ${MATERIALS_LIST.map(m => `<option value="${m}" ${data && data.strap_material === m ? 'selected' : ''}>${m}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Stock Quantity</label>
-                    <input type="number" name="variant_stock[]" class="form-control" value="0" min="0" oninput="calculateTotalStock()">
+                    <label>Initial Stock</label>
+                    <input type="number" name="variant_stock[]" class="form-control" value="${data ? data.stock : '0'}" min="0" oninput="calculateTotalStock()" required>
                 </div>
                 <div class="form-group">
                     <label>Strap Color</label>
-                    <select name="variant_strap_color[]" class="form-control">
+                    <select name="variant_strap_color[]" class="form-control" required>
                         <option value="">Select Color</option>
-                        ${COLORS_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.strap_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Dial Color</label>
-                    <select name="variant_dial_color[]" class="form-control">
+                    <select name="variant_dial_color[]" class="form-control" required>
                         <option value="">Select Color</option>
-                        ${COLORS_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.dial_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
             </div>
             <div class="form-group" style="margin-top: 15px;">
-                <label>Unique Features / Description</label>
-                <textarea name="variant_description[]" class="form-control" rows="2" placeholder="Describe what makes this variant special..."></textarea>
+                <label>Configuration Description (Optional)</label>
+                <textarea name="variant_description[]" class="form-control" rows="2" placeholder="Describe specific details for this configuration...">${data && data.description ? data.description : ''}</textarea>
             </div>
             
             <div class="variant-images-section">
-                <label style="font-size: 0.75rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Product Variant Image <span style="color:#ef4444">*</span></label>
+                <label style="font-size: 0.75rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Variant Photography <span style="color:#ef4444">*</span></label>
                 <div class="variant-img-grid">
-                    ${[1, 2, 3].map(i => `
-                        <div class="variant-img-slot" data-slot-idx="${idx}" data-slot-sub="${i}" onclick="this.querySelector('input').click()">
+                    ${[1, 2, 3].map(i => {
+                        let hasImg = data && data.images && data.images[i-1];
+                        return `
+                        <div class="variant-img-slot ${hasImg ? 'has-image' : ''}" data-slot-idx="${idx}" data-slot-sub="${i}" onclick="this.querySelector('input').click()">
                             <i class="fas fa-plus"></i>
-                            <div class="preview-container"></div>
-                            <input type="file" name="variant_image_${idx}_${i}" style="display:none" accept="image/*" onchange="previewVariantImage(this)">
+                            <div class="preview-container">${hasImg ? `<img src="${data.images[i-1]}">` : ''}</div>
+                            <input type="file" name="variant_image_input_${idx}_${i}" style="display:none" accept="image/*" onchange="previewVariantImage(this)">
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
-                <p class="variant-img-error" style="color:#ef4444; font-size:0.78rem; font-weight:600; margin-top:6px; display:none;"><i class="fas fa-exclamation-circle"></i> At least one product variant image is required.</p>
+                <p class="variant-img-error" style="color:#ef4444; font-size:0.78rem; font-weight:600; margin-top:10px; display:none; align-items:center; gap:6px;">
+                    <i class="fas fa-exclamation-triangle"></i> At least one image is required for each configuration.
+                </p>
             </div>
         `;
-        document.getElementById('variantList').prepend(card);
+        document.getElementById('variantList').appendChild(card);
+        
+        // If editing and has existing images, we need to handle them in croppedBlobs if we want validation to pass
+        // But for now, let's assume if it has-image class, it's valid.
+        
         renumberVariants();
         updateVariantSelectors();
         calculateTotalStock();
     }
 
     function removeVariant(btn) {
+        if (!confirm('Are you sure you want to remove this configuration?')) return;
         const card = btn.closest('.variant-card');
         const idx = card.querySelector('input[name="variant_image_idx[]"]').value;
         
         // Clean up any cropped blobs for this variant
         for (let i = 1; i <= 3; i++) {
-            croppedBlobs.delete(`variant_${idx}_${i}`);
+            croppedBlobs.delete(`variant_image_${idx}_${i}`);
         }
         
         card.remove();
@@ -737,93 +787,183 @@
         calculateTotalStock();
     }
 
-    function previewVariantImage(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = e => { 
-                const slot = input.closest('.variant-img-slot');
-                const preview = slot.querySelector('.preview-container');
-                preview.innerHTML = `<img src="${e.target.result}">`; 
-                slot.classList.add('has-image');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
     // Form Submit
     document.getElementById('productForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Validate: each variant must have at least one image (file input OR cropped blob)
+        // 1. Basic Validation: Product Info
+        const name = document.getElementById('formName').value.trim();
+        const category = document.getElementById('formCategory').value;
+        const price = document.getElementById('formPrice').value;
+        const description = document.getElementById('formDescription').value.trim();
+
+        if (!name) {
+            showToast('Please enter the product name.');
+            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formName').focus();
+            return;
+        }
+        if (!category) {
+            showToast('Please select a category.');
+            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formCategory').focus();
+            return;
+        }
+        if (!price || price <= 0) {
+            showToast('Please enter a valid base price.');
+            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formPrice').focus();
+            return;
+        }
+        if (!description) {
+            showToast('Please provide a product description.');
+            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formDescription').focus();
+            return;
+        }
+
+        // 2. Variants Validation: Need at least one
+        if (document.querySelectorAll('.variant-card').length === 0) {
+            showToast('Please add at least one product configuration (variant).');
+            document.querySelector('.modal-tab[data-tab="variants"]').click();
+            return;
+        }
+
+        // 2. Validate: each variant must have at least one image (cropped blob)
         let variantImageValid = true;
         document.querySelectorAll('.variant-card').forEach(card => {
             const idxInput = card.querySelector('input[name="variant_image_idx[]"]');
             const idx = idxInput ? idxInput.value : null;
             const errMsg = card.querySelector('.variant-img-error');
-            const slots = card.querySelectorAll('.variant-img-slot');
-
-            const hasFileInput = Array.from(card.querySelectorAll('input[type="file"]'))
-                .some(inp => inp.files && inp.files.length > 0);
-
-            const hasCroppedBlob = idx !== null && (
-                croppedBlobs.has('variant_' + idx + '_1') ||
-                croppedBlobs.has('variant_' + idx + '_2') ||
-                croppedBlobs.has('variant_' + idx + '_3')
+            const hasImage = idx !== null && (
+                card.querySelectorAll('.variant-img-slot.has-image').length > 0 ||
+                croppedBlobs.has('variant_image_' + idx + '_1') ||
+                croppedBlobs.has('variant_image_' + idx + '_2') ||
+                croppedBlobs.has('variant_image_' + idx + '_3')
             );
 
-            if (!hasFileInput && !hasCroppedBlob) {
-                slots.forEach(s => s.style.outline = '2px solid #ef4444');
-                if (errMsg) errMsg.style.display = 'block';
+            if (!hasImage) {
+                slots.forEach(s => s.style.borderColor = '#ef4444');
+                if (errMsg) errMsg.style.display = 'flex';
                 variantImageValid = false;
             } else {
-                slots.forEach(s => s.style.outline = '');
+                slots.forEach(s => s.style.borderColor = '');
                 if (errMsg) errMsg.style.display = 'none';
             }
         });
 
         if (!variantImageValid) {
-            const firstErr = document.querySelector('.variant-img-error[style*="block"]');
-            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.querySelector('.modal-tab[data-tab="variants"]').click();
+            setTimeout(() => {
+                const firstErr = document.querySelector('.variant-img-error[style*="flex"]');
+                if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+            return;
+        }
+
+        // 4. Main Product Images: Need at least one
+        const hasMainImage = croppedBlobs.has('product_image_1') || 
+                             croppedBlobs.has('product_image_2') || 
+                             croppedBlobs.has('product_image_3');
+        if (!hasMainImage) {
+            showToast('Please upload at least one main product image in the "Product Images" tab.');
+            document.querySelector('.modal-tab[data-tab="images"]').click();
             return;
         }
 
         const formData = new FormData(this);
         
+        // Remove the raw file inputs from formData since we use cropped blobs
+        // (This prevents sending uncropped files)
+        for (let pair of formData.entries()) {
+            if (pair[0].startsWith('product_image_') || pair[0].startsWith('variant_image_input_')) {
+                // We keep them if we want but they are not needed if we append blobs with same name
+            }
+        }
+        
         // Append cropped blobs
         croppedBlobs.forEach((blob, key) => {
-            formData.append(key, blob, key + '.jpg');
+            formData.set(key, blob, key + '.jpg');
         });
         
         const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Initializing...';
 
+        // Submit via AJAX to handle errors better
         fetch(window.location.href, {
             method: 'POST',
             body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        }).then(async r => {
-            if(r.ok || r.redirected) {
-                window.location.href = '{% url "product_list" %}';
-            } else {
-                const data = await r.json().catch(() => null);
-                if (data && data.message) {
-                    alert(data.message);
-                } else {
-                    alert('Failed to save product. Ensure all variants have stock and details.');
-                }
-                btn.disabled = false;
-                btn.innerText = 'Create Product';
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }).catch(() => {
-            alert('Connection error');
+        })
+        .then(async response => {
+            let data = {};
+            try { data = await response.json(); } catch(e) {}
+            
+            if (response.ok) {
+                showToast(data.message || 'Product saved successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'product_list' %}";
+                }, 1000);
+            } else {
+                showToast(data.message || 'An error occurred while saving the product.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('A network error occurred. Please try again.');
             btn.disabled = false;
+            btn.innerHTML = originalText;
         });
     });
 
-    // Initial variant
+    // Initial variants
     document.addEventListener('DOMContentLoaded', () => {
-        addVariantRow();
+        {% if is_edit and product.variants.all %}
+            {% for v in product.variants.all %}
+                addVariantRow({
+                    id: "{{ v.id }}",
+                    sku: "{{ v.sku|escapejs }}",
+                    strap_material: "{{ v.strap_material|escapejs }}",
+                    strap_color: "{{ v.strap_color|escapejs }}",
+                    dial_color: "{{ v.dial_color|escapejs }}",
+                    stock: "{{ v.stock }}",
+                    description: "{{ v.description|escapejs }}",
+                    images: [
+                        {% for img in v.variant_images.all %}"{{ img.image.url }}",{% endfor %}
+                    ]
+                });
+                
+                // Mark existing variant images in croppedBlobs for validation
+                {% for img in v.variant_images.all %}
+                    {% if forloop.counter <= 3 %}
+                        croppedBlobs.set("variant_image_" + (variantCounter-1) + "_{{ forloop.counter }}", "existing");
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            if (document.querySelectorAll('.variant-card').length === 0) {
+                addVariantRow();
+            }
+        {% endif %}
+
+        // Load existing product images
+        {% if is_edit and product.images.all %}
+            {% for img in product.images.all %}
+                {% if forloop.counter <= 3 %}
+                    showSlotPreview({{ forloop.counter }}, "{{ img.image.url }}");
+                    // We don't need to add to croppedBlobs for existing images, 
+                    // but we need to mark them so validation passes.
+                    // Let's add a dummy value to croppedBlobs for validation.
+                    croppedBlobs.set("product_image_{{ forloop.counter }}", "existing");
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     });
 </script>
 {% endblock %}

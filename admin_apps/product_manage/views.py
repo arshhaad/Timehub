@@ -298,6 +298,7 @@ def _save_variants(product, request):
                     strap_color=v_strap_col,
                     dial_color=v_dial_col,
                     description=v_desc,
+                    is_active=True
                 )
                 
                 # Handle up to 3 images
@@ -640,5 +641,108 @@ def add_product(request):
     context = {
         'all_categories': Collection.objects.filter(is_deleted=False).order_by('name'),
         'all_colors': Color.objects.all(),
+    }
+    return render(request, "add_product.html", context)
+
+@never_cache
+@superuser_required
+def edit_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        collection_id = request.POST.get("collection_id")
+        price_raw = request.POST.get("price")
+        discount_price_raw = request.POST.get("discount_price")
+        stock_raw = request.POST.get("stock")
+        description = request.POST.get("description", "").strip()
+        is_active = request.POST.get("is_active") == "on"
+        
+        brand = request.POST.get("brand", "TimeHub").strip()
+        gender = request.POST.get("gender", "Unisex")
+        occasion = request.POST.get("occasion", "Casual")
+        function = request.POST.get("function", "Analog")
+        features = request.POST.get("features", "").strip()
+
+        if not name or not collection_id:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': 'Name and Category are required.'}, status=400)
+            messages.error(request, "Name and Category are required.")
+            return redirect("edit_product", product_id=product.id)
+        
+        try:
+            price_unit = float(request.POST.get("price_unit", 1))
+            discount_price_unit = float(request.POST.get("discount_price_unit", 1))
+            
+            price = float(price_raw) * price_unit if price_raw else 0.0
+            discount_price = float(discount_price_raw) * discount_price_unit if discount_price_raw else None
+            stock = int(stock_raw) if stock_raw else 0
+            
+            collection = get_object_or_404(Collection, id=collection_id)
+            
+            with transaction.atomic():
+                product.name = name
+                product.collection = collection
+                product.price = price
+                product.discount_price = discount_price
+                product.stock = stock
+                product.description = description
+                product.is_active = is_active
+                product.brand = brand
+                product.gender = gender
+                product.occasion = occasion
+                product.function = function
+                product.features = features
+                product.save()
+                
+                # Save variants
+                variant_map = _save_variants(product, request)
+                
+                # Handle general product images
+                for i in range(1, 4):
+                    img_file = request.FILES.get(f"product_image_{i}")
+                    v_idx = request.POST.get(f"product_image_variant_{i}")
+                    
+                    if img_file:
+                        processed_file = process_product_image(img_file)
+                        if processed_file:
+                            is_main = (i == 1)
+                            if is_main:
+                                ProductImage.objects.filter(product=product, is_main=True).update(is_main=False)
+                            
+                            linked_variant = variant_map.get(v_idx) if v_idx and v_idx != 'all' else None
+                            
+                            img_obj = ProductImage.objects.create(
+                                product=product, 
+                                variant=linked_variant,
+                                image=processed_file, 
+                                is_main=is_main
+                            )
+                            if is_main:
+                                product.image = img_obj.image
+                                product.save()
+                
+                if not product.variants.filter(is_active=True).exists():
+                    raise ValidationError("At least one variant is required.")
+                if not product.images.exists():
+                    raise ValidationError("At least one image is required.")
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success', 'message': 'Product updated successfully.'})
+            messages.success(request, f"Product '{name}' updated successfully.")
+            return redirect("product_list")
+        except ValidationError as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': str(e.message if hasattr(e, 'message') else e)}, status=400)
+            messages.error(request, str(e))
+        except Exception as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': f"Error: {str(e)}"}, status=400)
+            messages.error(request, f"Error: {str(e)}")
+
+    context = {
+        'product': product,
+        'all_categories': Collection.objects.filter(is_deleted=False).order_by('name'),
+        'all_colors': Color.objects.all(),
+        'is_edit': True,
     }
     return render(request, "add_product.html", context)

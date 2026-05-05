@@ -237,23 +237,109 @@
         .s-Delivered { background: var(--success-bg); color: var(--success-text); }
         .s-Cancelled { background: var(--danger-bg);  color: var(--danger-text); }
 
-        /* ── Toast ── */
-        .toast-wrap {
-            position: fixed; top: 24px; right: 24px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 10px;
+        /* ── Toast Alert Styles ── */
+        .messages-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 380px;
+            width: 100%;
         }
-        .toast {
-            background: #fff; border: 1px solid var(--border-color);
-            border-left: 4px solid #000; border-radius: 10px;
-            padding: 14px 20px; display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,.08); font-size: .875rem; font-weight: 600;
-            animation: slideIn .3s ease; min-width: 280px;
+
+        .alert-toast {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15), 0 4px 10px -2px rgba(0,0,0,0.08);
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
-        .toast.success { border-left-color: #16a34a; }
-        .toast.error   { border-left-color: #dc2626; }
-        .toast.success i { color: #16a34a; }
-        .toast.error   i { color: #dc2626; }
-        @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+        .alert-toast.success { border-left-color: #22c55e; }
+        .alert-toast.error   { border-left-color: #ef4444; }
+        .alert-toast.warning { border-left-color: #f59e0b; }
+        .alert-toast.info    { border-left-color: #3b82f6; }
+
+        .alert-icon {
+            font-size: 1.35rem;
+            flex-shrink: 0;
+        }
+
+        .alert-toast.success .alert-icon { color: #22c55e; }
+        .alert-toast.error   .alert-icon { color: #ef4444; }
+        .alert-toast.warning .alert-icon { color: #f59e0b; }
+        .alert-toast.info    .alert-icon { color: #3b82f6; }
+
+        .alert-body {
+            flex: 1;
+        }
+
+        .alert-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .alert-close:hover {
+            color: #475569;
+            background: #f1f5f9;
+        }
+
+        /* Auto-dismiss progress bar */
+        .alert-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            animation: progressShrink 4s linear forwards;
+        }
+
+        .alert-toast.success .alert-progress { background: #22c55e; }
+        .alert-toast.error   .alert-progress { background: #ef4444; }
+        .alert-toast.warning .alert-progress { background: #f59e0b; }
+        .alert-toast.info    .alert-progress { background: #3b82f6; }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(60px) scale(0.9); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); max-height: 100px; }
+            to   { opacity: 0; transform: translateX(60px); max-height: 0; padding: 0; margin: 0; }
+        }
+
+        @keyframes progressShrink {
+            from { width: 100%; }
+            to   { width: 0%; }
+        }
+
+        .alert-toast.dismissing {
+            animation: slideOutRight 0.35s ease forwards;
+        }
 
         /* ── Responsive ── */
         @media (max-width: 1024px) {
@@ -396,11 +482,27 @@
 
         <!-- Toast Messages -->
         {% if messages %}
-        <div class="toast-wrap" id="toastWrap">
-            {% for msg in messages %}
-            <div class="toast {% if msg.tags == 'error' %}error{% else %}success{% endif %}">
-                <i class="fas {% if msg.tags == 'error' %}fa-times-circle{% else %}fa-check-circle{% endif %}"></i>
-                {{ msg }}
+        <div class="messages-container" id="toastWrap">
+            {% for message in messages %}
+            <div class="alert-toast {{ message.tags }}" id="alertToast">
+                <div class="alert-icon">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-circle-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-circle-xmark"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-triangle-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-circle-info"></i>
+                    {% endif %}
+                </div>
+                <div class="alert-body">
+                    <span class="alert-text">{{ message }}</span>
+                </div>
+                <button class="alert-close" onclick="this.parentElement.classList.add('dismissing'); setTimeout(()=>this.parentElement.remove(), 350)">
+                    <i class="fas fa-xmark"></i>
+                </button>
+                <div class="alert-progress"></div>
             </div>
             {% endfor %}
         </div>
@@ -430,14 +532,12 @@
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
 
     // Auto-dismiss toasts
-    const toastWrap = document.getElementById('toastWrap');
-    if (toastWrap) {
+    document.querySelectorAll('.alert-toast').forEach(toast => {
         setTimeout(() => {
-            toastWrap.style.transition = 'opacity .5s';
-            toastWrap.style.opacity = '0';
-            setTimeout(() => toastWrap.remove(), 500);
+            toast.classList.add('dismissing');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
         }, 4000);
-    }
+    });
 
     // Dynamic Search/Clear button toggling
     document.addEventListener('DOMContentLoaded', () => {
