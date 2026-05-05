@@ -113,8 +113,35 @@
         </div>
     </div>
 
-    <div class="transaction-list">
-        <h3 style="margin-bottom: 25px;">Recent Transactions</h3>
+    <div class="transaction-list" style="display: flex; flex-direction: column; gap: 30px;">
+        <div class="pending-section">
+            <h3 style="margin-bottom: 25px;">Pending Earnings</h3>
+            {% if pending_earnings %}
+                {% for earning in pending_earnings %}
+                <div class="transaction-item">
+                    <div class="tx-info">
+                        <div class="tx-icon" style="background: #fffbeb; color: #f59e0b;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="tx-details">
+                            <h4>{{ earning.order_item.product.name }}</h4>
+                            <p>Delivered - Waiting for approval</p>
+                        </div>
+                    </div>
+                    <div class="tx-amount" style="color: #f59e0b;">
+                        ₹{{ earning.amount }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 20px 0;">
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">No pending earnings.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="history-section" style="border-top: 1px solid var(--border-color); padding-top: 30px;">
+            <h3 style="margin-bottom: 25px;">Recent Transactions</h3>
         
         {% if transactions %}
             {% for tx in transactions %}

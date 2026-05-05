@@ -71,7 +71,6 @@ def product_detail_api(request, product_id):
             'id': v.id,
             'strap_material': v.strap_material,
             'strap_color': v.strap_color,
-            'dial_color': v.dial_color,
             'price': str(v.price) if v.price else '',
             'discount_price': str(v.discount_price) if v.discount_price else '',
             'stock': v.stock,
@@ -89,7 +88,7 @@ def product_detail_api(request, product_id):
         'occasion': product.occasion,
         'strap_material': product.strap_material,
         'strap_color': product.strap_color,
-        'dial_color': product.dial_color,
+
         'function': product.function,
         'collection_id': product.collection_id,
         'price': str(product.price),
@@ -233,7 +232,6 @@ def _save_variants(product, request):
     
     strap_materials = post_data.getlist("variant_strap_material[]")
     strap_colors = post_data.getlist("variant_strap_color[]")
-    dial_colors = post_data.getlist("variant_dial_color[]")
     variant_stocks = post_data.getlist("variant_stock[]")
     variant_skus = post_data.getlist("variant_sku[]")
     variant_ids = post_data.getlist("variant_id[]")
@@ -250,8 +248,8 @@ def _save_variants(product, request):
     
     # Iterate through variants using zip for cleaner code
     # Since they are submitted as parallel arrays in form rows, zip is perfect here
-    for v_id, v_sku, v_strap_mat, v_strap_col, v_dial_col, v_stock_raw, v_img_idx, v_desc in zip(
-        variant_ids, variant_skus, strap_materials, strap_colors, dial_colors, variant_stocks, variant_image_indices, variant_descriptions
+    for v_id, v_sku, v_strap_mat, v_strap_col, v_stock_raw, v_img_idx, v_desc in zip(
+        variant_ids, variant_skus, strap_materials, strap_colors, variant_stocks, variant_image_indices, variant_descriptions
     ):
         # Parse numeric values
         try:
@@ -269,7 +267,6 @@ def _save_variants(product, request):
                 variant.sku = v_sku
                 variant.strap_material = v_strap_mat
                 variant.strap_color = v_strap_col
-                variant.dial_color = v_dial_col
                 variant.description = v_desc
                 
                 # Handle up to 3 images
@@ -289,14 +286,13 @@ def _save_variants(product, request):
                 pass
         else:
             # Create new variant
-            if v_sku or v_strap_mat or v_strap_col or v_dial_col:
+            if v_sku or v_strap_mat or v_strap_col:
                 variant = ProductVariant.objects.create(
                     product=product,
                     stock=v_stock,
                     sku=v_sku,
                     strap_material=v_strap_mat,
                     strap_color=v_strap_col,
-                    dial_color=v_dial_col,
                     description=v_desc,
                     is_active=True
                 )

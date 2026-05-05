@@ -281,7 +281,7 @@
                     <p>{{ item.product.brand }} | {{ item.product.gender }}</p>
                     {% if item.variant %}
                     <p style="color: var(--primary-color); font-size: 0.8rem; font-weight: 600; margin-top: -5px;">
-                        Variant: {{ item.variant.strap_color|default:"" }} {{ item.variant.strap_material|default:"" }} {{ item.variant.dial_color|default:"" }}
+                        Variant: {{ item.variant.strap_color|default:"" }} {{ item.variant.strap_material|default:"" }}
                     </p>
                     {% endif %}
                     <a href="{% url 'checkout_page' %}" class="btn-buy-now-sm">Buy Now</a>

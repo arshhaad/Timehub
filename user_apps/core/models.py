@@ -65,7 +65,7 @@ class Product(models.Model):
     occasion = models.CharField(max_length=50, choices=OCCASION_CHOICES, default='Casual')
     strap_material = models.CharField(max_length=100, blank=True)
     strap_color = models.CharField(max_length=100, blank=True)
-    dial_color = models.CharField(max_length=100, blank=True)
+
     function = models.CharField(max_length=50, choices=FUNCTION_CHOICES, default='Analog')
     
     colors = models.ManyToManyField(Color, related_name='products', blank=True)
@@ -178,7 +178,6 @@ class ProductVariant(models.Model):
     image = models.ImageField(upload_to='variant_images/', null=True, blank=True)
     strap_material = models.CharField(max_length=100, blank=True)
     strap_color = models.CharField(max_length=100, blank=True)
-    dial_color = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
@@ -235,8 +234,6 @@ class ProductVariant(models.Model):
         parts = [self.product.name]
         if self.strap_color:
             parts.append(self.strap_color)
-        if self.dial_color:
-            parts.append(self.dial_color)
         return ' — '.join(parts)
 
     @property

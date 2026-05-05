@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from user_apps.core.models import Order, Product, ProductVariant, OrderItem, WishlistItem, Collection, Wallet, WalletTransaction
+from seller.models import Seller, SellerEarnings
 import json
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Avg, F
@@ -118,6 +119,15 @@ def order_detail(request, order_id):
                 process_full_return(order, request.POST.get('refund_method'))
             
             order.status = new_status
+            
+            # Create Seller Earnings if delivered
+            if new_status == 'Delivered':
+                for item in order.items.filter(is_cancelled=False, product__seller__isnull=False):
+                    SellerEarnings.objects.get_or_create(
+                        seller=item.product.seller,
+                        order_item=item,
+                        defaults={'amount': item.price * item.quantity}
+                    )
             
             # New Return Status logic
             if new_return_status and new_return_status in [c[0] for c in Order.RETURN_STATUS_CHOICES]:
@@ -260,6 +270,15 @@ def update_order_status(request, order_id):
                     product.save()
                 
         order.status = new_status
+        
+        # Create Seller Earnings if delivered
+        if new_status == 'Delivered':
+            for item in order.items.filter(is_cancelled=False, product__seller__isnull=False):
+                SellerEarnings.objects.get_or_create(
+                    seller=item.product.seller,
+                    order_item=item,
+                    defaults={'amount': item.price * item.quantity}
+                )
         order.save()
         messages.success(request, f'Order #{order.id} status updated to {new_status}.')
     else:
@@ -338,7 +357,7 @@ def inventory_list(request):
                     'type': 'variant',
                     'id': v.id,
                     'name': product.name,
-                    'variant_name': f"{v.strap_color} {v.dial_color}".strip() or "Standard",
+                    'variant_name': f"{v.strap_color}".strip() or "Standard",
                     'sku': v.sku,
                     'stock': v.stock,
                     'image': product.image.url if product.image else None,

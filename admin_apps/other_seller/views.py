@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from seller.models import Seller
+from seller.models import Seller, SellerEarnings
 from user_apps.core.models import Product, Wallet, WalletTransaction, Notification
 from django.db import transaction
 
@@ -73,6 +73,91 @@ def seller_product_details(request, product_id):
     return render(request, 'seller_product_details.html', {
         'product': product
     })
+
+@user_passes_test(is_admin)
+def seller_earnings(request):
+    from django.db.models import Sum, Q
+    seller_id = request.GET.get('seller_id')
+    status = request.GET.get('status', 'All')
+    
+    earnings = SellerEarnings.objects.all().select_related('seller', 'order_item', 'order_item__product').order_by('-created_at')
+    
+    if seller_id:
+        earnings = earnings.filter(seller_id=seller_id)
+    if status != 'All':
+        earnings = earnings.filter(status=status)
+        
+    # Annotate sellers with their total approved earnings
+    sellers = Seller.objects.annotate(
+        total_paid=Sum('earnings__amount', filter=Q(earnings__status='Approved'))
+    ).order_by('-created_at')
+    
+    return render(request, 'seller_earnings.html', {
+        'earnings': earnings,
+        'sellers': sellers,
+        'selected_seller_id': int(seller_id) if seller_id else None,
+        'selected_status': status,
+        'active_menu': 'seller_earnings'
+    })
+
+@user_passes_test(is_admin)
+def process_earning(request, earning_id):
+    earning = get_object_or_404(SellerEarnings, id=earning_id)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        new_amount = request.POST.get('amount')
+        admin_note = request.POST.get('admin_note', '').strip()
+        
+        if new_amount:
+            try:
+                from decimal import Decimal
+                earning.amount = Decimal(new_amount)
+            except:
+                messages.error(request, "Invalid amount format.")
+                return redirect('admin_seller_earnings')
+            
+        earning.admin_note = admin_note
+        
+        if action == 'approve':
+            with transaction.atomic():
+                earning.status = 'Approved'
+                earning.save()
+                
+                # Credit to seller's wallet
+                wallet, _ = Wallet.objects.get_or_create(user=earning.seller.user)
+                wallet.balance += earning.amount
+                wallet.save()
+                
+                WalletTransaction.objects.create(
+                    wallet=wallet,
+                    transaction_type='Credit',
+                    amount=earning.amount,
+                    description=f"Earnings from Order Item #{earning.order_item.id} ({earning.order_item.product.name})"
+                )
+                
+                Notification.objects.create(
+                    user=earning.seller.user,
+                    message=f"Your earnings of ₹{earning.amount} for '{earning.order_item.product.name}' have been approved and credited to your wallet."
+                )
+                
+                messages.success(request, f"Earning approved and ₹{earning.amount} credited to {earning.seller.store_name}.")
+                
+        elif action == 'reject':
+            earning.status = 'Rejected'
+            earning.save()
+            
+            Notification.objects.create(
+                user=earning.seller.user,
+                message=f"Your earnings for '{earning.order_item.product.name}' were rejected. Note: {admin_note}"
+            )
+            messages.warning(request, "Earning rejected.")
+            
+        elif action == 'update':
+            earning.save()
+            messages.info(request, "Earning updated successfully.")
+            
+    return redirect('admin_seller_earnings')
 
 @user_passes_test(is_admin)
 def seller_action(request, seller_id):

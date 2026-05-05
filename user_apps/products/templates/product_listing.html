@@ -2345,24 +2345,7 @@
                     </div>
                 </div>
 
-                <!-- Dial Color -->
-                <div class="filter-accordion">
-                    <button type="button" class="acc-header">
-                        <h4>Dial Color</h4>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="acc-content">
-                        <div class="check-list">
-                            {% for dial in dial_colors %}
-                            <label class="check-item">
-                                <input type="checkbox" name="dial_color" value="{{ dial }}" {% if dial in selected_dial_color %}checked{% endif %}>
-                                <div class="check-box"></div>
-                                <span class="check-label">{{ dial }}</span>
-                            </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="drawer-footer">
                     <button type="submit" class="btn btn-primary" style="width:100%;">Show Results</button>
@@ -2405,8 +2388,7 @@
                                 value="{{ mat }}">{% endfor %}
                             {% for col in selected_strap_color %}<input type="hidden" name="strap_color"
                                 value="{{ col }}">{% endfor %}
-                            {% for dial in selected_dial_color %}<input type="hidden" name="dial_color"
-                                value="{{ dial }}">{% endfor %}
+
 
                             <div class="search-input-wrap">
                                 {% if query %}

@@ -416,7 +416,14 @@
                     <a href="{% url 'wallet_list' %}"><i class="fas fa-wallet"></i> Wallet</a>
                 </li>
             </ul>
-
+            <ul class="nav-list">
+                <li class="sidebar-section-title">Sellers</li>
+                <li class="nav-item {% if active_menu == 'seller_profiles' %}active{% endif %}">
+                    <a href="{% url 'admin_seller_profiles' %}"><i class="fas fa-store"></i> Seller Profiles</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'seller_earnings' %}active{% endif %}">
+                    <a href="{% url 'admin_seller_earnings' %}"><i class="fas fa-hand-holding-usd"></i> Seller Earnings</a>
+                </li>
             <ul class="nav-list">
                 <li class="sidebar-section-title">System</li>
                 <li class="nav-item">

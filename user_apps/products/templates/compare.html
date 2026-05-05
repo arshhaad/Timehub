@@ -21,7 +21,8 @@
             --bg-card-hover: #1c1c23;
             --text-main: #ffffff;
             --text-muted: #9ca3af;
-            --primary-color: #f98822; /* Premium Orange/Gold */
+            --primary-color: #f98822;
+            /* Premium Orange/Gold */
             --primary-hover: #e07a1b;
             --border-color: #27272a;
             --radius-md: 12px;
@@ -763,416 +764,418 @@
     </style>
 </head>
 
-    {% csrf_token %}
-    <!-- SEARCH OVERLAY -->
-    <div class="search-overlay" id="searchOverlay">
-        <div class="search-container">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search for luxury timepieces...">
-            <div class="search-close" id="closeSearch">
-                <i class="fas fa-times"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- MOBILE MENU -->
-    <div class="mobile-menu" id="mobileMenu">
-        <div class="close-menu" id="closeMenu">
+{% csrf_token %}
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search for luxury timepieces...">
+        <div class="search-close" id="closeSearch">
             <i class="fas fa-times"></i>
         </div>
-        <div class="logo" style="margin-bottom: 50px;">
+    </div>
+</div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+    <div class="close-menu" id="closeMenu">
+        <i class="fas fa-times"></i>
+    </div>
+    <div class="logo" style="margin-bottom: 50px;">
+        <div class="logo-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        TimeHub
+    </div>
+    <nav class="mobile-nav-links">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'product_listing' %}">Collection</a>
+        <a href="{% url 'about' %}">About</a>
+        <a href="/about/#contact">Contact</a>
+    </nav>
+</div>
+
+<!-- NAVBAR -->
+<header id="header">
+    <div class="container nav-wrap">
+        <a href="/" class="logo">
             <div class="logo-icon">
                 <i class="fas fa-clock"></i>
             </div>
             TimeHub
-        </div>
-        <nav class="mobile-nav-links">
+        </a>
+        <nav class="nav-links">
             <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'product_listing' %}">Collection</a>
+            <a href="{% url 'product_listing' %}" class="active">Collection</a>
             <a href="{% url 'about' %}">About</a>
             <a href="/about/#contact">Contact</a>
         </nav>
-    </div>
-
-    <!-- NAVBAR -->
-    <header id="header">
-        <div class="container nav-wrap">
-            <a href="/" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                TimeHub
+        <div class="nav-actions">
+            <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
+            <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist"><i class="far fa-heart"></i></a>
+            <a href="{% url 'cart_view' %}" class="icon-btn"
+                style="text-decoration:none; color:inherit; position:relative;">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartBadge"
+                    style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{
+                    cart_count }}</span>
             </a>
-            <nav class="nav-links">
-                <a href="{% url 'home' %}">Home</a>
-                <a href="{% url 'product_listing' %}" class="active">Collection</a>
-                <a href="{% url 'about' %}">About</a>
-                <a href="/about/#contact">Contact</a>
-            </nav>
-            <div class="nav-actions">
-                <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist"><i class="far fa-heart"></i></a>
-                <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit; position:relative;">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span id="cartBadge" style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{ cart_count }}</span>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"
+                    style="color: var(--primary-color);"></i></a>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline"
+                style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">Sign
+                Up</a>
+            {% endif %}
+            <div class="mobile-toggle" id="mobileToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<main class="container">
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <nav class="breadcrumbs">
+            <a href="{% url 'home' %}">Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'product_listing' %}">Collection</a>
+            <i class="fas fa-chevron-right"></i>
+            <span style="color: var(--primary-color);">Compare Selection</span>
+        </nav>
+        <h1 class="page-title">Compare Selection</h1>
+        <p class="page-subtitle">Curating your ultimate choice through meticulous technical evaluation.</p>
+    </section>
+
+    <div class="content-layout">
+
+        <!-- PRODUCT SELECTION -->
+        <div class="main-column">
+            <div class="cat-row">
+                <div class="num-circ">1</div>
+                <h3>Selected Timepieces</h3>
+            </div>
+
+            <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card active">
+                    <div class="p-remove-btn remove-trigger" data-id="{{ product.id }}"><i class="fas fa-times"></i>
+                    </div>
+                    <div class="img-wrap">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                        <img src="{% static 'images/placeholder.png' %}" alt="">
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="p-meta">{{ product.brand|default:"TIMEHUB" }}</div>
+                        <h3 class="p-title">{{ product.name }}</h3>
+                        <div class="p-price-row">
+                            <div class="p-rate">₹{{ product.price }}</div>
+                        </div>
+                        <div class="p-action-row">
+                            <button class="p-btn p-btn-cart" onclick="addToCart('{{ product.uuid }}', this)">
+                                <i class="fas fa-shopping-bag"></i> Cart
+                            </button>
+                            <button class="p-btn p-btn-buy" onclick="buyProduct('{{ product.uuid }}', this)">
+                                Buy Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for i in places_to_fill %}
+                <a href="{% url 'product_listing' %}" class="product-card slot-placeholder">
+                    <div class="add-ico-btn"><i class="fas fa-plus"></i></div>
+                    <span style="font-weight: 700; font-size: 0.95rem; opacity: 0.8;">Add to selection</span>
                 </a>
-                {% if user.is_authenticated %}
-                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle" style="color: var(--primary-color);"></i></a>
-                {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline" style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">Sign Up</a>
-                {% endif %}
-                <div class="mobile-toggle" id="mobileToggle">
-                    <i class="fas fa-bars"></i>
+                {% endfor %}
+            </div>
+
+            <div class="cat-row">
+                <div class="num-circ">2</div>
+                <h3>Technical Evaluation</h3>
+            </div>
+
+            <div class="specs-group">
+                <div class="table-row">
+                    <div class="table-label"><i class="fas fa-tag"></i> <span>Price Point</span></div>
+                    {% for product in products %}<div class="table-val"
+                        style="color:var(--primary-color); font-weight:800; font-size:1.1rem;">₹{{ product.price }}
+                    </div>{% endfor %}
+                    {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
+                </div>
+                <div class="table-row">
+                    <div class="table-label"><i class="fas fa-star"></i> <span>Client Rating</span></div>
+                    {% for product in products %}
+                    <div class="table-val">
+                        <i class="fas fa-star" style="color:#fbbf24; margin-right:8px; font-size:0.95rem;"></i>
+                        {{ product.rating }}
+                    </div>
+                    {% endfor %}
+                    {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
+                </div>
+
+                <div class="table-row">
+                    <div class="table-label"><i class="fas fa-user-friends"></i> <span>Gender</span></div>
+                    {% for product in products %}<div class="table-val">{{
+                        product.get_gender_display|default:product.gender }}</div>{% endfor %}
+                    {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
+                </div>
+                <div class="table-row">
+                    <div class="table-label"><i class="fas fa-gem"></i> <span>Collection</span></div>
+                    {% for product in products %}
+                    <div class="table-val">{{ product.collection.name }}</div>
+                    {% endfor %}
+                    {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
                 </div>
             </div>
         </div>
-    </header>
 
+        <!-- ORDER SUMMARY -->
+        <aside class="sidebar-wrap">
+            <div class="summary-box">
+                <h4>Order Summary</h4>
 
-    <main class="container">
-        <!-- HERO SECTION -->
-        <section class="hero-section">
-            <nav class="breadcrumbs">
-                <a href="{% url 'home' %}">Home</a>
-                <i class="fas fa-chevron-right"></i>
-                <a href="{% url 'product_listing' %}">Collection</a>
-                <i class="fas fa-chevron-right"></i>
-                <span style="color: var(--primary-color);">Compare Selection</span>
-            </nav>
-            <h1 class="page-title">Compare Selection</h1>
-            <p class="page-subtitle">Curating your ultimate choice through meticulous technical evaluation.</p>
-        </section>
-
-        <div class="content-layout">
-
-            <!-- PRODUCT SELECTION -->
-            <div class="main-column">
-                <div class="cat-row">
-                    <div class="num-circ">1</div>
-                    <h3>Selected Timepieces</h3>
-                </div>
-
-                <div class="products-grid">
+                <div style="margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 25px;">
                     {% for product in products %}
-                    <div class="product-card active">
-                        <div class="p-remove-btn remove-trigger" data-id="{{ product.id }}"><i class="fas fa-times"></i>
-                        </div>
-                        <div class="img-wrap">
+                    <div class="basket-item">
+                        <div class="basket-thumb">
                             {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                            <img src="{{ product.image.url }}" alt="">
                             {% else %}
                             <img src="{% static 'images/placeholder.png' %}" alt="">
                             {% endif %}
                         </div>
-                        <div>
-                            <div class="p-meta">{{ product.brand|default:"TIMEHUB" }}</div>
-                            <h3 class="p-title">{{ product.name }}</h3>
-                            <div class="p-price-row">
-                                <div class="p-rate">₹{{ product.price }}</div>
-                            </div>
-                            <div class="p-action-row">
-                                <button class="p-btn p-btn-cart" onclick="addToCart('{{ product.uuid }}', this)">
-                                    <i class="fas fa-shopping-bag"></i> Cart
-                                </button>
-                                <button class="p-btn p-btn-buy" onclick="buyProduct('{{ product.uuid }}', this)">
-                                    Buy Now
-                                </button>
-                            </div>
+                        <div class="basket-details">
+                            <h5>{{ product.name|truncatechars:22 }}</h5>
+                            <p>Qty: 1 · ₹{{ product.price }}</p>
                         </div>
                     </div>
                     {% endfor %}
-
-                    {% for i in places_to_fill %}
-                    <a href="{% url 'product_listing' %}" class="product-card slot-placeholder">
-                        <div class="add-ico-btn"><i class="fas fa-plus"></i></div>
-                        <span style="font-weight: 700; font-size: 0.95rem; opacity: 0.8;">Add to selection</span>
-                    </a>
-                    {% endfor %}
                 </div>
 
-                <div class="cat-row">
-                    <div class="num-circ">2</div>
-                    <h3>Technical Evaluation</h3>
+                <div class="basket-bill">
+                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize
+                            }})</span><span>₹{{ total_price|default:"--" }}</span></div>
+                    <div class="price-line"><span>Insured Shipping</span><span
+                            style="color:var(--primary-color);">₹99</span></div>
+                    <div class="price-line"><span>Estimated Tax</span><span>₹55</span></div>
+                    <div class="price-line total">
+                        <span>Total Selection</span>
+                        <span class="price-total">₹{{ total_price|default:"--" }}</span>
+                    </div>
                 </div>
 
-                <div class="specs-group">
-                    <div class="table-row">
-                        <div class="table-label"><i class="fas fa-tag"></i> <span>Price Point</span></div>
-                        {% for product in products %}<div class="table-val"
-                            style="color:var(--primary-color); font-weight:800; font-size:1.1rem;">₹{{ product.price }}
-                        </div>{% endfor %}
-                        {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
-                    </div>
-                    <div class="table-row">
-                        <div class="table-label"><i class="fas fa-star"></i> <span>Client Rating</span></div>
-                        {% for product in products %}
-                        <div class="table-val">
-                            <i class="fas fa-star" style="color:#fbbf24; margin-right:8px; font-size:0.95rem;"></i>
-                            {{ product.rating }}
-                        </div>
-                        {% endfor %}
-                        {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
-                    </div>
-                    <div class="table-row">
-                        <div class="table-label"><i class="fas fa-palette"></i> <span>Dial Color</span></div>
-                        {% for product in products %}
-                        <div class="table-val">{{ product.dial_color|default:"Boutique" }}</div>
-                        {% endfor %}
-                        {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
-                    </div>
-                    <div class="table-row">
-                        <div class="table-label"><i class="fas fa-user-friends"></i> <span>Gender</span></div>
-                        {% for product in products %}<div class="table-val">{{ product.get_gender_display|default:product.gender }}</div>{% endfor %}
-                        {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
-                    </div>
-                    <div class="table-row">
-                        <div class="table-label"><i class="fas fa-gem"></i> <span>Collection</span></div>
-                        {% for product in products %}
-                        <div class="table-val">{{ product.collection.name }}</div>
-                        {% endfor %}
-                        {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
-                    </div>
-                </div>
+                <button class="checkout-trigger" id="checkoutBtn" onclick="processOrder()">
+                    <span class="btn-icon"><i class="fas fa-lock"></i></span>
+                    <span class="btn-text">Secure Checkout</span>
+                    <div class="loader-spin"></div>
+                </button>
+
+                <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:25px;">
+                    <i class="fas fa-shield-halved" style="color:var(--primary-color); margin-right:5px;"></i> SSL
+                    Secured Marketplace
+                </p>
             </div>
+        </aside>
 
-            <!-- ORDER SUMMARY -->
-            <aside class="sidebar-wrap">
-                <div class="summary-box">
-                    <h4>Order Summary</h4>
+    </div>
+</main>
 
-                    <div style="margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 25px;">
-                        {% for product in products %}
-                        <div class="basket-item">
-                            <div class="basket-thumb">
-                                {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="">
-                                {% else %}
-                                <img src="{% static 'images/placeholder.png' %}" alt="">
-                                {% endif %}
-                            </div>
-                            <div class="basket-details">
-                                <h5>{{ product.name|truncatechars:22 }}</h5>
-                                <p>Qty: 1 · ₹{{ product.price }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+<script>
+    async function processOrder() {
+        {% if products %}
+        const btn = document.getElementById('checkoutBtn');
+        btn.classList.add('is-loading');
+        btn.disabled = true;
 
-                    <div class="basket-bill">
-                        <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize }})</span><span>₹{{ total_price|default:"--" }}</span></div>
-                        <div class="price-line"><span>Insured Shipping</span><span
-                                style="color:var(--primary-color);">₹99</span></div>
-                        <div class="price-line"><span>Estimated Tax</span><span>₹55</span></div>
-                        <div class="price-line total">
-                            <span>Total Selection</span>
-                            <span class="price-total">₹{{ total_price|default:"--" }}</span>
-                        </div>
-                    </div>
-
-                    <button class="checkout-trigger" id="checkoutBtn" onclick="processOrder()">
-                        <span class="btn-icon"><i class="fas fa-lock"></i></span>
-                        <span class="btn-text">Secure Checkout</span>
-                        <div class="loader-spin"></div>
-                    </button>
-
-                    <p style="text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:25px;">
-                        <i class="fas fa-shield-halved" style="color:var(--primary-color); margin-right:5px;"></i> SSL
-                        Secured Marketplace
-                    </p>
-                </div>
-            </aside>
-
-        </div>
-    </main>
-
-    <script>
-        async function processOrder() {
-            {% if products %}
-            const btn = document.getElementById('checkoutBtn');
-            btn.classList.add('is-loading');
-            btn.disabled = true;
-            
-            const productsData = [
-                {% for p in products %}
-                { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: {{ p.variants.filter.exists|yesno:"true,false" }} }{% if not forloop.last %},{% endif %}
-                {% endfor %}
+        const productsData = [
+            {% for p in products %}
+    { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: { { p.variants.filter.exists | yesno: "true,false" } } } {% if not forloop.last %}, {% endif %}
+    {% endfor %}
             ];
-            
-            let failures = [];
-            for (const p of productsData) {
-                try {
-                    const response = await fetch(`/user/cart/add/${p.id}/`, {
-                        method: 'POST',
-                        headers: { 
-                            'X-CSRFToken': '{{ csrf_token }}', 
-                            'Content-Type': 'application/json' 
-                        },
-                        body: JSON.stringify({ quantity: 1 })
-                    });
-                    const data = await response.json();
-                    if (!data.success) {
-                        failures.push(`${p.name}: ${data.error}`);
-                    }
-                } catch (err) {
-                    failures.push(`${p.name}: Connection error`);
-                }
-            }
 
-            if (failures.length > 0) {
-                alert("Some items could not be added:\n\n" + failures.join("\n"));
-                btn.classList.remove('is-loading');
-                btn.disabled = false;
-                // If some succeeded, we might still want to go to checkout, 
-                // but let's stay here so user can fix issues (select variants).
-            } else {
-                window.location.href = "{% url 'checkout_page' %}";
+    let failures = [];
+    for (const p of productsData) {
+        try {
+            const response = await fetch(`/user/cart/add/${p.id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: 1 })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                failures.push(`${p.name}: ${data.error}`);
             }
-            {% endif %}
+        } catch (err) {
+            failures.push(`${p.name}: Connection error`);
+        }
+    }
+
+    if (failures.length > 0) {
+        alert("Some items could not be added:\n\n" + failures.join("\n"));
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+        // If some succeeded, we might still want to go to checkout, 
+        // but let's stay here so user can fix issues (select variants).
+    } else {
+        window.location.href = "{% url 'checkout_page' %}";
+    }
+    {% endif %}
         }
 
-        function addToCart(uuid, btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.style.pointerEvents = 'none';
+    function addToCart(uuid, btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.style.pointerEvents = 'none';
 
-            fetch(`/user/cart/add/${uuid}/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ quantity: 1 })
-            })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.success) {
-                        btn.innerHTML = '<i class="fas fa-check"></i> Added';
-                        btn.style.background = '#22c55e';
-                        btn.style.color = '#fff';
-                        // Update cart badge if exists
-                        const badge = document.getElementById('cartBadge');
-                        if (badge) {
-                            let count = parseInt(badge.textContent) || 0;
-                            badge.textContent = count + 1;
-                            badge.style.display = 'flex';
+        fetch(`/user/cart/add/${uuid}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: 1 })
+        })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Added';
+                    btn.style.background = '#22c55e';
+                    btn.style.color = '#fff';
+                    // Update cart badge if exists
+                    const badge = document.getElementById('cartBadge');
+                    if (badge) {
+                        let count = parseInt(badge.textContent) || 0;
+                        badge.textContent = count + 1;
+                        badge.style.display = 'flex';
+                    }
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.style.background = '';
+                        btn.style.color = '';
+                        btn.style.pointerEvents = 'auto';
+                    }, 2000);
+                } else {
+                    if (d.error.includes('variant')) {
+                        if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
+                            window.location.href = `/user/product/${uuid}/`;
                         }
-                        setTimeout(() => {
-                            btn.innerHTML = originalHtml;
-                            btn.style.background = '';
-                            btn.style.color = '';
-                            btn.style.pointerEvents = 'auto';
-                        }, 2000);
                     } else {
-                        if (d.error.includes('variant')) {
-                            if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
-                                window.location.href = `/user/product/${uuid}/`;
-                            }
-                        } else {
-                            alert(d.error || "Please login to add items.");
-                        }
-                        btn.innerHTML = originalHtml;
-                        btn.style.pointerEvents = 'auto';
+                        alert(d.error || "Please login to add items.");
                     }
-                })
-                .catch(() => {
-                    alert("Please login to add items.");
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
-                });
-        }
-
-        function buyProduct(uuid, btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.style.pointerEvents = 'none';
-
-            fetch(`/user/cart/add/${uuid}/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ quantity: 1 })
-            })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.success) window.location.href = "{% url 'checkout_page' %}";
-                    else {
-                        if (d.error.includes('variant')) {
-                            if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
-                                window.location.href = `/user/product/${uuid}/`;
-                            }
-                        } else {
-                            alert(d.error || "Please login to purchase.");
-                        }
-                        btn.innerHTML = originalHtml;
-                        btn.style.pointerEvents = 'auto';
-                    }
-                })
-                .catch(() => {
-                    alert("Please login to purchase.");
-                    btn.innerHTML = originalHtml;
-                    btn.style.pointerEvents = 'auto';
-                });
-        }
-
-        // Header Scroll Effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('header');
-            if (window.scrollY > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
-
-        // Mobile Menu Logic
-        const mobileToggle = document.getElementById('mobileToggle');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const closeMenu = document.getElementById('closeMenu');
-
-        if (mobileToggle) {
-            mobileToggle.addEventListener('click', () => {
-                mobileMenu.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            });
-        }
-
-        if (closeMenu) {
-            closeMenu.addEventListener('click', () => {
-                mobileMenu.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            });
-        }
-
-        // Search Overlay Logic
-        const searchTrigger = document.querySelector('.search-trigger');
-        const searchOverlay = document.getElementById('searchOverlay');
-        const closeSearch = document.getElementById('closeSearch');
-        const searchInput = document.getElementById('searchInput');
-
-        if (searchTrigger) {
-            searchTrigger.addEventListener('click', () => {
-                searchOverlay.classList.add('active');
-                setTimeout(() => searchInput.focus(), 300);
-            });
-        }
-
-        if (closeSearch) {
-            closeSearch.addEventListener('click', () => {
-                searchOverlay.classList.remove('active');
-            });
-        }
-
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && searchInput.value.trim() !== '') {
-                    window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
                 }
+            })
+            .catch(() => {
+                alert("Please login to add items.");
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
             });
-        }
+    }
 
-        document.querySelectorAll('.remove-trigger').forEach(b => {
-            b.onclick = () => {
-                fetch(`{% url 'toggle_compare' %}?id=${b.dataset.id}`)
-                    .then(r => r.json()).then(d => { if (d.success) window.location.reload(); });
+    function buyProduct(uuid, btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.style.pointerEvents = 'none';
+
+        fetch(`/user/cart/add/${uuid}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: 1 })
+        })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) window.location.href = "{% url 'checkout_page' %}";
+                else {
+                    if (d.error.includes('variant')) {
+                        if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
+                            window.location.href = `/user/product/${uuid}/`;
+                        }
+                    } else {
+                        alert(d.error || "Please login to purchase.");
+                    }
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(() => {
+                alert("Please login to purchase.");
+                btn.innerHTML = originalHtml;
+                btn.style.pointerEvents = 'auto';
+            });
+    }
+
+    // Header Scroll Effect
+    window.addEventListener('scroll', () => {
+        const header = document.getElementById('header');
+        if (window.scrollY > 50) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    });
+
+    // Mobile Menu Logic
+    const mobileToggle = document.getElementById('mobileToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMenu = document.getElementById('closeMenu');
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => {
+            mobileMenu.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (closeMenu) {
+        closeMenu.addEventListener('click', () => {
+            mobileMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Search Overlay Logic
+    const searchTrigger = document.querySelector('.search-trigger');
+    const searchOverlay = document.getElementById('searchOverlay');
+    const closeSearch = document.getElementById('closeSearch');
+    const searchInput = document.getElementById('searchInput');
+
+    if (searchTrigger) {
+        searchTrigger.addEventListener('click', () => {
+            searchOverlay.classList.add('active');
+            setTimeout(() => searchInput.focus(), 300);
+        });
+    }
+
+    if (closeSearch) {
+        closeSearch.addEventListener('click', () => {
+            searchOverlay.classList.remove('active');
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
             }
         });
-    </script>
+    }
+
+    document.querySelectorAll('.remove-trigger').forEach(b => {
+        b.onclick = () => {
+            fetch(`{% url 'toggle_compare' %}?id=${b.dataset.id}`)
+                .then(r => r.json()).then(d => { if (d.success) window.location.reload(); });
+        }
+    });
+</script>
 </body>
 
 </html>

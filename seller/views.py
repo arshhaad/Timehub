@@ -251,7 +251,6 @@ def seller_product_add(request):
                 materials = request.POST.getlist('variant_strap_material[]')
                 stocks = request.POST.getlist('variant_stock[]')
                 strap_colors = request.POST.getlist('variant_strap_color[]')
-                dial_colors = request.POST.getlist('variant_dial_color[]')
                 v_descriptions = request.POST.getlist('variant_description[]')
                 v_indices = request.POST.getlist('variant_image_idx[]')
                 
@@ -263,7 +262,6 @@ def seller_product_add(request):
                         strap_material=materials[i],
                         stock=int(stocks[i]),
                         strap_color=strap_colors[i],
-                        dial_color=dial_colors[i],
                         description=v_descriptions[i]
                     )
                     total_stock += int(stocks[i])
@@ -329,11 +327,19 @@ def seller_product_status(request):
 
 @login_required
 def seller_wallet(request):
+    from .models import SellerEarnings
     wallet, created = Wallet.objects.get_or_create(user=request.user)
     transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-timestamp')
+    
+    seller = getattr(request.user, 'seller_profile', None)
+    pending_earnings = []
+    if seller:
+        pending_earnings = SellerEarnings.objects.filter(seller=seller, status='Pending').order_by('-created_at')
+        
     return render(request, 'seller_wallat.html', {
         'wallet': wallet,
         'transactions': transactions,
+        'pending_earnings': pending_earnings,
         'active_menu': 'wallet'
     })
 @login_required

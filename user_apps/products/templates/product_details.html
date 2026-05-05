@@ -883,31 +883,7 @@
                     </div>
                     {% endif %}
 
-                    <!-- Dial Colors (from Product dial_color CSV) -->
-                    {% if product.dial_color %}
-                    <div class="variation-group" style="margin-bottom: 0;">
-                        <div class="variation-label">
-                            <span>Dial Colors</span>
-                            <span id="label-dial" class="selected-val"></span> <!-- Set by JS -->
-                        </div>
-                        <div class="color-row">
-                            <script>
-                                const dialColors = "{{ product.dial_color|escapejs }}".split(',').map(s => s.trim()).filter(s => s);
-                                if(dialColors.length > 0) {
-                                    document.getElementById('label-dial').textContent = dialColors[0];
-                                    dialColors.forEach((dial, idx) => {
-                                        document.write(`
-                                            <div class="color-option ${idx === 0 ? 'active' : ''}" onclick="handleDialSelection(this, '${dial}')">
-                                                <div class="color-swatch" style="background-color: #f1f5f9;" title="${dial}"></div>
-                                                <span class="color-name">${dial}</span>
-                                            </div>
-                                        `);
-                                    });
-                                }
-                            </script>
-                        </div>
-                    </div>
-                    {% endif %}
+
 
                     <!-- Strap Materials (from Product strap_material CSV) -->
                     {% if product.strap_material %}
@@ -970,7 +946,7 @@
                         {% for v in active_variants %}
                         {
                             "id": "{{ v.id }}",
-                            "dial": "{{ v.dial_color|default:''|escapejs }}",
+
                             "strap": "{{ v.strap_color|default:''|escapejs }}",
                             "material": "{{ v.strap_material|default:''|escapejs }}",
                             "price": "{{ v.effective_discount_price }}",
@@ -1507,45 +1483,56 @@
             const variants = JSON.parse(dataEl.textContent);
             
             const activeStrapEl = document.getElementById('label-strapclr');
-            const activeDialEl = document.getElementById('label-dial');
             const activeMaterialEl = document.getElementById('label-material');
             
             const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim() : '';
-            const currentDial = activeDialEl ? activeDialEl.textContent.trim() : '';
             const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim() : '';
             
-            let matchedVariant = variants.find(v => {
-                let match = true;
-                if(currentStrap && v.strap && v.strap !== currentStrap) match = false;
-                if(currentDial && v.dial && v.dial !== currentDial) match = false;
-                if(currentMaterial && v.material && v.material !== currentMaterial) match = false;
-                return match;
+            let firstVisibleMatch = null;
+            let currentStillVisible = false;
+            let visibleCount = 0;
+
+            // Update visibility of variant buttons
+            document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
+                const vId = btn.dataset.variantId;
+                const v = variants.find(v => v.id == vId);
+                if (v) {
+                    let isMatch = true;
+                    if (currentStrap && v.strap && v.strap !== currentStrap) isMatch = false;
+                    if (currentMaterial && v.material && v.material !== currentMaterial) isMatch = false;
+                    
+                    if (isMatch) {
+                        btn.style.display = 'inline-block';
+                        visibleCount++;
+                        if (!firstVisibleMatch) firstVisibleMatch = btn;
+                        if (vId === selectedVariantId) currentStillVisible = true;
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
             });
-            
-            if(!matchedVariant && variants.length > 0) {
-                 matchedVariant = variants.find(v => v.strap === currentStrap) || variants[0];
-            }
-            
-            if(matchedVariant) {
-                const btn = document.querySelector(`.opt-btn[data-variant-id="${matchedVariant.id}"]`);
-                if(btn && !btn.classList.contains('active')) {
-                    handleSizeSelection(btn, true);
+
+            // Handle selection logic
+            if (visibleCount > 0) {
+                if (!currentStillVisible) {
+                    // If the previously selected variant is now hidden, pick the first visible match
+                    handleSizeSelection(firstVisibleMatch, true);
+                }
+            } else if (variants.length > 0) {
+                // If no variants match the specific combination, show all as fallback or at least one
+                // Usually this means the combination of Strap Color + Material is invalid.
+                // For better UX, we might want to disable/hide invalid color/material options too.
+                // But for now, let's just show all if none match.
+                document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
+                    btn.style.display = 'inline-block';
+                });
+                if (!selectedVariantId) {
+                    handleSizeSelection(document.querySelector('.opt-btn[data-type="variant"]'), true);
                 }
             }
         };
 
-        let selectedDial = '';
-        window.handleDialSelection = function(element, dialName) {
-            const group = element.closest('.variation-group');
-            group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            selectedDial = dialName;
 
-            if (document.getElementById('label-dial')) {
-                document.getElementById('label-dial').textContent = dialName;
-            }
-            autoSelectVariant();
-        };
 
         let selectedStrapClr = '';
         window.handleStrapClrSelection = function(element, clrName) {
@@ -1557,8 +1544,36 @@
             if (document.getElementById('label-strapclr')) {
                 document.getElementById('label-strapclr').textContent = clrName;
             }
+            updateAvailableMaterials();
             autoSelectVariant();
         };
+
+        function updateAvailableMaterials() {
+            const dataEl = document.getElementById('variants-data');
+            if(!dataEl) return;
+            const variants = JSON.parse(dataEl.textContent);
+            
+            // Find materials available for the currently selected strap color
+            const availableMats = new Set();
+            variants.forEach(v => {
+                if (!selectedStrapClr || v.strap === selectedStrapClr) {
+                    if (v.material) availableMats.add(v.material);
+                }
+            });
+
+            document.querySelectorAll('.material-chip').forEach(chip => {
+                const matName = chip.querySelector('.material-label span:first-child').textContent.trim();
+                if (availableMats.has(matName)) {
+                    chip.classList.remove('disabled');
+                    chip.style.opacity = '1';
+                    chip.style.pointerEvents = 'auto';
+                } else {
+                    chip.classList.add('disabled');
+                    chip.style.opacity = '0.4';
+                    chip.style.pointerEvents = 'none';
+                }
+            });
+        }
 
         let selectedMaterial = '';
         window.handleMaterialSelection = function(element, materialName) {
@@ -1570,8 +1585,41 @@
             if (document.getElementById('label-material')) {
                 document.getElementById('label-material').textContent = materialName;
             }
+            updateAvailableStrapColors();
             autoSelectVariant();
         };
+
+        function updateAvailableStrapColors() {
+            const dataEl = document.getElementById('variants-data');
+            if(!dataEl) return;
+            const variants = JSON.parse(dataEl.textContent);
+            
+            // Find strap colors available for the currently selected material
+            const availableClrs = new Set();
+            variants.forEach(v => {
+                if (!selectedMaterial || v.material === selectedMaterial) {
+                    if (v.strap) availableClrs.add(v.strap);
+                }
+            });
+
+            document.querySelectorAll('.variation-group').forEach(group => {
+                const label = group.querySelector('.variation-label span:first-child');
+                if (label && label.textContent.includes('Strap Colors')) {
+                    group.querySelectorAll('.color-option').forEach(option => {
+                        const clrName = option.querySelector('.color-name').textContent.trim();
+                        if (availableClrs.has(clrName)) {
+                            option.classList.remove('disabled');
+                            option.style.opacity = '1';
+                            option.style.pointerEvents = 'auto';
+                        } else {
+                            option.classList.add('disabled');
+                            option.style.opacity = '0.4';
+                            option.style.pointerEvents = 'none';
+                        }
+                    });
+                }
+            });
+        }
 
         window.handleSizeSelection = function(element, isAutoTriggered = false) {
             // Update active UI
@@ -1656,19 +1704,7 @@
                                 });
                             });
                         }
-                        if (variant.dial) {
-                            selectedDial = variant.dial;
-                            if (document.getElementById('label-dial')) document.getElementById('label-dial').textContent = variant.dial;
-                            document.querySelectorAll('#label-dial').forEach(l => {
-                                const g = l.closest('.variation-group');
-                                g.querySelectorAll('.color-option').forEach(o => {
-                                    if(o.querySelector('.color-name').textContent.trim() === variant.dial) {
-                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-                                        o.classList.add('active');
-                                    }
-                                });
-                            });
-                        }
+
                         if (variant.material) {
                             selectedMaterial = variant.material;
                             if (document.getElementById('label-material')) document.getElementById('label-material').textContent = variant.material;
@@ -1690,11 +1726,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             const activeStrap = document.getElementById('label-strapclr');
             if (activeStrap) selectedStrapClr = activeStrap.textContent.trim();
-            const activeDial = document.getElementById('label-dial');
-            if (activeDial) selectedDial = activeDial.textContent.trim();
+
             const activeMat = document.getElementById('label-material');
             if (activeMat) selectedMaterial = activeMat.textContent.trim();
 
+            updateAvailableMaterials();
+            updateAvailableStrapColors();
             autoSelectVariant();
             
             // Fallback if autoSelectVariant didn't find anything

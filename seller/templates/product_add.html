@@ -167,7 +167,7 @@
 
     .variant-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 16px;
         margin-bottom: 16px;
     }
@@ -656,13 +656,6 @@
                         ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.strap_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Dial Color</label>
-                    <select name="variant_dial_color[]" class="form-control" required>
-                        <option value="">Select Color</option>
-                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.dial_color === c ? 'selected' : ''}>${c}</option>`).join('')}
-                    </select>
-                </div>
             </div>
             <div class="form-group" style="margin-top: 15px;">
                 <label>Configuration Description (Optional)</label>
@@ -749,7 +742,6 @@
                     sku: "{{ v.sku|escapejs }}",
                     strap_material: "{{ v.strap_material|escapejs }}",
                     strap_color: "{{ v.strap_color|escapejs }}",
-                    dial_color: "{{ v.dial_color|escapejs }}",
                     stock: "{{ v.stock }}",
                     description: "{{ v.description|escapejs }}",
                     images: [
