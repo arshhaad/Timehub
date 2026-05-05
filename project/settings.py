@@ -67,7 +67,9 @@ INSTALLED_APPS = [
     'admin_apps.product_manage',
     'admin_apps.order_manage',
     'admin_apps.offers',
-    
+    'admin_apps.other_seller',
+    #seller 
+    'seller',
 ]
 
 MIDDLEWARE = [
