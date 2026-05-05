@@ -1,0 +1,194 @@
+{% extends "order_manage/base.html" %}
+{% load static %}
+
+{% block title %}Seller Profiles - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .seller-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 24px;
+        align-items: center;
+        transition: var(--transition);
+    }
+    .seller-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        border-color: var(--primary-bg);
+    }
+    .seller-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #94a3b8;
+        overflow: hidden;
+    }
+    .seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .seller-info h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+    .seller-meta { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
+    .seller-meta span { display: flex; align-items: center; gap: 6px; }
+
+    .wallet-pill {
+        background: #f0fdf4;
+        color: #166534;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    .wallet-pill small { font-size: 0.7rem; text-transform: uppercase; opacity: 0.7; }
+
+    .action-group { display: flex; gap: 10px; }
+    
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+        z-index: 1000; display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .modal-content {
+        background: #fff; border-radius: 20px; padding: 30px;
+        width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800;">Seller Management</h1>
+        <p style="color: var(--text-muted);">Monitor and manage independent time curators.</p>
+    </div>
+</div>
+
+<div class="seller-list">
+    {% for seller in sellers %}
+    <div class="seller-card {% if seller.is_blocked %}blocked-card{% endif %}" style="{% if seller.is_blocked %}background: #fff5f5; opacity: 0.8;{% endif %}">
+        <div class="seller-avatar">
+            {% if seller.user.avatar %}
+                <img src="{{ seller.user.avatar.url }}" alt="">
+            {% else %}
+                <i class="fas fa-store"></i>
+            {% endif %}
+        </div>
+        <div class="seller-info">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h3>{{ seller.store_name }}</h3>
+                {% if seller.is_blocked %}
+                    <span class="status-badge s-Cancelled">Blocked</span>
+                {% elif not seller.user.is_active %}
+                    <span class="status-badge s-Cancelled">Inactive Account</span>
+                {% else %}
+                    <span class="status-badge s-Delivered">Active</span>
+                {% endif %}
+            </div>
+            <div class="seller-meta">
+                <span><i class="fas fa-envelope"></i> {{ seller.user.email }}</span>
+                <span><i class="fas fa-calendar-alt"></i> Joined {{ seller.created_at|date:"M d, Y" }}</span>
+                <a href="{% url 'admin_seller_products' %}?seller_id={{ seller.id }}" style="text-decoration: none; color: inherit;">
+                    <span><i class="fas fa-box"></i> {{ seller.product_set.count }} Products</span>
+                </a>
+            </div>
+            <div class="action-group">
+                <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="openWarningModal({{ seller.id }}, '{{ seller.store_name|escapejs }}')">
+                    <i class="fas fa-exclamation-triangle"></i> Warn
+                </button>
+                {% if seller.is_blocked %}
+                    <form action="{% url 'admin_seller_action' seller.id %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="unblock">
+                        <button type="submit" class="btn btn-outline" style="font-size: 0.8rem; color: #16a34a;">
+                            <i class="fas fa-unlock"></i> Unblock
+                        </button>
+                    </form>
+                {% else %}
+                    <form action="{% url 'admin_seller_action' seller.id %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="block">
+                        <button type="submit" class="btn btn-outline" style="font-size: 0.8rem; color: #d97706;">
+                            <i class="fas fa-ban"></i> Block
+                        </button>
+                    </form>
+                {% endif %}
+                <form action="{% url 'admin_seller_action' seller.id %}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to deactivate this seller account?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="remove">
+                    <button type="submit" class="btn btn-outline" style="font-size: 0.8rem; color: #ef4444;">
+                        <i class="fas fa-trash"></i> Deactivate
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="wallet-pill">
+            <small>Wallet Balance</small>
+            ₹{{ seller.user.wallet.balance|default:"0.00" }}
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 60px; background: #fff; border-radius: 20px; border: 2px dashed var(--border-color);">
+        <i class="fas fa-users-slash" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 20px;"></i>
+        <h2>No sellers found</h2>
+        <p style="color: var(--text-muted);">There are no independent sellers registered on the platform yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Warning Modal -->
+<div id="warningModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="font-weight: 800; margin-bottom: 10px;">Send Warning</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">The message will be sent to the seller's dashboard notification center.</p>
+        
+        <form action="" id="warningForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="warn">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 8px;">Select Predefined Issue</label>
+                <select class="btn btn-outline" style="width: 100%; margin-bottom: 15px;" onchange="document.getElementById('warnMessage').value = this.value">
+                    <option value="">Custom Message...</option>
+                    <option value="The product quantity for your top listings is running low. Please restock soon.">Low Inventory Warning</option>
+                    <option value="One or more of your products have prices significantly higher than market average. Please review.">High Price Alert</option>
+                    <option value="Please update your product descriptions to be more detailed and accurate.">Improve Descriptions</option>
+                </select>
+                <textarea name="message" id="warnMessage" class="btn btn-outline" style="width: 100%; height: 120px; padding: 15px; text-align: left; align-items: flex-start;" placeholder="Type your warning message here..." required></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn btn-outline" onclick="closeWarningModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #ef4444;">Send Warning</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openWarningModal(sellerId, storeName) {
+        const modal = document.getElementById('warningModal');
+        const form = document.getElementById('warningForm');
+        document.getElementById('modalTitle').textContent = `Warn ${storeName}`;
+        form.action = `/adminpanel/other_seller/action/${sellerId}/`;
+        modal.style.display = 'flex';
+    }
+
+    function closeWarningModal() {
+        document.getElementById('warningModal').style.display = 'none';
+    }
+
+    // Close on click outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('warningModal');
+        if (event.target == modal) closeWarningModal();
+    }
+</script>
+{% endblock %}

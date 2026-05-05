@@ -1,0 +1,280 @@
+{% extends "seller_base.html" %}
+{% load static %}
+
+{% block title %}Product Status - Seller Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 30px;
+    }
+    .status-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 30px;
+    }
+    .product-header {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+    .product-image-large {
+        width: 150px;
+        height: 150px;
+        border-radius: 16px;
+        object-fit: cover;
+        background: #f8fafc;
+    }
+    .product-title-area h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+    .product-id {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-family: monospace;
+    }
+    
+    .status-timeline {
+        margin-top: 40px;
+    }
+    .timeline-item {
+        display: flex;
+        gap: 20px;
+        padding-bottom: 30px;
+        position: relative;
+    }
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 24px;
+        bottom: 0;
+        width: 2px;
+        background: #e5e7eb;
+    }
+    .timeline-item:last-child::after { display: none; }
+    
+    .timeline-dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--primary-bg);
+        z-index: 1;
+        flex-shrink: 0;
+    }
+    .timeline-dot.completed { background: var(--primary-bg); }
+    .timeline-dot.rejected { border-color: #ef4444; background: #ef4444; }
+    
+    .timeline-content h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .timeline-content p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .timeline-content span {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .stat-box {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+    
+    .badge-approved { background: #dcfce7; color: #166534; }
+    .badge-pending  { background: #fef9c3; color: #854d0e; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1>Product Details & Status</h1>
+</div>
+
+{% if product %}
+<div class="status-container">
+    <div class="status-card">
+        <div class="product-header">
+            {% if product.images.all %}
+                <img src="{{ product.images.first.image.url }}" class="product-image-large">
+            {% else %}
+                {% with first_variant=product.variants.all|first %}
+                    {% if first_variant and first_variant.variant_images.all %}
+                        <img src="{{ first_variant.variant_images.first.image.url }}" class="product-image-large">
+                    {% else %}
+                        <div class="product-image-large" style="display:flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-image" style="font-size: 2rem; color: #cbd5e1;"></i>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+            <div class="product-title-area">
+                <div class="status-badge 
+                    {% if product.approval_status == 'Approved' %}badge-approved
+                    {% elif product.approval_status == 'Pending' %}badge-pending
+                    {% else %}badge-rejected{% endif %}" 
+                    style="margin-bottom: 10px;">
+                    {{ product.approval_status }}
+                </div>
+                <h2>{{ product.name }}</h2>
+                <span class="product-id">ID: #{{ product.id }}</span>
+            </div>
+        </div>
+
+        {% if product.admin_note %}
+        <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 20px; border-radius: 16px; margin-bottom: 30px;">
+            <h4 style="font-size: 0.9rem; color: #9a3412; margin-bottom: 8px;"><i class="fas fa-comment-dots"></i> Message from TimeHub Curator:</h4>
+            <p style="font-size: 0.85rem; color: #7c2d12;">{{ product.admin_note }}</p>
+        </div>
+        {% endif %}
+
+        <div class="status-timeline">
+            <h3 style="margin-bottom: 20px;">Review Timeline</h3>
+            
+            <div class="timeline-item">
+                <div class="timeline-dot completed"></div>
+                <div class="timeline-content">
+                    <h4>Product Submitted</h4>
+                    <p>Successfully added by you and queued for review.</p>
+                    <span>{{ product.created_at|date:"M d, Y - H:i" }}</span>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot {% if product.approval_status != 'Pending' %}completed{% endif %} {% if product.approval_status == 'Rejected' %}rejected{% endif %}"></div>
+                <div class="timeline-content">
+                    <h4>TimeHub Verification</h4>
+                    {% if product.approval_status == 'Pending' %}
+                        <p>Our curators are currently reviewing your timepiece for quality and authenticity.</p>
+                    {% elif product.approval_status == 'Approved' %}
+                        <p>Congratulations! Your product has been verified and is live on the marketplace.</p>
+                    {% else %}
+                        <p>The product was not approved for listing. Please check the feedback above.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot {% if is_sold %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <h4>Market Status</h4>
+                    {% if is_sold %}
+                        <p>This timepiece has been successfully sold!</p>
+                    {% else %}
+                        <p>Currently awaiting its first buyer.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="status-card" style="padding: 24px;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 20px;">Performance Overview</h3>
+            
+            <div class="stat-box">
+                <div class="stat-label">Market Status</div>
+                <div class="stat-value" style="color: {% if is_sold %}#16a34a{% else %}#2563eb{% endif %};">
+                    {% if is_sold %}SOLD{% else %}FOR SALE{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Listed Date</div>
+                <div class="stat-value">{{ product.created_at|date:"M d, Y" }}</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Stock Remaining</div>
+                <div class="stat-value">{{ product.stock }}</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-label">Listed Price</div>
+                <div class="stat-value">₹{{ product.price }}</div>
+            </div>
+            
+            <a href="{% url 'seller_product_edit' product.id %}" class="btn btn-outline" style="width: 100%; justify-content: center; margin-top: 10px;">
+                <i class="fas fa-edit"></i> Edit Listing
+            </a>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px; background: #ef4444; color: #fff;">
+                <i class="fas fa-trash"></i> Unlist Product
+            </button>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="status-container" style="display: block; text-align: center; padding: 100px 0; background: #fff; border-radius: 20px; border: 1px solid var(--border-color);">
+    <i class="fas fa-box-open" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 20px;"></i>
+    <h2>No Products Found</h2>
+    <p style="color: #64748b;">You haven't added any products yet or selected product is invalid.</p>
+    <a href="{% url 'seller_product_add' %}" class="btn btn-primary" style="margin-top: 20px; text-decoration: none;">Add Your First Watch</a>
+</div>
+{% endif %}
+
+<!-- Product Selection List -->
+{% if all_products %}
+<div style="margin-top: 60px;">
+    <h3 style="margin-bottom: 24px; font-weight: 800;">Track Another Product</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+        {% for p in all_products %}
+        <a href="?id={{ p.id }}" style="text-decoration: none; color: inherit;">
+            <div style="background: #fff; border: 1px solid {% if p.id == product.id %}var(--primary-bg){% else %}var(--border-color){% endif %}; border-radius: 16px; padding: 14px; display: flex; gap: 16px; align-items: center; transition: var(--transition); {% if p.id == product.id %}box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1);{% endif %}">
+                {% if p.images.all %}
+                    <img src="{{ p.images.first.image.url }}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
+                {% else %}
+                    {% with first_v=p.variants.all|first %}
+                        {% if first_v and first_v.variant_images.all %}
+                            <img src="{{ first_v.variant_images.first.image.url }}" style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 60px; height: 60px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #cbd5e1;">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+                <div style="flex: 1;">
+                    <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; color: var(--text-main);">{{ p.name }}</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; 
+                            {% if p.approval_status == 'Approved' %}background: #dcfce7; color: #166534;
+                            {% elif p.approval_status == 'Pending' %}background: #fee2e2; color: #991b1b;
+                            {% else %}background: #fef9c3; color: #854d0e;{% endif %}">
+                            {{ p.approval_status }}
+                        </span>
+                        <span style="font-size: 0.75rem; color: #94a3b8;">{{ p.created_at|date:"M d" }}</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #cbd5e1; font-size: 0.8rem;"></i>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

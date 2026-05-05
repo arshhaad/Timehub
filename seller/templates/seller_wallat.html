@@ -1,0 +1,144 @@
+{% extends "seller_base.html" %}
+{% load static %}
+
+{% block title %}My Wallet - Seller Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-layout {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 30px;
+    }
+    .wallet-card {
+        background: linear-gradient(135deg, #000 0%, #1f2937 100%);
+        color: #fff;
+        border-radius: 24px;
+        padding: 35px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.3);
+    }
+    .wallet-card::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: var(--primary-bg);
+        border-radius: 50%;
+        opacity: 0.1;
+    }
+    .balance-label {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 10px;
+    }
+    .balance-amount {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 30px;
+    }
+    .wallet-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .transaction-list {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 30px;
+    }
+    .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .transaction-item:last-child { border-bottom: none; }
+    
+    .tx-info { display: flex; gap: 16px; align-items: center; }
+    .tx-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    .icon-income { background: #dcfce7; color: #166534; }
+    .icon-withdrawal { background: #fee2e2; color: #991b1b; }
+    
+    .tx-details h4 { font-size: 0.95rem; font-weight: 700; }
+    .tx-details p { font-size: 0.8rem; color: var(--text-muted); }
+    
+    .tx-amount { font-weight: 800; font-size: 1rem; }
+    .amount-plus { color: #166534; }
+    .amount-minus { color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1>Seller Wallet</h1>
+    <p style="color: var(--text-muted);">Manage your earnings and withdrawals.</p>
+</div>
+
+<div class="wallet-layout">
+    <div>
+        <div class="wallet-card">
+            <div class="balance-label">Total Balance</div>
+            <div class="balance-amount">₹{{ wallet.balance|default:"0.00" }}</div>
+            
+            <div class="wallet-actions">
+                <button class="btn btn-primary" style="background: var(--primary-bg); color: #fff;">
+                    Withdraw
+                </button>
+                <button class="btn btn-outline" style="background: rgba(255,255,255,0.1); border: none; color: #fff;">
+                    Add Funds
+                </button>
+            </div>
+        </div>
+        
+        <div class="status-card" style="margin-top: 30px; background: #fff; padding: 25px; border-radius: 24px; border: 1px solid var(--border-color);">
+            <h3 style="font-size: 1rem; margin-bottom: 20px;">Payout Information</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                Earnings from sales are credited to your wallet after the order is marked as delivered and the return period has expired.
+            </p>
+        </div>
+    </div>
+
+    <div class="transaction-list">
+        <h3 style="margin-bottom: 25px;">Recent Transactions</h3>
+        
+        {% if transactions %}
+            {% for tx in transactions %}
+            <div class="transaction-item">
+                <div class="tx-info">
+                    <div class="tx-icon {% if tx.transaction_type == 'Credit' %}icon-income{% else %}icon-withdrawal{% endif %}">
+                        <i class="fas {% if tx.transaction_type == 'Credit' %}fa-arrow-down{% else %}fa-arrow-up{% endif %}"></i>
+                    </div>
+                    <div class="tx-details">
+                        <h4>{{ tx.description }}</h4>
+                        <p>{{ tx.timestamp|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+                <div class="tx-amount {% if tx.transaction_type == 'Credit' %}amount-plus{% else %}amount-minus{% endif %}">
+                    {% if tx.transaction_type == 'Credit' %}+{% else %}-{% endif %}₹{{ tx.amount }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="fas fa-history" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">No transactions yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,422 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Seller - TimeHub{% endblock %}</title>
+    <meta name="description" content="TimeHub Seller Panel">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Design Tokens ── */
+        :root {
+            --bg-color: #fafbfc;
+            --sidebar-width: 260px;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #f3f4f6;
+            --primary-bg: #ff6b00;
+            --primary-glow: rgba(255, 107, 0, 0.2);
+            --success-bg: #dcfce7; --success-text: #166534;
+            --danger-bg:  #fee2e2; --danger-text:  #991b1b;
+            --warning-bg: #ffedd5; --warning-text: #c2410c;
+            --info-bg:    #dbeafe; --info-text:    #1e40af;
+            --radius-pill: 9999px;
+            --radius-lg: 14px;
+            --radius-md: 12px;
+            --transition: all 0.2s ease;
+        }
+
+        /* ── Reset ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-color); color: var(--text-main); overflow-x: hidden; }
+
+        /* ── Sidebar overlay ── */
+        .sidebar-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.4); backdrop-filter: blur(2px);
+            z-index: 99; display: none; opacity: 0; transition: opacity .3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        /* ── Mobile header ── */
+        .mobile-header {
+            display: none; height: 60px; background: #fff;
+            padding: 0 20px; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 1001;
+        }
+        .mobile-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 800; font-size: 1.2rem; text-decoration: none; color: var(--text-main);
+        }
+        .mobile-brand .brand-icon { width: 32px; height: 32px; font-size: 1rem; margin-bottom: 0; }
+        .menu-toggle { font-size: 1.2rem; color: var(--text-main); cursor: pointer; }
+
+        /* ── Layout ── */
+        .admin-layout { display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-width); background-color: #ffffff;
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh; left: 0; top: 0;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .brand {
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            padding: 30px 20px; border-bottom: 1px solid var(--border-color);
+            background-color: #ffffff; flex-shrink: 0;
+        }
+        .brand-icon {
+            width: 60px; height: 60px; background-color: var(--primary-bg); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin-bottom: 12px;
+            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3); transition: var(--transition);
+        }
+        .brand-icon:hover {
+            transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(255, 107, 0, 0.4);
+        }
+        .brand h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); }
+        .brand span { font-size: 0.85rem; color: var(--primary-bg); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 20px; }
+        .sidebar-nav::-webkit-scrollbar { width: 5px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+        .nav-item a i { font-size: 1.1rem; width: 20px; text-align: center; }
+        .nav-item a:hover { background-color: #f9fafb; color: #000; transform: translateX(6px); }
+        .nav-item a i { transition: transform 0.2s; }
+        .nav-item a:hover i { transform: scale(1.1); color: var(--primary-bg); }
+        
+        .nav-item.active a { 
+            background-color: #000000 !important; 
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .nav-item.active a i { color: #ffffff !important; }
+        .nav-item.active a:hover { transform: none; background-color: #000000 !important; }
+
+        .sidebar-section-title {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: #9ca3af; font-weight: 700; margin: 25px 0 15px 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── Main wrapper ── */
+        .main-wrapper {
+            flex: 1; margin-left: var(--sidebar-width);
+            display: flex; flex-direction: column; min-width: 0;
+            background: var(--bg-color);
+        }
+
+        /* ── Topbar ── */
+        .topbar {
+            height: 80px; background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 40px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 101;
+        }
+        .search-bar {
+            display: flex; align-items: center; background: #f4f4f5;
+            padding: 10px 18px; border-radius: 14px; 
+            width: 360px; gap: 12px;
+            border: 1px solid transparent; transition: var(--transition);
+        }
+        .search-bar:focus-within {
+            background: #fff; border-color: #e4e4e7;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            width: 400px;
+        }
+        .search-bar i { color: #a1a1aa; transition: var(--transition); font-size: 0.95rem; }
+        .search-bar:focus-within i.search-icon { color: var(--primary-bg); }
+        .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
+        .search-bar input::placeholder { color: #a1a1aa; font-weight: 400; }
+
+        /* Search / Clear action buttons */
+        .search-action-btn {
+            display: none;
+            align-items: center; justify-content: center;
+            height: 30px; padding: 0 12px;
+            border-radius: 8px; border: none;
+            font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .search-action-btn.visible { display: flex; }
+        .btn-search-go {
+            background: var(--primary-bg); color: #fff;
+        }
+        .btn-search-go:hover { background: #e05e00; }
+        .btn-search-clear {
+            background: #f1f5f9; color: #64748b;
+        }
+        .btn-search-clear:hover { background: #e2e8f0; color: #374151; }
+
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .icon-btn { 
+            position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; color: #71717a; font-size: 1.15rem; cursor: pointer; transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        .icon-btn:hover { background: #fff; border-color: #f4f4f5; color: var(--text-main); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        .admin-profile {
+            display: flex; align-items: center; gap: 12px;
+            padding: 6px 12px 6px 16px; border-left: 1px solid var(--border-color);
+            text-decoration: none; color: inherit; border-radius: 14px;
+            transition: var(--transition); margin-left: 8px;
+        }
+        .admin-profile:hover { background: rgba(255,255,255,0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .admin-name { font-weight: 700; font-size: 0.9rem; display: block; line-height: 1.2; color: var(--text-main); }
+        .admin-role { font-size: 0.7rem; color: var(--text-muted); display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        .profile-avatar {
+            width: 42px; height: 42px; border-radius: 50%; border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #e2e8f0; overflow: hidden; flex-shrink: 0;
+            transition: var(--transition);
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-placeholder {
+            width: 100%; height: 100%; background: #f1f5f9; color: #64748b;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.85rem;
+        }
+        .admin-profile:hover .profile-avatar { box-shadow: 0 0 0 1px var(--primary-bg); }
+
+        /* ── Page content ── */
+        .content { padding: 40px; flex: 1; min-width: 0; }
+
+        /* ── Buttons (shared) ── */
+        .btn {
+            padding: 10px 20px; border-radius: var(--radius-md); font-weight: 600;
+            font-size: .875rem; cursor: pointer; border: none; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-primary { background: #000; color: #fff; }
+        .btn-primary:hover { background: #1f2937; }
+        .btn-outline { background: #fff; border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-outline:hover { background: #f9fafb; border-color: #d1d5db; }
+
+        /* ── Status badges (shared) ── */
+        .status-badge {
+            padding: 4px 11px; border-radius: var(--radius-pill);
+            font-size: .75rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .s-Pending   { background: var(--warning-bg); color: var(--warning-text); }
+        .s-Processing{ background: var(--info-bg);    color: var(--info-text); }
+        .s-Shipped   { background: #e0e7ff; color: #3730a3; }
+        .s-Delivered { background: var(--success-bg); color: var(--success-text); }
+        .s-Cancelled { background: var(--danger-bg);  color: var(--danger-text); }
+        .s-Active    { background: var(--success-bg); color: var(--success-text); }
+        .s-Inactive  { background: var(--danger-bg);  color: var(--danger-text); }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.active { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; }
+            .mobile-header { display: flex; }
+            .topbar { padding: 0 20px; height: 70px; }
+            .search-bar { width: 100%; max-width: 300px; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 20px; }
+            .admin-info { display: none; }
+        }
+
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <a href="#" class="mobile-brand">
+            <div class="brand-icon"><i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i></div>
+            TimeHub
+        </a>
+        <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+            </div>
+            <h2>TimeHub</h2>
+            <span>Seller Panel</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="sidebar-section-title">Main Menu</li>
+                <li class="nav-item {% if active_menu == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'seller_dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'my_products' %}active{% endif %}">
+                    <a href="{% url 'seller_product_sell_list' %}"><i class="fas fa-box"></i> My Products</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'add_product' %}active{% endif %}">
+                    <a href="{% url 'seller_product_add' %}"><i class="fas fa-plus-circle"></i> Add Product</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'product_status' %}active{% endif %}">
+                    <a href="{% url 'seller_product_status' %}"><i class="fas fa-info-circle"></i> Product Status</a>
+                </li>
+                <li class="nav-item {% if active_menu == 'wallet' %}active{% endif %}">
+                    <a href="{% url 'seller_wallet' %}"><i class="fas fa-wallet"></i> Wallet</a>
+                </li>
+            </ul>
+
+            <ul class="nav-list">
+                <li class="sidebar-section-title">System</li>
+                <li class="nav-item {% if active_menu == 'settings' %}active{% endif %}">
+                    <a href="{% url 'seller_settings' %}"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+
+            <ul class="nav-list"
+                style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <li class="nav-item">
+                    <a href="{% url 'seller_logout' %}" style="color: #ef4444;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            {% block topbar_left %}
+            <form action="{% url 'seller_product_sell_list' %}" method="GET" class="search-bar" id="sellerSearchForm">
+                <i class="fas fa-search search-icon"></i>
+                <input 
+                    type="text" 
+                    name="q" 
+                    id="sellerSearchInput" 
+                    placeholder="Search your products..." 
+                    autocomplete="off"
+                    value="{{ request.GET.q|default:'' }}">
+                <!-- Search button: shown while typing -->
+                <button type="submit" class="search-action-btn btn-search-go" id="btnSearchGo">
+                    <i class="fas fa-arrow-right" style="font-size:0.7rem;"></i>&nbsp;Search
+                </button>
+                <!-- Clear button: shown after a search is active -->
+                <button type="button" class="search-action-btn btn-search-clear" id="btnSearchClear"
+                        onclick="clearSearch()" title="Clear search">
+                    <i class="fas fa-times" style="font-size:0.7rem;"></i>&nbsp;Clear
+                </button>
+            </form>
+            {% endblock %}
+
+            <div class="topbar-right">
+                <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="icon-dot"></span></div>
+                <a href="#" class="admin-profile">
+                    <div class="admin-info" style="text-align:right;">
+                        <span class="admin-name">
+                            {% if request.user.first_name %}{{ request.user.first_name }}{% else %}Seller{% endif %}
+                        </span>
+                        <span class="admin-role">Seller</span>
+                    </div>
+                    <div class="profile-avatar">
+                        <div class="avatar-placeholder">
+                            {% if request.user.first_name %}{{ request.user.first_name|slice:":1"|upper }}{% else %}S{% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+{% block extra_scripts %}{% endblock %}
+
+<script>
+    // Sidebar toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+    }
+
+    if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    // ── Search bar button logic ──
+    (function() {
+        const input   = document.getElementById('sellerSearchInput');
+        const btnGo   = document.getElementById('btnSearchGo');
+        const btnClear= document.getElementById('btnSearchClear');
+        if (!input || !btnGo || !btnClear) return;
+
+        function updateState() {
+            const hasText    = input.value.trim().length > 0;
+            // If URL already has ?q= it means results are shown → show Clear
+            const isSearched = new URLSearchParams(window.location.search).get('q');
+
+            if (isSearched && !hasText) {
+                // On results page but input is empty (shouldn't happen normally)
+                btnGo.classList.remove('visible');
+                btnClear.classList.add('visible');
+            } else if (isSearched && hasText) {
+                // User is editing the query on results page
+                btnGo.classList.add('visible');
+                btnClear.classList.add('visible');
+            } else if (hasText) {
+                // Fresh typing — show Search only
+                btnGo.classList.add('visible');
+                btnClear.classList.remove('visible');
+            } else {
+                btnGo.classList.remove('visible');
+                btnClear.classList.remove('visible');
+            }
+        }
+
+        function clearSearch() {
+            input.value = '';
+            // Navigate to list without query
+            window.location.href = "{% url 'seller_product_sell_list' %}";
+        }
+        window.clearSearch = clearSearch;
+
+        input.addEventListener('input', updateState);
+        // Run on load to restore state if page loaded with ?q=
+        updateState();
+    })();
+
+    {% block extra_js %}{% endblock %}
+</script>
+</body>
+</html>

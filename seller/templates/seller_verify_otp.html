@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - Seller Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-glow: rgba(255, 107, 0, 0.15);
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #fafbfc;
+            --radius: 14px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+        .auth-wrapper {
+            max-width: 450px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 25px 60px -12px rgba(0,0,0,0.12);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: var(--primary-glow);
+            color: var(--primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 24px;
+        }
+
+        h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 24px; }
+        .otp-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 12px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .otp-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover { background: #1f2937; transform: translateY(-1px); }
+
+        .timer {
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .timer span { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="icon-box">
+        <i class="fas fa-shield-alt"></i>
+    </div>
+    <h2>Verify Your Email</h2>
+    <p>We've sent a 6-digit verification code to<br><strong>{{ email }}</strong></p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="text" name="otp" class="otp-input" placeholder="000000" maxlength="6" required autofocus>
+        </div>
+        <button type="submit" class="btn-submit">Verify Account</button>
+    </form>
+
+    <div class="timer">
+        OTP expires in <span id="time">00:00</span>
+    </div>
+</div>
+
+<script>
+    let timeLeft = {{ seconds_left|default:0 }};
+    const display = document.querySelector('#time');
+    
+    function startTimer() {
+        const timer = setInterval(function () {
+            let minutes = parseInt(timeLeft / 60, 10);
+            let seconds = parseInt(timeLeft % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timeLeft < 0) {
+                clearInterval(timer);
+                display.textContent = "00:00";
+                display.style.color = "#ef4444";
+            }
+        }, 1000);
+    }
+    
+    if (timeLeft > 0) startTimer();
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Login - TimeHub</title>
+    <meta name="description" content="Login to your TimeHub seller account.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-glow: rgba(255, 107, 0, 0.15);
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #fafbfc;
+            --radius: 14px;
+            --transition: all 0.2s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+        .auth-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 900px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px -12px rgba(0,0,0,0.12);
+            border: 1px solid var(--border);
+        }
+
+        /* Left Panel */
+        .auth-left {
+            background: linear-gradient(135deg, #000 0%, #1f2937 100%);
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .brand-logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; color: #fff;
+        }
+        .brand-logo .logo-icon {
+            width: 48px; height: 48px; background: var(--primary);
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; box-shadow: 0 8px 20px rgba(255,107,0,0.3);
+        }
+        .brand-logo span { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+        
+        .auth-left-content { position: relative; z-index: 1; }
+        .auth-left-content h1 { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+        .auth-left-content h1 span { color: var(--primary); }
+        .auth-left-content p { font-size: 0.95rem; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+        /* Right Panel */
+        .auth-right { padding: 60px 50px; display: flex; flex-direction: column; justify-content: center; }
+        .auth-right h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .auth-right p.subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 36px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+        .form-group label { font-size: 0.82rem; font-weight: 700; color: #4b5563; }
+        .form-control {
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem; font-weight: 500;
+            outline: none; width: 100%;
+            transition: var(--transition);
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .btn-submit {
+            width: 100%; padding: 14px;
+            background: #000; color: #fff;
+            border: none; border-radius: var(--radius);
+            font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-submit:hover { background: #1f2937; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+        .auth-link { text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
+        .auth-link a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+        /* Alert Toasts */
+        .messages-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; max-width: 380px; }
+        .alert-toast { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15); border-left: 4px solid transparent; animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+        .alert-toast.error   { border-left-color: #ef4444; }
+        .alert-toast.error .alert-icon { color: #ef4444; }
+        .alert-text { font-size: 0.875rem; font-weight: 600; color: #1e293b; }
+        .alert-close { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+
+        @media (max-width: 768px) {
+            .auth-wrapper { grid-template-columns: 1fr; }
+            .auth-left { display: none; }
+            .auth-right { padding: 40px 30px; }
+        }
+    </style>
+</head>
+<body>
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert-toast {{ message.tags }}">
+        <div class="alert-icon"><i class="fas fa-circle-xmark"></i></div>
+        <div class="alert-body"><span class="alert-text">{{ message }}</span></div>
+        <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-xmark"></i></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="auth-wrapper">
+    <div class="auth-left">
+        <a href="#" class="brand-logo">
+            <div class="logo-icon"><i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i></div>
+            <span>TimeHub</span>
+        </a>
+        <div class="auth-left-content">
+            <h1>Welcome Back, <span>Partner</span></h1>
+            <p>Access your dashboard to manage your premium inventory and track your sales performance.</p>
+        </div>
+        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">
+            &copy; 2026 TimeHub Marketplace
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <h2>Seller Login</h2>
+        <p class="subtitle">Enter your credentials to access the seller panel.</p>
+
+        <form method="POST" action="{% url 'seller_login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="password">Password</label>
+                    <a href="#" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 600;">Forgot password?</a>
+                </div>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-submit">
+                Sign In <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <p class="auth-link">New to TimeHub selling? <a href="{% url 'seller_signup' %}">Create account</a></p>
+    </div>
+</div>
+
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert-toast').forEach(t => t.remove());
+    }, 4000);
+</script>
+</body>
+</html>
