@@ -248,6 +248,18 @@ class ProductVariant(models.Model):
     def effective_price(self):
         return self.price if self.price else self.product.price
 
+    def get_all_images(self):
+        """Returns a list of all unique image URLs for this variant."""
+        image_urls = []
+        if self.image:
+            image_urls.append(self.image.url)
+        for vi in self.images.all():
+            image_urls.append(vi.image.url)
+        for pi in self.product_images.all():
+            image_urls.append(pi.image.url)
+        seen = set()
+        return [x for x in image_urls if not (x in seen or seen.add(x))]
+
     @property
     def effective_discount_price(self):
         """Calculates discount price for variant based on best offer or manual discount."""

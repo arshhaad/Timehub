@@ -306,13 +306,13 @@
         .product-desc { color: var(--text-muted); line-height: 1.8; margin-bottom: 40px; font-size: 1rem; }
 
         .variations { margin-bottom: 40px; }
-        .variation-group { margin-bottom: 25px; }
-        .variation-label { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; font-size: 0.9rem; }
+        .variation-group { margin-bottom: 15px; }
+        .variation-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; }
         .variation-label span:last-child { color: var(--text-muted); }
         
         /* Options Buttons */
         .options-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .opt-btn { padding: 12px 24px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+        .opt-btn { padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
         .opt-btn:hover { border-color: rgba(255,255,255,0.2); background: var(--bg-card-hover); }
         .opt-btn.active { border-color: var(--primary-color); color: #fff; background: rgba(255, 106, 0, 0.1); box-shadow: 0 0 15px rgba(255, 106, 0, 0.1); }
         .variant-chip { display: flex; flex-direction: column; gap: 4px; }
@@ -321,7 +321,7 @@
         /* Color Swatches */
         .color-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 5px; }
         .color-option { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .color-swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--bg-color); outline: 1px solid var(--border-color); transition: var(--transition); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .color-swatch { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--bg-color); outline: 1px solid var(--border-color); transition: var(--transition); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .color-swatch:hover { transform: scale(1.1); }
         .color-option.active .color-swatch { outline: 2px solid var(--primary-color); transform: scale(1.1); }
         .color-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); }
@@ -329,7 +329,7 @@
 
         /* Material Chips */
         .material-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .material-chip { padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); }
+        .material-chip { padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); }
         .material-chip i { font-size: 1.1rem; color: var(--text-muted); }
         .material-chip.active { border-color: var(--primary-color); background: rgba(255, 106, 0, 0.05); }
         .material-chip.active i { color: var(--primary-color); }
@@ -1027,18 +1027,17 @@
                             "id": "{{ v.id }}",
 
                             "strap": "{{ v.strap_color|default:''|escapejs }}",
+                            "dial": "{{ v.dial_color|default:''|escapejs }}",
                             "material": "{{ v.strap_material|default:''|escapejs }}",
                             "price": "{{ v.effective_discount_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
                             "images": [
-                                {% if v.image %}"{{ v.image.url|escapejs }}"{% endif %}
-                                {% for vi in v.images.all %}
-                                    {% if v.image %},{% endif %}"{{ vi.image.url|escapejs }}"{% if not forloop.last %},{% endif %}
+                                {% with all_images=v.get_all_images %}
+                                {% for img_url in all_images %}
+                                    "{{ img_url|escapejs }}"{% if not forloop.last %},{% endif %}
                                 {% endfor %}
-                                {% for pi in v.product_images.all %}
-                                    , "{{ pi.image.url|escapejs }}"
-                                {% endfor %}
+                                {% endwith %}
                             ],
                             "description": "{{ v.description|default:''|escapejs }}"
                         }{% if not forloop.last %},{% endif %}
@@ -1400,19 +1399,24 @@
         const thumbnails = document.querySelectorAll('.thumb-card');
         let currentImageIndex = 0;
 
+        // Always query live DOM — thumbnails rebuild dynamically on variant change
+        function getThumbs() {
+            return Array.from(document.getElementById('thumbGallery')?.querySelectorAll('.thumb-card') || []);
+        }
+
         function updateCarousel(index) {
-            if (thumbnails.length === 0) return;
+            const thumbs = getThumbs();
+            if (!thumbs.length) return;
             
             if (index !== undefined) {
                 currentImageIndex = index;
             } else {
-                if (currentImageIndex >= thumbnails.length) currentImageIndex = 0;
-                if (currentImageIndex < 0) currentImageIndex = thumbnails.length - 1;
+                if (currentImageIndex >= thumbs.length) currentImageIndex = 0;
+                if (currentImageIndex < 0) currentImageIndex = thumbs.length - 1;
             }
             
-            const activeThumb = thumbnails[currentImageIndex];
+            const activeThumb = thumbs[currentImageIndex];
             const imgSrc = activeThumb.querySelector('img').src;
-            
             renderSwap(imgSrc, activeThumb);
         }
 
@@ -1448,7 +1452,7 @@
 
         function swapImage(src, element) {
             renderSwap(src, element);
-            currentImageIndex = Array.from(thumbnails).indexOf(element);
+            currentImageIndex = getThumbs().indexOf(element);
         }
 
         // Quantity controls
@@ -1554,6 +1558,24 @@
             if (document.getElementById('label-color')) {
                 document.getElementById('label-color').textContent = colorName;
             }
+            
+            // Force sync with Strap Color if section exists
+            if (document.getElementById('label-strapclr')) {
+                document.getElementById('label-strapclr').textContent = colorName;
+                selectedStrapClr = colorName;
+                
+                // Also update the active state of the Strap Color chips
+                const strapGroup = document.getElementById('label-strapclr').closest('.variation-group');
+                if (strapGroup) {
+                    strapGroup.querySelectorAll('.color-option').forEach(o => {
+                        if (o.querySelector('.color-name').textContent.trim().toLowerCase() === colorName.toLowerCase()) {
+                            strapGroup.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+                            o.classList.add('active');
+                        }
+                    });
+                }
+            }
+
             autoSelectVariant();
         };
 
@@ -1562,13 +1584,15 @@
             if(!dataEl) return;
             const variants = JSON.parse(dataEl.textContent);
             
+            const activeColorEl = document.getElementById('label-color');
             const activeStrapEl = document.getElementById('label-strapclr');
             const activeDialEl = document.getElementById('label-dialclr');
             const activeMaterialEl = document.getElementById('label-material');
             
-            const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim() : '';
-            const currentDial = activeDialEl ? activeDialEl.textContent.trim() : '';
-            const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim() : '';
+            const currentColor = activeColorEl ? activeColorEl.textContent.trim().toLowerCase() : '';
+            const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim().toLowerCase() : '';
+            const currentDial = activeDialEl ? activeDialEl.textContent.trim().toLowerCase() : '';
+            const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim().toLowerCase() : '';
             
             let firstVisibleMatch = null;
             let currentStillVisible = false;
@@ -1580,9 +1604,11 @@
                 const v = variants.find(v => v.id == vId);
                 if (v) {
                     let isMatch = true;
-                    if (currentStrap && v.strap && v.strap !== currentStrap) isMatch = false;
-                    if (currentDial && v.dial && v.dial !== currentDial) isMatch = false;
-                    if (currentMaterial && v.material && v.material !== currentMaterial) isMatch = false;
+                    // Check against all active labels (case-insensitive)
+                    if (currentColor && v.strap && v.strap.toLowerCase() !== currentColor) isMatch = false;
+                    if (currentStrap && v.strap && v.strap.toLowerCase() !== currentStrap) isMatch = false;
+                    if (currentDial && v.dial && v.dial.toLowerCase() !== currentDial) isMatch = false;
+                    if (currentMaterial && v.material && v.material.toLowerCase() !== currentMaterial) isMatch = false;
                     
                     if (isMatch) {
                         btn.style.display = 'inline-block';
@@ -1598,8 +1624,13 @@
             // Handle selection logic
             if (visibleCount > 0) {
                 if (!currentStillVisible) {
-                    // If the previously selected variant is now hidden, pick the first visible match
+                    // Previously selected variant is no longer in the filtered set — pick the first match
                     handleSizeSelection(firstVisibleMatch, true);
+                } else {
+                    // Variant is still compatible — but we still need to refresh its images
+                    // in case the gallery was showing a stale state (e.g., on initial load).
+                    const currentBtn = document.querySelector(`.opt-btn[data-variant-id="${selectedVariantId}"]`);
+                    if (currentBtn) _refreshVariantImages(selectedVariantId);
                 }
             } else if (variants.length > 0) {
                 // If no variants match the specific combination, show all as fallback or at least one
@@ -1727,6 +1758,68 @@
             });
         }
 
+        function updatePriceUI(price, oldPrice) {
+            const mainPrice = document.getElementById('main-price');
+            const oldPriceEl = document.getElementById('old-price');
+            const savingsBadge = document.getElementById('savings-badge');
+            
+            if (mainPrice) mainPrice.textContent = `₹${price}`;
+            if (oldPriceEl) {
+                if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
+                    oldPriceEl.textContent = `₹${oldPrice}`;
+                    oldPriceEl.style.display = 'inline';
+                } else {
+                    oldPriceEl.style.display = 'none';
+                }
+            }
+            if (savingsBadge) {
+                const diff = parseFloat(oldPrice) - parseFloat(price);
+                if (diff > 0) {
+                    savingsBadge.textContent = `Save ₹${Math.round(diff)}`;
+                    savingsBadge.style.display = 'inline-block';
+                } else {
+                    savingsBadge.style.display = 'none';
+                }
+            }
+            
+            const stickyPrice = document.getElementById('sticky-price');
+            const stickyOldPrice = document.getElementById('sticky-old-price');
+            if (stickyPrice) stickyPrice.textContent = `₹${price}`;
+            if (stickyOldPrice) {
+                if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
+                    stickyOldPrice.textContent = `₹${oldPrice}`;
+                } else {
+                    stickyOldPrice.textContent = '';
+                }
+            }
+        }
+
+        function updateStockUI(stock) {
+            const badge = document.getElementById('stock-badge');
+            if (badge) {
+                if (stock > 0) {
+                    badge.className = 'stock-label stock-in';
+                    badge.innerHTML = `<i class="fas fa-check-circle"></i> In Stock (${stock} units)`;
+                } else {
+                    badge.className = 'stock-label stock-out';
+                    badge.innerHTML = `<i class="fas fa-times-circle"></i> Out of Stock`;
+                }
+            }
+            
+            const cartBtn = document.querySelector('.add-cart-btn');
+            const buyNowBtn = document.querySelector('.buy-now-btn');
+            const stickyCartBtn = document.getElementById('sticky-cart-btn');
+            
+            const isOut = stock <= 0;
+            if (cartBtn) cartBtn.disabled = isOut;
+            if (buyNowBtn) buyNowBtn.disabled = isOut;
+            if (stickyCartBtn) stickyCartBtn.disabled = isOut;
+            
+            if (cartBtn) cartBtn.innerHTML = isOut ? 'Unavailable' : '<i class="fas fa-shopping-cart"></i> Add to Cart';
+            if (buyNowBtn) buyNowBtn.textContent = isOut ? 'Unavailable' : 'Buy Now';
+            if (stickyCartBtn) stickyCartBtn.textContent = isOut ? 'Unavailable' : 'Add to Cart';
+        }
+
         window.handleSizeSelection = function(element, isAutoTriggered = false) {
             // Update active UI
             const group = element.parentElement;
@@ -1760,22 +1853,33 @@
                 const variants = JSON.parse(dataEl.textContent);
                 const variant = variants.find(v => v.id == selectedVariantId);
                 const thumbGallery = document.getElementById('thumbGallery');
-                
+
                 if (variant && variant.images && variant.images.length > 0) {
                     // Show variant-specific images
                     let html = '';
-                    variant.images.forEach((img, vidx) => {
+                    variant.images.forEach((imgUrl, vidx) => {
                         html += `
-                            <div class="thumb-card ${vidx === 0 ? 'active' : ''}" onclick="swapImage('${img}', this)">
-                                <img src="${img}" alt="Thumb">
+                            <div class="thumb-card ${vidx === 0 ? 'active' : ''}" onclick="swapImage('${imgUrl}', this)">
+                                <img src="${imgUrl}" alt="Variant Image">
                             </div>
                         `;
                     });
                     thumbGallery.innerHTML = html;
+                    currentImageIndex = 0;   // ← CRITICAL: reset index after rebuilding gallery
                     renderSwap(variant.images[0], thumbGallery.querySelector('.thumb-card'));
                 } else {
-                    // Revert to original general gallery (optional logic here if needed)
-                    // For now, if no variant images, keep what's there or revert to main
+                    // Variant has no images — fall back to product's main image
+                    const mainImg = document.getElementById('mainProductImage');
+                    if (mainImg && originalProductImage) {
+                        // Rebuild gallery with just the main product image
+                        thumbGallery.innerHTML = `
+                            <div class="thumb-card active" onclick="swapImage('${originalProductImage}', this)">
+                                <img src="${originalProductImage}" alt="Product Image">
+                            </div>
+                        `;
+                        currentImageIndex = 0;
+                        renderSwap(originalProductImage, thumbGallery.querySelector('.thumb-card'));
+                    }
                 }
                 
                 // Update Description
@@ -1793,55 +1897,75 @@
             // Sync visual chips if not auto-triggered
             if (!isAutoTriggered) {
                 const dataEl = document.getElementById('variants-data');
-                if(dataEl) {
+                if (dataEl) {
                     const variants = JSON.parse(dataEl.textContent);
-                    const variant = variants.find(v => v.id === selectedVariantId);
+                    const variant = variants.find(v => v.id == selectedVariantId);
                     if (variant) {
-                        if (variant.strap) {
-                            selectedStrapClr = variant.strap;
-                            if (document.getElementById('label-strapclr')) document.getElementById('label-strapclr').textContent = variant.strap;
-                            document.querySelectorAll('#label-strapclr').forEach(l => {
-                                const g = l.closest('.variation-group');
-                                g.querySelectorAll('.color-option').forEach(o => {
-                                    if(o.querySelector('.color-name').textContent.trim() === variant.strap) {
-                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-                                        o.classList.add('active');
-                                    }
-                                });
-                            });
-                        }
-
-                        if (variant.material) {
-                            selectedMaterial = variant.material;
-                            if (document.getElementById('label-material')) document.getElementById('label-material').textContent = variant.material;
-                            document.querySelectorAll('#label-material').forEach(l => {
-                                const g = l.closest('.variation-group');
-                                g.querySelectorAll('.material-chip').forEach(o => {
-                                    if(o.querySelector('.material-label span:first-child').textContent.trim() === variant.material) {
-                                        g.querySelectorAll('.material-chip').forEach(el => el.classList.remove('active'));
-                                        o.classList.add('active');
-                                    }
-                                });
-                            });
-                        }
-
-                        if (variant.dial) {
-                            selectedDialClr = variant.dial;
-                            if (document.getElementById('label-dialclr')) document.getElementById('label-dialclr').textContent = variant.dial;
-                            document.querySelectorAll('#label-dialclr').forEach(l => {
-                                const g = l.closest('.variation-group');
-                                g.querySelectorAll('.color-option').forEach(o => {
-                                    if(o.querySelector('.color-name').textContent.trim() === variant.dial) {
-                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
-                                        o.classList.add('active');
-                                    }
-                                });
-                            });
-                        }
+                        syncChip('#label-color',    '.color-option',  '.color-name',                        variant.strap,     v => selectedColor    = v);
+                        syncChip('#label-strapclr', '.color-option',  '.color-name',                        variant.strap,     v => selectedStrapClr = v);
+                        syncChip('#label-dialclr',  '.color-option',  '.color-name',                        variant.dial,      v => selectedDialClr  = v);
+                        syncChip('#label-material', '.material-chip', '.material-label span:first-child',   variant.material,  v => selectedMaterial = v);
                     }
                 }
             }
         };
+
+        /**
+         * Helper to sync a chip group with a value
+         */
+        function syncChip(labelSelector, groupClass, textSelector, targetValue, stateSetter) {
+            if (!targetValue) return;
+            const labels = document.querySelectorAll(labelSelector);
+            labels.forEach(l => {
+                const g = l.closest('.variation-group');
+                if (!g) return;
+                const items = g.querySelectorAll(groupClass);
+                items.forEach(item => {
+                    const text = item.querySelector(textSelector)?.textContent.trim();
+                    if (text && text.toLowerCase() === targetValue.toLowerCase()) {
+                        items.forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        l.textContent = targetValue;
+                        stateSetter(targetValue);
+                    }
+                });
+            });
+        }
+
+        /**
+         * Refreshes the thumbnail gallery for a given variant ID
+         * without changing price/stock/selection state.
+         */
+        function _refreshVariantImages(variantId) {
+            const dataEl = document.getElementById('variants-data');
+            if (!dataEl) return;
+            const variants = JSON.parse(dataEl.textContent);
+            const variant = variants.find(v => v.id == variantId);
+            const thumbGallery = document.getElementById('thumbGallery');
+            if (!thumbGallery) return;
+
+            if (variant && variant.images && variant.images.length > 0) {
+                let html = '';
+                variant.images.forEach((imgUrl, vidx) => {
+                    html += `
+                        <div class="thumb-card ${vidx === 0 ? 'active' : ''}" onclick="swapImage('${imgUrl}', this)">
+                            <img src="${imgUrl}" alt="Variant Image">
+                        </div>
+                    `;
+                });
+                thumbGallery.innerHTML = html;
+                currentImageIndex = 0;
+                renderSwap(variant.images[0], thumbGallery.querySelector('.thumb-card'));
+            } else if (originalProductImage) {
+                thumbGallery.innerHTML = `
+                    <div class="thumb-card active" onclick="swapImage('${originalProductImage}', this)">
+                        <img src="${originalProductImage}" alt="Product Image">
+                    </div>
+                `;
+                currentImageIndex = 0;
+                renderSwap(originalProductImage, thumbGallery.querySelector('.thumb-card'));
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const activeStrap = document.getElementById('label-strapclr');

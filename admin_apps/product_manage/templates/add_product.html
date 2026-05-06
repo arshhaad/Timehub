@@ -1040,12 +1040,12 @@
                     stock: "{{ v.stock }}",
                     description: "{{ v.description|escapejs }}",
                     images: [
-                        {% for img in v.variant_images.all %}"{{ img.image.url }}",{% endfor %}
+                        {% for img in v.images.all %}"{{ img.image.url }}",{% endfor %}
                     ]
                 });
                 
                 // Mark existing variant images in croppedBlobs for validation
-                {% for img in v.variant_images.all %}
+                {% for img in v.images.all %}
                     {% if forloop.counter <= 3 %}
                         croppedBlobs.set("variant_image_" + (variantCounter-1) + "_{{ forloop.counter }}", "existing");
                     {% endif %}
