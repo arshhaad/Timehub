@@ -355,8 +355,10 @@ def add_to_cart(request, product_uuid):
             if not variant:
                 return JsonResponse({'success': False, 'error': 'Invalid product variant selected'})
         elif has_variants:
-            # If product has variants but none selected, we can't add to cart from here
-            return JsonResponse({'success': False, 'error': 'Please select a variant (color/strap) for this product'})
+            # If product has variants but none selected, pick the first active one
+            variant = active_variants.first()
+            if not variant:
+                return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
         
         # Check stock of variant if it exists, else base product
         available_stock = variant.stock if variant else product.stock
