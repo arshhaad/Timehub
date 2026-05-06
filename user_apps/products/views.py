@@ -292,10 +292,11 @@ def product_details(request, product_uuid):
     strap_colors = []
 
     materials = []
+    dial_colors = []
     
     seen_strap = set()
-
     seen_material = set()
+    seen_dial = set()
     
     # Try to map color names to hex codes from Color model
     from user_apps.core.models import Color
@@ -316,6 +317,14 @@ def product_details(request, product_uuid):
             m_name = v.strap_material.strip()
             materials.append(m_name)
             seen_material.add(m_name.lower())
+            
+        if v.dial_color and v.dial_color.strip().lower() not in seen_dial:
+            d_name = v.dial_color.strip()
+            dial_colors.append({
+                'name': d_name,
+                'hex': color_map.get(d_name.lower(), '#888')
+            })
+            seen_dial.add(d_name.lower())
 
     # Add reviews
     reviews = product.reviews.all().order_by('-created_at')
@@ -329,7 +338,7 @@ def product_details(request, product_uuid):
         'savings': savings,
         'active_variants': active_variants,
         'strap_colors': strap_colors,
-
+        'dial_colors': dial_colors,
         'materials': materials,
         'reviews': reviews,
     }

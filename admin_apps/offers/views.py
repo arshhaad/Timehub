@@ -8,7 +8,7 @@ from user_apps.core.models import Collection, Product
 def superuser_required(view_func):
     @login_required(login_url="admin_login")
     def wrap(request, *args, **kwargs):
-        if not request.user.is_superuser:
+        if not request.user.is_superuser or hasattr(request.user, 'seller_profile'):
             return redirect("home")
         return view_func(request, *args, **kwargs)
     return wrap

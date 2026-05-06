@@ -30,11 +30,19 @@ def admin_login(request):
             
             user = authenticate(request, username=email, password=password)
             
-            if user is not None and user.is_superuser:
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                return redirect("dashboard")
-            elif user is not None:
-                messages.error(request, "You are not authorized to access the admin dashboard.")
+            if user is not None:
+                if user.is_superuser:
+                    # Check if the superuser is also a seller (should be blocked as per request)
+                    if hasattr(user, 'seller_profile'):
+                        messages.error(request, "Seller accounts are not authorized to access the admin dashboard.")
+                    else:
+                        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                        return redirect("dashboard")
+                else:
+                    if hasattr(user, 'seller_profile'):
+                        messages.error(request, "Seller accounts are not allowed to access the admin panel.")
+                    else:
+                        messages.error(request, "You are not authorized to access the admin dashboard.")
             else:
                 messages.error(request, "Invalid email or password.")
         else:
@@ -47,7 +55,7 @@ def admin_login(request):
 @never_cache
 @login_required(login_url="admin_login")
 def dashboard(request):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser or hasattr(request.user, 'seller_profile'):
         return redirect("home")
 
     now = timezone.now()

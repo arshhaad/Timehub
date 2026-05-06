@@ -160,6 +160,7 @@ class ProductImage(models.Model):
     variant = models.ForeignKey('ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='product_images')
     image = models.ImageField(upload_to='product_images/')
     is_main = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -168,6 +169,8 @@ class ProductImage(models.Model):
 class VariantImage(models.Model):
     variant = models.ForeignKey('ProductVariant', on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='variant_images/')
+    is_main = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -178,6 +181,7 @@ class ProductVariant(models.Model):
     image = models.ImageField(upload_to='variant_images/', null=True, blank=True)
     strap_material = models.CharField(max_length=100, blank=True)
     strap_color = models.CharField(max_length=100, blank=True)
+    dial_color = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
@@ -233,7 +237,11 @@ class ProductVariant(models.Model):
     def __str__(self):
         parts = [self.product.name]
         if self.strap_color:
-            parts.append(self.strap_color)
+            parts.append(f"Strap: {self.strap_color}")
+        if self.dial_color:
+            parts.append(f"Dial: {self.dial_color}")
+        if self.strap_material:
+            parts.append(f"Material: {self.strap_material}")
         return ' — '.join(parts)
 
     @property

@@ -17,6 +17,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <style>
     :root {
         --primary-bg: #ff6b00;
@@ -202,30 +203,88 @@
 
     .variant-img-grid {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 12px;
+        margin-top: 8px;
     }
 
     .variant-img-slot {
         aspect-ratio: 1;
-        border: 1px dashed #cbd5e1;
-        border-radius: 10px;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f8fafc;
         position: relative;
         overflow: hidden;
-        background: #f8fafc;
     }
 
-    .variant-img-slot:hover { border-color: var(--primary-bg); background: #fff; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .variant-img-slot img { width: 100%; height: 100%; object-fit: cover; }
-    .variant-img-slot i { font-size: 1rem; color: #94a3b8; }
-    .variant-img-slot .preview-container { position: absolute; inset: 0; display: none; }
-    .variant-img-slot .preview-container img { width: 100%; height: 100%; object-fit: cover; }
-    .variant-img-slot.has-image .preview-container { display: block; }
+    .variant-img-slot:hover {
+        border-color: #000;
+        background: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .variant-img-slot i {
+        font-size: 1.2rem;
+        color: #94a3b8;
+    }
+
+    .variant-img-slot .preview-container {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+    }
+
+    .variant-img-slot img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .primary-tag {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #000;
+        color: #fff;
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-align: center;
+        padding: 2px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 10;
+    }
+
+    .bulk-slot {
+        border-style: solid;
+        background: #f1f5f9;
+    }
+
+    .bulk-slot i {
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .bulk-slot span {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .bulk-slot:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+    }
+
     .variant-img-slot.has-image i { display: none; }
 
     /* Image Slots */
@@ -569,6 +628,31 @@
         openCropper(file);
     }
 
+    function handleBulkUpload(input, variantIdx) {
+        const files = Array.from(input.files);
+        if (files.length === 0) return;
+
+        // Find available slots for this variant
+        const slots = document.querySelectorAll(`.variant-img-slot[data-slot-idx="${variantIdx}"]:not(.bulk-slot)`);
+        
+        files.forEach((file, i) => {
+            if (i < slots.length) {
+                const slot = slots[i];
+                const fileInput = slot.querySelector('input[type="file"]');
+                
+                // Create a DataTransfer to programmatically set the file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Trigger preview
+                previewVariantImage(fileInput);
+            }
+        });
+        
+        input.value = ''; // Reset bulk input
+    }
+
     function previewVariantImage(input) {
         const file = input.files[0];
         if (!file) return;
@@ -622,7 +706,7 @@
                 croppedBlobs.set(`product_image_${activeCropSource.slot}`, blob);
                 showSlotPreview(activeCropSource.slot, url);
             } else {
-                croppedBlobs.set(`variant_image_${activeCropSource.idx}_${activeCropSource.subIdx}`, blob);
+                croppedBlobs.set(`variant_image_input_${activeCropSource.idx}_${activeCropSource.subIdx}`, blob);
                 
                 const slot = activeCropSource.input.closest('.variant-img-slot');
                 const preview = slot.querySelector('.preview-container');
@@ -726,8 +810,15 @@
                 <div class="form-group">
                     <label>Strap Color</label>
                     <select name="variant_strap_color[]" class="form-control" required>
-                        <option value="">Select Color</option>
+                        <option value="">Select Strap Color</option>
                         ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.strap_color === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Dial Color</label>
+                    <select name="variant_dial_color[]" class="form-control" required>
+                        <option value="">Select Dial Color</option>
+                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.dial_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
             </div>
@@ -737,17 +828,26 @@
             </div>
             
             <div class="variant-images-section">
-                <label style="font-size: 0.75rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Variant Photography <span style="color:#ef4444">*</span></label>
-                <div class="variant-img-grid">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #1e293b; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Variant Photography</label>
+                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Drag to reorder • First image is Primary</span>
+                </div>
+                <div class="variant-img-grid sortable-variant-images" id="variant-images-${idx}">
                     ${[1, 2, 3].map(i => {
                         let hasImg = data && data.images && data.images[i-1];
                         return `
-                        <div class="variant-img-slot ${hasImg ? 'has-image' : ''}" data-slot-idx="${idx}" data-slot-sub="${i}" onclick="this.querySelector('input').click()">
+                        <div class="variant-img-slot ${hasImg ? 'has-image' : ''}" data-slot-idx="${idx}" data-slot-sub="${i}" onclick="this.querySelector('input').click()" title="${i === 1 ? 'Primary Image' : 'Gallery Image'}">
+                            ${i === 1 ? '<div class="primary-tag">Primary</div>' : ''}
                             <i class="fas fa-plus"></i>
                             <div class="preview-container">${hasImg ? `<img src="${data.images[i-1]}">` : ''}</div>
                             <input type="file" name="variant_image_input_${idx}_${i}" style="display:none" accept="image/*" onchange="previewVariantImage(this)">
                         </div>
                     `}).join('')}
+                    <div class="variant-img-slot bulk-slot" onclick="document.getElementById('bulk-input-${idx}').click()" title="Bulk Upload">
+                        <i class="fas fa-images"></i>
+                        <span>Bulk</span>
+                        <input type="file" id="bulk-input-${idx}" style="display:none" multiple accept="image/*" onchange="handleBulkUpload(this, ${idx})">
+                    </div>
                 </div>
                 <p class="variant-img-error" style="color:#ef4444; font-size:0.78rem; font-weight:600; margin-top:10px; display:none; align-items:center; gap:6px;">
                     <i class="fas fa-exclamation-triangle"></i> At least one image is required for each configuration.
@@ -756,9 +856,16 @@
         `;
         document.getElementById('variantList').appendChild(card);
         
-        // If editing and has existing images, we need to handle them in croppedBlobs if we want validation to pass
-        // But for now, let's assume if it has-image class, it's valid.
-        
+        // Initialize Sortable
+        new Sortable(card.querySelector('.sortable-variant-images'), {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            filter: '.bulk-slot',
+            onMove: function (evt) {
+                return evt.related.className.indexOf('bulk-slot') === -1;
+            }
+        });
+
         renumberVariants();
         updateVariantSelectors();
         calculateTotalStock();
@@ -822,7 +929,8 @@
             return;
         }
 
-        // 2. Validate: each variant must have at least one image (cropped blob)
+        // 2. Validate: each variant images (Not mandatory anymore)
+        /*
         let variantImageValid = true;
         document.querySelectorAll('.variant-card').forEach(card => {
             const idxInput = card.querySelector('input[name="variant_image_idx[]"]');
@@ -836,11 +944,9 @@
             );
 
             if (!hasImage) {
-                slots.forEach(s => s.style.borderColor = '#ef4444');
                 if (errMsg) errMsg.style.display = 'flex';
                 variantImageValid = false;
             } else {
-                slots.forEach(s => s.style.borderColor = '');
                 if (errMsg) errMsg.style.display = 'none';
             }
         });
@@ -853,8 +959,10 @@
             }, 100);
             return;
         }
+        */
 
-        // 4. Main Product Images: Need at least one
+        // 4. Main Product Images: Not mandatory anymore as per user request
+        /*
         const hasMainImage = croppedBlobs.has('product_image_1') || 
                              croppedBlobs.has('product_image_2') || 
                              croppedBlobs.has('product_image_3');
@@ -863,20 +971,24 @@
             document.querySelector('.modal-tab[data-tab="images"]').click();
             return;
         }
+        */
 
         const formData = new FormData(this);
         
-        // Remove the raw file inputs from formData since we use cropped blobs
-        // (This prevents sending uncropped files)
-        for (let pair of formData.entries()) {
-            if (pair[0].startsWith('product_image_') || pair[0].startsWith('variant_image_input_')) {
-                // We keep them if we want but they are not needed if we append blobs with same name
+        // Collect all keys to remove first to avoid iteration issues
+        const keysToRemove = [];
+        for (let key of formData.keys()) {
+            if (key.startsWith('product_image_') || key.startsWith('variant_image_input_')) {
+                keysToRemove.push(key);
             }
         }
+        keysToRemove.forEach(key => formData.delete(key));
         
         // Append cropped blobs
         croppedBlobs.forEach((blob, key) => {
-            formData.set(key, blob, key + '.jpg');
+            if (blob instanceof Blob) {
+                formData.set(key, blob, key + '.jpg');
+            }
         });
         
         const btn = document.getElementById('submitBtn');
@@ -924,7 +1036,7 @@
                     sku: "{{ v.sku|escapejs }}",
                     strap_material: "{{ v.strap_material|escapejs }}",
                     strap_color: "{{ v.strap_color|escapejs }}",
-
+                    dial_color: "{{ v.dial_color|escapejs }}",
                     stock: "{{ v.stock }}",
                     description: "{{ v.description|escapejs }}",
                     images: [

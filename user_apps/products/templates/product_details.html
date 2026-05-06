@@ -198,6 +198,74 @@
             background: rgba(249, 136, 34, 0.1);
             border: 1px solid rgba(249, 136, 34, 0.2);
             color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .coupon-chip:hover {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        /* Luxury Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-scale { animation: fadeInScale 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-right { animation: slideInRight 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        .variation-group { opacity: 0; }
+        .variation-group:nth-child(1) { animation-delay: 0.1s; }
+        .variation-group:nth-child(2) { animation-delay: 0.2s; }
+        .variation-group:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Gallery Transition */
+        #main-product-image {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .image-swapping {
+            opacity: 0 !important;
+            transform: scale(0.98) !important;
+        }
+
+        /* Active State Glow */
+        .color-option.active .color-swatch {
+            box-shadow: 0 0 0 3px var(--bg-color), 0 0 0 5px var(--primary-color);
+        }
+
+        .material-chip.active {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(255, 106, 0, 0.3);
+        }
+
+        .material-chip.active i { color: #000; }
+        .material-chip.active .material-label span:nth-child(2) { color: rgba(0,0,0,0.6); }
+
+        .opt-btn.active {
+            border-color: var(--primary-color);
+            background: rgba(255, 106, 0, 0.05);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
             padding: 4px 12px;
             border-radius: 8px;
             font-size: 0.75rem;
@@ -696,7 +764,7 @@
 
         <div class="product-content">
             <!-- Left Gallery -->
-            <div class="gallery-wrapper">
+            <div class="gallery-wrapper animate-scale">
                 <div class="main-image-container" id="mainImageContainer">
                     <button class="carousel-btn prev-btn" id="prevImgBtn" aria-label="Previous Image" onclick="event.stopPropagation();"><i class="fas fa-chevron-left"></i></button>
                     <button class="carousel-btn next-btn" id="nextImgBtn" aria-label="Next Image" onclick="event.stopPropagation();"><i class="fas fa-chevron-right"></i></button>
@@ -838,10 +906,10 @@
                 {% endif %}
 
                 <!-- Professional Variations -->
-                <div class="variations" id="selection-container" style="gap: 20px; display: flex; flex-direction: column; margin-bottom: 25px;">
+                <div class="variations animate-right" id="selection-container" style="gap: 20px; display: flex; flex-direction: column; margin-bottom: 25px;">
                     <!-- Available Colors (from Product model) -->
                     {% if product.colors.exists %}
-                    <div class="variation-group" style="margin-bottom: 0;">
+                    <div class="variation-group animate-up" style="margin-bottom: 0;">
                         <div class="variation-label">
                             <span>Available Colors</span>
                             <span id="label-color" class="selected-val">{{ product.colors.first.name }}</span>
@@ -859,7 +927,7 @@
 
                     <!-- Strap Colors (from Product strap_color CSV) -->
                     {% if product.strap_color %}
-                    <div class="variation-group" style="margin-bottom: 0;">
+                    <div class="variation-group animate-up" style="margin-bottom: 0;">
                         <div class="variation-label">
                             <span>Strap Colors</span>
                             <span id="label-strapclr" class="selected-val"></span> <!-- Set by JS -->
@@ -885,38 +953,49 @@
 
 
 
-                    <!-- Strap Materials (from Product strap_material CSV) -->
-                    {% if product.strap_material %}
-                    <div class="variation-group" style="margin-bottom: 0;">
+                    <!-- Dial Colors -->
+                    {% if dial_colors %}
+                    <div class="variation-group animate-up" style="margin-bottom: 0;">
                         <div class="variation-label">
-                            <span>Strap Materials</span>
-                            <span id="label-material" class="selected-val"></span> <!-- Set by JS -->
+                            <span>Dial Colors</span>
+                            <span id="label-dialclr" class="selected-val">{{ dial_colors.0.name }}</span>
                         </div>
-                        <div class="material-row">
-                            <script>
-                                const materials = "{{ product.strap_material|escapejs }}".split(',').map(s => s.trim()).filter(s => s);
-                                if(materials.length > 0) {
-                                    document.getElementById('label-material').textContent = materials[0];
-                                    materials.forEach((mat, idx) => {
-                                        document.write(`
-                                            <div class="material-chip ${idx === 0 ? 'active' : ''}" onclick="handleMaterialSelection(this, '${mat}')">
-                                                <i class="fas ${mat.toLowerCase().includes('leather') ? 'fa-ribbon' : (mat.toLowerCase().includes('steel') ? 'fa-link' : 'fa-clock')}"></i>
-                                                <div class="material-label">
-                                                    <span>${mat}</span>
-                                                    <span>Premium Build</span>
-                                                </div>
-                                            </div>
-                                        `);
-                                    });
-                                }
-                            </script>
+                        <div class="color-row">
+                            {% for color in dial_colors %}
+                            <div class="color-option {% if forloop.first %}active{% endif %}" onclick="handleDialClrSelection(this, '{{ color.name|escapejs }}')">
+                                <div class="color-swatch" style="background-color: {{ color.hex }};" title="{{ color.name }}"></div>
+                                <span class="color-name">{{ color.name }}</span>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                     {% endif %}
 
+                    <!-- Strap Materials -->
+                    {% if materials %}
+                    <div class="variation-group animate-up" style="margin-bottom: 0;">
+                        <div class="variation-label">
+                            <span>Strap Materials</span>
+                            <span id="label-material" class="selected-val">{{ materials.0 }}</span>
+                        </div>
+                        <div class="material-row">
+                            {% for material in materials %}
+                            <div class="material-chip {% if forloop.first %}active{% endif %}" onclick="handleMaterialSelection(this, '{{ material|escapejs }}')">
+                                <i class="fas fa-layer-group"></i>
+                                <div class="material-label">
+                                    <span>{{ material }}</span>
+                                    <span>Premium Choice</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+
                     {% if active_variants %}
                         <!-- Size/Variant Selection -->
-                        <div class="variation-group" style="margin-bottom: 0;">
+                        <div class="variation-group animate-up" style="margin-bottom: 0;">
                             <div class="variation-label">
                                 <span>Select Size / Variant</span>
                                 <span id="label-size" class="selected-val">{{ active_variants.first.sku|default:"Standard" }}</span>
@@ -1343,13 +1422,14 @@
             const mainImg = document.getElementById('mainProductImage');
             const zoomLens = document.getElementById('zoomLens');
             
-            // Effect
-            mainImg.style.opacity = '0.5';
+            // Premium Transition
+            mainImg.classList.add('image-swapping');
+            
             setTimeout(() => {
                 mainImg.src = imgSrc;
                 if(zoomLens) zoomLens.style.backgroundImage = `url(${imgSrc})`;
-                mainImg.style.opacity = '1';
-            }, 150);
+                mainImg.classList.remove('image-swapping');
+            }, 300);
 
             // Update active
             document.querySelectorAll('.thumb-card').forEach(c => c.classList.remove('active'));
@@ -1483,9 +1563,11 @@
             const variants = JSON.parse(dataEl.textContent);
             
             const activeStrapEl = document.getElementById('label-strapclr');
+            const activeDialEl = document.getElementById('label-dialclr');
             const activeMaterialEl = document.getElementById('label-material');
             
             const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim() : '';
+            const currentDial = activeDialEl ? activeDialEl.textContent.trim() : '';
             const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim() : '';
             
             let firstVisibleMatch = null;
@@ -1499,6 +1581,7 @@
                 if (v) {
                     let isMatch = true;
                     if (currentStrap && v.strap && v.strap !== currentStrap) isMatch = false;
+                    if (currentDial && v.dial && v.dial !== currentDial) isMatch = false;
                     if (currentMaterial && v.material && v.material !== currentMaterial) isMatch = false;
                     
                     if (isMatch) {
@@ -1535,6 +1618,9 @@
 
 
         let selectedStrapClr = '';
+        let selectedDialClr = '';
+        let selectedMaterial = '';
+
         window.handleStrapClrSelection = function(element, clrName) {
             const group = element.closest('.variation-group');
             group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
@@ -1544,23 +1630,56 @@
             if (document.getElementById('label-strapclr')) {
                 document.getElementById('label-strapclr').textContent = clrName;
             }
-            updateAvailableMaterials();
+            updateAvailableOptions();
             autoSelectVariant();
         };
 
-        function updateAvailableMaterials() {
+        window.handleDialClrSelection = function(element, clrName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedDialClr = clrName;
+
+            if (document.getElementById('label-dialclr')) {
+                document.getElementById('label-dialclr').textContent = clrName;
+            }
+            updateAvailableOptions();
+            autoSelectVariant();
+        };
+
+        window.handleMaterialSelection = function(element, materialName) {
+            const group = element.closest('.variation-group');
+            group.querySelectorAll('.material-chip').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            selectedMaterial = materialName;
+
+            if (document.getElementById('label-material')) {
+                document.getElementById('label-material').textContent = materialName;
+            }
+            updateAvailableOptions();
+            autoSelectVariant();
+        };
+
+        function updateAvailableOptions() {
             const dataEl = document.getElementById('variants-data');
             if(!dataEl) return;
             const variants = JSON.parse(dataEl.textContent);
             
-            // Find materials available for the currently selected strap color
             const availableMats = new Set();
+            const availableStrapClrs = new Set();
+            const availableDialClrs = new Set();
+            
             variants.forEach(v => {
-                if (!selectedStrapClr || v.strap === selectedStrapClr) {
-                    if (v.material) availableMats.add(v.material);
-                }
+                let strapMatch = !selectedStrapClr || v.strap === selectedStrapClr;
+                let dialMatch = !selectedDialClr || v.dial === selectedDialClr;
+                let matMatch = !selectedMaterial || v.material === selectedMaterial;
+
+                if (strapMatch && dialMatch && v.material) availableMats.add(v.material);
+                if (matMatch && dialMatch && v.strap) availableStrapClrs.add(v.strap);
+                if (matMatch && strapMatch && v.dial) availableDialClrs.add(v.dial);
             });
 
+            // Update Materials
             document.querySelectorAll('.material-chip').forEach(chip => {
                 const matName = chip.querySelector('.material-label span:first-child').textContent.trim();
                 if (availableMats.has(matName)) {
@@ -1573,41 +1692,28 @@
                     chip.style.pointerEvents = 'none';
                 }
             });
-        }
 
-        let selectedMaterial = '';
-        window.handleMaterialSelection = function(element, materialName) {
-            const group = element.closest('.variation-group');
-            group.querySelectorAll('.material-chip').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            selectedMaterial = materialName;
-
-            if (document.getElementById('label-material')) {
-                document.getElementById('label-material').textContent = materialName;
-            }
-            updateAvailableStrapColors();
-            autoSelectVariant();
-        };
-
-        function updateAvailableStrapColors() {
-            const dataEl = document.getElementById('variants-data');
-            if(!dataEl) return;
-            const variants = JSON.parse(dataEl.textContent);
-            
-            // Find strap colors available for the currently selected material
-            const availableClrs = new Set();
-            variants.forEach(v => {
-                if (!selectedMaterial || v.material === selectedMaterial) {
-                    if (v.strap) availableClrs.add(v.strap);
-                }
-            });
-
+            // Update Colors (Strap and Dial)
             document.querySelectorAll('.variation-group').forEach(group => {
                 const label = group.querySelector('.variation-label span:first-child');
                 if (label && label.textContent.includes('Strap Colors')) {
                     group.querySelectorAll('.color-option').forEach(option => {
                         const clrName = option.querySelector('.color-name').textContent.trim();
-                        if (availableClrs.has(clrName)) {
+                        if (availableStrapClrs.has(clrName)) {
+                            option.classList.remove('disabled');
+                            option.style.opacity = '1';
+                            option.style.pointerEvents = 'auto';
+                        } else {
+                            option.classList.add('disabled');
+                            option.style.opacity = '0.4';
+                            option.style.pointerEvents = 'none';
+                        }
+                    });
+                }
+                if (label && label.textContent.includes('Dial Colors')) {
+                    group.querySelectorAll('.color-option').forEach(option => {
+                        const clrName = option.querySelector('.color-name').textContent.trim();
+                        if (availableDialClrs.has(clrName)) {
                             option.classList.remove('disabled');
                             option.style.opacity = '1';
                             option.style.pointerEvents = 'auto';
@@ -1718,6 +1824,20 @@
                                 });
                             });
                         }
+
+                        if (variant.dial) {
+                            selectedDialClr = variant.dial;
+                            if (document.getElementById('label-dialclr')) document.getElementById('label-dialclr').textContent = variant.dial;
+                            document.querySelectorAll('#label-dialclr').forEach(l => {
+                                const g = l.closest('.variation-group');
+                                g.querySelectorAll('.color-option').forEach(o => {
+                                    if(o.querySelector('.color-name').textContent.trim() === variant.dial) {
+                                        g.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
+                                        o.classList.add('active');
+                                    }
+                                });
+                            });
+                        }
                     }
                 }
             }
@@ -1727,11 +1847,13 @@
             const activeStrap = document.getElementById('label-strapclr');
             if (activeStrap) selectedStrapClr = activeStrap.textContent.trim();
 
+            const activeDial = document.getElementById('label-dialclr');
+            if (activeDial) selectedDialClr = activeDial.textContent.trim();
+
             const activeMat = document.getElementById('label-material');
             if (activeMat) selectedMaterial = activeMat.textContent.trim();
 
-            updateAvailableMaterials();
-            updateAvailableStrapColors();
+            updateAvailableOptions();
             autoSelectVariant();
             
             // Fallback if autoSelectVariant didn't find anything
