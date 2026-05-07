@@ -153,77 +153,100 @@
     <div id="edit-profile" class="tab-content {% if active_tab == 'edit-profile' or not active_tab %}active{% endif %}">
         <div class="settings-panel">
             <h3 class="panel-title">Personal Information</h3>
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 <div class="avatar-upload-section">
-                    {% if user.avatar %}
-                    <img id="avatar-preview" src="{{ user.avatar.url }}" class="avatar-preview-large"
-                        alt="Preview">
-                    {% else %}
-                    <div id="avatar-preview-placeholder" class="avatar-preview-large"
-                        style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2rem;">
-                        <i class="fa-regular fa-user"></i>
+                    <div style="position: relative;">
+                        {% if user.avatar %}
+                        <img id="avatar-preview" src="{{ user.avatar.url }}" class="avatar-preview-large" alt="Preview">
+                        {% else %}
+                        <div id="avatar-preview-placeholder" class="avatar-preview-large"
+                            style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2rem;">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                        {% endif %}
+                        <div style="margin-top: 10px; color: var(--text-muted); font-size: 0.75rem; text-align: center;">Current Avatar</div>
                     </div>
-                    {% endif %}
                     <label class="upload-box">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p><strong>Click to upload</strong> or drag and drop</p>
-                        <p>SVG, PNG, JPG or GIF (max. 800x400px)</p>
-                        <input type="file" name="avatar" id="id_avatar" style="display: none;"
-                            onchange="previewImage(event)">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #000; margin-bottom: 15px;"></i>
+                        <p style="font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Click to update avatar</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">Recommended: Square image, max 2MB</p>
+                        <input type="file" name="avatar" id="id_avatar" style="display: none;" onchange="previewImage(event)">
                     </label>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
                         <label>First Name</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}"
-                            placeholder="Enter first name">
+                        {{ profile_form.first_name }}
+                        {% if profile_form.first_name.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ profile_form.first_name.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label>Last Name</label>
-                        <input type="text" name="last_name" value="{{ user.last_name }}"
-                            placeholder="Enter last name">
+                        {{ profile_form.last_name }}
+                        {% if profile_form.last_name.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ profile_form.last_name.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input type="email" value="{{ user.email }}" disabled
-                            style="background: #f9fafb; cursor: not-allowed;">
+                        {{ profile_form.email }}
+                        {% if profile_form.email.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ profile_form.email.errors.0 }}</div>
+                        {% endif %}
+                        <small style="color: var(--text-muted); font-size: 0.7rem;">This is your primary login email.</small>
                     </div>
                     <div class="form-group">
                         <label>Phone Number</label>
-                        <input type="text" name="phone_number"
-                            value="{{ user.phone_number|default:'' }}" placeholder="+1 (555) 000-0000">
+                        {{ profile_form.phone_number }}
+                        {% if profile_form.phone_number.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ profile_form.phone_number.errors.0 }}</div>
+                        {% endif %}
                     </div>
                 </div>
 
-                <button type="submit" name="update_profile" class="btn-submit">Update Profile</button>
+                <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                    <button type="submit" name="update_profile" class="btn-submit" style="padding: 14px 40px; font-size: 0.95rem;">Save Changes</button>
+                </div>
             </form>
         </div>
     </div>
 
     <!-- Change Password Tab -->
-    <div id="change-password"
-        class="tab-content {% if active_tab == 'change-password' %}active{% endif %}">
+    <div id="change-password" class="tab-content {% if active_tab == 'change-password' %}active{% endif %}">
         <div class="settings-panel">
-            <h3 class="panel-title">Change Password</h3>
-            <form method="post">
+            <h3 class="panel-title">Security & Authentication</h3>
+            <form method="post" novalidate>
                 {% csrf_token %}
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>Current Password</label>
-                        <input type="password" name="old_password" required placeholder="••••••••">
+                        <input type="password" name="old_password" required placeholder="Enter current password" class="form-control">
+                        {% if password_form.old_password.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ password_form.old_password.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label>New Password</label>
-                        <input type="password" name="new_password1" required placeholder="••••••••">
+                        <input type="password" name="new_password1" required placeholder="Min. 8 characters" class="form-control">
+                        {% if password_form.new_password1.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ password_form.new_password1.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="form-group">
-                        <label>Confirm Password</label>
-                        <input type="password" name="new_password2" required placeholder="••••••••">
+                        <label>Confirm New Password</label>
+                        <input type="password" name="new_password2" required placeholder="Repeat new password" class="form-control">
+                        {% if password_form.new_password2.errors %}
+                            <div style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">{{ password_form.new_password2.errors.0 }}</div>
+                        {% endif %}
                     </div>
                 </div>
-                <button type="submit" name="change_password" class="btn-submit">Change Password</button>
+                
+                <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                    <button type="submit" name="change_password" class="btn-submit" style="padding: 14px 40px; font-size: 0.95rem;">Update Password</button>
+                </div>
             </form>
         </div>
     </div>

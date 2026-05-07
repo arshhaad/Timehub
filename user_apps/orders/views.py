@@ -406,7 +406,7 @@ def cancel_order(request, order_uuid):
             return redirect('order_detail', order_uuid=order.uuid)
         return render(request, 'cancel.html', {'order': order})
         
-    if request.method == 'POST' and order.status in ['Pending', 'CONFIRMED', 'Processing']:
+    if request.method == 'POST' and order.status in ['Pending', 'Confirmed', 'Processing']:
         reason = request.POST.get('reason', '').strip()
         if not reason:
             messages.error(request, 'Please provide a reason for cancellation.')
@@ -459,7 +459,7 @@ def cancel_order_item(request, item_uuid):
     item = get_object_or_404(OrderItem, uuid=item_uuid, order__user=request.user)
     order = item.order
     
-    if order.status in ['Pending', 'CONFIRMED', 'Processing'] and not item.is_cancelled:
+    if order.status in ['Pending', 'Confirmed', 'Processing'] and not item.is_cancelled:
         reason = request.POST.get('reason', '').strip()
         if not reason:
             messages.error(request, 'Please provide a reason for cancellation.')

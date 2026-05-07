@@ -295,6 +295,18 @@
         width: 90%; max-width: 600px;
     }
 
+    @media (max-width: 768px) {
+        .form-header { flex-direction: column; align-items: stretch; gap: 15px; }
+        .modal-tabs { overflow-x: auto; }
+        .tab-panel { padding: 20px; }
+        .form-grid, .variant-grid { grid-template-columns: 1fr; }
+        .form-group.full { grid-column: span 1; }
+        .image-slots { flex-direction: column; gap: 20px; }
+        .image-slot-container { flex: none; width: 100%; }
+        .image-slot { height: 200px; }
+        .variant-header { flex-direction: column; align-items: stretch; gap: 15px; }
+        .variant-img-grid { grid-template-columns: repeat(3, 1fr); }
+    }
 </style>
 {% endblock %}
 

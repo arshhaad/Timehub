@@ -80,6 +80,12 @@
     .tx-amount { font-weight: 800; font-size: 1rem; }
     .amount-plus { color: #166534; }
     .amount-minus { color: #991b1b; }
+
+    @media (max-width: 991px) {
+        .wallet-layout { grid-template-columns: 1fr; }
+        .wallet-card { padding: 24px; }
+        .balance-amount { font-size: 2rem; }
+    }
 </style>
 {% endblock %}
 

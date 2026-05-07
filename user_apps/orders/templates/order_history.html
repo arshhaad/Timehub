@@ -99,6 +99,41 @@
     
     .mini-step.completed .mini-label, .mini-step.active .mini-label { color: #fff; }
     .mini-step.active .mini-label { color: var(--primary-color); }
+
+    /* RESPONSIVE QUERIES */
+    @media (max-width: 991px) {
+        .order-card { padding: 25px; }
+        .order-meta { gap: 20px; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header-alt h1 { font-size: 1.8rem; }
+        
+        .order-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .order-meta { flex-direction: row; flex-wrap: wrap; gap: 20px; width: 100%; }
+        .meta-item { flex: 1 1 120px; }
+        
+        .status-badge { align-self: flex-start; }
+        
+        .mini-tracker { padding: 20px 10px; }
+        .mini-label { font-size: 0.55rem; letter-spacing: 0.2px; }
+        
+        .order-actions { flex-direction: column; gap: 10px; }
+        .btn-action { width: 100%; justify-content: center; padding: 12px; }
+    }
+
+    @media (max-width: 480px) {
+        .order-meta { flex-direction: column; gap: 10px; }
+        .meta-item { width: 100%; }
+        
+        .mini-tracker { overflow-x: auto; justify-content: flex-start; gap: 20px; padding-bottom: 30px; }
+        .mini-tracker-line { display: none; }
+        .mini-step { flex: 0 0 80px; }
+        
+        .item-row { gap: 12px; }
+        .item-img { width: 60px; height: 60px; }
+        .item-name { font-size: 0.85rem; }
+    }
 </style>
 {% endblock %}
 

@@ -801,83 +801,90 @@ function buildChart(period) {
     const noData = document.getElementById('noDataMessage');
     if (!canvas) return;
 
-    const data = chartData[period];
-    if (salesChart) { salesChart.destroy(); }
+    // ── FIX 1: Guard against missing or empty period data ──
+    const data = chartData && chartData[period];
+    const isEmpty = !data || !data.labels || data.labels.length === 0;
 
-    const empty = !data.labels || data.labels.length === 0;
-    noData.style.display = empty ? 'block' : 'none';
-    canvas.style.display = empty ? 'none' : 'block';
-    if (empty) return;
+    // ── FIX 2: Properly destroy and null out the old chart ──
+    if (salesChart) {
+        salesChart.destroy();
+        salesChart = null;
+    }
+
+    noData.style.display = isEmpty ? 'block' : 'none';
+    canvas.style.display = isEmpty ? 'none' : 'block';
+    if (isEmpty) return;
 
     const ctx = canvas.getContext('2d');
+
+    // ── FIX 3: Recreate gradient fresh each time (old ctx is gone after destroy) ──
     const gradient = ctx.createLinearGradient(0, 0, 0, 350);
     gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
     gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
 
-    salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Revenue',
-                data: data.values,
-                borderColor: '#ff6b00',
-                backgroundColor: gradient,
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#ff6b00',
-                pointBorderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#ff6b00',
-                pointHoverBorderColor: '#ffffff',
-                pointHoverBorderWidth: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index',
+    // ── FIX 4: Wrap in try/catch so a bad data shape doesn't silently die ──
+    try {
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: data.values,
+                    borderColor: '#ff6b00',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ff6b00',
+                    pointBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#ff6b00',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2,
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return '₹' + context.parsed.y.toLocaleString('en-IN');
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f3f4f6', drawBorder: false },
-                    ticks: {
-                        callback: function(value) {
-                            if (value >= 1000) return '₹' + (value/1000) + 'k';
-                            return '₹' + value;
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: ctx => '₹' + ctx.parsed.y.toLocaleString('en-IN')
                         }
                     }
                 },
-                x: { grid: { display: false } }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: {
+                            callback: v => v >= 1000 ? '₹' + (v / 1000) + 'k' : '₹' + v
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
             }
-        }
-    });
+        });
+    } catch (e) {
+        console.error('Chart render error:', e);
+        noData.style.display = 'block';
+        canvas.style.display = 'none';
+    }
 }
 
 // ── Period switching ──────────────────────────────────────────────────────────
 document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         buildChart(this.dataset.period);
@@ -920,8 +927,10 @@ function toggleCustomDates(val) {
     if (customDiv) customDiv.style.display = val === 'custom' ? 'flex' : 'none';
 }
 
+// ── FIX 5: Wait for Chart.js to fully load before building the chart ──
 document.addEventListener('DOMContentLoaded', () => {
-    buildChart('daily');
+    // Small delay ensures Chart.js script from CDN has executed
+    setTimeout(() => buildChart('daily'), 100);
     runCounters();
     runProgressBars();
     const filterSelect = document.querySelector('select[name="filter_type"]');

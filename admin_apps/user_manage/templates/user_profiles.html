@@ -216,6 +216,15 @@
         background: #fff; cursor: pointer;
     }
     .btn-action:hover { background: #f1f5f9; color: var(--text-main); }
+
+    @media (max-width: 991px) {
+        .profile-header-card { flex-direction: column; align-items: stretch; gap: 25px; padding: 24px; }
+        .profile-identity { flex-direction: column; text-align: center; }
+        .profile-meta { flex-direction: column; gap: 10px; align-items: center; }
+        .header-status { justify-content: center; }
+        .stats-strip { grid-template-columns: 1fr; }
+        .profile-container > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    }
 </style>
 {% endblock %}
 

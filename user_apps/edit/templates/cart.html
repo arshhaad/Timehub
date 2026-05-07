@@ -248,10 +248,13 @@
         .cart-summary-card { width: 100%; position: relative; top: 0; }
     }
     @media (max-width: 576px) {
-        .cart-item { flex-direction: column; align-items: flex-start; position: relative; }
-        .item-img { width: 100%; height: 160px; margin-bottom: 15px; margin-right: 0; }
-        .item-price, .item-qty { margin-bottom: 10px; display: inline-block; }
-        .remove-btn { position: absolute; top: 20px; right: 0; }
+        .cart-item { flex-direction: column; align-items: center; text-align: center; gap: 15px; padding: 30px 0; }
+        .item-img { width: 100%; height: 180px; margin-right: 0; }
+        .item-info { width: 100%; }
+        .item-qty-container { margin-right: 0; }
+        .item-price { margin-right: 0; font-size: 1.2rem; }
+        .item-actions-col { flex-direction: row; justify-content: center; width: 100%; gap: 20px; }
+        .remove-btn { position: absolute; top: 15px; right: 15px; }
     }
 </style>
 {% endblock %}
@@ -284,7 +287,7 @@
                         Variant: {{ item.variant.strap_color|default:"" }} {{ item.variant.strap_material|default:"" }}
                     </p>
                     {% endif %}
-                    <a href="{% url 'checkout_page' %}" class="btn-buy-now-sm">Buy Now</a>
+                    <a href="{% url 'checkout_page' %}?buy_now_id={{ item.id }}" class="btn-buy-now-sm">Buy Now</a>
                 </div>
                 <div class="item-qty-container" style="display:flex; flex-direction:column; align-items:center; margin-right:20px;">
                     <div class="qty-controls" style="display:flex; align-items:center; background:rgba(255,255,255,0.05); border-radius:20px; padding:2px;">

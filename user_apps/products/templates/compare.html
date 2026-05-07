@@ -459,15 +459,8 @@
 
         .table-row {
             display: grid;
-
-            grid-template-columns: 240px repeat({
-                    {
-                    products|length|add:fill_count
-                }
-            }
-
-            , 1fr);
-        border-bottom: 1px solid var(--border);
+            grid-template-columns: 240px repeat({{ products|length|add:fill_count }}, 1fr);
+            border-bottom: 1px solid var(--border);
         }
 
         .table-row:last-child {
@@ -739,6 +732,20 @@
         }
 
         @media (max-width: 768px) {
+            .modal-overlay {
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .modal-content {
+                transform: translateY(20px);
+            }
+
+            .modal-overlay.active .modal-content {
+                transform: translateY(0);
+            }
+
             .products-grid {
                 grid-template-columns: 1fr;
             }
@@ -760,6 +767,84 @@
         .container {
             padding: 0 20px;
         }
+        }
+        /* NEW TOAST SYSTEM */
+        .toast-container {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(17, 17, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .toast i {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .toast-error  { border-left: 4px solid #ef4444; }
+        .toast-error i { color: #ef4444; }
+
+        .toast-success  { border-left: 4px solid #22c55e; }
+        .toast-success i { color: #22c55e; }
+
+        .toast-info  { border-left: 4px solid #f98822; }
+        .toast-info i { color: #f98822; }
+
+        /* Progress bar at bottom */
+        .toast::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+            transform-origin: left;
+            animation: toast-progress 4s linear forwards;
+        }
+
+        .toast-error::after   { background: #ef4444; }
+        .toast-success::after { background: #22c55e; }
+        .toast-info::after    { background: #f98822; }
+
+        @keyframes toast-progress {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
+        }
+
+        .toast i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
         }
     </style>
 </head>
@@ -882,7 +967,7 @@
                                 <i class="fas fa-shopping-bag"></i> Cart
                             </button>
                             <button class="p-btn p-btn-buy" onclick="buyProduct('{{ product.uuid }}', this)">
-                                Buy Now
+                                <i class="fas fa-bolt"></i> Buy Now
                             </button>
                         </div>
                     </div>
@@ -923,8 +1008,7 @@
 
                 <div class="table-row">
                     <div class="table-label"><i class="fas fa-user-friends"></i> <span>Gender</span></div>
-                    {% for product in products %}<div class="table-val">{{
-                        product.get_gender_display|default:product.gender }}</div>{% endfor %}
+                    {% for product in products %}<div class="table-val">{{ product.get_gender_display|default:product.gender }}</div>{% endfor %}
                     {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
                 </div>
                 <div class="table-row">
@@ -961,8 +1045,7 @@
                 </div>
 
                 <div class="basket-bill">
-                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize
-                            }})</span><span>₹{{ total_price|default:"--" }}</span></div>
+                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize }})</span><span>₹{{ total_price|default:"--" }}</span></div>
                     <div class="price-line"><span>Insured Shipping</span><span
                             style="color:var(--primary-color);">₹99</span></div>
                     <div class="price-line"><span>Estimated Tax</span><span>₹55</span></div>
@@ -989,7 +1072,41 @@
 </main>
 
 <script>
+    // CUSTOM MESSAGE SYSTEM
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === 'error'   ? 'exclamation-circle'
+                   : type === 'success' ? 'check-circle'
+                   :                      'info-circle';
+
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <div class="toast-message">${message}</div>
+        `;
+
+        container.appendChild(toast);
+
+        // Trigger slide-in
+        setTimeout(() => toast.classList.add('active'), 10);
+
+        // Auto-dismiss after 4s
+        setTimeout(() => {
+            toast.classList.remove('active');
+            setTimeout(() => toast.remove(), 600);
+        }, 4000);
+    }
+
     async function processOrder() {
+        {% if not user.is_authenticated %}
+        window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
+        return;
+        {% endif %}
+
         {% if products %}
         const btn = document.getElementById('checkoutBtn');
         btn.classList.add('is-loading');
@@ -997,41 +1114,39 @@
 
         const productsData = [
             {% for p in products %}
-    { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: { { p.variants.filter.exists | yesno: "true,false" } } } {% if not forloop.last %}, {% endif %}
-    {% endfor %}
-            ];
+            { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: {{ p.variants.exists|yesno:"true,false" }} }{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        ];
 
-    let failures = [];
-    for (const p of productsData) {
-        try {
-            const response = await fetch(`/user/cart/add/${p.id}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ quantity: 1 })
-            });
-            const data = await response.json();
-            if (!data.success) {
-                failures.push(`${p.name}: ${data.error}`);
+        let failures = [];
+        for (const p of productsData) {
+            try {
+                const response = await fetch(`/user/cart/add/${p.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ quantity: 1 })
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    failures.push(`${p.name}: ${data.error}`);
+                }
+            } catch (err) {
+                failures.push(`${p.name}: Connection error`);
             }
-        } catch (err) {
-            failures.push(`${p.name}: Connection error`);
         }
-    }
 
-    if (failures.length > 0) {
-        alert("Some items could not be added:\n\n" + failures.join("\n"));
-        btn.classList.remove('is-loading');
-        btn.disabled = false;
-        // If some succeeded, we might still want to go to checkout, 
-        // but let's stay here so user can fix issues (select variants).
-    } else {
-        window.location.href = "{% url 'checkout_page' %}";
-    }
-    {% endif %}
+        if (failures.length > 0) {
+            showToast("Selection Issue: " + failures.join(", "), "error");
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+        } else {
+            window.location.href = "{% url 'checkout_page' %}";
         }
+        {% endif %}
+    }
 
     function addToCart(uuid, btn) {
         const originalHtml = btn.innerHTML;
@@ -1046,10 +1161,10 @@
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
+                    showToast("Added to your collection!", "success");
                     btn.innerHTML = '<i class="fas fa-check"></i> Added';
                     btn.style.background = '#22c55e';
                     btn.style.color = '#fff';
-                    // Update cart badge if exists
                     const badge = document.getElementById('cartBadge');
                     if (badge) {
                         let count = parseInt(badge.textContent) || 0;
@@ -1063,19 +1178,19 @@
                         btn.style.pointerEvents = 'auto';
                     }, 2000);
                 } else {
-                    if (d.error.includes('variant')) {
-                        if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
-                            window.location.href = `/user/product/${uuid}/`;
-                        }
+                    if (d.error && d.error.includes('variant')) {
+                        showToast("Options Required: " + d.error, "info");
+                    } else if (d.error && d.error.includes('login')) {
+                        window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                     } else {
-                        alert(d.error || "Please login to add items.");
+                        showToast(d.error || "Please login to add items.", "error");
                     }
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(() => {
-                alert("Please login to add items.");
+                window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
             });
@@ -1088,26 +1203,30 @@
 
         fetch(`/user/cart/add/${uuid}/`, {
             method: 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            headers: { 
+                'X-CSRFToken': '{{ csrf_token }}', 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({ quantity: 1 })
         })
             .then(r => r.json())
             .then(d => {
-                if (d.success) window.location.href = "{% url 'checkout_page' %}";
-                else {
-                    if (d.error.includes('variant')) {
-                        if (confirm(d.error + "\n\nWould you like to view product details to select options?")) {
-                            window.location.href = `/user/product/${uuid}/`;
-                        }
+                if (d.success) {
+                    window.location.href = "{% url 'checkout_page' %}";
+                } else {
+                    if (d.error && d.error.includes('variant')) {
+                        showToast("Options Required: " + d.error, "info");
+                    } else if (d.error && d.error.includes('login')) {
+                        window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                     } else {
-                        alert(d.error || "Please login to purchase.");
+                        showToast(d.error || "An error occurred. Please try again.", "error");
                     }
                     btn.innerHTML = originalHtml;
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(() => {
-                alert("Please login to purchase.");
+                window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
             });
@@ -1176,6 +1295,8 @@
         }
     });
 </script>
+
+<div class="toast-container" id="toastContainer"></div>
 </body>
 
 </html>

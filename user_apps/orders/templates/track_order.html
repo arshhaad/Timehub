@@ -121,37 +121,68 @@
             <!-- Progress Bar -->
             {% with status=order.status %}
             <div class="tracking-progress">
-                <div class="progress-line">
-                    <div class="progress-fill" style="width: 
-                        {% if status == 'Pending' %}12.5%
-                        {% elif status == 'Confirmed' %}37.5%
-                        {% elif status == 'Shipped' %}62.5%
-                        {% elif status == 'Out for Delivery' %}87.5%
-                        {% elif status == 'Delivered' %}100%
-                        {% else %}0%{% endif %}">
+                {% if status == 'Return Requested' or status == 'Returned' %}
+                    <!-- Return Flow -->
+                    <div class="progress-line">
+                        <div class="progress-fill" style="width: 
+                            {% if order.return_status == 'Requested' %}12.5%
+                            {% elif order.return_status == 'Processing' %}37.5%
+                            {% elif order.return_status == 'Pickup Scheduled' %}62.5%
+                            {% elif order.return_status == 'Returned' %}100%
+                            {% else %}0%{% endif %}">
+                        </div>
                     </div>
-                </div>
 
-                <div class="step {% if status == 'Pending' %}active{% elif status != 'Cancelled' %}completed{% endif %}">
-                    <div class="step-icon"><i class="fas fa-receipt"></i></div>
-                    <div class="step-label">Order Placed</div>
-                </div>
-                <div class="step {% if status == 'Confirmed' %}active{% elif status == 'Shipped' or status == 'Out for Delivery' or status == 'Delivered' %}completed{% endif %}">
-                    <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="step-label">Confirmed</div>
-                </div>
-                <div class="step {% if status == 'Shipped' %}active{% elif status == 'Out for Delivery' or status == 'Delivered' %}completed{% endif %}">
-                    <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
-                    <div class="step-label">Shipped</div>
-                </div>
-                <div class="step {% if status == 'Out for Delivery' %}active{% elif status == 'Delivered' %}completed{% endif %}">
-                    <div class="step-icon"><i class="fas fa-house-chimney"></i></div>
-                    <div class="step-label">Out for Delivery</div>
-                </div>
-                <div class="step {% if status == 'Delivered' %}active{% endif %}">
-                    <div class="step-icon"><i class="fas fa-box-open"></i></div>
-                    <div class="step-label">Delivered</div>
-                </div>
+                    <div class="step {% if order.return_status != 'None' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-undo"></i></div>
+                        <div class="step-label">Requested</div>
+                    </div>
+                    <div class="step {% if order.return_status == 'Requested' %}active{% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-cog"></i></div>
+                        <div class="step-label">Processing</div>
+                    </div>
+                    <div class="step {% if order.return_status == 'Processing' %}active{% elif order.return_status in 'Pickup Scheduled,Returned' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="step-label">Pickup</div>
+                    </div>
+                    <div class="step {% if order.return_status == 'Pickup Scheduled' %}active{% elif order.return_status == 'Returned' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                        <div class="step-label">Returned</div>
+                    </div>
+                {% else %}
+                    <!-- Standard Delivery Flow -->
+                    <div class="progress-line">
+                        <div class="progress-fill" style="width: 
+                            {% if status == 'Pending' %}12.5%
+                            {% elif status == 'Confirmed' %}37.5%
+                            {% elif status == 'Shipped' %}62.5%
+                            {% elif status == 'Out for Delivery' %}87.5%
+                            {% elif status == 'Delivered' %}100%
+                            {% else %}0%{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="step {% if status == 'Pending' %}active{% elif status != 'Cancelled' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-receipt"></i></div>
+                        <div class="step-label">Order Placed</div>
+                    </div>
+                    <div class="step {% if status == 'Confirmed' %}active{% elif status == 'Shipped' or status == 'Out for Delivery' or status == 'Delivered' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="step-label">Confirmed</div>
+                    </div>
+                    <div class="step {% if status == 'Shipped' %}active{% elif status == 'Out for Delivery' or status == 'Delivered' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
+                        <div class="step-label">Shipped</div>
+                    </div>
+                    <div class="step {% if status == 'Out for Delivery' %}active{% elif status == 'Delivered' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fas fa-house-chimney"></i></div>
+                        <div class="step-label">Out for Delivery</div>
+                    </div>
+                    <div class="step {% if status == 'Delivered' %}active{% endif %}">
+                        <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                {% endif %}
             </div>
             {% endwith %}
 
@@ -164,7 +195,14 @@
                     <div class="log-content">
                         <h4>Order is {{ order.status }}</h4>
                         <p>
-                            {% if order.status == 'Pending' %}We've received your order and are processing it.
+                            {% if order.status == 'Return Requested' %}
+                                {% if order.return_status == 'Requested' %}We've received your return request. Our team will review it shortly.
+                                {% elif order.return_status == 'Processing' %}Your return request has been approved and is being processed.
+                                {% elif order.return_status == 'Pickup Scheduled' %}A courier has been assigned to pick up the item from your address.
+                                {% else %}Your return is in progress.{% endif %}
+                            {% elif order.status == 'Returned' %}
+                                Return completed successfully. Refund has been initiated via {{ order.refund_method|default:"original method" }}.
+                            {% elif order.status == 'Pending' %}We've received your order and are processing it.
                             {% elif order.status == 'Confirmed' %}Quality checks completed. Preparing for shipment.
                             {% elif order.status == 'Shipped' %}Your timepiece is with our premium courier partner.
                             {% elif order.status == 'Out for Delivery' %}Your package will arrive today.

@@ -137,7 +137,7 @@ def verify_payment(request):
 
             order = payment.order
             order.is_paid = True
-            order.status = "CONFIRMED"
+            order.status = "Confirmed"
             order.payment_method = "razorpay"
             order.save()
 
@@ -212,7 +212,7 @@ def razorpay_callback(request):
 
             order = payment.order
             order.is_paid = True
-            order.status = "CONFIRMED"
+            order.status = "Confirmed"
             order.payment_method = "razorpay"
             order.save()
 

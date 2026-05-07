@@ -111,7 +111,11 @@ box-shadow:0 0 0 4px rgba(255,107,0,.15); }
 display:inline-flex; align-items:center; gap:6px; }
 
 @media (max-width:1100px) { .detail-grid { grid-template-columns:1fr; } }
-@media (max-width:768px) { .info-grid { grid-template-columns:1fr; } }
+@media (max-width:768px) { 
+    .info-grid { grid-template-columns:1fr; }
+    .page-header { flex-direction: column; align-items: stretch; }
+    .page-header form { justify-content: flex-start !important; }
+}
 </style>
 {% endblock %}
 
@@ -206,11 +210,42 @@ display:inline-flex; align-items:center; gap:6px; }
 <div class="stepper" style="justify-content:center; text-align:center;">
     <div class="stepper-item cancelled">
         <div class="stepper-icon"
-            style="background:var(--danger-bg); color:var(--danger-text); border-color:var(--danger-bg);"><i
+            style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border-color:rgba(239, 68, 68, 0.2);"><i
                 class="fas fa-times"></i></div>
         <div>
-            <div class="stepper-label" style="color:var(--danger-text);">Cancelled</div>
+            <div class="stepper-label" style="color:#ef4444;">Cancelled</div>
             <div class="stepper-desc">Order was cancelled</div>
+        </div>
+    </div>
+</div>
+{% elif order.status == 'Return Requested' or order.status == 'Returned' %}
+<div class="stepper">
+    <div class="stepper-item {% if order.return_status != 'None' %}done{% else %}current{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-undo"></i></div>
+        <div>
+            <div class="stepper-label">Return Requested</div>
+            <div class="stepper-desc">Customer requested return</div>
+        </div>
+    </div>
+    <div class="stepper-item {% if order.return_status == 'Requested' %}current{% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-cog"></i></div>
+        <div>
+            <div class="stepper-label">Processing</div>
+            <div class="stepper-desc">Admin reviewing request</div>
+        </div>
+    </div>
+    <div class="stepper-item {% if order.return_status == 'Processing' %}current{% elif order.return_status in 'Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <div class="stepper-label">Pickup Scheduled</div>
+            <div class="stepper-desc">Courier assigned for pickup</div>
+        </div>
+    </div>
+    <div class="stepper-item {% if order.return_status == 'Pickup Scheduled' %}current{% elif order.return_status == 'Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
+        <div>
+            <div class="stepper-label">Returned</div>
+            <div class="stepper-desc">Refund completed</div>
         </div>
     </div>
 </div>

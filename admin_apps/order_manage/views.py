@@ -8,6 +8,7 @@ from user_apps.core.models import Order, Product, ProductVariant, OrderItem, Wis
 from seller.models import Seller, SellerEarnings
 import json
 from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.utils import timezone
@@ -129,14 +130,40 @@ def order_detail(request, order_id):
                         defaults={'amount': item.price * item.quantity}
                     )
             
-            # New Return Status logic
+            # New Return Status logic with strict step-by-step flow
             if new_return_status and new_return_status in [c[0] for c in Order.RETURN_STATUS_CHOICES]:
-                order.return_status = new_return_status
-                if new_return_status == 'Returned' and order.status != 'Returned':
-                    order.status = 'Returned'
-                    process_full_return(order, request.POST.get('refund_method') or 'Wallet')
-                elif new_return_status == 'Rejected':
-                    order.status = 'Delivered'
+                current_return_status = order.return_status
+                
+                # Define sequential flow mapping
+                RETURN_FLOW = {
+                    'None': ['Requested'],
+                    'Requested': ['Processing'],
+                    'Processing': ['Pickup Scheduled', 'Rejected'],
+                    'Pickup Scheduled': ['Returned', 'Rejected'],
+                    'Returned': [],
+                    'Rejected': [],
+                }
+                
+                if new_return_status != current_return_status:
+                    allowed_next_stages = RETURN_FLOW.get(current_return_status, [])
+                    
+                    if new_return_status not in allowed_next_stages:
+                        messages.error(request, f"Invalid flow: Cannot move return stage from {current_return_status} to {new_return_status}. Stages must move step-by-step.")
+                        return redirect('admin_order_detail', order_id=order.id)
+                    
+                    # Apply status synchronization logic
+                    if new_return_status == 'Rejected':
+                        order.status = 'Delivered'
+                        order.return_status = 'Rejected'
+                    elif new_return_status == 'Returned':
+                        if order.status != 'Returned':
+                            order.status = 'Returned'
+                            process_full_return(order, request.POST.get('refund_method') or 'Wallet')
+                        order.return_status = 'Returned'
+                    else:
+                        order.return_status = new_return_status
+                        if order.status == 'Delivered':
+                            order.status = 'Return Requested'
             
             # Update delivery date if provided
             if new_date:
@@ -792,7 +819,7 @@ def sales_report(request):
         'total_customers': total_customers,
         'total_products_count': total_products_count,
         'aov': aov,
-        'chart_data_json': json.dumps(chart_data),
+        'chart_data_json': json.dumps(chart_data, cls=DjangoJSONEncoder),
         'top_products': top_products,
         'most_wanted': most_wanted,
         'active_menu': 'sales',

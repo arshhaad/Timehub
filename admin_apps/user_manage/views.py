@@ -184,13 +184,27 @@ def admin_user_wallet(request, user_id):
 
 @superuser_required
 def wallet_list(request):
-    wallets = Wallet.objects.select_related('user').annotate(
+    wallets_qs = Wallet.objects.select_related('user', 'user__profile').annotate(
         order_count=Count('user__orders'),
         total_spent=Sum('user__orders__total_amount')
     ).order_by('-user__created_at')
     
+    query = request.GET.get('q')
+    if query:
+        wallets_qs = wallets_qs.filter(
+            Q(user__first_name__icontains=query) | 
+            Q(user__last_name__icontains=query) | 
+            Q(user__email__icontains=query)
+        )
+    
+    # Pagination
+    paginator = Paginator(wallets_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'wallets': wallets,
+        'wallets': page_obj,
+        'query': query,
         'active_menu': 'wallet',
     }
     return render(request, "wallet_list.html", context)

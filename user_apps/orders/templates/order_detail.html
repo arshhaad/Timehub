@@ -291,7 +291,7 @@
                                     <td style="text-align:right; padding: 16px 24px;">
                                         <div class="action-flex-container">
                                             {% if not item.is_cancelled and not item.is_returned %}
-                                                {% if order.status == 'Pending' or order.status == 'CONFIRMED' or order.status == 'Processing' %}
+                                                {% if order.status == 'Pending' or order.status == 'Confirmed' or order.status == 'Processing' %}
                                                     <button class="btn-action btn-danger-alt btn-sm" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
                                                 {% elif order.status == 'Delivered' %}
                                                     {% if item.product.id in reviewed_product_ids %}
@@ -299,7 +299,7 @@
                                                     {% else %}
                                                         <button class="btn-action btn-primary-alt btn-sm" onclick="openReviewModal('{{ item.product.id }}', '{{ item.product.name|escapejs }}')">Rate</button>
                                                     {% endif %}
-                                                    {% if order.return_status == 'None' %}
+                                                    {% if not item.is_returned %}
                                                         <button class="btn-action btn-outline-alt btn-sm" onclick="openItemReturnModal('{{ item.id }}', '{{ item.product.name|escapejs }}')">Return</button>
                                                     {% endif %}
                                                 {% endif %}

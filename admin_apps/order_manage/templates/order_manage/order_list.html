@@ -17,13 +17,16 @@
 .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* ── Premium Search Box ── */
-.premium-search-container {
-    display: flex; align-items: center;
-    background: #f8fafc; border: 1.5px solid #e2e8f0;
-    border-radius: 12px; padding: 2px 2px 2px 16px;
-    gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
+    .premium-search-container {
+        display: flex; align-items: center;
+        background: #f8fafc; border: 1.5px solid #e2e8f0;
+        border-radius: 12px; padding: 2px 2px 2px 16px;
+        gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    @media (max-width: 768px) {
+        .premium-search-container { min-width: 0; width: 100%; }
+    }
 .premium-search-container:focus-within {
     background: #fff; border-color: #000;
     box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);

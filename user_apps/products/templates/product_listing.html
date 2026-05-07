@@ -1378,10 +1378,6 @@
             gap: 24px;
         }
 
-        opacity: 1;
-        transform: scale(1);
-        }
-
         /* Selected state */
         .product-card.compare-selected {
             border-color: var(--primary-color) !important;
@@ -1626,6 +1622,27 @@
                 width: 100%;
                 left: -100%;
                 border-radius: 0;
+            }
+
+            .header-tools {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                width: 100%;
+            }
+
+            .compare-toggle-wrapper {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .sort-wrapper, .sort-select {
+                width: 100%;
+            }
+
+            .results-meta {
+                text-align: center;
+                margin-top: 5px;
             }
         }
 
