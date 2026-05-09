@@ -177,20 +177,28 @@ def checkout_page(request):
 
     # --- Resolve Buy Now session ---
     buy_now_id = request.GET.get('buy_now_id')
-    if buy_now_id:
+    if buy_now_id and buy_now_id.isdigit():
         request.session['buy_now_id'] = buy_now_id
+    elif buy_now_id == 'undefined':
+        # Defensive: explicitly clear if frontend sends "undefined"
+        if 'buy_now_id' in request.session:
+            del request.session['buy_now_id']
     elif 'buy_now_id' in request.session and not request.GET:
         # User arrived from the cart page — clear any lingering Buy Now state
         del request.session['buy_now_id']
 
     current_buy_now_id = request.session.get('buy_now_id')
 
-    if current_buy_now_id:
+    if current_buy_now_id and str(current_buy_now_id).isdigit():
         items = cart.items.filter(id=current_buy_now_id).select_related('product', 'variant')
         if not items.exists():
-            del request.session['buy_now_id']
+            if 'buy_now_id' in request.session:
+                del request.session['buy_now_id']
             return redirect('cart_view')
     else:
+        # Fallback for invalid or missing buy_now_id
+        if 'buy_now_id' in request.session:
+            del request.session['buy_now_id']
         items = cart.items.select_related('product', 'variant').all()
 
     if not items.exists():

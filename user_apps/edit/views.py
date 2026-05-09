@@ -374,7 +374,12 @@ def add_to_cart(request, product_uuid):
     WishlistItem.objects.filter(wishlist__user=request.user, product=product).delete()
                 
     count = sum(i.quantity for i in cart.items.all())
-    return JsonResponse({'success': True, 'message': 'Added to cart', 'cart_count': count})
+    return JsonResponse({
+        'success': True, 
+        'message': 'Added to cart', 
+        'cart_count': count,
+        'item_id': cart_item.id
+    })
 
 
 @login_required
