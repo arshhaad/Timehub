@@ -15,6 +15,40 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* PAGE TRANSITION LOADER */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #th-loader.active { opacity: 1; visibility: visible; pointer-events: all; }
+        .th-card { display: flex; flex-direction: row; align-items: center; gap: 25px; background: transparent; }
+        .th-clock { position: relative; width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .th-arc { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top: 3px solid var(--primary-color); border-right: 3px solid rgba(249, 136, 34, 0.2); animation: spinArc 0.85s linear infinite; }
+        @keyframes spinArc { to { transform: rotate(360deg); } }
+        .th-face { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(249, 136, 34, 0.4); }
+        .th-face svg { width: 22px; height: 22px; overflow: visible; }
+        .hand-min { transform-origin: 14px 14px; animation: rotHand 1.5s linear infinite; }
+        .hand-hr { transform-origin: 14px 14px; animation: rotHand 18s linear infinite; }
+        @keyframes rotHand { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .th-text { display: flex; flex-direction: column; gap: 0px; }
+        .th-letters { display: flex; gap: 0px; }
+        .th-letter { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: 1px; font-family: 'Outfit', sans-serif; opacity: 0; transform: translateY(10px); animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes letterIn { to { opacity: 1; transform: translateY(0); } }
+        .th-dots { display: flex; gap: 5px; margin-top: 6px; }
+        .th-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary-color); opacity: 0.4; animation: dotPulse 0.8s ease-in-out infinite; }
+        .th-dot:nth-child(2) { animation-delay: 0.15s; }
+        .th-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotPulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
         :root {
             --bg-color: #0b0b0e;
             --bg-card: #15151a;
@@ -126,23 +160,120 @@
             color: var(--primary-color);
         }
 
-        /* NAVBAR */
-        header {
+        /* HEADER (Synchronized with Dashboard Header) */
+        .dashboard-header {
             position: fixed;
             top: 0;
             width: 100%;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             z-index: 2100;
-            transition: var(--transition);
-            padding: 25px 0;
-            border-bottom: 1px solid transparent;
             background: transparent;
+            transition: var(--transition);
         }
 
-        header.scrolled {
-            background: rgba(11, 11, 14, 0.95);
-            backdrop-filter: blur(15px);
-            padding: 15px 0;
-            border-color: var(--border-color);
+        .dashboard-header.scrolled {
+            background: rgba(11, 11, 14, 0.9);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 15px 40px;
+        }
+
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            z-index: 2200;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3);
+        }
+
+        .nav-links {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 35px;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 2200;
+        }
+
+        .icon-btn {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            text-decoration: none !important;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        #cartBadge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--primary-color);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-color);
         }
 
         .nav-wrap {
@@ -2103,6 +2234,28 @@
 </head>
 
 <body class="{% if request.session.compare_mode_active %}compare-mode-active{% endif %}" id="pageBody">
+    <div id="th-loader">
+        <div class="th-card">
+            <div class="th-clock">
+                <div class="th-arc"></div>
+                <div class="th-face">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                        <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="14" cy="14" r="2" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="th-text">
+                <div class="th-letters" id="th-letters"></div>
+                <div class="th-dots">
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- SEARCH OVERLAY -->
     <div class="search-overlay" id="searchOverlay">
@@ -2115,46 +2268,44 @@
         </div>
     </div>
 
-    <!-- NAVBAR -->
-    <header id="header">
-        <div class="container nav-wrap">
+    <header class="dashboard-header" id="header">
+        <div class="nav-wrap">
             <a href="/" class="logo">
                 <div class="logo-icon">
                     <i class="fas fa-clock"></i>
                 </div>
-                TimeHub
+                <span>TimeHub</span>
             </a>
-            <nav class="nav-links">
-                <a href="{% url 'home' %}">Home</a>
-                <a href="{% url 'product_listing' %}" class="active">Collection</a>
-                <a href="{% url 'about' %}">About</a>
-                <a href="/about/#contact">Contact</a>
-            </nav>
-            <div class="nav-actions">
-                <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
-                    <i class="far fa-heart"></i>
-                </a>
-                <a href="{% url 'cart_view' %}" class="icon-btn"
-                    style="text-decoration:none; color:inherit; position:relative;">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span id="cartBadge"
-                        style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{
-                        cart_count }}</span>
-                </a>
-                <div class="mobile-toggle" id="mobileToggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-                {% if user.is_authenticated %}
-                <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"
-                        style="color: var(--primary-color);"></i></a>
-                {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline"
-                    style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary"
-                    style="padding: 10px 20px; font-size: 0.85rem;">Sign Up</a>
+        </div>
+        <nav class="nav-links">
+            <a href="{% url 'home' %}" class="{% if request.path == '/home/' %}active{% endif %}">Home</a>
+            <a href="{% url 'product_listing' %}" class="active">Collection</a>
+            <a href="{% url 'about' %}" class="{% if '/about/' in request.path %}active{% endif %}">About</a>
+            <a href="/about/#contact">Contact</a>
+        </nav>
+        <div class="quick-actions">
+            <div class="icon-btn search-trigger" title="Search"><i class="fas fa-search"></i></div>
+            <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
+                <i class="far fa-heart"></i>
+            </a>
+            <a href="{% url 'cart_view' %}" class="icon-btn" title="My Cart">
+                <i class="fas fa-shopping-cart"></i>
+                {% if cart_count %}
+                <span id="cartBadge">{{ cart_count }}</span>
                 {% endif %}
+            </a>
+            <div class="mobile-toggle" id="mobileToggle">
+                <i class="fas fa-bars"></i>
             </div>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_dashboard' %}" class="icon-btn" title="Dashboard">
+                <i class="fas fa-user-circle" style="color: var(--primary-color);"></i>
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="icon-btn" title="Login">
+                <i class="fas fa-sign-in-alt"></i>
+            </a>
+            {% endif %}
         </div>
     </header>
 
@@ -2736,6 +2887,7 @@
         if (overlaySearchInput) {
             overlaySearchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && overlaySearchInput.value.trim() !== '') {
+                    showLoader();
                     window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(overlaySearchInput.value.trim())}`;
                 }
             });
@@ -2983,6 +3135,7 @@
 
         // Bar: Compare Now
         document.getElementById('btnCompareNow')?.addEventListener('click', () => {
+            showLoader();
             window.location.href = "{% url 'compare_products' %}";
         });
 
@@ -3078,6 +3231,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        showLoader();
                         window.location.href = "{% url 'checkout_page' %}?buy_now_id=" + data.item_id;
                     } else {
                         showToast(data.error || 'Failed to process Buy Now', 'error');
@@ -3166,6 +3320,46 @@
                     showToast('Connection error. Please check your login status.', 'error');
                 });
         };
+
+        // --- Page Transition Loader Logic ---
+        const loader = document.getElementById('th-loader');
+        const lettersEl = document.getElementById('th-letters');
+        const word = 'TimeHub';
+
+        function showLoader() {
+            if (!loader || !lettersEl) return;
+            lettersEl.innerHTML = '';
+            word.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.className = 'th-letter';
+                s.textContent = ch;
+                s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                lettersEl.appendChild(s);
+            });
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(hideLoader, 5000);
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && 
+                !link.href.startsWith('javascript:') && 
+                !link.target && 
+                !link.href.includes('#') &&
+                link.hostname === window.location.hostname) {
+                showLoader();
+            }
+        });
+        document.addEventListener('submit', (e) => {
+            if (!e.defaultPrevented) showLoader();
+        });
     </script>
 
 </body>

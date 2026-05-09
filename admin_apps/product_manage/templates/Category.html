@@ -220,12 +220,15 @@
                     {% for cat in categories %}
                     <tr>
                         <td style="font-weight:700; color:var(--text-main);">
+                            {% if cat.parent %}
+                            <span style="color:var(--text-muted); font-weight:400; font-size:0.8rem;">{{ cat.parent.name }} / </span>
+                            {% endif %}
                             <i class="fas fa-folder tree-connector"></i> {{ cat.name }}
                         </td>
                         <td style="color:var(--text-muted); font-size: 0.85rem;">{{ cat.description|default:"No description"|truncatechars:60 }}</td>
                         <td class="action-btns">
                             <button class="action-btn"
-                                onclick="openEditModal('{{ cat.id|escapejs }}', '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}')"
+                                onclick="openEditModal('{{ cat.id|escapejs }}', '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}', '{{ cat.parent.id|default:''|escapejs }}')"
                                 title="Edit">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
@@ -319,6 +322,15 @@
                         <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
                     </div>
                     <div class="form-group">
+                        <label>Parent Category</label>
+                        <select name="parent_id" class="form-control">
+                            <option value="">None (Top Level)</option>
+                            {% for parent in all_categories %}
+                            <option value="{{ parent.id }}">{{ parent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Description</label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Briefly describe this category..."></textarea>
                     </div>
@@ -349,6 +361,15 @@
                                pattern="^[a-zA-Z0-9 ]+$"
                                title="Only letters, numbers, and spaces are allowed.">
                         <small class="validation-msg" style="color: #ef4444; font-size: 0.75rem; display: none;">No special characters allowed.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Category</label>
+                        <select name="parent_id" id="edit_cat_parent" class="form-control">
+                            <option value="">None (Top Level)</option>
+                            {% for parent in all_categories %}
+                            <option value="{{ parent.id }}">{{ parent.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Description</label>
@@ -389,10 +410,20 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    function openEditModal(id, name, desc) {
+    function openEditModal(id, name, desc, parentId) {
         document.getElementById('edit_cat_id').value = id;
         document.getElementById('edit_cat_name').value = name;
         document.getElementById('edit_cat_description').value = desc;
+        
+        const parentSelect = document.getElementById('edit_cat_parent');
+        if (parentSelect) {
+            parentSelect.value = parentId;
+            // Disable self as parent to prevent circularity
+            Array.from(parentSelect.options).forEach(opt => {
+                opt.disabled = (opt.value === id);
+            });
+        }
+        
         openModal('editCategoryModal');
     }
 

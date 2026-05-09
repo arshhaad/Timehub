@@ -8,6 +8,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage, Cart
 from admin_apps.offers.models import Coupon
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+
 
 def product_list(request):
     # Base queryset: Show active products AND inactive products (to show as unavailable)
@@ -155,6 +158,8 @@ def product_list(request):
     
     return render(request, 'product_listing.html', context)
 
+@login_required
+@never_cache
 def compare_products(request):
     # Try to get IDs from session first, then GET
     product_ids = request.session.get('compare_list', [])
@@ -214,6 +219,8 @@ def compare_products(request):
     }
     return render(request, 'compare.html', context)
 
+@login_required
+@never_cache
 def toggle_compare(request):
     product_id = request.GET.get('id')
     if not product_id:
@@ -247,18 +254,23 @@ def toggle_compare(request):
         'count': len(products_data),
         'products': products_data
     })
-
+@login_required
+@never_cache
 def clear_compare(request):
     request.session['compare_list'] = []
     request.session.modified = True
     return JsonResponse({'success': True, 'count': 0, 'products': []})
 
+@login_required
+@never_cache
 def toggle_compare_mode(request):
     is_active = request.GET.get('active') == 'true'
     request.session['compare_mode_active'] = is_active
     request.session.modified = True
     return JsonResponse({'success': True, 'mode': is_active})
 
+
+@never_cache
 def product_details(request, product_uuid):
     product = get_object_or_404(Product, uuid=product_uuid)
     
@@ -377,7 +389,8 @@ def product_details(request, product_uuid):
 
     return render(request, 'product_details.html', context)
 
-
+@login_required
+@never_cache
 def validate_coupon_product(request):
     """AJAX view to validate a coupon for a specific product price on the detail page."""
     import json

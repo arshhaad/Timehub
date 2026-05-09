@@ -1,13 +1,21 @@
+"""Core Data Models."""
+
+import uuid
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
-import uuid
+
+
+
 
 class Collection(models.Model):
+    """Product collection or category grouping."""
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
+    )
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -15,47 +23,36 @@ class Collection(models.Model):
         return self.name
 
     def get_all_descendant_ids(self):
-        """Returns a list containing this collection's ID and all its descendants' IDs."""
+        """Find all sub-collection IDs recursively."""
         descendants = [self.id]
         for child in self.children.all():
             descendants.extend(child.get_all_descendant_ids())
         return descendants
 
+
 class Color(models.Model):
+    """Color tokens for display and filtering."""
     name = models.CharField(max_length=50, unique=True)
     hex_code = models.CharField(max_length=7) 
 
     def __str__(self):
         return self.name
 
+
+
+
 class Product(models.Model):
+    """Main product entity for watches."""
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    GENDER_CHOICES = (
-        ('Men', 'Men'),
-        ('Women', 'Women'),
-        ('Unisex', 'Unisex'),
-    )
-    OCCASION_CHOICES = (
-        ('Casual', 'Casual'),
-        ('Formal', 'Formal'),
-        ('Sport', 'Sport'),
-        ('Luxury', 'Luxury'),
-    )
-    FUNCTION_CHOICES = (
-        ('Analog', 'Analog'),
-        ('Digital', 'Digital'),
-        ('Chronograph', 'Chronograph'),
-        ('Automatic', 'Automatic'),
-    )
+    
+    # Choice sets for standardized filtering
+    GENDER_CHOICES = (('Men', 'Men'), ('Women', 'Women'), ('Unisex', 'Unisex'))
+    OCCASION_CHOICES = (('Casual', 'Casual'), ('Formal', 'Formal'), ('Sport', 'Sport'), ('Luxury', 'Luxury'))
+    FUNCTION_CHOICES = (('Analog', 'Analog'), ('Digital', 'Digital'), ('Chronograph', 'Chronograph'), ('Automatic', 'Automatic'))
     BADGE_CHOICES = (
-        ('Sale', 'Sale'),
-        ('Limited Edition', 'Limited Edition'),
-        ('New Arrival', 'New Arrival'),
-        ('Exclusive', 'Exclusive'),
-        ('Luxury', 'Luxury'),
-        ('Premium', 'Premium'),
-        ('Signature Series', 'Signature Series'),
-        ('Best Seller', 'Best Seller'),
+        ('Sale', 'Sale'), ('Limited Edition', 'Limited Edition'), ('New Arrival', 'New Arrival'),
+        ('Exclusive', 'Exclusive'), ('Luxury', 'Luxury'), ('Premium', 'Premium'),
+        ('Signature Series', 'Signature Series'), ('Best Seller', 'Best Seller')
     )
 
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='products')
@@ -65,7 +62,6 @@ class Product(models.Model):
     occasion = models.CharField(max_length=50, choices=OCCASION_CHOICES, default='Casual')
     strap_material = models.CharField(max_length=100, blank=True)
     strap_color = models.CharField(max_length=100, blank=True)
-
     function = models.CharField(max_length=50, choices=FUNCTION_CHOICES, default='Analog')
     
     colors = models.ManyToManyField(Color, related_name='products', blank=True)
@@ -77,9 +73,14 @@ class Product(models.Model):
     rating = models.FloatField(default=0.0)
     features = models.TextField(blank=True, help_text="Comma-separated key features")
     badge = models.CharField(max_length=50, choices=BADGE_CHOICES, blank=True, null=True)
+    
+    # Ownership & Status
     seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products', null=True, blank=True)
-    approval_status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='Pending')
-    admin_note = models.TextField(blank=True, null=True, help_text="Note from TimeHub curators")
+    approval_status = models.CharField(
+        max_length=20, choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], 
+        default='Pending'
+    )
+    admin_note = models.TextField(blank=True, null=True, help_text="Curator's feedback")
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,95 +89,50 @@ class Product(models.Model):
         return self.name
 
     def get_best_discounted_price(self):
-        """Calculates price after applying the best available offer (Product vs Category)."""
-        from admin_apps.offers.models import ProductOffer, CategoryOffer
+        """Calculate actual selling price with offers."""
         from django.utils import timezone
-        from decimal import Decimal
-        
         now = timezone.now()
         
-        # Get highest active product offer
-        product_offer = self.product_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
+        # 1. Check Product-specific Offers
+        p_offer = self.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        # 2. Check Category-wide Offers
+        c_offer = self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
         
-        # Get highest active category offer (via collection)
-        category_offer = self.collection.category_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
+        p_disc = p_offer.discount_percentage if p_offer else 0
+        c_disc = c_offer.discount_percentage if c_offer else 0
         
-        prod_disc_perc = product_offer.discount_percentage if product_offer else 0
-        cat_disc_perc = category_offer.discount_percentage if category_offer else 0
+        best_perc = max(p_disc, c_disc)
         
-        best_disc_perc = max(prod_disc_perc, cat_disc_perc)
+        if best_perc > 0:
+            savings = (self.price * Decimal(best_perc)) / Decimal(100)
+            return (self.price - savings).quantize(Decimal('0.00'))
         
-        if best_disc_perc > 0:
-            discount_amount = (self.price * Decimal(best_disc_perc)) / Decimal(100)
-            return (self.price - discount_amount).quantize(Decimal('0.00'))
-        
-        # Fallback to manual discount_price if no offers active
+        # Fallback to manual discount_price if set, else full price
         return self.discount_price if self.discount_price else self.price
         
     @property
     def display_price(self):
-        """Dynamic price property that accounts for offers."""
+        """Frontend-ready price reflecting current discounts."""
         return self.get_best_discounted_price()
 
     @property
     def has_offer(self):
+        """Check if product has an active offer discount."""
         return self.get_best_discounted_price() < self.price
 
     def get_active_offer(self):
-        """Returns the highest active offer object (ProductOffer or CategoryOffer)."""
-        from admin_apps.offers.models import ProductOffer, CategoryOffer
+        """Get best current offer for the product."""
         from django.utils import timezone
         now = timezone.now()
+        p_offer = self.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        c_offer = self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
         
-        product_offer = self.product_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
-        
-        category_offer = self.collection.category_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
-        
-        if not product_offer and not category_offer:
-            return None
-            
-        prod_perc = product_offer.discount_percentage if product_offer else 0
-        cat_perc = category_offer.discount_percentage if category_offer else 0
-        
-        return product_offer if prod_perc >= cat_perc else category_offer
+        if not p_offer and not c_offer: return None
+        return p_offer if (p_offer.discount_percentage if p_offer else 0) >= (c_offer.discount_percentage if c_offer else 0) else c_offer
 
-    @property
-    def offer_badge_text(self):
-        offer = self.get_active_offer()
-        if offer:
-            return f"{offer.discount_percentage}% OFF"
-        return None
-
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    variant = models.ForeignKey('ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='product_images')
-    image = models.ImageField(upload_to='product_images/')
-    is_main = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Image for {self.product.name}"
-
-class VariantImage(models.Model):
-    variant = models.ForeignKey('ProductVariant', on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='variant_images/')
-    is_main = models.BooleanField(default=False)
-    order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Image for {self.variant}"
 
 class ProductVariant(models.Model):
+    """Specific product variation entity."""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     image = models.ImageField(upload_to='variant_images/', null=True, blank=True)
     strap_material = models.CharField(max_length=100, blank=True)
@@ -190,179 +146,147 @@ class ProductVariant(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def effective_price(self):
+        """Get variant price or parent product price."""
+        return self.price if self.price else self.product.price
+
     def get_best_discounted_price(self):
-        """Calculates price after applying the best available offer for this variant."""
-        base_price = self.price if self.price else self.product.price
-        
-        from admin_apps.offers.models import ProductOffer, CategoryOffer
+        """Calculate discounted price for the variant."""
+        base = self.effective_price
         from django.utils import timezone
-        from decimal import Decimal
-        
         now = timezone.now()
+        p_off = self.product.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        c_off = self.product.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
         
-        # Get highest active product offer
-        product_offer = self.product.product_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
-        
-        # Get highest active category offer
-        category_offer = self.product.collection.category_offers.filter(
-            is_active=True, valid_from__lte=now, valid_to__gte=now
-        ).order_by('-discount_percentage').first()
-        
-        prod_disc_perc = product_offer.discount_percentage if product_offer else 0
-        cat_disc_perc = category_offer.discount_percentage if category_offer else 0
-        
-        best_disc_perc = max(prod_disc_perc, cat_disc_perc)
-        
-        if best_disc_perc > 0:
-            discount_amount = (base_price * Decimal(best_disc_perc)) / Decimal(100)
-            return (base_price - discount_amount).quantize(Decimal('0.00'))
-        
-        # Fallback to manual discount_price if no offers active
-        return self.discount_price if self.discount_price else base_price
+        best = max(p_off.discount_percentage if p_off else 0, c_off.discount_percentage if c_off else 0)
+        if best > 0:
+            return (base - (base * Decimal(best) / Decimal(100))).quantize(Decimal('0.00'))
+        return self.discount_price if self.discount_price else base
 
     @property
     def display_price(self):
         return self.get_best_discounted_price()
 
-    @property
-    def effective_discount_price(self):
-        return self.get_best_discounted_price()
-
-    @property
-    def effective_price(self):
-        return self.price if self.price else self.product.price
-
     def __str__(self):
         parts = [self.product.name]
-        if self.strap_color:
-            parts.append(f"Strap: {self.strap_color}")
-        if self.dial_color:
-            parts.append(f"Dial: {self.dial_color}")
-        if self.strap_material:
-            parts.append(f"Material: {self.strap_material}")
+        if self.strap_color: parts.append(f"Strap: {self.strap_color}")
+        if self.dial_color: parts.append(f"Dial: {self.dial_color}")
         return ' — '.join(parts)
 
-    @property
-    def effective_price(self):
-        return self.price if self.price else self.product.price
-
     def get_all_images(self):
-        """Returns a list of all unique image URLs for this variant."""
-        image_urls = []
-        if self.image:
-            image_urls.append(self.image.url)
-        for vi in self.images.all():
-            image_urls.append(vi.image.url)
-        for pi in self.product_images.all():
-            image_urls.append(pi.image.url)
+        """Aggregate all unique image URLs for the variant."""
+        urls = []
+        if self.image: urls.append(self.image.url)
+        for vi in self.images.all(): urls.append(vi.image.url)
+        for pi in self.product_images.all(): urls.append(pi.image.url)
+        # Deduplicate while preserving order
         seen = set()
-        return [x for x in image_urls if not (x in seen or seen.add(x))]
+        return [u for u in urls if not (u in seen or seen.add(u))]
 
-    @property
-    def effective_discount_price(self):
-        """Calculates discount price for variant based on best offer or manual discount."""
-        from decimal import Decimal
-        
-        base_price = self.price if self.price else self.product.price
-        
-        # First check if the base product has an offer (applies to variants too)
-        best_price = self.product.get_best_discounted_price()
-        
-        # If product has an offer, we apply that same percentage to the variant price
-        if self.product.has_offer:
-            discount_perc = 100 - (best_price * 100 / self.product.price)
-            discount_amount = (base_price * discount_perc) / 100
-            return (base_price - discount_amount).quantize(Decimal('0.00'))
-            
-        # Fallback to manual variant discount or product discount
-        return self.discount_price if self.discount_price else self.product.discount_price
+
+
+
+class ProductImage(models.Model):
+    """Gallery images for a product or variant."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_images')
+    image = models.ImageField(upload_to='product_images/')
+    is_main = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class VariantImage(models.Model):
+    """Images strictly belonging to a variant."""
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='variant_images/')
+    is_main = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 
 
 class Order(models.Model):
+    """Customer purchase and tracking record."""
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     STATUS_CHOICES = (
-        ('Pending', 'Pending'),
-        ('Confirmed', 'Confirmed'),
-        ('Processing', 'Processing'),
-        ('Shipped', 'Shipped'),
-        ('Out for Delivery', 'Out for Delivery'),
-        ('Delivered', 'Delivered'),
-        ('Cancelled', 'Cancelled'),
-        ('Returned', 'Returned'),
-        ('Return Requested', 'Return Requested'),
+        ('Pending', 'Pending'), ('Confirmed', 'Confirmed'), ('Processing', 'Processing'),
+        ('Shipped', 'Shipped'), ('Out for Delivery', 'Out for Delivery'), ('Delivered', 'Delivered'),
+        ('Cancelled', 'Cancelled'), ('Returned', 'Returned'), ('Return Requested', 'Return Requested'),
     )
-    PAYMENT_CHOICES = (
-        ('cod', 'Cash on Delivery'),
-        ('razorpay', 'Razorpay'),
-        ('wallet', 'TimeHub Wallet'),
-    )
-    RETURN_STATUS_CHOICES = (
-        ('None', 'None'),
-        ('Requested', 'Requested'),
-        ('Processing', 'Processing'),
-        ('Pickup Scheduled', 'Pickup Scheduled'),
-        ('Returned', 'Returned'),
-        ('Rejected', 'Rejected'),
-    )
+    PAYMENT_CHOICES = (('cod', 'Cash on Delivery'), ('razorpay', 'Razorpay'), ('wallet', 'Wallet'))
+    RETURN_CHOICES = (('None', 'None'), ('Requested', 'Requested'), ('Processing', 'Processing'), 
+                      ('Pickup Scheduled', 'Pickup Scheduled'), ('Returned', 'Returned'), ('Rejected', 'Rejected'))
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
-    address_snapshot = models.TextField(blank=True, help_text='JSON snapshot of address at time of order')
+    address_snapshot = models.TextField(blank=True, help_text='JSON snapshot of address at time of purchase')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
+    
+    # Financials
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    # Statuses
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    return_status = models.CharField(max_length=20, choices=RETURN_STATUS_CHOICES, default='None')
+    return_status = models.CharField(max_length=20, choices=RETURN_CHOICES, default='None')
+    is_paid = models.BooleanField(default=False)
+    
+    # Reasons & Requests
     cancel_reason = models.TextField(blank=True, null=True)
     return_reason = models.TextField(blank=True, null=True)
     reschedule_reason = models.TextField(blank=True, null=True)
     requested_reschedule_date = models.DateField(blank=True, null=True)
     requested_reschedule_time = models.TimeField(blank=True, null=True)
-    coupon_code = models.CharField(max_length=50, blank=True, null=True, help_text="Coupon code applied at checkout")
+    
+    # External Tracking
+    coupon_code = models.CharField(max_length=50, blank=True, null=True)
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
-    reschedule_status = models.CharField(max_length=20, choices=[('None', 'None'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], default='None')
+    
+    # Internal Logistics
+    reschedule_status = models.CharField(
+        max_length=20, choices=[('None', 'None'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')], 
+        default='None'
+    )
     reschedule_count = models.PositiveIntegerField(default=0)
     scheduled_delivery_date = models.DateField(blank=True, null=True)
     scheduled_delivery_time = models.TimeField(blank=True, null=True)
+    
     refund_processed_at = models.DateTimeField(blank=True, null=True)
     refund_method = models.CharField(max_length=50, blank=True, null=True)
-    is_paid = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Order #{self.id} by {self.user.email}"
+        return f"Order #{self.id} — {self.user.email}"
 
     def update_totals(self):
-        """Recalculate subtotal, tax, and total based on active items."""
-        active_items = self.items.filter(is_cancelled=False)
-        self.subtotal = sum(item.price * item.quantity for item in active_items)
+        """Recalculate financial breakdown for active items."""
+        active = self.items.filter(is_cancelled=False)
+        self.subtotal = sum(i.price * i.quantity for i in active)
         
-        # Calculate shipping based on subtotal
-        if self.subtotal == 0:
-            shipping = Decimal('0.00')
-        elif self.subtotal >= Decimal('5000.00'):
-            shipping = Decimal('0.00') # Free shipping for orders above 5000
+        # Free shipping logic
+        if self.subtotal == 0 or self.subtotal >= Decimal('5000.00'):
+            self.shipping_charge = Decimal('0.00')
         else:
-            shipping = Decimal('49.00') # Standard shipping for orders under 5000
-        self.shipping_charge = shipping
+            self.shipping_charge = Decimal('49.00')
 
-        # Tax should be calculated on the discounted amount (net price)
-        taxable_amount = max(Decimal('0'), self.subtotal - self.discount)
+        # Tax calculation (3% on net price)
+        taxable = max(Decimal('0'), self.subtotal - self.discount)
+        self.tax = round(taxable * Decimal('0.03'), 2)
         
-        # 3% tax as per project standard
-        self.tax = round(taxable_amount * Decimal('0.03'), 2)
-        
-        # Total amount = (Subtotal - Discount) + Tax + Shipping
-        self.total_amount = taxable_amount + self.tax + self.shipping_charge
+        # Final Total
+        self.total_amount = taxable + self.tax + self.shipping_charge
         self.save()
 
+
 class OrderItem(models.Model):
+    """Product/variant entry within an order."""
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -381,36 +305,18 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
 
-class Notification(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
-    message = models.TextField()
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Notification for {self.user.email} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
-class ComparisonHistory(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comparison_history')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name_plural = 'Comparison Histories'
-
-    def __str__(self):
-        return f"{self.user.email} compared {self.product.name}"
 
 class Cart(models.Model):
+    """Shopping basket for a user."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart')
     coupon = models.ForeignKey('offers.Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='carts')
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"Cart for {self.user.email}"
+
 
 class CartItem(models.Model):
+    """Single entry in a user cart."""
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
@@ -418,29 +324,24 @@ class CartItem(models.Model):
     
     @property
     def total_price(self):
-        if self.variant:
-            price = self.variant.display_price
-        else:
-            price = self.product.display_price
+        price = self.variant.display_price if self.variant else self.product.display_price
         return price * self.quantity
 
+
 class Wishlist(models.Model):
+    """User collection of saved products."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"Wishlist for {self.user.email}"
+
 
 class WishlistItem(models.Model):
+    """Product saved in a wishlist."""
     wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    
     class Meta:
         unique_together = ('wishlist', 'product')
-        
-    def __str__(self):
-        return f"{self.product.name} in {self.wishlist.user.email}'s wishlist"
+
 
 class Wallet(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wallet')
@@ -448,25 +349,16 @@ class Wallet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Wallet of {self.user.email} - Balance: {self.balance}"
 
 class WalletTransaction(models.Model):
-    TRANSACTION_TYPES = (
-        ('Credit', 'Credit'),
-        ('Debit', 'Debit'),
-    )
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    transaction_type = models.CharField(max_length=10, choices=(('Credit', 'Credit'), ('Debit', 'Debit')))
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     description = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
-
     class Meta:
         ordering = ['-timestamp']
 
-    def __str__(self):
-        return f"{self.transaction_type} of {self.amount} for {self.wallet.user.email}"
 
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
@@ -475,5 +367,20 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.product.name} ({self.rating})"
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ComparisonHistory(models.Model):
+    """Log of products compared by a user."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comparison_history')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('user', 'product')

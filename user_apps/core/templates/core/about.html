@@ -17,6 +17,165 @@
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
+        /* PAGE TRANSITION LOADER */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #th-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .th-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px;
+            background: transparent;
+        }
+
+        .th-clock {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .th-arc {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary-color);
+            border-right: 3px solid rgba(249, 136, 34, 0.2);
+            animation: spinArc 0.85s linear infinite;
+        }
+
+        @keyframes spinArc {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-face {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(249, 136, 34, 0.4);
+        }
+
+        .th-face svg {
+            width: 22px;
+            height: 22px;
+            overflow: visible;
+        }
+
+        .hand-min {
+            transform-origin: 14px 14px;
+            animation: rotHand 1.5s linear infinite;
+        }
+
+        .hand-hr {
+            transform-origin: 14px 14px;
+            animation: rotHand 18s linear infinite;
+        }
+
+        @keyframes rotHand {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .th-letters {
+            display: flex;
+            gap: 0px;
+        }
+
+        .th-letter {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes letterIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .th-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .th-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.4;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+
+        .th-dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .th-dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
         :root {
             --bg-color: #0b0b0e;
             --bg-card: #15151a;
@@ -551,6 +710,30 @@
 </head>
 
 <body>
+    <div id="th-loader">
+        <div class="th-card">
+            <div class="th-clock">
+                <div class="th-arc"></div>
+                <div class="th-face">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2"
+                            stroke-linecap="round" />
+                        <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8"
+                            stroke-linecap="round" />
+                        <circle cx="14" cy="14" r="2" fill="white" />
+                    </svg>
+                </div>
+            </div>
+            <div class="th-text">
+                <div class="th-letters" id="th-letters"></div>
+                <div class="th-dots">
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- NAVBAR -->
     <header id="header">
@@ -808,28 +991,45 @@
             });
         }
 
-        // Custom Toast Helper (matches site aesthetic)
-        function showToast(msg, type = 'error') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed; top: 30px; right: 30px; 
-                padding: 15px 30px; border-radius: 12px;
-                background: #111; color: #fff; z-index: 9999;
-                border: 1px solid ${type === 'success' ? '#22c55e' : '#ef4444'};
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                font-weight: 600; font-size: 0.9rem;
-                transform: translateX(120%); transition: all 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-            `;
-            toast.innerText = msg;
-            document.body.appendChild(toast);
+        // --- Page Transition Loader Logic ---
+        const loader = document.getElementById('th-loader');
+        const lettersEl = document.getElementById('th-letters');
+        const word = 'TimeHub';
 
-            setTimeout(() => toast.style.transform = 'translateX(0)', 100);
-
-            setTimeout(() => {
-                toast.style.transform = 'translateX(120%)';
-                setTimeout(() => toast.remove(), 500);
-            }, 4000);
+        function showLoader() {
+            if (!loader || !lettersEl) return;
+            lettersEl.innerHTML = '';
+            word.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.className = 'th-letter';
+                s.textContent = ch;
+                s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                lettersEl.appendChild(s);
+            });
+            loader.classList.add('active');
         }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(hideLoader, 5000);
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href &&
+                !link.href.startsWith('javascript:') &&
+                !link.target &&
+                !link.href.includes('#') &&
+                link.hostname === window.location.hostname) {
+                showLoader();
+            }
+        });
+        document.addEventListener('submit', (e) => {
+            if (!e.defaultPrevented) showLoader();
+        });
     </script>
 </body>
 

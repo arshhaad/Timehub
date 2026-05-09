@@ -26,8 +26,24 @@
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-pill: 30px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --glass: blur(15px);
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --glass: blur(20px) saturate(180%);
+            --sidebar-width: 280px;
+        }
+
+        /* Custom Scrollbar for Professional Feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
         }
 
         /* Essential Reset for Responsiveness */
@@ -161,10 +177,15 @@
         .nav-item a:hover { background: rgba(255, 255, 255, 0.03); color: #fff; padding-left: 22px; }
         .nav-item a:hover i { color: var(--primary-color); transform: scale(1.1); }
 
-        .nav-item.active a { background: linear-gradient(90deg, rgba(255, 106, 0, 0.1) 0%, transparent 100%); color: var(--primary-color); font-weight: 600; }
-        .nav-item.active a::before {
-            content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 4px;
-            background: var(--primary-color); border-radius: 0 4px 4px 0; box-shadow: 4px 0 10px var(--primary-glow);
+        .nav-item.active a { 
+            background: linear-gradient(90deg, rgba(249, 136, 34, 0.08) 0%, transparent 100%); 
+            color: var(--primary-color); 
+            font-weight: 700; 
+            box-shadow: inset 2px 0 0 var(--primary-color);
+        }
+        .nav-item.active a i {
+            color: var(--primary-color);
+            filter: drop-shadow(0 0 5px var(--primary-color));
         }
 
         .nav-item.logout { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); }
@@ -187,6 +208,12 @@
             width: 100%;
             max-width: 1600px;
             margin: 0 auto;
+            animation: contentSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes contentSlideIn {
+            from { opacity: 0; transform: translateY(15px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
         /* =========================================
@@ -267,12 +294,111 @@
             .sidebar { width: 260px; }
             .user-panel { margin-bottom: 10px; }
         }
-
         @media (max-width: 480px) {
             .main-content { padding: 15px 10px; }
         }
 
-        /* Premium Toast Notifications */
+        /* =========================================
+           PAGE TRANSITION LOADER
+           ========================================= */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #th-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .th-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px;
+            background: transparent;
+        }
+
+        .th-clock {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .th-arc {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary-color);
+            border-right: 3px solid rgba(255, 106, 0, 0.2);
+            animation: spinArc 0.85s linear infinite;
+        }
+
+        @keyframes spinArc { to { transform: rotate(360deg); } }
+
+        .th-face {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(255, 106, 0, 0.4);
+        }
+
+        .th-face svg { width: 22px; height: 22px; overflow: visible; }
+
+        .hand-min { transform-origin: 14px 14px; animation: rotHand 1.5s linear infinite; }
+        .hand-hr { transform-origin: 14px 14px; animation: rotHand 18s linear infinite; }
+        @keyframes rotHand { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .th-text { display: flex; flex-direction: column; gap: 0px; }
+        .th-letters { display: flex; gap: 0px; }
+        .th-letter {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes letterIn { to { opacity: 1; transform: translateY(0); } }
+
+        .th-dots { display: flex; gap: 5px; margin-top: 6px; }
+        .th-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.4;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+        .th-dot:nth-child(2) { animation-delay: 0.15s; }
+        .th-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        /* Toast Notifications */
         .toast-container {
             position: fixed;
             top: 32px;
@@ -298,24 +424,33 @@
             min-width: 320px;
             max-width: 420px;
             transform: translateX(calc(100% + 40px));
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            font-size: 0.95rem;
-            font-weight: 600;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 0.9rem;
+            font-weight: 500;
             position: relative;
             overflow: hidden;
+            letter-spacing: 0.3px;
         }
         .toast.active { transform: translateX(0); }
-        .toast i { font-size: 1.2rem; flex-shrink: 0; }
-        .toast-error { border-left: 4px solid #ef4444; }
-        .toast-error i { color: #ef4444; }
-        .toast-success { border-left: 4px solid #22c55e; }
-        .toast-success i { color: #22c55e; }
-        .toast-info { border-left: 4px solid var(--primary-color); }
-        .toast-info i { color: var(--primary-color); }
-        .toast-warning { border-left: 4px solid #f59e0b; }
-        .toast-warning i { color: #f59e0b; }
+        .toast i { 
+            font-size: 1.4rem; 
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        .toast-message {
+            flex: 1;
+        }
+        .toast-error { border-left: 4px solid #ff4d4d; background: rgba(255, 77, 77, 0.05); backdrop-filter: blur(20px); }
+        .toast-error i { color: #ff4d4d; }
+        .toast-success { border-left: 4px solid #00ff88; background: rgba(0, 255, 136, 0.05); backdrop-filter: blur(20px); }
+        .toast-success i { color: #00ff88; }
+        .toast-info { border-left: 4px solid #00d4ff; background: rgba(0, 212, 255, 0.05); backdrop-filter: blur(20px); }
+        .toast-info i { color: #00d4ff; }
+        .toast-warning { border-left: 4px solid #ffcc00; background: rgba(255, 204, 0, 0.05); backdrop-filter: blur(20px); }
+        .toast-warning i { color: #ffcc00; }
+        
         .toast::after {
-            content: ''; position: absolute; bottom: 0; left: 0; height: 3px;
+            content: ''; position: absolute; bottom: 0; left: 0; height: 2px;
             background: rgba(255,255,255,0.1); width: 100%;
             transform-origin: left; animation: toast-progress 4s linear forwards;
         }
@@ -390,16 +525,17 @@
         /* Dashboard Quick Access Header */
         .dashboard-header {
             width: 100%;
-            padding: 20px 40px;
+            padding: 15px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 900;
-            background: rgba(11, 11, 14, 0.5);
-            backdrop-filter: blur(20px);
+            background: rgba(11, 11, 14, 0.8);
+            backdrop-filter: blur(25px);
             border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .nav-links {
@@ -457,6 +593,29 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- PAGE LOADER -->
+    <div id="th-loader">
+        <div class="th-card">
+            <div class="th-clock">
+                <div class="th-arc"></div>
+                <div class="th-face">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                        <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="14" cy="14" r="2" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="th-text">
+                <div class="th-letters" id="th-letters"></div>
+                <div class="th-dots">
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Search Overlay Synchronization -->
     <div class="search-overlay" id="searchOverlay">
@@ -639,6 +798,52 @@
                 }
             });
         }
+
+        // Page Transition Loader Logic
+        const loader = document.getElementById('th-loader');
+        const lettersEl = document.getElementById('th-letters');
+        const word = 'TimeHub';
+
+        function showLoader() {
+            if (!loader || !lettersEl) return;
+            lettersEl.innerHTML = '';
+            word.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.className = 'th-letter';
+                s.textContent = ch;
+                s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                lettersEl.appendChild(s);
+            });
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        // Auto-show on navigation
+        window.addEventListener('load', () => {
+            setTimeout(hideLoader, 5000);
+        });
+
+        // Trigger on link clicks
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && 
+                !link.href.startsWith('javascript:') && 
+                !link.target && 
+                !link.href.includes('#') &&
+                link.hostname === window.location.hostname) {
+                showLoader();
+            }
+        });
+
+        // Trigger on form submissions
+        document.addEventListener('submit', (e) => {
+            if (!e.defaultPrevented) {
+                showLoader();
+            }
+        });
 
         // Global Toast System
         function showToast(message, type = 'error') {

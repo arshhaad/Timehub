@@ -8,7 +8,8 @@ class Payment(models.Model):
         ('FAILED', 'Failed'),
     )
     
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
+    user = models.ForeignKey('accounts.CustomUser', on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
     gateway = models.CharField(max_length=50, default='RAZORPAY')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=10, default='INR')

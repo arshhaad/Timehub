@@ -1,30 +1,37 @@
-from django.shortcuts import render, reverse
-from django.db.models import Sum
-from django.contrib.auth.decorators import login_required
-from .models import Address
-from .forms import AddressForm, UserEditForm
-from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
-from django.views.decorators.cache import never_cache
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from django.contrib import messages
-from django.http import JsonResponse
+"""User Profile & Shopping Views."""
+
 import json
 from decimal import Decimal
-from user_apps.core.models import Cart, CartItem, Product, WishlistItem, Wishlist, Order, Wallet, WalletTransaction
-from user_apps.accounts.models import EmailOTP, CustomUser
-from django.core.mail import send_mail
+from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from django.contrib import messages
+from django.http import JsonResponse
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.db.models import Sum
 from django.conf import settings
 from django.utils import timezone
+
+from .models import Address
+from .forms import AddressForm, UserEditForm
+from user_apps.accounts.models import EmailOTP, CustomUser
+from user_apps.accounts.utils import send_otp_email
+from user_apps.core.models import (
+    Cart, CartItem, Product, WishlistItem, 
+    Wishlist, Order, Wallet, WalletTransaction, Notification
+)
+
+
 
 
 @login_required
 @never_cache
 def dashboard(request):
+    """Show user account dashboard summary."""
     user = request.user
     
-    # Ensure user has a referral code (for existing users)
+    # 1. Ensure user has a unique referral code
     if not user.referral_code:
         from user_apps.core.signals import generate_referral_code
         code = f"TH-{generate_referral_code()}"
@@ -33,7 +40,7 @@ def dashboard(request):
         user.referral_code = code
         user.save(update_fields=['referral_code'])
     
-    # Fetch actual stats
+    # 2. Gather simple statistics
     total_orders = user.orders.count()
     wishlist, _ = Wishlist.objects.get_or_create(user=user)
     saved_items = wishlist.items.count()
@@ -41,7 +48,7 @@ def dashboard(request):
     stats = {
         'total_orders': total_orders,
         'saved_items': saved_items,
-        'reward_points': 0, # Model not create 
+        'reward_points': 0, # Future feature placeholder
     }
     
     recent_orders = user.orders.order_by('-created_at')[:5]
@@ -53,125 +60,40 @@ def dashboard(request):
         'referral_code': user.referral_code,
         "referral_url": request.build_absolute_uri(reverse('referral_redirect', args=[user.referral_code])),
     }
-    
     return render(request, 'user_dashboard.html', context)
 
 
 @login_required
 @never_cache
-def address_list(request):
-    addresses = Address.objects.filter(user=request.user)
-    return render(request, 'address.html', {'addresses': addresses})
-
-
-@login_required
-@never_cache
-def add_address(request):
-    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
-    if request.method == 'POST':
-        form = AddressForm(request.POST)
-        if form.is_valid():
-            address = form.save(commit=False)
-            address.user = request.user
-
-            # default address
-            if address.is_default:
-                Address.objects.filter(user=request.user).update(is_default=False)
-
-            address.save()
-            messages.success(request, 'Address added successfully!')
-            return redirect(next_url)
-    else:
-        form = AddressForm()
-
-    return render(request, 'address_form.html', {'form': form, 'next': next_url})
-
-
-@login_required
-@never_cache
-def edit_address(request, address_uuid):
-    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
-    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
-
-    if request.method == 'POST':
-        form = AddressForm(request.POST, instance=address)
-        if form.is_valid():
-            address = form.save(commit=False)
-
-            if address.is_default:
-                Address.objects.filter(user=request.user).exclude(uuid=address_uuid).update(is_default=False)
-
-            address.save()
-            messages.success(request, 'Address updated successfully!')
-            return redirect(next_url)
-    else:
-        form = AddressForm(instance=address)
-
-    return render(request, 'address_form.html', {'form': form, 'next': next_url})
-
-@login_required
-@never_cache
-def delete_address(request, address_uuid):
-    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
-    address.delete()
-    return redirect('address_list')
-
-@login_required
-@never_cache
-def toggle_default_address(request, address_uuid):
-    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
-    
-    if not address.is_default:
-        # Unset others and set this one
-        Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
-        address.is_default = True
-        address.save()
-    else:
-        # off
-        address.is_default = False
-        address.save()
-        
-    return redirect('address_list')
-
-
-@login_required
-@never_cache
 def edit_profile(request):
+    """Update user profile personal information."""
     if request.method == 'POST':
         form = UserEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             new_email = form.cleaned_data.get('email')
             
-            # Check if email is being changed
+            # Check if user is trying to change their email address
             if new_email and new_email != request.user.email:
+                # Security: Check if new email is already taken
                 if CustomUser.objects.filter(email=new_email).exclude(id=request.user.id).exists():
-                    messages.error(request, 'This email is already in use by another account.')
+                    messages.error(request, 'This email is already linked to another account.')
                     return render(request, 'edit_profile.html', {'form': form})
 
-                # Save everything except email first
+                # Save non-email changes first
                 user = form.save(commit=False)
-                # Keep original email for now
-                user.email = request.user.email
+                user.email = request.user.email # Revert email for now
                 user.save()
-                # Save M2M (like colors if any, though User doesn't have them in Meta)
                 form.save_m2m()
 
-                # Store pending email in session
+                # Trigger OTP Verification Flow
                 request.session['pending_email_change'] = new_email
-                
-                # Send OTP to NEW email
                 otp_obj = EmailOTP.objects.create(user=request.user)
+                send_otp_email(new_email, otp_obj.otp, context="email_change")
                 
-                send_mail(
-                    "Verify Your New Email",
-                    f"Your OTP for changing email to {new_email} is: {otp_obj.otp}",
-                    settings.EMAIL_HOST_USER,
-                    [new_email],
-                )
-                
-                messages.info(request, f"Profile updated. Now please verify the OTP sent to {new_email} to complete your email change.")
+                messages.info(request, f"Please verify the code sent to {new_email} to update your email.")
                 return redirect('verify_email_change')
             
+            # Standard profile update (no email change)
             form.save()
             messages.success(request, 'Profile updated successfully!')
             return redirect('user_dashboard')
@@ -183,7 +105,30 @@ def edit_profile(request):
 
 @login_required
 @never_cache
+def account_edit(request):
+    """Change account security password."""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Important: Keep the user logged in after password change
+            update_session_auth_hash(request, user)  
+            messages.success(request, 'Password updated successfully!')
+            return redirect('user_dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'account_edit.html', {'form': form}, status=400 if request.method == 'POST' else 200)
+
+
+
+
+@login_required
+@never_cache
 def verify_email_change(request):
+    """Verify OTP for email update request."""
     new_email = request.session.get('pending_email_change')
     if not new_email:
         return redirect('edit_profile')
@@ -191,28 +136,30 @@ def verify_email_change(request):
     if request.method == 'POST':
         otp_input = request.POST.get('otp', '').strip()
         try:
+            # Check against the latest OTP issued to this user
             otp_obj = request.user.otps.latest('created_at')
             
             if otp_obj.is_expired:
-                messages.error(request, 'OTP expired. Please try changing your email again.')
+                messages.error(request, 'Verification code expired. Please try again.')
                 return redirect('edit_profile')
                 
             if otp_obj.otp == otp_input:
+                # Verification success — update the email for real
                 user = request.user
                 user.email = new_email
                 user.save()
                 
-                # Clean up session
+                # Cleanup
                 if 'pending_email_change' in request.session:
                     del request.session['pending_email_change']
-                
                 otp_obj.delete()
-                messages.success(request, 'Email updated successfully!')
+                
+                messages.success(request, 'Email address updated successfully!')
                 return redirect('user_dashboard')
             else:
-                messages.error(request, 'Invalid OTP. Please try again.')
+                messages.error(request, 'Incorrect code. Please try again.')
         except EmailOTP.DoesNotExist:
-            messages.error(request, 'No OTP found. Please try again.')
+            messages.error(request, 'Session expired. Please restart the process.')
             return redirect('edit_profile')
             
     return render(request, 'verify_email_otp.html', {'new_email': new_email})
@@ -221,355 +168,345 @@ def verify_email_change(request):
 @login_required
 @never_cache
 def resend_email_otp(request):
+    """Resend OTP for email verification."""
     new_email = request.session.get('pending_email_change')
     if not new_email:
         return redirect('edit_profile')
         
-    # Optional Cooldown check (similar to accounts app)
-    # last_otp = request.user.otps.order_by('-created_at').first()
-    # if last_otp and ...
-
     otp_obj = EmailOTP.objects.create(user=request.user)
+    send_otp_email(new_email, otp_obj.otp, context="email_change")
     
-    send_mail(
-        "Verify Your New Email (Resent)",
-        f"Your OTP for changing email to {new_email} is: {otp_obj.otp}",
-        settings.EMAIL_HOST_USER,
-        [new_email],
-    )
-    
-    messages.success(request, f"A new OTP has been sent to {new_email}.")
+    messages.success(request, f"A new code has been sent to {new_email}.")
     return redirect('verify_email_change')
 
 
+
+
 @login_required
 @never_cache
-def account_edit(request):
+def address_list(request):
+    """List all saved delivery addresses."""
+    addresses = Address.objects.filter(user=request.user)
+    return render(request, 'address.html', {'addresses': addresses})
+
+
+@login_required
+@never_cache
+def add_address(request):
+    """Create a new delivery address."""
+    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
+        form = AddressForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)  
-            messages.success(request, 'Your password was successfully updated!')
-            return redirect('user_dashboard')
-        else:
-            messages.error(request, 'Please correct the error below.')
+            address = form.save(commit=False)
+            address.user = request.user
+            # Ensure only one default address exists
+            if address.is_default:
+                Address.objects.filter(user=request.user).update(is_default=False)
+            address.save()
+            messages.success(request, 'New address saved!')
+            return redirect(next_url)
     else:
-        form = PasswordChangeForm(request.user)
-    
-    status_code = 200
-    if request.method == 'POST' and not form.is_valid():
-        status_code = 400
+        form = AddressForm()
+    return render(request, 'address_form.html', {'form': form, 'next': next_url})
 
-    return render(request, 'account_edit.html', {
-        'form': form
-    }, status=status_code)
 
 @login_required
 @never_cache
-def notifications_view(request):
-    from user_apps.core.models import Notification
-    # Get all notifications for the user, ordered by newest first
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
-    
-    # Mark them as read automatically upon viewing
-    unread_notifications = notifications.filter(is_read=False)
-    if unread_notifications.exists():
-        unread_notifications.update(is_read=True)
-        
-    return render(request, 'notifications.html', {
-        'notifications': notifications
-    })
+def edit_address(request, address_uuid):
+    """Update an existing delivery address."""
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
+    next_url = request.GET.get('next') or request.POST.get('next') or 'address_list'
+    if request.method == 'POST':
+        form = AddressForm(request.POST, instance=address)
+        if form.is_valid():
+            address = form.save(commit=False)
+            if address.is_default:
+                Address.objects.filter(user=request.user).exclude(uuid=address_uuid).update(is_default=False)
+            address.save()
+            messages.success(request, 'Address updated.')
+            return redirect(next_url)
+    else:
+        form = AddressForm(instance=address)
+    return render(request, 'address_form.html', {'form': form, 'next': next_url})
+
+
+@login_required
+@never_cache
+def delete_address(request, address_uuid):
+    """Delete a saved delivery address."""
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
+    address.delete()
+    messages.success(request, 'Address removed.')
+    return redirect('address_list')
+
+
+@login_required
+@never_cache
+def toggle_default_address(request, address_uuid):
+    """Set an address as the primary default."""
+    address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
+    if not address.is_default:
+        Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
+        address.is_default = True
+    else:
+        address.is_default = False
+    address.save()
+    return redirect('address_list')
+
+
+
 
 @login_required
 @never_cache
 def cart_view(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    items = cart.items.select_related('product').all()
+    """View shopping cart and price breakdown."""
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    items = cart.items.select_related('product', 'variant').all()
+    
+    # 1. Base Calculations
     subtotal = sum(item.total_price for item in items)
-    if subtotal == 0:
-        shipping = Decimal('0.00')
-    elif subtotal >= Decimal('5000.00'):
-        shipping = Decimal('0.00')
-    else:
-        shipping = Decimal('49.00')
     
-    tax = round(subtotal * Decimal('0.03'), 2)
-    total = subtotal + tax + shipping
-    
+    # Shipping: Free on ₹5000+ else ₹49
+    if subtotal == 0: shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'): shipping = Decimal('0.00')
+    else: shipping = Decimal('49.00')
+
+    # 2. Discount Logic (Coupon & Referral)
+    from admin_apps.offers.services import get_referral_first_order_discount
+    coupon_discount = Decimal('0')
+    if cart.coupon and cart.coupon.is_valid_for_user(request.user)[0]:
+        # Narrow down collection-specific coupons
+        if cart.coupon.applicable_collection:
+            collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
+            applicable_items = [i for i in items if i.product.collection_id in collection_ids]
+            applicable_subtotal = sum(i.total_price for i in applicable_items)
+        else:
+            applicable_subtotal = subtotal
+            
+        if applicable_subtotal >= cart.coupon.min_purchase_amount:
+            if cart.coupon.discount_type == 'percentage':
+                coupon_discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
+                if cart.coupon.max_discount_amount:
+                    coupon_discount = min(coupon_discount, cart.coupon.max_discount_amount)
+            else:
+                coupon_discount = min(cart.coupon.discount_value, applicable_subtotal)
+
+    referral_discount = get_referral_first_order_discount(request.user, subtotal)
+    discount = coupon_discount + referral_discount
+
+    # 3. Final Totals
+    taxable = max(Decimal('0'), subtotal - discount)
+    tax = round(taxable * Decimal('0.03'), 2)
+    total = taxable + tax + shipping
+
+    # 4. Availability Warnings
     has_stock_issues = False
     for item in items:
-        # Check basic availability
-        if not item.product.is_active or item.product.is_deleted or item.product.collection.is_deleted:
-            has_stock_issues = True
-            break
+        if not item.product.is_active or item.product.is_deleted:
+            has_stock_issues = True; break
+        
+        stock = item.variant.stock if item.variant else item.product.stock
+        if stock < item.quantity:
+            has_stock_issues = True; break
             
-        if item.variant:
-            if not item.variant.is_active or item.variant.stock == 0 or item.quantity > item.variant.stock:
-                has_stock_issues = True
-                break
-        else:
-            if item.product.stock == 0 or item.quantity > item.product.stock:
-                has_stock_issues = True
-                break
-            
+    # Progress bar for free shipping
     shipping_needed = max(0, Decimal('5000.00') - subtotal)
-    shipping_percentage = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
+    shipping_percent = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
 
     return render(request, 'cart.html', {
-        'cart': cart,
-        'items': items,
-        'subtotal': subtotal,
-        'shipping': shipping,
-        'tax': tax,
-        'total': total,
+        'cart': cart, 'items': items,
+        'subtotal': subtotal, 'shipping': shipping, 'tax': tax, 'total': total,
         'has_stock_issues': has_stock_issues,
-        'shipping_needed': shipping_needed,
-        'shipping_percentage': shipping_percentage
+        'shipping_needed': shipping_needed, 'shipping_percentage': shipping_percent
     })
+
 
 @login_required
 def add_to_cart(request, product_uuid):
-    if request.method == 'POST':
-        product = get_object_or_404(Product, uuid=product_uuid)
-        
-        try:
-            data = json.loads(request.body)
-            quantity = int(data.get('quantity', 1))
-            variant_id = data.get('variant_id')
-        except:
-            quantity = 1
-            variant_id = None
+    """Add a product or variant to the cart."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+    product = get_object_or_404(Product, uuid=product_uuid)
+    
+    try:
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        variant_id = data.get('variant_id')
+    except:
+        quantity, variant_id = 1, None
             
-        # Prevent adding blocked/unlisted products
-        if not product.is_active or product.is_deleted or product.collection.is_deleted:
-            return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
+    # Basic Validation
+    if not product.is_active or product.is_deleted or product.collection.is_deleted:
+        return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
             
-        active_variants = product.variants.filter(is_active=True)
-        has_variants = active_variants.exists()
+    # Resolve Variant
+    active_variants = product.variants.filter(is_active=True)
+    variant = active_variants.filter(id=variant_id).first() if variant_id else None
+    
+    if not variant and active_variants.exists():
+        # Fallback to first available if none selected
+        variant = active_variants.first()
         
-        variant = None
-        if variant_id:
-            from user_apps.core.models import ProductVariant
-            variant = active_variants.filter(id=variant_id).first()
-            if not variant:
-                return JsonResponse({'success': False, 'error': 'Invalid product variant selected'})
-        elif has_variants:
-            # If product has variants but none selected, pick the first active one
-            variant = active_variants.first()
-            if not variant:
-                return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
+    # Stock Check
+    stock = variant.stock if variant else product.stock
+    if stock <= 0: return JsonResponse({'success': False, 'error': 'Item is out of stock'})
         
-        # Check stock of variant if it exists, else base product
-        available_stock = variant.stock if variant else product.stock
-        if available_stock <= 0:
-            return JsonResponse({'success': False, 'error': 'Item is out of stock'})
-        
-        MAX_QTY = 10
-        if quantity > MAX_QTY:
-            return JsonResponse({'success': False, 'error': f'Maximum quantity per item is {MAX_QTY}'})
-        if quantity > available_stock:
-            return JsonResponse({'success': False, 'error': f'Only {available_stock} items available in stock'})
+    MAX_QTY = 10
+    if quantity > stock: return JsonResponse({'success': False, 'error': f'Only {stock} items left'})
+    if quantity > MAX_QTY: return JsonResponse({'success': False, 'error': f'Maximum {MAX_QTY} per item allowed'})
             
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        
-        # Check if item exists in cart
-        cart_item, item_created = CartItem.objects.get_or_create(
-            cart=cart, 
-            product=product,
-            variant=variant,
-            defaults={'quantity': quantity}
-        )
-        
-        if not item_created:
-            if cart_item.quantity + quantity <= min(available_stock, MAX_QTY):
-                cart_item.quantity += quantity
-                cart_item.save()
-            elif cart_item.quantity >= MAX_QTY:
-                return JsonResponse({'success': False, 'error': f'Maximum quantity limit reached in your cart.'})
-            else:
-                return JsonResponse({'success': False, 'error': f'Only {available_stock} items available. You already have {cart_item.quantity} in cart.'})
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart, product=product, variant=variant,
+        defaults={'quantity': quantity}
+    )
+    
+    if not created:
+        if cart_item.quantity + quantity <= min(stock, MAX_QTY):
+            cart_item.quantity += quantity
+            cart_item.save()
+        else:
+            return JsonResponse({'success': False, 'error': 'Cannot add more: Stock or Limit reached'})
                 
-        # Remove from wishlist when added to cart
-        if hasattr(request.user, 'wishlist'):
-            WishlistItem.objects.filter(wishlist=request.user.wishlist, product=product).delete()
+    # Cleanup Wishlist if added to cart
+    WishlistItem.objects.filter(wishlist__user=request.user, product=product).delete()
                 
-        # Total cart items count
-        cart_count = sum(item.quantity for item in cart.items.all())
-                
-        return JsonResponse({'success': True, 'message': 'Added to cart', 'cart_count': cart_count, 'item_id': cart_item.id})
-        
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    count = sum(i.quantity for i in cart.items.all())
+    return JsonResponse({'success': True, 'message': 'Added to cart', 'cart_count': count})
+
 
 @login_required
 def update_cart(request, item_id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            action = data.get('action')
-            cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-            product = cart_item.product
+    """Adjust item quantity in the cart."""
+    if request.method != 'POST': return JsonResponse({'success': False})
+
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+        item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+        
+        # Increase/Decrease Logic
+        if action == 'increase':
+            stock = item.variant.stock if item.variant else item.product.stock
+            if item.quantity >= 10: return JsonResponse({'success': False, 'error': 'Limit: 10 units'})
+            if item.quantity >= stock: return JsonResponse({'success': False, 'error': 'Out of stock'})
+            item.quantity += 1
+        elif action == 'decrease' and item.quantity > 1:
+            item.quantity -= 1
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid action'})
             
-            MAX_QTY = 10
-            
-            if action == 'increase':
-                if not product.is_active or product.is_deleted or product.collection.is_deleted:
-                     return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
-                
-                if cart_item.quantity < min(product.stock, MAX_QTY):
-                    cart_item.quantity += 1
-                    cart_item.save()
-                elif cart_item.quantity >= MAX_QTY:
-                    return JsonResponse({'success': False, 'error': 'Maximum quantity limit reached'})
-                else:
-                    return JsonResponse({'success': False, 'error': 'Not enough stock'})
-            
-            elif action == 'decrease':
-                if cart_item.quantity > 1:
-                    cart_item.quantity -= 1
-                    cart_item.save()
-                else:
-                    return JsonResponse({'success': False, 'error': 'Minimum quantity is 1. Use remove instead.'})
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid action'})
-                
-            # Recalculate totals
-            cart = cart_item.cart
-            items = cart.items.select_related('product').all()
-            subtotal = sum(item.total_price for item in items)
-            if subtotal == 0:
-                shipping = Decimal('0.00')
-            elif subtotal >= Decimal('5000.00'):
-                shipping = Decimal('0.00')
-            else:
-                shipping = Decimal('49.00')
-            
-            tax = round(subtotal * Decimal('0.03'), 2)
-            total = subtotal + tax + shipping
-            cart_count = sum(item.quantity for item in items)
-            
-            return JsonResponse({
-                'success': True,
-                'cart_count': cart_count,
-                'item_total': str(cart_item.total_price),
-                'item_quantity': cart_item.quantity,
-                'subtotal': str(subtotal),
-                'shipping': str(shipping),
-                'tax': str(round(tax, 2)),
-                'total': str(round(total, 2))
-            })
-            
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-            
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+        item.save()
+        
+        # Fresh Totals
+        cart = item.cart
+        all_items = cart.items.all()
+        subtotal = sum(i.total_price for i in all_items)
+        ship = Decimal('0') if subtotal >= 5000 or subtotal == 0 else Decimal('49')
+        tax = round(subtotal * Decimal('0.03'), 2)
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': sum(i.quantity for i in all_items),
+            'item_total': str(item.total_price),
+            'item_quantity': item.quantity,
+            'subtotal': str(subtotal),
+            'shipping': str(ship),
+            'tax': str(tax),
+            'total': str(subtotal + tax + ship)
+        })
+    except: return JsonResponse({'success': False})
+
 
 @login_required
 def remove_from_cart(request, item_id):
-    # Ensure the item belongs to the user's cart
-    cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-    cart_item.delete()
-    messages.success(request, 'Item removed from cart.')
+    """Remove an item from the shopping cart."""
+    item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    item.delete()
+    messages.success(request, 'Item removed.')
     return redirect('cart_view')
+
 
 @login_required
 @never_cache
 def wishlist_view(request):
-    wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+    """View saved items in the wishlist."""
+    wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
     items = wishlist.items.select_related('product').all()
-    return render(request, 'wishlist.html', {
-        'items': items
-    })
+    return render(request, 'wishlist.html', {'items': items})
+
 
 def toggle_wishlist(request, product_uuid):
+    """Add or remove an item from the wishlist."""
     if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'error': 'Please login to modify your wishlist.'})
+        return JsonResponse({'success': False, 'error': 'Please login first.'})
         
     if request.method == 'POST':
         product = get_object_or_404(Product, uuid=product_uuid)
-        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
         
-        wishlist_item = WishlistItem.objects.filter(wishlist=wishlist, product=product).first()
-        
-        if wishlist_item:
-            wishlist_item.delete()
-            action = 'removed'
+        item = WishlistItem.objects.filter(wishlist=wishlist, product=product).first()
+        if item:
+            item.delete()
+            status = 'removed'
         else:
-            # Only check availability when ADDING (stock is okay for wishlist)
-            if not product.is_active or product.is_deleted or product.collection.is_deleted:
-                return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
-                
+            # Check availability only for adding
+            if not product.is_active or product.is_deleted:
+                return JsonResponse({'success': False, 'error': 'Unavailable'})
             WishlistItem.objects.create(wishlist=wishlist, product=product)
-            action = 'added'
+            status = 'added'
             
-        wishlist_count = wishlist.items.count()
-        return JsonResponse({'success': True, 'action': action, 'wishlist_count': wishlist_count})
-        
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+        return JsonResponse({'success': True, 'action': status, 'wishlist_count': wishlist.items.count()})
+    return JsonResponse({'success': False})
+
 
 @login_required
 def remove_wishlist_item(request, item_id):
-    if request.method == 'POST':
-        wishlist_item = get_object_or_404(WishlistItem, id=item_id, wishlist__user=request.user)
-        wishlist_item.delete()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    """Remove a specific item from the wishlist."""
+    item = get_object_or_404(WishlistItem, id=item_id, wishlist__user=request.user)
+    item.delete()
+    messages.success(request, 'Item removed from wishlist.')
+    return redirect('wishlist_view')
+
 
 @login_required
 def save_for_later(request, item_id):
+    """Move an item from cart to wishlist."""
     if request.method == 'POST':
-        cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
-        product = cart_item.product
-        
-        # Add to wishlist
-        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
-        WishlistItem.objects.get_or_create(wishlist=wishlist, product=product)
-        
-        # Delete from cart
-        cart_item.delete()
-        
-        # Recalculate totals
-        cart = request.user.cart
-        items = cart.items.select_related('product').all()
-        subtotal = sum(item.total_price for item in items)
-        if subtotal == 0:
-            shipping = Decimal('0.00')
-        elif subtotal >= Decimal('5000.00'):
-            shipping = Decimal('0.00')
-        else:
-            shipping = Decimal('49.00')
-        
-        tax = round(subtotal * Decimal('0.03'), 2)
-        total = subtotal + tax + shipping
-        cart_count = sum(item.quantity for item in items)
-        
-        return JsonResponse({
-            'success': True,
-            'cart_count': cart_count,
-            'subtotal': str(subtotal),
-            'shipping': str(shipping),
-            'tax': str(round(tax, 2)),
-            'total': str(round(total, 2))
-        })
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+        item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        WishlistItem.objects.get_or_create(wishlist=wishlist, product=item.product)
+        item.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
+
+@login_required
+@never_cache
+def notifications_view(request):
+    """View system and order notifications."""
+    notes = Notification.objects.filter(user=request.user).order_by('-created_at')
+    # Auto-read on view
+    notes.filter(is_read=False).update(is_read=True)
+    return render(request, 'notifications.html', {'notifications': notes})
+
 
 @login_required
 @never_cache
 def wallet_view(request):
-    wallet, created = Wallet.objects.get_or_create(user=request.user)
-    transactions = wallet.transactions.all().order_by('-timestamp')
+    """View wallet balance and transactions."""
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    txs = wallet.transactions.all().order_by('-timestamp')
     
-    # Calculate professional stats
-    total_added = transactions.filter(transaction_type='Credit').aggregate(total=Sum('amount'))['total'] or 0
-    total_spent = transactions.filter(transaction_type='Debit').aggregate(total=Sum('amount'))['total'] or 0
-    total_rewards = transactions.filter(transaction_type='Credit', description__icontains='Referral').aggregate(total=Sum('amount'))['total'] or 0
+    # Summary Metrics
+    added = txs.filter(transaction_type='Credit').aggregate(t=Sum('amount'))['t'] or 0
+    spent = txs.filter(transaction_type='Debit').aggregate(t=Sum('amount'))['t'] or 0
+    rewards = txs.filter(transaction_type='Credit', description__icontains='Referral').aggregate(t=Sum('amount'))['t'] or 0
     
-    context = {
-        'wallet': wallet,
-        'transactions': transactions,
-        'total_added': total_added,
-        'total_spent': total_spent,
-        'total_rewards': total_rewards,
+    return render(request, 'wallet.html', {
+        'wallet': wallet, 'transactions': txs,
+        'total_added': added, 'total_spent': spent, 'total_rewards': rewards,
         'active_menu': 'wallet',
-    }
-    return render(request, 'wallet.html', context)
+    })

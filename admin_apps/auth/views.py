@@ -12,6 +12,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .forms import AdminProfileForm, AdminLoginForm
 from user_apps.accounts.models import CustomUser, EmailOTP
+from user_apps.accounts.utils import send_otp_email
 from user_apps.core.models import Product, Order, OrderItem, Collection
 from django.db.models import Sum
 from .models import Profile
@@ -226,25 +227,7 @@ def admin_forgot_password(request):
             request.session['admin_reset_email'] = email
             
             # Dispatch the email
-            send_mail(
-                subject='TimeHub Admin — Password Reset OTP',
-                message=f"""Hello {user.first_name if user.first_name else 'Admin'} ⏱
-
-                        You requested a password reset for the TimeHub Admin Panel.
-
-                        🔐 YOUR ONE-TIME PASSWORD:
-
-                                        {otp_obj.otp}   
-                                        
-                        ⏳ Valid for 5 minutes only.
-                        🚫 Do not share it with anyone.
-
-                        If you did not request this, please ignore this email.
-
-                        — The TimeHub Admin System 🚀""",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[email],
-            )
+            send_otp_email(email, otp_obj.otp, context="password_reset")
             
             messages.success(request, "An OTP has been sent to your admin email address.")
             return redirect("admin_verify_otp")
@@ -321,22 +304,7 @@ def admin_resend_otp(request):
 
     otp_obj = EmailOTP.objects.create(user=user)
 
-    send_mail(
-        subject='TimeHub Admin — Password Reset OTP',
-        message=f"""Hello {user.first_name if user.first_name else 'Admin'} ⏱
-
-You requested a new password reset OTP for the TimeHub Admin Panel.
-
-🔐 YOUR ONE-TIME PASSWORD:
-
-                  {otp_obj.otp}   
-                
-⏳ Valid for 5 minutes only.
-
-— The TimeHub Admin System 🚀""",
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[email],
-    )
+    send_otp_email(email, otp_obj.otp, context="password_reset")
 
     messages.success(request, "OTP resent successfully!")
     return redirect("admin_verify_otp")

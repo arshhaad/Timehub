@@ -189,13 +189,18 @@
             <i class="fas fa-check-circle"></i>
         </div>
 
+        {% if is_wallet %}
+        <h1>Funds Added!</h1>
+        <p>Your payment was successful, and the funds have been credited to your TimeHub wallet.</p>
+        {% else %}
         <h1>Order Confirmed!</h1>
         <p>Thank you for your purchase. Your payment was successful, and your luxury timepiece is being prepared for shipment.</p>
+        {% endif %}
 
         <div class="order-summary">
             <div class="summary-row">
-                <span class="label">Order ID</span>
-                <span class="value">#{{ order.id }}</span>
+                <span class="label">{% if is_wallet %}Transaction ID{% else %}Order ID{% endif %}</span>
+                <span class="value">#{{ order.id|default:payment.id }}</span>
             </div>
             <div class="summary-row">
                 <span class="label">Payment Status</span>
@@ -203,24 +208,32 @@
             </div>
             <div class="summary-row">
                 <span class="label">Amount Paid</span>
-                <span class="value" style="color: var(--primary-color);">₹{{ order.total_amount|floatformat:2 }}</span>
+                <span class="value" style="color: var(--primary-color);">₹{{ order.total_amount|default:payment.amount|floatformat:2 }}</span>
             </div>
         </div>
 
         <div class="btn-group">
+            {% if is_wallet %}
+            <a href="{% url 'user_wallet' %}" class="action-btn btn-primary">
+                <i class="fas fa-wallet"></i> My Wallet
+            </a>
+            {% else %}
             <a href="{% url 'order_history' %}" class="action-btn btn-primary">
                 <i class="fas fa-box-open"></i> My Orders
             </a>
+            {% endif %}
             <a href="{% url 'product_listing' %}" class="action-btn btn-outline">
                 <i class="fas fa-shopping-bag"></i> Shop More
             </a>
         </div>
         
+        {% if not is_wallet %}
         <div style="margin-top: 30px;">
             <a href="{% url 'download_invoice' order.id %}" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none; font-weight: 600; transition: var(--transition);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">
                 <i class="fas fa-file-invoice" style="margin-right: 5px;"></i> Download Invoice
             </a>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

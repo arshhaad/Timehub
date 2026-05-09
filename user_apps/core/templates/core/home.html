@@ -15,6 +15,167 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* =========================================
+           PAGE TRANSITION LOADER
+           ========================================= */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #th-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .th-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px;
+            background: transparent;
+        }
+
+        .th-clock {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .th-arc {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary-color);
+            border-right: 3px solid rgba(255, 106, 0, 0.2);
+            animation: spinArc 0.85s linear infinite;
+        }
+
+        @keyframes spinArc {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-face {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(255, 106, 0, 0.4);
+        }
+
+        .th-face svg {
+            width: 22px;
+            height: 22px;
+            overflow: visible;
+        }
+
+        .hand-min {
+            transform-origin: 14px 14px;
+            animation: rotHand 1.5s linear infinite;
+        }
+
+        .hand-hr {
+            transform-origin: 14px 14px;
+            animation: rotHand 18s linear infinite;
+        }
+
+        @keyframes rotHand {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .th-letters {
+            display: flex;
+            gap: 0px;
+        }
+
+        .th-letter {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes letterIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .th-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .th-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.4;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+
+        .th-dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .th-dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
         :root {
             --bg-color: #0b0b0e;
             --bg-card: #15151a;
@@ -1233,6 +1394,31 @@
     </style>
 </head>
 
+<div id="th-loader">
+    <div class="th-card">
+        <div class="th-clock">
+            <div class="th-arc"></div>
+            <div class="th-face">
+                <svg viewBox="0 0 28 28" fill="none">
+                    <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2"
+                        stroke-linecap="round" />
+                    <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8"
+                        stroke-linecap="round" />
+                    <circle cx="14" cy="14" r="2" fill="white" />
+                </svg>
+            </div>
+        </div>
+        <div class="th-text">
+            <div class="th-letters" id="th-letters"></div>
+            <div class="th-dots">
+                <div class="th-dot"></div>
+                <div class="th-dot"></div>
+                <div class="th-dot"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% csrf_token %}
 <!-- SEARCH OVERLAY -->
 <div class="search-overlay" id="searchOverlay">
@@ -1266,8 +1452,7 @@
                 style="text-decoration:none; color:inherit; position:relative;">
                 <i class="fas fa-shopping-cart"></i>
                 <span id="cartBadge"
-                    style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{
-                    cart_count }}</span>
+                    style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{ cart_count }}</span>
             </a>
             <div class="mobile-toggle" id="mobileToggle">
                 <i class="fas fa-bars"></i>
@@ -1293,10 +1478,10 @@
     <nav class="mobile-nav-links">
         <a href="/">Home</a>
         <a href="{% url 'wishlist_view' %}">Wishlist</a>
-        <a href="#">Luxury</a>
-        <a href="#">Sport</a>
-        <a href="#">Smart</a>
-        <a href="#">Vintage</a>
+        <a href="{% url 'product_listing' %}?q=luxury">Luxury</a>
+        <a href="{% url 'product_listing' %}?q=sports">Sport</a>
+        <a href="{% url 'product_listing' %}?q=smart">Smart</a>
+        <a href="{% url 'product_listing' %}?q=vintage">Vintage</a>
         {% if user.is_authenticated %}
         <a href="{% url 'user_dashboard' %}">Dashboard</a>
         {% else %}
@@ -1378,6 +1563,101 @@
     </div>
 </section>
 
+<!-- PREMIUM CATEGORIES (WHITE THEME & SCROLLABLE) -->
+<section class="premium-categories">
+    <div class="container">
+        <div class="section-header">
+            <h2>Our Collections</h2>
+            <p>Scroll to explore our wide range of luxury timepieces.</p>
+        </div>
+        <div class="round-cat-grid">
+            <a href="{% url 'product_listing' %}?q=automatic" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/automatic_cat.png' %}" alt="Automatic">
+                </div>
+                <div class="round-cat-name">Automatic</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=mechanical" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical">
+                </div>
+                <div class="round-cat-name">Mechanical</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=analog" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/chronograph_cat.png' %}" alt="Analog">
+                </div>
+                <div class="round-cat-name">Analog</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=luxury" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury">
+                </div>
+                <div class="round-cat-name">Luxury</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=sports" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/sport_category.png' %}" alt="Sports">
+                </div>
+                <div class="round-cat-name">Sports</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=smart" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/smart_category.png' %}" alt="Smart">
+                </div>
+                <div class="round-cat-name">Smart</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=digital" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/digital_category.png' %}" alt="Digital">
+                </div>
+                <div class="round-cat-name">Digital</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=casual" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual">
+                </div>
+                <div class="round-cat-name">Casual</div>
+            </a>
+            <a href="{% url 'product_listing' %}?q=premium" class="round-cat-item">
+                <div class="round-cat-img-wrap">
+                    <img src="{% static 'images/luxury_category.png' %}" alt="Premium">
+                </div>
+                <div class="round-cat-name">Premium</div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FLASH DEALS -->
+<section class="container">
+    <div class="flash-deals">
+        <div class="container flash-content">
+            <div style="flex: 1;">
+                <div class="hero-badge" style="background:#000; border-color:var(--primary-color);">Midnight Sale
+                </div>
+                <h2 style="font-size: 3rem; margin-bottom: 20px;">Flash Deals of <br>The Day</h2>
+                <p style="color: var(--text-muted);">Hurry up! Grab your favorite luxury watches at heavily
+                    discounted prices before they run out. Valid for today only!</p>
+                <div class="flash-timer">
+                    <div class="timer-unit"><span id="hours">08</span><label>Hours</label></div>
+                    <div class="timer-unit"><span id="minutes">42</span><label>Mins</label></div>
+                    <div class="timer-unit"><span id="seconds">15</span><label>Secs</label></div>
+                </div>
+                <a href="#" class="btn btn-primary">Grab The Deal <i class="fas fa-bolt"></i></a>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; margin-bottom: 20px;">
+                    Limited Edition <br>Starting from ₹1,999</p>
+                <img src="{% static 'images/art_watch.png' %}" alt="Flash Deal Watch"
+                    style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));">
+                <p style="color: #ef4444; font-weight: 700; margin-top: 20px;"><i class="fas fa-exclamation-circle"></i>
+                    Only 12 items left in stock!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- BEST SELLERS -->
 <section class="products-section">
     <div class="container">
@@ -1434,35 +1714,6 @@
             See More Best Sellers <i class="fas fa-plus"></i>
         </a>
     </div>
-    </div>
-</section>
-
-<!-- FLASH DEALS -->
-<section class="container">
-    <div class="flash-deals">
-        <div class="container flash-content">
-            <div style="flex: 1;">
-                <div class="hero-badge" style="background:#000; border-color:var(--primary-color);">Midnight Sale
-                </div>
-                <h2 style="font-size: 3rem; margin-bottom: 20px;">Flash Deals of <br>The Day</h2>
-                <p style="color: var(--text-muted);">Hurry up! Grab your favorite luxury watches at heavily
-                    discounted prices before they run out. Valid for today only!</p>
-                <div class="flash-timer">
-                    <div class="timer-unit"><span id="hours">08</span><label>Hours</label></div>
-                    <div class="timer-unit"><span id="minutes">42</span><label>Mins</label></div>
-                    <div class="timer-unit"><span id="seconds">15</span><label>Secs</label></div>
-                </div>
-                <a href="#" class="btn btn-primary">Grab The Deal <i class="fas fa-bolt"></i></a>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; margin-bottom: 20px;">
-                    Limited Edition <br>Starting from ₹1,999</p>
-                <img src="{% static 'images/art_watch.png' %}" alt="Flash Deal Watch"
-                    style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));">
-                <p style="color: #ef4444; font-weight: 700; margin-top: 20px;"><i class="fas fa-exclamation-circle"></i>
-                    Only 12 items left in stock!</p>
-            </div>
-        </div>
     </div>
 </section>
 
@@ -1536,72 +1787,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- PREMIUM CATEGORIES (WHITE THEME & SCROLLABLE) -->
-<section class="premium-categories">
-    <div class="container">
-        <div class="section-header">
-            <h2>Our Collections</h2>
-            <p>Scroll to explore our wide range of luxury timepieces.</p>
-        </div>
-        <div class="round-cat-grid">
-            <a href="{% url 'product_listing' %}?q=automatic" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/automatic_cat.png' %}" alt="Automatic">
-                </div>
-                <div class="round-cat-name">Automatic</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=mechanical" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical">
-                </div>
-                <div class="round-cat-name">Mechanical</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=analog" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/chronograph_cat.png' %}" alt="Analog">
-                </div>
-                <div class="round-cat-name">Analog</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=luxury" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury">
-                </div>
-                <div class="round-cat-name">Luxury</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=sports" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/sport_category.png' %}" alt="Sports">
-                </div>
-                <div class="round-cat-name">Sports</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=smart" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/smart_category.png' %}" alt="Smart">
-                </div>
-                <div class="round-cat-name">Smart</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=digital" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/digital_category.png' %}" alt="Digital">
-                </div>
-                <div class="round-cat-name">Digital</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=casual" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual">
-                </div>
-                <div class="round-cat-name">Casual</div>
-            </a>
-            <a href="{% url 'product_listing' %}?q=premium" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/luxury_category.png' %}" alt="Premium">
-                </div>
-                <div class="round-cat-name">Premium</div>
-            </a>
         </div>
     </div>
 </section>
@@ -1726,6 +1911,7 @@
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                showLoader();
                 window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
             }
         });
@@ -1853,6 +2039,47 @@
                 btn.style.pointerEvents = 'auto';
             });
     };
+    // --- Page Transition Loader Logic ---
+    const loader = document.getElementById('th-loader');
+    const lettersEl = document.getElementById('th-letters');
+    const word = 'TimeHub';
+
+    function showLoader() {
+        if (!loader || !lettersEl) return;
+        lettersEl.innerHTML = '';
+        word.split('').forEach((ch, i) => {
+            const s = document.createElement('span');
+            s.className = 'th-letter';
+            s.textContent = ch;
+            s.style.animationDelay = (0.05 + i * 0.05) + 's';
+            lettersEl.appendChild(s);
+        });
+        loader.classList.add('active');
+    }
+
+    function hideLoader() {
+        if (loader) loader.classList.remove('active');
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(hideLoader, 5000);
+    });
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href &&
+            !link.href.startsWith('javascript:') &&
+            !link.target &&
+            !link.href.includes('#') &&
+            link.hostname === window.location.hostname) {
+            showLoader();
+        }
+    });
+
+    document.addEventListener('submit', (e) => {
+        if (!e.defaultPrevented) showLoader();
+    });
+
     function copyRefCode(code, btn) {
         navigator.clipboard.writeText(code).then(() => {
             const originalHtml = btn.innerHTML;

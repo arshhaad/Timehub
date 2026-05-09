@@ -1598,12 +1598,25 @@
                                 <span class="label">Estimated Tax (3% GST)</span>
                                 <span class="val" id="summaryTax">₹{{ tax|floatformat:2 }}</span>
                             </div>
-                            
-                            <div class="price-row" id="summaryDiscountRow" style="display: {% if discount and discount > 0 %}flex{% else %}none{% endif %};">
-                                <span class="label">Discount</span>
-                                <span class="val" style="color: #22c55e;" id="summaryDiscount">-₹{{ discount|floatformat:2 }}</span>
+
+                            <!-- Offer Savings (product/category offer already baked into item prices) -->
+                            <div class="price-row" id="summaryOfferRow" style="display: {% if offer_savings and offer_savings > 0 %}flex{% else %}none{% endif %};">
+                                <span class="label"><i class="fas fa-tag" style="color:#22c55e; font-size:0.75rem; margin-right:4px;"></i> Product Offer</span>
+                                <span class="val" style="color: #22c55e;" id="summaryOfferSavings">-₹{{ offer_savings|floatformat:2 }}</span>
                             </div>
-                            
+
+                            <!-- Coupon Discount -->
+                            <div class="price-row" id="summaryCouponRow" style="display: {% if coupon_discount and coupon_discount > 0 %}flex{% else %}none{% endif %};">
+                                <span class="label"><i class="fas fa-ticket-alt" style="color:#22c55e; font-size:0.75rem; margin-right:4px;"></i> Coupon {% if cart.coupon %}({{ cart.coupon.code }}){% endif %}</span>
+                                <span class="val" style="color: #22c55e;" id="summaryCouponDiscount">-₹{{ coupon_discount|floatformat:2 }}</span>
+                            </div>
+
+                            <!-- Referral Discount -->
+                            <div class="price-row" id="summaryReferralRow" style="display: {% if referral_discount and referral_discount > 0 %}flex{% else %}none{% endif %};">
+                                <span class="label"><i class="fas fa-users" style="color:#22c55e; font-size:0.75rem; margin-right:4px;"></i> Referral Discount</span>
+                                <span class="val" style="color: #22c55e;" id="summaryReferralDiscount">-₹{{ referral_discount|floatformat:2 }}</span>
+                            </div>
+
                             <div class="price-row total-row">
                                 <span class="label">Total</span>
                                 <span class="val" id="summaryTotal">₹{{ total|floatformat:2 }}</span>
@@ -2025,13 +2038,14 @@
                 shippingSpan.classList.remove('free-shipping');
             }
             
-            const discountRow = document.getElementById('summaryDiscountRow');
-            const discountSpan = document.getElementById('summaryDiscount');
-            if (parseFloat(data.discount) > 0) {
-                discountRow.style.display = 'flex';
-                discountSpan.innerText = '-₹' + parseFloat(data.discount).toFixed(2);
-            } else {
-                discountRow.style.display = 'none';
+            // Coupon discount row
+            const couponRow = document.getElementById('summaryCouponRow');
+            const couponSpan = document.getElementById('summaryCouponDiscount');
+            if (couponRow && couponSpan && parseFloat(data.discount || 0) > 0) {
+                couponRow.style.display = 'flex';
+                couponSpan.innerText = '-₹' + parseFloat(data.discount).toFixed(2);
+            } else if (couponRow) {
+                couponRow.style.display = 'none';
             }
         }
 
@@ -2089,16 +2103,6 @@
             }
         });
 
-        document.getElementById('openAddressModal').addEventListener('click', () => {
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-map-marker-alt" style="color:var(--primary-color); margin-right:8px;"></i>Add New Address';
-            ['new_full_name', 'new_street', 'new_city', 'new_state', 'new_postal_code', 'new_phone'].forEach(f => {
-                document.getElementById(f).value = '';
-            });
-            document.getElementById('new_country').value = 'India';
-            delete document.getElementById('saveNewAddress').dataset.editId;
-            clearFieldErrors();
-            modal.classList.add('active');
-        });
         document.getElementById('closeAddressModal').addEventListener('click', () => modal.classList.remove('active'));
         document.getElementById('cancelAddressModal').addEventListener('click', () => modal.classList.remove('active'));
         modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });

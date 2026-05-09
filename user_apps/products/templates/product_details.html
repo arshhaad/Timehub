@@ -13,6 +13,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* PAGE TRANSITION LOADER */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 11000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #th-loader.active { opacity: 1; visibility: visible; pointer-events: all; }
+        .th-card { display: flex; flex-direction: row; align-items: center; gap: 25px; background: transparent; }
+        .th-clock { position: relative; width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .th-arc { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top: 3px solid var(--primary-color); border-right: 3px solid rgba(249, 136, 34, 0.2); animation: spinArc 0.85s linear infinite; }
+        @keyframes spinArc { to { transform: rotate(360deg); } }
+        .th-face { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(249, 136, 34, 0.4); }
+        .th-face svg { width: 22px; height: 22px; overflow: visible; }
+        .hand-min { transform-origin: 14px 14px; animation: rotHand 1.5s linear infinite; }
+        .hand-hr { transform-origin: 14px 14px; animation: rotHand 18s linear infinite; }
+        @keyframes rotHand { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .th-text { display: flex; flex-direction: column; gap: 0px; }
+        .th-letters { display: flex; gap: 0px; }
+        .th-letter { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: 1px; font-family: 'Outfit', sans-serif; opacity: 0; transform: translateY(10px); animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes letterIn { to { opacity: 1; transform: translateY(0); } }
+        .th-dots { display: flex; gap: 5px; margin-top: 6px; }
+        .th-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary-color); opacity: 0.4; animation: dotPulse 0.8s ease-in-out infinite; }
+        .th-dot:nth-child(2) { animation-delay: 0.15s; }
+        .th-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotPulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
         :root {
             --bg-color: #050505;
             --bg-card: #0f0f12;
@@ -47,17 +81,119 @@
         .btn-outline { background: #15151a; border: 1px solid var(--border-color); color: #fff; }
         .btn-outline:hover { border-color: var(--text-muted); background: #1c1c23; }
 
-        /* HEADER */
-        header { padding: 25px 0; border-bottom: 1px solid transparent; background: rgba(11, 11, 14, 0.9); backdrop-filter: blur(15px); }
-        .nav-wrap { display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 1.6rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .logo span { color: var(--primary-color); font-size: 2rem; line-height: 1;}
-        .nav-links { display: flex; gap: 35px; }
-        .nav-links a { font-size: 0.9rem; font-weight: 600; color: #fff; }
-        .nav-actions { display: flex; gap: 20px; }
-        .icon-btn { color: #fff; position: relative; font-size: 1.1rem; }
-        
-        .badge { position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.6rem; font-weight: 800; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        /* HEADER (Synchronized with Dashboard Header) */
+        .dashboard-header {
+            width: 100%;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(11, 11, 14, 0.85);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3);
+        }
+
+        .nav-links {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 35px;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .icon-btn {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            text-decoration: none !important;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .icon-btn i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #cartBadge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--primary-color);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-color);
+        }
 
         /* BREADCRUMB */
         .breadcrumb { padding: 30px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; display: flex; gap: 10px; align-items: center; }
@@ -246,25 +382,217 @@
             transform: scale(0.98) !important;
         }
 
-        /* Active State Glow */
+        /* --- VARIANT SELECTION UPGRADE ────────────────────────────────────────── */
+        .color-option,
+        .material-chip,
+        .opt-btn {
+            transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                        opacity 0.22s ease,
+                        border-color 0.2s ease,
+                        box-shadow 0.2s ease,
+                        background 0.2s ease;
+        }
+
+        /* 1. COLOR SWATCHES */
+        .color-option {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .color-swatch {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-color);
+            outline: 1.5px solid rgba(255,255,255,0.15);
+            transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), outline-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .color-option:not(.disabled):not(.active):hover .color-swatch {
+            transform: scale(1.12);
+            outline-color: rgba(255,255,255,0.35);
+        }
+
         .color-option.active .color-swatch {
-            box-shadow: 0 0 0 3px var(--bg-color), 0 0 0 5px var(--primary-color);
+            transform: scale(1.08);
+            outline: 2.5px solid var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.18), 0 4px 14px rgba(0,0,0,0.45);
+        }
+
+        .color-swatch::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M2.5 7L5.5 10L11.5 4' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/52% no-repeat;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+        }
+        .color-option.active .color-swatch::after { opacity: 1; }
+
+        .color-option .color-name { font-size: 0.73rem; font-weight: 600; color: var(--text-muted); transition: color 0.2s ease; white-space: nowrap; }
+        .color-option.active .color-name { color: var(--primary-color); font-weight: 700; }
+
+        .color-option.disabled { cursor: not-allowed; pointer-events: none; }
+        .color-option.disabled .color-swatch { opacity: 0.38; filter: grayscale(0.6); }
+        .color-option.disabled .color-swatch::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, transparent 42%, rgba(200,50,50,0.75) 42%, rgba(200,50,50,0.75) 58%, transparent 58%);
+            z-index: 2;
+        }
+        .color-option.disabled .color-name { opacity: 0.38; text-decoration: line-through; }
+
+        /* 2. MATERIAL CHIPS */
+        .material-chip {
+            position: relative;
+            padding: 11px 16px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-left-width: 3px;
+            border-left-color: transparent;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .material-chip:not(.disabled):not(.active):hover {
+            border-color: rgba(255,255,255,0.2);
+            border-left-color: rgba(255,255,255,0.2);
+            background: var(--bg-card-hover);
+            transform: translateY(-1px);
         }
 
         .material-chip.active {
-            background: var(--primary-color);
-            color: #000;
-            border-color: var(--primary-color);
-            box-shadow: 0 8px 20px rgba(255, 106, 0, 0.3);
+            border-color: rgba(255,106,0,0.4);
+            border-left-color: var(--primary-color);
+            background: rgba(255,106,0,0.07);
+            box-shadow: inset 0 0 0 0.5px rgba(255,106,0,0.25);
+            transform: translateY(-1px);
         }
 
-        .material-chip.active i { color: #000; }
-        .material-chip.active .material-label span:nth-child(2) { color: rgba(0,0,0,0.6); }
+        .material-chip i { font-size: 1.1rem; color: var(--text-muted); transition: color 0.2s ease, transform 0.25s ease; flex-shrink: 0; }
+        .material-chip.active i { color: var(--primary-color); transform: scale(1.15); }
+
+        .material-label { display: flex; flex-direction: column; gap: 1px; }
+        .material-label span:first-child { font-weight: 700; font-size: 0.9rem; color: #fff; transition: color 0.2s ease; }
+        .material-label span:last-child { font-size: 0.7rem; color: var(--text-muted); transition: color 0.2s ease; }
+        .material-chip.active .material-label span:last-child  { color: rgba(255,106,0,0.7); }
+
+        .material-chip::after {
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            right: 9px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            opacity: 0;
+            transform: scale(0.6) rotate(15deg);
+            transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .material-chip.active::after { opacity: 1; transform: scale(1) rotate(0deg); }
+
+        .material-chip.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; filter: grayscale(0.4); }
+        .material-chip.disabled .material-label span:first-child { text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.6); }
+
+        /* 3. SIZE / SKU VARIANT BUTTONS */
+        .opt-btn {
+            position: relative;
+            padding: 9px 18px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .opt-btn:not(.active):not([data-oos]):not(:disabled):hover {
+            border-color: rgba(255,255,255,0.28);
+            background: var(--bg-card-hover);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
 
         .opt-btn.active {
             border-color: var(--primary-color);
-            background: rgba(255, 106, 0, 0.05);
-            box-shadow: 0 0 0 1px var(--primary-color);
+            background: rgba(255,106,0,0.09);
+            color: #fff;
+            box-shadow: 0 0 0 3px rgba(255,106,0,0.18), 0 6px 18px rgba(255,106,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .opt-btn::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            right: 7px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0;
+            transform: scale(0);
+            transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 0 6px rgba(255,106,0,0.6);
+        }
+        .opt-btn.active::before { opacity: 1; transform: scale(1); }
+
+        .variant-chip { display: flex; flex-direction: column; gap: 2px; pointer-events: none; text-align: left; }
+        .variant-chip span:first-child { font-size: 0.88rem; font-weight: 700; color: inherit; transition: color 0.2s ease; }
+        .variant-chip span:last-child { font-size: 0.68rem; opacity: 0.55; font-weight: 500; }
+        .opt-btn.active .variant-chip span:first-child { color: #fff; }
+
+        .opt-btn[data-oos="true"] { opacity: 0.42; cursor: not-allowed; pointer-events: none; border-style: dashed; }
+        .opt-btn[data-oos="true"] .variant-chip span:first-child { text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.55); }
+        .opt-btn[data-oos="true"]::after {
+            content: 'sold out';
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #ef4444;
+            position: absolute;
+            bottom: 4px;
+            right: 7px;
+            opacity: 0.75;
+        }
+
+        .opt-btn:focus-visible, .material-chip:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+
+        .variation-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .variation-label > span:first-child { color: rgba(255,255,255,0.5); }
+        .variation-label .selected-val {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            background: rgba(255,106,0,0.1);
+            padding: 2px 10px;
+            border-radius: 20px;
+            letter-spacing: 0;
+            text-transform: none;
+            transition: opacity 0.2s ease;
         }
             padding: 4px 12px;
             border-radius: 8px;
@@ -305,37 +633,9 @@
 
         .product-desc { color: var(--text-muted); line-height: 1.8; margin-bottom: 40px; font-size: 1rem; }
 
-        .variations { margin-bottom: 40px; }
-        .variation-group { margin-bottom: 15px; }
-        .variation-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; }
-        .variation-label span:last-child { color: var(--text-muted); }
-        
-        /* Options Buttons */
         .options-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .opt-btn { padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
-        .opt-btn:hover { border-color: rgba(255,255,255,0.2); background: var(--bg-card-hover); }
-        .opt-btn.active { border-color: var(--primary-color); color: #fff; background: rgba(255, 106, 0, 0.1); box-shadow: 0 0 15px rgba(255, 106, 0, 0.1); }
-        .variant-chip { display: flex; flex-direction: column; gap: 4px; }
-        .variant-chip span:last-child { font-size: 0.7rem; opacity: 0.6; }
-
-        /* Color Swatches */
         .color-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 5px; }
-        .color-option { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-        .color-swatch { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--bg-color); outline: 1px solid var(--border-color); transition: var(--transition); position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .color-swatch:hover { transform: scale(1.1); }
-        .color-option.active .color-swatch { outline: 2px solid var(--primary-color); transform: scale(1.1); }
-        .color-name { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); }
-        .color-option.active .color-name { color: var(--primary-color); }
-
-        /* Material Chips */
         .material-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .material-chip { padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition); }
-        .material-chip i { font-size: 1.1rem; color: var(--text-muted); }
-        .material-chip.active { border-color: var(--primary-color); background: rgba(255, 106, 0, 0.05); }
-        .material-chip.active i { color: var(--primary-color); }
-        .material-label { display: flex; flex-direction: column; }
-        .material-label span:first-child { font-weight: 700; font-size: 0.9rem; color: #fff; }
-        .material-label span:last-child { font-size: 11px; color: var(--text-muted); }
 
         .actions-row { display: flex; gap: 15px; margin-bottom: 25px; }
         .qty-controls { display: flex; align-items: center; background: #15151a; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; height: 56px;}
@@ -720,29 +1020,64 @@
     </style>
 </head>
 <body>
+    <div id="th-loader">
+        <div class="th-card">
+            <div class="th-clock">
+                <div class="th-arc"></div>
+                <div class="th-face">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                        <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="14" cy="14" r="2" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="th-text">
+                <div class="th-letters" id="th-letters"></div>
+                <div class="th-dots">
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                    <div class="th-dot"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <header>
-        <div class="container nav-wrap">
-            <a href="/" style="display:flex; align-items:center; gap:20px; text-decoration:none;">
-               <div style="width: 30px; height: 30px; background: var(--primary-color); border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#000; font-weight:800; font-size:1.2rem;">T</div>
-               <span class="logo" style="color:#fff;">TimeHub <span>.</span></span>
+    <header class="dashboard-header">
+        <div class="nav-wrap">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span>TimeHub</span>
             </a>
-            
-            <div class="nav-links">
-                <a href="#">New Arrivals</a>
-                <a href="#">Brands</a>
-                <a href="{% url 'product_listing' %}">Collections</a>
-            </div>
-            
-            <div class="nav-actions">
-                <a href="{% url 'product_listing' %}?q=" onclick="this.href='{% url 'product_listing' %}'; setTimeout(() => document.querySelector('.search-field')?.focus(), 300);" class="icon-btn" title="Search"><i class="fas fa-search"></i></a>
-                <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
-                    <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="{% if is_in_wishlist %}color: #ff4757;{% endif %}"></i>
-                </a>
-                <a href="{% url 'cart_view' %}" class="icon-btn">
-                    <i class="fas fa-shopping-cart"></i>
-                </a>
-            </div>
+        </div>
+        <nav class="nav-links">
+            <a href="{% url 'home' %}" class="{% if request.path == '/home/' %}active{% endif %}">Home</a>
+            <a href="{% url 'product_listing' %}" class="{% if '/products/' in request.path %}active{% endif %}">Collection</a>
+            <a href="{% url 'about' %}" class="{% if '/about/' in request.path %}active{% endif %}">About</a>
+            <a href="/about/#contact">Contact</a>
+        </nav>
+        <div class="quick-actions">
+            <div class="icon-btn search-trigger" title="Search"><i class="fas fa-search"></i></div>
+            <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
+                <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="{% if is_in_wishlist %}color: var(--primary-color);{% endif %}"></i>
+            </a>
+            <a href="{% url 'cart_view' %}" class="icon-btn" title="My Cart">
+                <i class="fas fa-shopping-cart"></i>
+                {% if cart_count %}
+                <span id="cartBadge">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'user_dashboard' %}" class="icon-btn" title="Dashboard">
+                <i class="fas fa-user-circle" style="color: var(--primary-color);"></i>
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="icon-btn" title="Login">
+                <i class="fas fa-sign-in-alt"></i>
+            </a>
+            {% endif %}
         </div>
     </header>
 
@@ -911,7 +1246,7 @@
                     {% if product.colors.exists %}
                     <div class="variation-group animate-up" style="margin-bottom: 0;">
                         <div class="variation-label">
-                            <span>Available Colors</span>
+                            <span>Strap Colors</span>
                             <span id="label-color" class="selected-val">{{ product.colors.first.name }}</span>
                         </div>
                         <div class="color-row">
@@ -1546,8 +1881,14 @@
         };
 
         // --- Professional Selection Logic ---
+        /* ══════════════════════════════════════════════════════════════════
+           VARIANT SELECTION JS
+           ══════════════════════════════════════════════════════════════════ */
         let selectedVariantId = '';
         let selectedColor = '{% if product.colors.exists %}{{ product.colors.first.name|escapejs }}{% endif %}';
+        let selectedStrapClr = '';
+        let selectedDialClr = '';
+        let selectedMaterial = '';
 
         window.handleColorSelection = function(element, colorName) {
             const group = element.closest('.variation-group');
@@ -1559,16 +1900,16 @@
                 document.getElementById('label-color').textContent = colorName;
             }
             
-            // Force sync with Strap Color if section exists
+            // Sync with Strap Color if section exists
             if (document.getElementById('label-strapclr')) {
                 document.getElementById('label-strapclr').textContent = colorName;
                 selectedStrapClr = colorName;
                 
-                // Also update the active state of the Strap Color chips
                 const strapGroup = document.getElementById('label-strapclr').closest('.variation-group');
                 if (strapGroup) {
                     strapGroup.querySelectorAll('.color-option').forEach(o => {
-                        if (o.querySelector('.color-name').textContent.trim().toLowerCase() === colorName.toLowerCase()) {
+                        const name = o.querySelector('.color-name')?.textContent.trim();
+                        if (name && name.toLowerCase() === colorName.toLowerCase()) {
                             strapGroup.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
                             o.classList.add('active');
                         }
@@ -1576,81 +1917,9 @@
                 }
             }
 
+            updateAvailableOptions();
             autoSelectVariant();
         };
-
-        window.autoSelectVariant = function() {
-            const dataEl = document.getElementById('variants-data');
-            if(!dataEl) return;
-            const variants = JSON.parse(dataEl.textContent);
-            
-            const activeColorEl = document.getElementById('label-color');
-            const activeStrapEl = document.getElementById('label-strapclr');
-            const activeDialEl = document.getElementById('label-dialclr');
-            const activeMaterialEl = document.getElementById('label-material');
-            
-            const currentColor = activeColorEl ? activeColorEl.textContent.trim().toLowerCase() : '';
-            const currentStrap = activeStrapEl ? activeStrapEl.textContent.trim().toLowerCase() : '';
-            const currentDial = activeDialEl ? activeDialEl.textContent.trim().toLowerCase() : '';
-            const currentMaterial = activeMaterialEl ? activeMaterialEl.textContent.trim().toLowerCase() : '';
-            
-            let firstVisibleMatch = null;
-            let currentStillVisible = false;
-            let visibleCount = 0;
-
-            // Update visibility of variant buttons
-            document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
-                const vId = btn.dataset.variantId;
-                const v = variants.find(v => v.id == vId);
-                if (v) {
-                    let isMatch = true;
-                    // Check against all active labels (case-insensitive)
-                    if (currentColor && v.strap && v.strap.toLowerCase() !== currentColor) isMatch = false;
-                    if (currentStrap && v.strap && v.strap.toLowerCase() !== currentStrap) isMatch = false;
-                    if (currentDial && v.dial && v.dial.toLowerCase() !== currentDial) isMatch = false;
-                    if (currentMaterial && v.material && v.material.toLowerCase() !== currentMaterial) isMatch = false;
-                    
-                    if (isMatch) {
-                        btn.style.display = 'inline-block';
-                        visibleCount++;
-                        if (!firstVisibleMatch) firstVisibleMatch = btn;
-                        if (vId === selectedVariantId) currentStillVisible = true;
-                    } else {
-                        btn.style.display = 'none';
-                    }
-                }
-            });
-
-            // Handle selection logic
-            if (visibleCount > 0) {
-                if (!currentStillVisible) {
-                    // Previously selected variant is no longer in the filtered set — pick the first match
-                    handleSizeSelection(firstVisibleMatch, true);
-                } else {
-                    // Variant is still compatible — but we still need to refresh its images
-                    // in case the gallery was showing a stale state (e.g., on initial load).
-                    const currentBtn = document.querySelector(`.opt-btn[data-variant-id="${selectedVariantId}"]`);
-                    if (currentBtn) _refreshVariantImages(selectedVariantId);
-                }
-            } else if (variants.length > 0) {
-                // If no variants match the specific combination, show all as fallback or at least one
-                // Usually this means the combination of Strap Color + Material is invalid.
-                // For better UX, we might want to disable/hide invalid color/material options too.
-                // But for now, let's just show all if none match.
-                document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
-                    btn.style.display = 'inline-block';
-                });
-                if (!selectedVariantId) {
-                    handleSizeSelection(document.querySelector('.opt-btn[data-type="variant"]'), true);
-                }
-            }
-        };
-
-
-
-        let selectedStrapClr = '';
-        let selectedDialClr = '';
-        let selectedMaterial = '';
 
         window.handleStrapClrSelection = function(element, clrName) {
             const group = element.closest('.variation-group');
@@ -1689,6 +1958,36 @@
             }
             updateAvailableOptions();
             autoSelectVariant();
+        };
+
+        window.autoSelectVariant = function() {
+            const dataEl = document.getElementById('variants-data');
+            if(!dataEl) return;
+            const variants = JSON.parse(dataEl.textContent);
+            
+            // Try to find a variant that matches current selections
+            let matched = variants.find(v => {
+                let strapMatch = !selectedStrapClr || v.strap === selectedStrapClr;
+                let dialMatch = !selectedDialClr || v.dial === selectedDialClr;
+                let matMatch = !selectedMaterial || v.material === selectedMaterial;
+                return strapMatch && dialMatch && matMatch;
+            });
+
+            if (matched) {
+                const btn = document.querySelector(`.opt-btn[data-variant-id="${matched.id}"]`);
+                if (btn) {
+                    handleSizeSelection(btn, true);
+                    if (selectedVariantId) _refreshVariantImages(selectedVariantId);
+                }
+            } else if (variants.length > 0) {
+                document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
+                    btn.style.display = 'inline-block';
+                });
+                if (!selectedVariantId) {
+                    const firstBtn = document.querySelector('.opt-btn[data-type="variant"]');
+                    if (firstBtn) handleSizeSelection(firstBtn, true);
+                }
+            }
         };
 
         function updateAvailableOptions() {
@@ -1763,19 +2062,23 @@
             const oldPriceEl = document.getElementById('old-price');
             const savingsBadge = document.getElementById('savings-badge');
             
-            if (mainPrice) mainPrice.textContent = `₹${price}`;
+            const p = parseFloat(price);
+            const op = parseFloat(oldPrice);
+            
+            if (mainPrice) mainPrice.textContent = isNaN(p) ? 'N/A' : `₹${p.toLocaleString()}`;
+            
             if (oldPriceEl) {
-                if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
-                    oldPriceEl.textContent = `₹${oldPrice}`;
+                if (!isNaN(op) && !isNaN(p) && op > p) {
+                    oldPriceEl.textContent = `₹${op.toLocaleString()}`;
                     oldPriceEl.style.display = 'inline';
                 } else {
                     oldPriceEl.style.display = 'none';
                 }
             }
             if (savingsBadge) {
-                const diff = parseFloat(oldPrice) - parseFloat(price);
-                if (diff > 0) {
-                    savingsBadge.textContent = `Save ₹${Math.round(diff)}`;
+                const diff = op - p;
+                if (!isNaN(diff) && diff > 0) {
+                    savingsBadge.textContent = `Save ₹${Math.round(diff).toLocaleString()}`;
                     savingsBadge.style.display = 'inline-block';
                 } else {
                     savingsBadge.style.display = 'none';
@@ -1784,10 +2087,10 @@
             
             const stickyPrice = document.getElementById('sticky-price');
             const stickyOldPrice = document.getElementById('sticky-old-price');
-            if (stickyPrice) stickyPrice.textContent = `₹${price}`;
+            if (stickyPrice) stickyPrice.textContent = isNaN(p) ? 'N/A' : `₹${p.toLocaleString()}`;
             if (stickyOldPrice) {
-                if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
-                    stickyOldPrice.textContent = `₹${oldPrice}`;
+                if (!isNaN(op) && !isNaN(p) && op > p) {
+                    stickyOldPrice.textContent = `₹${op.toLocaleString()}`;
                 } else {
                     stickyOldPrice.textContent = '';
                 }
@@ -1821,33 +2124,25 @@
         }
 
         window.handleSizeSelection = function(element, isAutoTriggered = false) {
-            // Update active UI
             const group = element.parentElement;
             group.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
-            // Apply selected ID
             selectedVariantId = element.dataset.variantId;
 
-            // Update Label
             if(document.getElementById('label-size')) {
                 document.getElementById('label-size').textContent = element.querySelector('.variant-chip span:first-child').textContent;
             }
 
-            // Update Price
             updatePriceUI(element.dataset.price, element.dataset.oldPrice);
-
-            // Update Stock
             const stock = parseInt(element.dataset.stock);
             updateStockUI(stock);
 
-            // Update quantity max
             if (qtyInput) {
                 qtyInput.value = 1;
                 qtyInput.max = Math.min(stock, MAX_CART_LIMIT);
             }
 
-            // Update Gallery Images
             const dataEl = document.getElementById('variants-data');
             if (dataEl) {
                 const variants = JSON.parse(dataEl.textContent);
@@ -1855,7 +2150,6 @@
                 const thumbGallery = document.getElementById('thumbGallery');
 
                 if (variant && variant.images && variant.images.length > 0) {
-                    // Show variant-specific images
                     let html = '';
                     variant.images.forEach((imgUrl, vidx) => {
                         html += `
@@ -1865,13 +2159,11 @@
                         `;
                     });
                     thumbGallery.innerHTML = html;
-                    currentImageIndex = 0;   // ← CRITICAL: reset index after rebuilding gallery
+                    currentImageIndex = 0;
                     renderSwap(variant.images[0], thumbGallery.querySelector('.thumb-card'));
                 } else {
-                    // Variant has no images — fall back to product's main image
                     const mainImg = document.getElementById('mainProductImage');
                     if (mainImg && originalProductImage) {
-                        // Rebuild gallery with just the main product image
                         thumbGallery.innerHTML = `
                             <div class="thumb-card active" onclick="swapImage('${originalProductImage}', this)">
                                 <img src="${originalProductImage}" alt="Product Image">
@@ -1882,11 +2174,9 @@
                     }
                 }
                 
-                // Update Description
                 const descContainer = document.getElementById('product-description-text');
                 if (descContainer) {
                     if (variant && variant.description && variant.description.trim() !== '') {
-                        // Replace newlines with <br> for HTML display
                         descContainer.innerHTML = variant.description.replace(/\n/g, '<br>');
                     } else {
                         descContainer.innerHTML = descContainer.getAttribute('data-original');
@@ -1894,7 +2184,6 @@
                 }
             }
 
-            // Sync visual chips if not auto-triggered
             if (!isAutoTriggered) {
                 const dataEl = document.getElementById('variants-data');
                 if (dataEl) {
@@ -1910,9 +2199,6 @@
             }
         };
 
-        /**
-         * Helper to sync a chip group with a value
-         */
         function syncChip(labelSelector, groupClass, textSelector, targetValue, stateSetter) {
             if (!targetValue) return;
             const labels = document.querySelectorAll(labelSelector);
@@ -1932,10 +2218,6 @@
             });
         }
 
-        /**
-         * Refreshes the thumbnail gallery for a given variant ID
-         * without changing price/stock/selection state.
-         */
         function _refreshVariantImages(variantId) {
             const dataEl = document.getElementById('variants-data');
             if (!dataEl) return;
@@ -1980,12 +2262,18 @@
             updateAvailableOptions();
             autoSelectVariant();
             
-            // Fallback if autoSelectVariant didn't find anything
-            if (!selectedVariantId) {
-                const firstVariantBtn = document.querySelector('.opt-btn[data-type="variant"]');
-                if (firstVariantBtn) {
-                    handleSizeSelection(firstVariantBtn, true);
+            // Mark OOS variants
+            document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
+                if (parseInt(btn.dataset.stock, 10) <= 0) {
+                    btn.setAttribute('data-oos', 'true');
+                    btn.disabled = true;
                 }
+            });
+
+            if (!selectedVariantId) {
+                const firstBtn = document.querySelector('.opt-btn[data-type="variant"]:not([data-oos="true"])') || 
+                               document.querySelector('.opt-btn[data-type="variant"]');
+                if (firstBtn) handleSizeSelection(firstBtn, true);
             }
         });
 
@@ -2026,8 +2314,14 @@
                     };
                     
                     // Re-trigger price update with current price
-                    const mainPrice = parseFloat(document.getElementById('main-price').textContent.replace('₹', ''));
-                    const oldPrice = document.getElementById('old-price').textContent.replace('₹', '') || mainPrice;
+                    const parsePrice = (el) => {
+                        if (!el) return 0;
+                        const val = el.textContent.replace(/[₹,]/g, '').trim();
+                        return parseFloat(val) || 0;
+                    };
+                    const mainPrice = parsePrice(document.getElementById('main-price'));
+                    const oldPriceEl = document.getElementById('old-price');
+                    const oldPrice = oldPriceEl && oldPriceEl.style.display !== 'none' ? parsePrice(oldPriceEl) : mainPrice;
                     updatePriceUI(mainPrice, oldPrice);
                     
                     document.getElementById('couponSuccess').style.display = 'block';
@@ -2054,26 +2348,25 @@
             const savingsBadge = document.getElementById('savings-badge');
 
             let displayPrice = parseFloat(newPrice);
+            if (isNaN(displayPrice)) displayPrice = 0;
             
             // Apply active coupon discount if any
-            if (activeCoupon) {
-                // If it's a fixed discount from validation, we use it. 
-                // Note: Percentage coupons might need recalibration on variant change.
-                // For simplicity, we'll re-validate or just use the amount for now.
-                displayPrice = Math.max(0, displayPrice - activeCoupon.discount_amount);
+            if (activeCoupon && activeCoupon.discount_amount) {
+                displayPrice = Math.max(0, displayPrice - parseFloat(activeCoupon.discount_amount));
             }
 
             if (mainPriceEl) mainPriceEl.textContent = '₹' + displayPrice.toFixed(2);
             if (stickyPriceEl) stickyPriceEl.textContent = '₹' + displayPrice.toFixed(2);
 
-            if (oldPrice && oldPrice !== newPrice) {
-                const totalSavings = parseFloat(oldPrice) - displayPrice;
+            let oldVal = parseFloat(oldPrice);
+            if (!isNaN(oldVal) && oldVal > displayPrice) {
+                const totalSavings = oldVal - displayPrice;
                 if (oldPriceEl) {
-                    oldPriceEl.textContent = '₹' + oldPrice;
+                    oldPriceEl.textContent = '₹' + oldVal.toFixed(2);
                     oldPriceEl.style.display = 'inline-block';
                 }
                 if (stickyOldPriceEl) {
-                    stickyOldPriceEl.textContent = '₹' + oldPrice;
+                    stickyOldPriceEl.textContent = '₹' + oldVal.toFixed(2);
                     stickyOldPriceEl.style.display = 'inline-block';
                 }
                 if (savingsBadge && totalSavings > 0) {
@@ -2193,6 +2486,7 @@
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
+                    showLoader();
                     window.location.href = "{% url 'checkout_page' %}?buy_now_id=" + data.item_id;
                 } else {
                     alert(data.error || 'Failed to process Buy Now');
@@ -2310,6 +2604,46 @@
                 closeReviewModal();
             }
         }
+
+        // --- Page Transition Loader Logic ---
+        const loader = document.getElementById('th-loader');
+        const lettersEl = document.getElementById('th-letters');
+        const word = 'TimeHub';
+
+        function showLoader() {
+            if (!loader || !lettersEl) return;
+            lettersEl.innerHTML = '';
+            word.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.className = 'th-letter';
+                s.textContent = ch;
+                s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                lettersEl.appendChild(s);
+            });
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(hideLoader, 5000);
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && 
+                !link.href.startsWith('javascript:') && 
+                !link.target && 
+                !link.href.includes('#') &&
+                link.hostname === window.location.hostname) {
+                showLoader();
+            }
+        });
+        document.addEventListener('submit', (e) => {
+            if (!e.defaultPrevented) showLoader();
+        });
     </script>
 </body>
 </html>

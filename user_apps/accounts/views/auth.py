@@ -6,6 +6,7 @@ from django.conf import settings
 from ..forms import SignupForm, LoginForm,ForgotPasswordForm,ResetPasswordForm
 from ..models import CustomUser, EmailOTP
 from django.views.decorators.cache import never_cache
+from ..utils import send_otp_email
 
 
 @never_cache
@@ -34,25 +35,7 @@ def signup_view(request):
             otp_obj = EmailOTP.objects.create(email=email)
 
             # send email
-            send_mail(
-                subject='Verify Your TimeHub Account ⏱',
-                message=f"""Hello from TimeHub!
-                
-                Welcome to the world of premium timepieces. 
-                
-                🔐 YOUR VERIFICATION CODE:
-                
-                        {otp_obj.otp}
-                        
-                ⏳ This code is valid for 1 minute.
-                🚫 Do not share this code with anyone.
-                
-                If you did not request this, please ignore this email.
-                
-                The TimeHub Team 🚀""",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[email],
-            )
+            send_otp_email(email, otp_obj.otp, context="verification")
 
             # store email in session (for verification step)
             request.session['verify_email'] = email
@@ -94,17 +77,7 @@ def login_view(request):
             if not user.is_active:
                 # generate a fresh OTP and send it
                 otp_obj = EmailOTP.objects.create(user=user)
-                send_mail(
-                    subject='Your OTP Code',
-                    message=f"""Hello from TimeHub ⏱
-                                Your OTP is: {otp_obj.otp}
-                                Valid for 1 minute.
-                                Do not share it with anyone.
-                                - TimeHub Team 🚀
-                                """,
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[user.email],
-                )
+                send_otp_email(user.email, otp_obj.otp, context="verification")
                 request.session['verify_email'] = user.email
                 messages.warning(request, 'Please verify your email first. A new OTP has been sent.')
                 return redirect('verify-otp')
@@ -145,21 +118,7 @@ def forgot_password(request):
         # Store email in session so the verify step knows who to look up
         request.session['reset_email'] = email
 
-        send_mail(
-            subject='TimeHub — Password Reset OTP',
-            message=f"""Hello from TimeHub ⏱
-            You requested a password reset.
-            🔐  YOUR ONE-TIME PASSWORD
-
-                    {otp_obj.otp}   
-                    
-            ⏳ Valid for 1 minute only.
-            🚫 Do not share it with anyone.
-            If you did not request this, please ignore this email.
-             — The TimeHub Team 🚀""",
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[email],
-        )
+        send_otp_email(email, otp_obj.otp, context="password_reset")
 
         messages.success(request, 'A reset OTP has been sent to your email.')
         return redirect('verify-otp-reset')

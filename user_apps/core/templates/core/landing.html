@@ -15,6 +15,167 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        /* =========================================
+           PAGE TRANSITION LOADER
+           ========================================= */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #th-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .th-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px;
+            background: transparent;
+        }
+
+        .th-clock {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .th-arc {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--accent);
+            border-right: 3px solid rgba(255, 106, 0, 0.2);
+            animation: spinArc 0.85s linear infinite;
+        }
+
+        @keyframes spinArc {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-face {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(255, 106, 0, 0.4);
+        }
+
+        .th-face svg {
+            width: 22px;
+            height: 22px;
+            overflow: visible;
+        }
+
+        .hand-min {
+            transform-origin: 14px 14px;
+            animation: rotHand 1.5s linear infinite;
+        }
+
+        .hand-hr {
+            transform-origin: 14px 14px;
+            animation: rotHand 18s linear infinite;
+        }
+
+        @keyframes rotHand {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .th-letters {
+            display: flex;
+            gap: 0px;
+        }
+
+        .th-letter {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            font-family: 'Inter', sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes letterIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .th-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .th-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.4;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+
+        .th-dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .th-dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
         :root {
             --bg-color: #0b0b0e;
             --bg-card: #15151a;
@@ -507,9 +668,17 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .product-img-wrap {
@@ -901,7 +1070,7 @@
             flex-direction: column;
             gap: 30px;
             transition: 0.4s ease;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .mobile-menu.active {
@@ -921,7 +1090,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
             z-index: 999;
             display: none;
@@ -1043,6 +1212,7 @@
                 font-size: 0.8rem;
             }
         }
+
         /* REFERRAL SECTION */
         .referral-section {
             padding: 100px 6%;
@@ -1190,13 +1360,20 @@
 
         .ref-image img {
             max-width: 90%;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
             animation: float 6s ease-in-out infinite;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
         @media (max-width: 992px) {
@@ -1204,15 +1381,33 @@
                 grid-template-columns: 1fr;
                 text-align: center;
             }
-            .ref-content p { margin: 0 auto 40px; }
-            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
-            .ref-code-box { margin: 0 auto; }
-            .ref-image { display: none; }
+
+            .ref-content p {
+                margin: 0 auto 40px;
+            }
+
+            .ref-rewards-grid {
+                max-width: 600px;
+                margin: 0 auto 40px;
+            }
+
+            .ref-code-box {
+                margin: 0 auto;
+            }
+
+            .ref-image {
+                display: none;
+            }
         }
 
         @media (max-width: 600px) {
-            .ref-content h2 { font-size: 2.2rem; }
-            .ref-rewards-grid { grid-template-columns: 1fr; }
+            .ref-content h2 {
+                font-size: 2.2rem;
+            }
+
+            .ref-rewards-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1238,7 +1433,8 @@
                     <span
                         style="font-weight: 500; font-size: 0.9rem; opacity: 0.9; cursor: pointer; transition: opacity 0.3s;"
                         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
-                        <i class="fa-regular fa-user" style="margin-right: 5px; color: var(--primary-color);"></i> {{ user.first_name }}
+                        <i class="fa-regular fa-user" style="margin-right: 5px; color: var(--primary-color);"></i> {{
+                        user.first_name }}
                     </span>
                 </a>
                 <a href="{% url 'logout' %}" class="btn btn-outline"
@@ -1307,7 +1503,8 @@
             <div class="ref-content">
                 <div class="ref-badge">Referral Rewards</div>
                 <h2>Spread the <span>TimeHub</span> Elegance</h2>
-                <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium craftsmanship is better shared.</p>
+                <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium
+                    craftsmanship is better shared.</p>
                 <div class="ref-rewards-grid">
                     <div class="ref-reward-item">
                         <div class="ref-reward-icon"><i class="fas fa-user-plus"></i></div>
@@ -1326,15 +1523,16 @@
                 </div>
                 <div class="ref-action">
                     {% if user.is_authenticated %}
-                        <div class="ref-code-box">
-                            <span class="ref-code-label">Your Code:</span>
-                            <span class="ref-code-value" id="refCodeText">{{ request.user.referral_code }}</span>
-                            <button class="copy-btn" onclick="copyRefCode('{{ request.user.referral_code }}', this)">
-                                <i class="far fa-copy"></i> Copy
-                            </button>
-                        </div>
+                    <div class="ref-code-box">
+                        <span class="ref-code-label">Your Code:</span>
+                        <span class="ref-code-value" id="refCodeText">{{ request.user.referral_code }}</span>
+                        <button class="copy-btn" onclick="copyRefCode('{{ request.user.referral_code }}', this)">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
                     {% else %}
-                        <a href="{% url 'signup' %}" class="btn btn-primary">Join & Start Earning <i class="fas fa-arrow-right"></i></a>
+                    <a href="{% url 'signup' %}" class="btn btn-primary">Join & Start Earning <i
+                            class="fas fa-arrow-right"></i></a>
                     {% endif %}
                 </div>
             </div>
@@ -1354,7 +1552,8 @@
         </div>
         <div class="cards-grid">
             {% for p in products|slice:":3" %}
-            <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card" style="text-decoration:none; color:inherit; display:block;">
+            <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card"
+                style="text-decoration:none; color:inherit; display:block;">
                 <div class="badge-container">
                     {% if forloop.counter == 1 %}
                     <div class="card-badge">Top Choice</div>
@@ -1364,13 +1563,13 @@
                     <div class="card-badge">Exclusive</div>
                     {% endif %}
                 </div>
-                
+
                 {% if p.offer_badge_text %}
                 <div class="offer-badge">
                     {{ p.offer_badge_text }}
                 </div>
                 {% endif %}
-                
+
                 <div class="product-img-wrap">
                     {% if p.image %}
                     <img src="{{ p.image.url }}" alt="{{ p.name }}">
@@ -1383,10 +1582,12 @@
                     <div class="product-price">
                         {% if p.has_offer %}
                         <span style="color: #fff; margin-right: 10px;">₹{{ p.display_price }}</span>
-                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{ p.price }}</span>
+                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{
+                            p.price }}</span>
                         {% elif p.discount_price %}
                         <span style="color: #fff; margin-right: 10px;">₹{{ p.discount_price }}</span>
-                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{ p.price }}</span>
+                        <span style="color: var(--text-muted); text-decoration: line-through; font-size: 0.9rem;">₹{{
+                            p.price }}</span>
                         {% else %}
                         ₹{{ p.price }}
                         {% endif %}
@@ -1396,7 +1597,8 @@
             {% endfor %}
         </div>
         <div style="text-align: center; margin-top: 50px;">
-            <a href="{% url 'product_listing' %}" class="btn btn-outline" style="padding: 15px 40px; font-size: 1rem; border-radius: 30px;">
+            <a href="{% url 'product_listing' %}" class="btn btn-outline"
+                style="padding: 15px 40px; font-size: 1rem; border-radius: 30px;">
                 View All Collection <i class="fa-solid fa-arrow-right" style="margin-left: 10px;"></i>
             </a>
         </div>
@@ -1544,7 +1746,8 @@
                 <p>Your premier destination for luxury timepieces. We are dedicated to delivering excellence to
                     collectors, ensuring authenticity and unparalleled service.</p>
                 <div class="hero-buttons" style="display: flex; gap: 20px;">
-                    <a href="{% url 'product_listing' %}" class="btn btn-primary">Shop Collection <i class="fas fa-arrow-right"></i></a>
+                    <a href="{% url 'product_listing' %}" class="btn btn-primary">Shop Collection <i
+                            class="fas fa-arrow-right"></i></a>
                     <a href="#" class="btn btn-outline">Watch Our Story <i class="fas fa-play-circle"></i></a>
                 </div>
                 <div class="social-links">
@@ -1607,7 +1810,7 @@
         function toggleMenu() {
             mobileMenu.classList.toggle('active');
             overlay.classList.toggle('active');
-            
+
             // Toggle icon
             const icon = mobileToggle.querySelector('i');
             if (mobileMenu.classList.contains('active')) {
@@ -1618,7 +1821,46 @@
         }
 
         mobileToggle.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu);        function copyRefCode(code, btn) {
+        overlay.addEventListener('click', toggleMenu);
+
+        // --- Page Transition Loader Logic ---
+        const loader = document.getElementById('th-loader');
+        const lettersEl = document.getElementById('th-letters');
+        const word = 'TimeHub';
+
+        function showLoader() {
+            if (!loader || !lettersEl) return;
+            lettersEl.innerHTML = '';
+            word.split('').forEach((ch, i) => {
+                const s = document.createElement('span');
+                s.className = 'th-letter';
+                s.textContent = ch;
+                s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                lettersEl.appendChild(s);
+            });
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(hideLoader, 5000);
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href &&
+                !link.href.startsWith('javascript:') &&
+                !link.target &&
+                !link.href.includes('#') &&
+                link.hostname === window.location.hostname) {
+                showLoader();
+            }
+        });
+
+        function copyRefCode(code, btn) {
             navigator.clipboard.writeText(code).then(() => {
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> Copied!';

@@ -15,6 +15,165 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* PAGE TRANSITION LOADER */
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #th-loader.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .th-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 25px;
+            background: transparent;
+        }
+
+        .th-clock {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .th-arc {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary-color);
+            border-right: 3px solid rgba(249, 136, 34, 0.2);
+            animation: spinArc 0.85s linear infinite;
+        }
+
+        @keyframes spinArc {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-face {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(249, 136, 34, 0.4);
+        }
+
+        .th-face svg {
+            width: 22px;
+            height: 22px;
+            overflow: visible;
+        }
+
+        .hand-min {
+            transform-origin: 14px 14px;
+            animation: rotHand 1.5s linear infinite;
+        }
+
+        .hand-hr {
+            transform-origin: 14px 14px;
+            animation: rotHand 18s linear infinite;
+        }
+
+        @keyframes rotHand {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .th-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .th-letters {
+            display: flex;
+            gap: 0px;
+        }
+
+        .th-letter {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes letterIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .th-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .th-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            opacity: 0.4;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+
+        .th-dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .th-dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
         :root {
             --bg-color: #0b0b0e;
             --bg-card: #15151a;
@@ -459,8 +618,15 @@
 
         .table-row {
             display: grid;
-            grid-template-columns: 240px repeat({{ products|length|add:fill_count }}, 1fr);
-            border-bottom: 1px solid var(--border);
+
+            grid-template-columns: 240px repeat({
+                    {
+                    products|length|add:fill_count
+                }
+            }
+
+            , 1fr);
+        border-bottom: 1px solid var(--border);
         }
 
         .table-row:last-child {
@@ -768,6 +934,7 @@
             padding: 0 20px;
         }
         }
+
         /* NEW TOAST SYSTEM */
         .toast-container {
             position: fixed;
@@ -811,14 +978,29 @@
             flex-shrink: 0;
         }
 
-        .toast-error  { border-left: 4px solid #ef4444; }
-        .toast-error i { color: #ef4444; }
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
 
-        .toast-success  { border-left: 4px solid #22c55e; }
-        .toast-success i { color: #22c55e; }
+        .toast-error i {
+            color: #ef4444;
+        }
 
-        .toast-info  { border-left: 4px solid #f98822; }
-        .toast-info i { color: #f98822; }
+        .toast-success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .toast-success i {
+            color: #22c55e;
+        }
+
+        .toast-info {
+            border-left: 4px solid #f98822;
+        }
+
+        .toast-info i {
+            color: #f98822;
+        }
 
         /* Progress bar at bottom */
         .toast::after {
@@ -833,13 +1015,26 @@
             animation: toast-progress 4s linear forwards;
         }
 
-        .toast-error::after   { background: #ef4444; }
-        .toast-success::after { background: #22c55e; }
-        .toast-info::after    { background: #f98822; }
+        .toast-error::after {
+            background: #ef4444;
+        }
+
+        .toast-success::after {
+            background: #22c55e;
+        }
+
+        .toast-info::after {
+            background: #f98822;
+        }
 
         @keyframes toast-progress {
-            from { transform: scaleX(1); }
-            to   { transform: scaleX(0); }
+            from {
+                transform: scaleX(1);
+            }
+
+            to {
+                transform: scaleX(0);
+            }
         }
 
         .toast i {
@@ -848,6 +1043,31 @@
         }
     </style>
 </head>
+
+<div id="th-loader">
+    <div class="th-card">
+        <div class="th-clock">
+            <div class="th-arc"></div>
+            <div class="th-face">
+                <svg viewBox="0 0 28 28" fill="none">
+                    <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2"
+                        stroke-linecap="round" />
+                    <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8"
+                        stroke-linecap="round" />
+                    <circle cx="14" cy="14" r="2" fill="white" />
+                </svg>
+            </div>
+        </div>
+        <div class="th-text">
+            <div class="th-letters" id="th-letters"></div>
+            <div class="th-dots">
+                <div class="th-dot"></div>
+                <div class="th-dot"></div>
+                <div class="th-dot"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% csrf_token %}
 <!-- SEARCH OVERLAY -->
@@ -1008,7 +1228,8 @@
 
                 <div class="table-row">
                     <div class="table-label"><i class="fas fa-user-friends"></i> <span>Gender</span></div>
-                    {% for product in products %}<div class="table-val">{{ product.get_gender_display|default:product.gender }}</div>{% endfor %}
+                    {% for product in products %}<div class="table-val">{{
+                        product.get_gender_display|default:product.gender }}</div>{% endfor %}
                     {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
                 </div>
                 <div class="table-row">
@@ -1045,7 +1266,8 @@
                 </div>
 
                 <div class="basket-bill">
-                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize }})</span><span>₹{{ total_price|default:"--" }}</span></div>
+                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize
+                            }})</span><span>₹{{ total_price|default:"--" }}</span></div>
                     <div class="price-line"><span>Insured Shipping</span><span
                             style="color:var(--primary-color);">₹99</span></div>
                     <div class="price-line"><span>Estimated Tax</span><span>₹55</span></div>
@@ -1080,9 +1302,9 @@
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
 
-        const icon = type === 'error'   ? 'exclamation-circle'
-                   : type === 'success' ? 'check-circle'
-                   :                      'info-circle';
+        const icon = type === 'error' ? 'exclamation-circle'
+            : type === 'success' ? 'check-circle'
+                : 'info-circle';
 
         toast.innerHTML = `
             <i class="fas fa-${icon}"></i>
@@ -1103,6 +1325,7 @@
 
     async function processOrder() {
         {% if not user.is_authenticated %}
+        showLoader();
         window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
         return;
         {% endif %}
@@ -1114,38 +1337,39 @@
 
         const productsData = [
             {% for p in products %}
-            { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: {{ p.variants.exists|yesno:"true,false" }} }{% if not forloop.last %}, {% endif %}
-            {% endfor %}
+    { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: { { p.variants.exists | yesno: "true,false" } } } {% if not forloop.last %}, {% endif %}
+    {% endfor %}
         ];
 
-        let failures = [];
-        for (const p of productsData) {
-            try {
-                const response = await fetch(`/user/cart/add/${p.id}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ quantity: 1 })
-                });
-                const data = await response.json();
-                if (!data.success) {
-                    failures.push(`${p.name}: ${data.error}`);
-                }
-            } catch (err) {
-                failures.push(`${p.name}: Connection error`);
+    let failures = [];
+    for (const p of productsData) {
+        try {
+            const response = await fetch(`/user/cart/add/${p.id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: 1 })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                failures.push(`${p.name}: ${data.error}`);
             }
+        } catch (err) {
+            failures.push(`${p.name}: Connection error`);
         }
+    }
 
-        if (failures.length > 0) {
-            showToast("Selection Issue: " + failures.join(", "), "error");
-            btn.classList.remove('is-loading');
-            btn.disabled = false;
-        } else {
-            window.location.href = "{% url 'checkout_page' %}";
-        }
-        {% endif %}
+    if (failures.length > 0) {
+        showToast("Selection Issue: " + failures.join(", "), "error");
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+    } else {
+        showLoader();
+        window.location.href = "{% url 'checkout_page' %}";
+    }
+    {% endif %}
     }
 
     function addToCart(uuid, btn) {
@@ -1181,6 +1405,7 @@
                     if (d.error && d.error.includes('variant')) {
                         showToast("Options Required: " + d.error, "info");
                     } else if (d.error && d.error.includes('login')) {
+                        showLoader();
                         window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                     } else {
                         showToast(d.error || "Please login to add items.", "error");
@@ -1190,6 +1415,7 @@
                 }
             })
             .catch(() => {
+                showLoader();
                 window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
@@ -1203,20 +1429,22 @@
 
         fetch(`/user/cart/add/${uuid}/`, {
             method: 'POST',
-            headers: { 
-                'X-CSRFToken': '{{ csrf_token }}', 
-                'Content-Type': 'application/json' 
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ quantity: 1 })
         })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
+                    showLoader();
                     window.location.href = "{% url 'checkout_page' %}";
                 } else {
                     if (d.error && d.error.includes('variant')) {
                         showToast("Options Required: " + d.error, "info");
                     } else if (d.error && d.error.includes('login')) {
+                        showLoader();
                         window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                     } else {
                         showToast(d.error || "An error occurred. Please try again.", "error");
@@ -1226,6 +1454,7 @@
                 }
             })
             .catch(() => {
+                showLoader();
                 window.location.href = "{% url 'login' %}?next=" + encodeURIComponent(window.location.pathname);
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
@@ -1283,6 +1512,7 @@
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                showLoader();
                 window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
             }
         });
@@ -1290,9 +1520,51 @@
 
     document.querySelectorAll('.remove-trigger').forEach(b => {
         b.onclick = () => {
+            showLoader();
             fetch(`{% url 'toggle_compare' %}?id=${b.dataset.id}`)
                 .then(r => r.json()).then(d => { if (d.success) window.location.reload(); });
         }
+    });
+
+    // --- Page Transition Loader Logic ---
+    const loader = document.getElementById('th-loader');
+    const lettersEl = document.getElementById('th-letters');
+    const word = 'TimeHub';
+
+    function showLoader() {
+        if (!loader || !lettersEl) return;
+        lettersEl.innerHTML = '';
+        word.split('').forEach((ch, i) => {
+            const s = document.createElement('span');
+            s.className = 'th-letter';
+            s.textContent = ch;
+            s.style.animationDelay = (0.05 + i * 0.05) + 's';
+            lettersEl.appendChild(s);
+        });
+        loader.classList.add('active');
+    }
+
+    function hideLoader() {
+        if (loader) loader.classList.remove('active');
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(hideLoader, 5000);
+    });
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href &&
+            !link.href.startsWith('javascript:') &&
+            !link.target &&
+            !link.href.includes('#') &&
+            link.hostname === window.location.hostname) {
+            showLoader();
+        }
+    });
+
+    document.addEventListener('submit', (e) => {
+        if (!e.defaultPrevented) showLoader();
     });
 </script>
 
