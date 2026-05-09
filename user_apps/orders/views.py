@@ -103,7 +103,7 @@ def get_cart_totals(cart):
                 discount = min(coupon.discount_value, applicable_subtotal)
 
     # Stack the referral first-order discount on top of any coupon saving
-    referral_discount = get_referral_first_order_discount(cart.user, subtotal)
+    referral_discount = get_referral_first_order_discount(cart.user, items=items)
     discount += referral_discount
 
     taxable_amount = max(Decimal('0'), subtotal - discount)
@@ -245,7 +245,7 @@ def checkout_page(request):
             cart.coupon = None
             cart.save()
 
-    referral_discount = get_referral_first_order_discount(request.user, subtotal)
+    referral_discount = get_referral_first_order_discount(request.user, items=items)
     discount = coupon_discount + referral_discount
 
     taxable_amount = max(Decimal('0'), subtotal - discount)

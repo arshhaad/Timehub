@@ -405,6 +405,30 @@
         .stats-grid { grid-template-columns: 1fr; }
         .stat-card { padding: 30px; border-radius: 24px; }
 
+        /* Mobile Horizontal Scroll for Quick Actions */
+        .quick-actions-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 10px;
+            margin: 0 -20px 40px -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-actions-grid::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for cleaner look */
+        }
+
+        .action-tile {
+            min-width: 140px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            padding: 20px 15px;
+        }
+
         .recent-orders { padding: 30px 20px; }
         .orders-table th:nth-child(3), 
         .orders-table td:nth-child(3) { display: none; }

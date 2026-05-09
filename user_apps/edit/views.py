@@ -292,7 +292,7 @@ def cart_view(request):
             else:
                 coupon_discount = min(cart.coupon.discount_value, applicable_subtotal)
 
-    referral_discount = get_referral_first_order_discount(request.user, subtotal)
+    referral_discount = get_referral_first_order_discount(request.user, items=items)
     discount = coupon_discount + referral_discount
 
     # 3. Final Totals

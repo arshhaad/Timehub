@@ -64,8 +64,8 @@ def process_referrer_reward(referee):
     return False
 
 
-def get_referral_first_order_discount(user, subtotal):
-    """Calculate discount for referee's first order."""
+def get_referral_first_order_discount(user, items=None, subtotal=None):
+    """Calculate discount for referee's first order, restricted to the 2 most expensive products."""
     if not user.is_authenticated or not user.referred_by:
         return Decimal('0.00')
     
@@ -75,6 +75,36 @@ def get_referral_first_order_discount(user, subtotal):
         
     referral_offer = ReferralOffer.objects.filter(is_active=True).first()
     if referral_offer:
-        discount = (subtotal * Decimal(referral_offer.referee_discount_percent)) / Decimal('100.00')
+        percent = Decimal(referral_offer.referee_discount_percent)
+        
+        if items:
+            # Sort most expensive items first
+            sorted_items = sorted(
+                items,
+                key=lambda x: (x.variant.display_price if x.variant else x.product.display_price),
+                reverse=True
+            )
+            
+            discountable_subtotal = Decimal('0.00')
+            units_counted = 0
+            MAX_UNITS = 2
+            
+            for item in sorted_items:
+                if units_counted >= MAX_UNITS:
+                    break
+                
+                price = item.variant.display_price if item.variant else item.product.display_price
+                take_qty = min(item.quantity, MAX_UNITS - units_counted)
+                
+                discountable_subtotal += price * take_qty
+                units_counted += take_qty
+                
+            discount = (discountable_subtotal * percent) / Decimal('100.00')
+        elif subtotal:
+            # Fallback if items list not provided
+            discount = (subtotal * percent) / Decimal('100.00')
+        else:
+            return Decimal('0.00')
+            
         return round(discount, 2)
     return Decimal('0.00')

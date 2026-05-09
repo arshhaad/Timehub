@@ -132,44 +132,88 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 35px;
+            gap: 40px;
         }
 
         .nav-links a {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-muted);
             text-decoration: none;
             transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            padding: 8px 0;
         }
 
-        .nav-links a:hover, .nav-links a.active {
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: var(--transition);
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-links a.active {
             color: var(--primary-color);
+            text-shadow: 0 0 15px rgba(249, 136, 34, 0.3);
         }
 
         .quick-actions {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .icon-btn {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-muted);
             cursor: pointer;
             transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             text-decoration: none !important;
             position: relative;
+            overflow: hidden;
         }
 
         .icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .icon-btn i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover i {
+            transform: scale(1.1);
             color: var(--primary-color);
-            transform: translateY(-2px);
         }
 
         .icon-btn i {
@@ -1043,6 +1087,16 @@
         </div>
     </div>
 
+    <!-- SEARCH OVERLAY -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search for luxury timepieces...">
+            <div class="search-close" id="closeSearch">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+
     <header class="dashboard-header">
         <div class="nav-wrap">
             <a href="/" class="logo">
@@ -1059,7 +1113,6 @@
             <a href="/about/#contact">Contact</a>
         </nav>
         <div class="quick-actions">
-            <div class="icon-btn search-trigger" title="Search"><i class="fas fa-search"></i></div>
             <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist">
                 <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="{% if is_in_wishlist %}color: var(--primary-color);{% endif %}"></i>
             </a>
@@ -2603,6 +2656,35 @@
             if (event.target == modal) {
                 closeReviewModal();
             }
+        }
+
+        // --- Search Overlay Logic ---
+        const searchTriggers = document.querySelectorAll('.search-trigger');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const closeSearch = document.getElementById('closeSearch');
+        const searchInput = document.getElementById('searchInput');
+
+        if (searchTriggers.length > 0) {
+            searchTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                    searchOverlay.classList.add('active');
+                    setTimeout(() => searchInput.focus(), 300);
+                });
+            });
+        }
+
+        if (closeSearch) {
+            closeSearch.addEventListener('click', () => {
+                searchOverlay.classList.remove('active');
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                    window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(searchInput.value.trim())}`;
+                }
+            });
         }
 
         // --- Page Transition Loader Logic ---
