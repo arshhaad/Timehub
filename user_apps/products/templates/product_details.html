@@ -240,9 +240,36 @@
         }
 
         /* BREADCRUMB */
-        .breadcrumb { padding: 30px 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; display: flex; gap: 10px; align-items: center; }
+        .breadcrumb-wrap { display: flex; justify-content: space-between; align-items: center; padding: 25px 0 15px; }
+        .breadcrumb { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; display: flex; gap: 10px; align-items: center; }
         .breadcrumb a { color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
         .breadcrumb a:hover { color: #fff; }
+
+        .share-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .share-btn:hover {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 106, 0, 0.3);
+        }
+
+        .share-btn i { font-size: 0.9rem; }
 
         /* PRODUCT GRID */
         .product-content { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; padding: 40px 0 80px; }
@@ -878,6 +905,28 @@
             position: relative;
             overflow: hidden;
         }
+
+        .badge-offer-inline {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: 6px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
         .toast.active { transform: translateX(0); }
         .toast i { font-size: 1.2rem; flex-shrink: 0; }
         .toast-error { border-left: 4px solid #ef4444; }
@@ -1087,15 +1136,6 @@
         </div>
     </div>
 
-    <!-- SEARCH OVERLAY -->
-    <div class="search-overlay" id="searchOverlay">
-        <div class="search-container">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search for luxury timepieces...">
-            <div class="search-close" id="closeSearch">
-                <i class="fas fa-times"></i>
-            </div>
-        </div>
-    </div>
 
     <header class="dashboard-header">
         <div class="nav-wrap">
@@ -1138,16 +1178,25 @@
         <!-- Professional Toast Container -->
         <div class="toast-container" id="toastContainer"></div>
 
-        <div class="breadcrumb">
-            <a href="/"><i class="fas fa-home"></i> Home</a>
-            <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
-            <a href="{% url 'product_listing' %}">Watches</a>
-            {% if product.collection %}
-            <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
-            <a href="{% url 'product_listing' %}?category={{ product.collection.id }}">{{ product.collection.name }}</a>
-            {% endif %}
-            <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
-            <span style="color: var(--primary-color);">{{ product.name }}</span>
+        <div class="breadcrumb-wrap">
+            <div class="breadcrumb">
+                <a href="/"><i class="fas fa-home"></i> Home</a>
+                <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
+                <a href="{% url 'product_listing' %}">Watches</a>
+                {% if product.collection %}
+                <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
+                <a href="{% url 'product_listing' %}?category={{ product.collection.id }}">{{ product.collection.name }}</a>
+                {% if product.active_category_offer %}
+                <span class="badge-offer-inline" style="margin-left: 8px;">{{ product.active_category_offer.discount_percentage }}% OFF</span>
+                {% endif %}
+                {% endif %}
+                <i class="fas fa-chevron-right" style="font-size: 0.7rem; margin: 0 5px; color: var(--text-muted);"></i>
+                <span style="color: var(--primary-color);">{{ product.name }}</span>
+            </div>
+            
+            <button class="share-btn" onclick="shareProduct()" title="Share this product">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
         </div>
 
         <div class="product-content">
@@ -1190,7 +1239,12 @@
             <!-- Right Info -->
             <div class="product-info">
                 <div class="brand-name">{{ product.brand|default:product.collection.name }}</div>
-                <h1 class="product-title">{{ product.name }}</h1>
+                <h1 class="product-title animate-up" id="dynamic-title" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    {{ product.name }}
+                    {% if product.active_product_offer %}
+                    <span class="badge-offer-inline">{{ product.active_product_offer.discount_percentage }}% OFF</span>
+                    {% endif %}
+                </h1>
                 
                 <div class="meta-row">
                     <div class="stars">
@@ -1393,7 +1447,7 @@
                                 <button class="opt-btn {% if forloop.first %}active{% endif %}"
                                         data-type="variant"
                                         data-variant-id="{{ v.id }}"
-                                        data-price="{{ v.effective_discount_price }}"
+                                        data-price="{{ v.display_price }}"
                                         data-old-price="{{ v.effective_price }}"
                                         data-stock="{{ v.stock }}"
                                         onclick="handleSizeSelection(this)">
@@ -1417,7 +1471,7 @@
                             "strap": "{{ v.strap_color|default:''|escapejs }}",
                             "dial": "{{ v.dial_color|default:''|escapejs }}",
                             "material": "{{ v.strap_material|default:''|escapejs }}",
-                            "price": "{{ v.effective_discount_price }}",
+                            "price": "{{ v.display_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
                             "images": [
@@ -1523,7 +1577,12 @@
                     </div>
                     <div class="spec-item">
                         <div class="spec-label">Collection</div>
-                        <div class="spec-value">{{ product.collection.name }}</div>
+                        <div class="spec-value" style="display: flex; align-items: center; gap: 8px;">
+                            {{ product.collection.name }}
+                            {% if product.active_category_offer %}
+                            <span class="badge-offer-inline">{{ product.active_category_offer.discount_percentage }}% OFF</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="spec-item">
                         <div class="spec-label">Gender</div>
@@ -2110,45 +2169,7 @@
             });
         }
 
-        function updatePriceUI(price, oldPrice) {
-            const mainPrice = document.getElementById('main-price');
-            const oldPriceEl = document.getElementById('old-price');
-            const savingsBadge = document.getElementById('savings-badge');
-            
-            const p = parseFloat(price);
-            const op = parseFloat(oldPrice);
-            
-            if (mainPrice) mainPrice.textContent = isNaN(p) ? 'N/A' : `₹${p.toLocaleString()}`;
-            
-            if (oldPriceEl) {
-                if (!isNaN(op) && !isNaN(p) && op > p) {
-                    oldPriceEl.textContent = `₹${op.toLocaleString()}`;
-                    oldPriceEl.style.display = 'inline';
-                } else {
-                    oldPriceEl.style.display = 'none';
-                }
-            }
-            if (savingsBadge) {
-                const diff = op - p;
-                if (!isNaN(diff) && diff > 0) {
-                    savingsBadge.textContent = `Save ₹${Math.round(diff).toLocaleString()}`;
-                    savingsBadge.style.display = 'inline-block';
-                } else {
-                    savingsBadge.style.display = 'none';
-                }
-            }
-            
-            const stickyPrice = document.getElementById('sticky-price');
-            const stickyOldPrice = document.getElementById('sticky-old-price');
-            if (stickyPrice) stickyPrice.textContent = isNaN(p) ? 'N/A' : `₹${p.toLocaleString()}`;
-            if (stickyOldPrice) {
-                if (!isNaN(op) && !isNaN(p) && op > p) {
-                    stickyOldPrice.textContent = `₹${op.toLocaleString()}`;
-                } else {
-                    stickyOldPrice.textContent = '';
-                }
-            }
-        }
+
 
         function updateStockUI(stock) {
             const badge = document.getElementById('stock-badge');
@@ -2625,6 +2646,46 @@
     </div>
     
     <script>
+        function shareProduct() {
+            const productTitle = "{{ product.name }}";
+            const productUrl = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: productTitle,
+                    text: 'Check out this amazing timepiece on TimeHub!',
+                    url: productUrl,
+                }).then(() => {
+                    // Shared successfully
+                }).catch((error) => {
+                    console.log('Error sharing:', error);
+                });
+            } else {
+                // Fallback: Copy to clipboard
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = productUrl;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                
+                // Show notification using the toast container if it exists
+                const container = document.getElementById('toastContainer');
+                if (container) {
+                    const toast = document.createElement('div');
+                    toast.className = 'toast active toast-info';
+                    toast.innerHTML = '<i class="fas fa-check-circle"></i> Link copied to clipboard!';
+                    container.appendChild(toast);
+                    setTimeout(() => {
+                        toast.classList.remove('active');
+                        setTimeout(() => toast.remove(), 600);
+                    }, 3000);
+                } else {
+                    alert('Link copied to clipboard!');
+                }
+            }
+        }
+
         function openReviewModal() { 
             const modal = document.getElementById('reviewModal');
             modal.style.display = 'flex';

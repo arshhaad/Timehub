@@ -251,6 +251,21 @@
             color: var(--accent);
         }
 
+        .badge-offer-inline {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: 6px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
         /* NAVBAR */
         nav {
             position: absolute;
@@ -1564,9 +1579,9 @@
                     {% endif %}
                 </div>
 
-                {% if p.offer_badge_text %}
-                <div class="offer-badge">
-                    {{ p.offer_badge_text }}
+                {% if p.active_product_offer %}
+                <div class="offer-badge" style="background: rgba(255, 106, 0, 0.1); color: var(--accent); border: 1px solid rgba(255, 106, 0, 0.2);">
+                    {{ p.active_product_offer.discount_percentage }}% OFF
                 </div>
                 {% endif %}
 
@@ -1578,7 +1593,12 @@
                     {% endif %}
                 </div>
                 <div class="product-info">
-                    <h3>{{ p.name }}</h3>
+                    <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
+                        {{ p.name }}
+                        {% if p.active_category_offer %}
+                        <span class="badge-offer-inline">{{ p.active_category_offer.discount_percentage }}% OFF</span>
+                        {% endif %}
+                    </h3>
                     <div class="product-price">
                         {% if p.has_offer %}
                         <span style="color: #fff; margin-right: 10px;">₹{{ p.display_price }}</span>

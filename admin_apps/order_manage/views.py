@@ -311,7 +311,7 @@ def update_order_status(request, order_id):
         if new_status == 'Delivered':
             if not order.is_paid:
                 order.is_paid = True
-                process_referrer_reward(order.user)
+                process_referrer_reward(order.user, order=order)
 
             for item in order.items.filter(is_cancelled=False, product__seller__isnull=False):
                 SellerEarnings.objects.get_or_create(

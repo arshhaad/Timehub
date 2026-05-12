@@ -160,7 +160,7 @@
         <p>We encountered an issue while processing your payment. Don't worry, no funds were deducted from your account.</p>
 
         <div class="error-details">
-            <p>Reason: Transaction declined by provider or cancelled by user.</p>
+            <p>Reason: {{ reason|default:"Transaction declined by provider or cancelled by user." }}</p>
         </div>
 
         <div class="btn-group">

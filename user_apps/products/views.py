@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from decimal import Decimal
 from user_apps.core.models import Product, Collection, ComparisonHistory, ProductImage, Cart
 from admin_apps.offers.models import Coupon
 from django.contrib.auth.decorators import login_required
@@ -206,8 +207,31 @@ def compare_products(request):
     if request.user.is_authenticated:
         history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
             
-    # Calculate total price for summary
-    total_price = sum(p.display_price for p in products)
+    # --- Price calculations (mirrors checkout logic) ---
+    # display_price already reflects any active product/category offers
+    TAX_RATE = Decimal('0.03')
+    
+    subtotal = sum(p.display_price for p in products)
+    
+    # How much the customer saved from product/category offers (display only)
+    offer_savings = sum(
+        max(Decimal('0'), p.price - p.display_price)
+        for p in products
+    )
+    
+    # Shipping: free if no items or subtotal >= ₹5000
+    if not products.exists() or subtotal == 0:
+        shipping = Decimal('0.00')
+    elif subtotal >= Decimal('5000.00'):
+        shipping = Decimal('0.00')
+    else:
+        shipping = Decimal('49.00')
+    
+    # Tax: 3% on subtotal
+    tax = round(subtotal * TAX_RATE, 2)
+    
+    # Grand total
+    total_price = subtotal + tax + shipping
     
     fill_count = max(0, 3 - len(products))
     context = {
@@ -215,6 +239,10 @@ def compare_products(request):
         'history': history,
         'places_to_fill': range(fill_count),
         'fill_count': fill_count,
+        'subtotal': subtotal,
+        'shipping': shipping,
+        'tax': tax,
+        'offer_savings': offer_savings,
         'total_price': total_price,
     }
     return render(request, 'compare.html', context)

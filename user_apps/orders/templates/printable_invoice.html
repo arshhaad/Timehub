@@ -102,11 +102,11 @@
 
         <div class="total-section">
             <div class="total-row"><span>Subtotal</span><span>₹{{ order.subtotal|floatformat:2 }}</span></div>
-            <div class="total-row"><span>Tax (3% GST)</span><span>₹{{ order.tax|floatformat:2 }}</span></div>
-            <div class="total-row"><span>Shipping</span><span>₹{{ order.shipping_charge|floatformat:2 }}</span></div>
             {% if order.discount > 0 %}
             <div class="total-row" style="color: #16a34a;"><span>Discount</span><span>-₹{{ order.discount|floatformat:2 }}</span></div>
             {% endif %}
+            <div class="total-row"><span>Tax (3% GST)</span><span>₹{{ order.tax|floatformat:2 }}</span></div>
+            <div class="total-row"><span>Shipping</span><span>₹{{ order.shipping_charge|floatformat:2 }}</span></div>
             <div class="total-row grand-total"><span>Total</span><span>₹{{ order.total_amount|floatformat:2 }}</span></div>
         </div>
 

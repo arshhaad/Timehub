@@ -238,7 +238,9 @@
                     )">
                         <i class="fas fa-pen-nib"></i>
                     </button>
-                    <button type="button" class="btn-circle btn-delete" title="Delete" onclick="showConfirmModal('Are you sure you want to delete this coupon?', () => window.location.href='{% url 'delete_coupon' coupon.id %}')">
+                    <!-- Delete button -->
+                    <button type="button" class="btn-circle btn-delete" title="Delete"
+                        onclick="showDeleteModal('{{ coupon.id }}', '{{ coupon.code }}', '{% url 'delete_coupon' coupon.id %}')">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
@@ -253,6 +255,27 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="form-overlay" onclick="closeModal(event, 'deleteConfirmModal')">
+    <div class="modal-content" onclick="event.stopPropagation()" style="width: 420px; text-align: center; padding: 48px;">
+        <div style="width: 80px; height: 80px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #ef4444;"></i>
+        </div>
+        <h3 style="font-weight: 900; font-size: 1.75rem; margin-bottom: 12px; color: var(--text-main); letter-spacing: -0.02em;">Delete Coupon?</h3>
+        <p id="deleteModalMsg" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 32px;">
+            Are you sure you want to permanently delete this coupon? This action cannot be undone.
+        </p>
+        <form method="POST" id="deleteCouponForm">
+            {% csrf_token %}
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <button type="button" class="btn-submit" onclick="hideDeleteModal()" style="flex:1; background: #f1f5f9; color: var(--text-main); box-shadow: none; margin-top: 0; padding: 14px;">Cancel</button>
+                <button type="submit" class="btn-submit" style="flex:1; background: #ef4444; margin-top: 0; padding: 14px; box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.4);">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <!-- COUPON MODAL -->
 <div id="couponModal" class="form-overlay" onclick="closeModal(event, 'couponModal')">
@@ -394,19 +417,40 @@
         document.body.style.overflow = 'hidden';
     }
 
+    // Also fix closeModal to always restore overflow
     function closeModal(e, id) {
         if (e.target.id === id) {
-            document.getElementById(id).style.display = 'none';
+            hideDeleteModal(); // Generic hide for delete modal
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
             document.body.style.overflow = 'auto';
         }
     }
 
+    // Close all modals on Escape
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.getElementById('couponModal').style.display = 'none';
+            ['couponModal', 'deleteConfirmModal'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.style.display = 'none';
+            });
             document.body.style.overflow = 'auto';
         }
     });
+
+    function showDeleteModal(id, code, url) {
+        const form = document.getElementById('deleteCouponForm');
+        form.action = url;
+        document.getElementById('deleteModalMsg').innerText = `Are you sure you want to permanently delete coupon '${code}'? This action cannot be undone.`;
+        document.getElementById('deleteConfirmModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideDeleteModal() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if(modal) modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 
     /* ---------- CLIENT-SIDE VALIDATION ---------- */
     function clearFormErrors() {
@@ -501,5 +545,6 @@
 
         if (!valid) e.preventDefault();
     });
+
 </script>
 {% endblock %}

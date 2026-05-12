@@ -249,8 +249,19 @@
                 {% endif %}
             </div>
             <div class="item-info">
-                <h3>{{ item.product.name }}</h3>
-                <p>{{ item.product.brand }} | {{ item.product.gender }}</p>
+                <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
+                    {{ item.product.name }}
+                    {% if item.product.active_product_offer %}
+                    <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">{{ item.product.active_product_offer.discount_percentage }}% OFF</span>
+                    {% endif %}
+                </h3>
+                <p style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    {{ item.product.brand|default:item.product.collection.name }}
+                    {% if item.product.active_category_offer %}
+                    <span class="badge-offer-inline">{{ item.product.active_category_offer.discount_percentage }}% OFF</span>
+                    {% endif %}
+                    | {{ item.product.gender }}
+                </p>
                 {% if item.product.stock == 0 %}
                 <span style="color:#ef4444; font-size:0.75rem; font-weight:700;">Out of Stock</span>
                 {% elif not item.product.is_active or item.product.is_deleted or item.product.collection.is_deleted %}

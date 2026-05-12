@@ -485,7 +485,7 @@
                 <a href="{% url 'admin_profile' %}" class="admin-profile">
                     <div class="admin-info" style="text-align:right;">
                         <span class="admin-name">
-                            {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}
+                            {{ user.get_full_name|default:user.email }}
                         </span>
                         <span class="admin-role">Super admin</span>
                     </div>

@@ -29,6 +29,7 @@
 
     .status-badge { padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .s-Pending { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+    .s-Confirmed { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
     .s-Processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
     .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
     .s-OutforDelivery { background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
@@ -219,6 +220,7 @@
             <div class="mini-tracker-line">
                 <div class="mini-tracker-fill" 
                     {% if order.status == 'Pending' %} style="width: 0%;"
+                    {% elif order.status == 'Confirmed' %} style="width: 12.5%;"
                     {% elif order.status == 'Processing' %} style="width: 25%;"
                     {% elif order.status == 'Shipped' %} style="width: 50%;"
                     {% elif order.status == 'Out for Delivery' %} style="width: 75%;"
@@ -226,11 +228,11 @@
                     {% endif %}>
                 </div>
             </div>
-            <div class="mini-step {% if order.status == 'Pending' %}active{% elif order.status != 'Pending' %}completed{% endif %}">
+            <div class="mini-step {% if order.status == 'Pending' %}active{% else %}completed{% endif %}">
                 <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Pending</div>
             </div>
-            <div class="mini-step {% if order.status == 'Processing' %}active{% elif order.status == 'Shipped' or order.status == 'Out for Delivery' or order.status == 'Delivered' %}completed{% endif %}">
+            <div class="mini-step {% if order.status == 'Confirmed' or order.status == 'Processing' %}active{% elif order.status in 'Shipped,Out for Delivery,Delivered' %}completed{% endif %}">
                 <div class="mini-dot-outer"><div class="mini-dot-inner"></div></div>
                 <div class="mini-label">Processing</div>
             </div>
@@ -261,9 +263,9 @@
                 <i class="fas fa-location-dot"></i> Track Order
             </a>
 
-            {% if order.status in 'Pending,Processing' %}
+            {% if order.status == 'Pending' or order.status == 'Confirmed' or order.status == 'Processing' or order.status == 'Shipped' or order.status == 'Out for Delivery' %}
                 {% if order.reschedule_status != 'Rejected' and order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
-                <a href="{% url 'reschedule_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt" style="border-color:var(--primary-color); color:var(--primary-color);">
+                <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action btn-outline-alt" style="border-color:var(--primary-color); color:var(--primary-color);">
                     <i class="fas fa-calendar-alt"></i> Reschedule
                 </a>
                 {% elif order.reschedule_status == 'Rejected' %}
@@ -271,6 +273,10 @@
                     <i class="fas fa-exclamation-circle"></i> RESCHEDULE REQUEST REJECTED
                 </div>
                 {% endif %}
+                <!-- Cancel button for consistency with detail page -->
+                <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action btn-outline-alt" style="color:#ef4444; border-color:rgba(239,68,68,0.2);">
+                    <i class="fas fa-ban"></i> Cancel
+                </a>
             {% elif order.status == 'Delivered' and order.return_status == 'None' %}
                 <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action btn-primary-alt">
                     <i class="fas fa-undo"></i> Return Order

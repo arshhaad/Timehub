@@ -900,6 +900,21 @@
             100% { transform: scale(1); }
         }
 
+        .badge-offer-inline {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: 6px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
         .wishlist-btn {
             position: absolute;
             top: 15px;
@@ -2747,8 +2762,18 @@
                             </button>
                         </div>
                         <div class="card-info-wrap">
-                            <span class="category-label">{{ product.collection.name }}</span>
-                            <h3>{{ product.name }}</h3>
+                            <span class="category-label">
+                                {{ product.collection.name }}
+                                {% if product.active_category_offer %}
+                                <span class="badge-offer-inline">{{ product.active_category_offer.discount_percentage }}% OFF</span>
+                                {% endif %}
+                            </span>
+                            <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
+                                {{ product.name }}
+                                {% if product.active_product_offer %}
+                                <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">{{ product.active_product_offer.discount_percentage }}% OFF</span>
+                                {% endif %}
+                            </h3>
 
                             <div class="price-row">
                                 {% if product.has_offer %}
@@ -2942,39 +2967,6 @@
             });
         });
 
-        // Search Overlay Logic
-        const searchTrigger = document.querySelector('.search-trigger');
-        const searchOverlay = document.getElementById('searchOverlay');
-        const closeSearch = document.getElementById('closeSearch');
-        const overlaySearchInput = document.getElementById('overlaySearchInput');
-
-        if (searchTrigger && searchOverlay) {
-            searchTrigger.addEventListener('click', () => {
-                searchOverlay.classList.add('active');
-                if (overlaySearchInput) setTimeout(() => overlaySearchInput.focus(), 300);
-            });
-        }
-
-        if (closeSearch && searchOverlay) {
-            closeSearch.addEventListener('click', () => {
-                searchOverlay.classList.remove('active');
-            });
-        }
-
-        if (overlaySearchInput) {
-            overlaySearchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && overlaySearchInput.value.trim() !== '') {
-                    showLoader();
-                    window.location.href = `{% url 'product_listing' %}?q=${encodeURIComponent(overlaySearchInput.value.trim())}`;
-                }
-            });
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && searchOverlay) {
-                searchOverlay.classList.remove('active');
-            }
-        });
 
         // --- Price Slider (Corrected & Enhanced) ---
         const minThumb = document.getElementById('minThumb'), maxThumb = document.getElementById('maxThumb');
@@ -3188,7 +3180,6 @@
             }
         });
 
-        // Product card click interception
         document.getElementById('productGrid')?.addEventListener('click', e => {
             if (!compareMode) return; // normal navigation
 
@@ -3199,6 +3190,7 @@
             if (e.target.closest('.action-buttons-row') || e.target.closest('.wishlist-btn')) return;
 
             e.preventDefault();
+            e.stopPropagation(); // Prevents loader from firing
             const { id, name } = card.dataset;
             const image = card.dataset.image || '';
             toggleCompareItem(id, name, image);
@@ -3355,7 +3347,7 @@
         window.toggleWishlist = function (event, productId, btnElement) {
             if (event) {
                 event.preventDefault();
-                event.stopPropagation();
+                event.stopPropagation(); // must be synchronous & first
             }
 
             // Subtle loading state
@@ -3382,9 +3374,11 @@
                             // Optional: Small bounce animation
                             btnElement.style.transform = 'scale(1.3)';
                             setTimeout(() => btnElement.style.transform = '', 200);
+                            showToast('Added to wishlist', 'success');
                         } else {
                             btnElement.classList.remove('active');
                             icon.className = 'far fa-heart';
+                            showToast('Removed from wishlist', 'info');
                         }
                     } else {
                         icon.className = originalClass;
@@ -3394,7 +3388,7 @@
                 .catch(err => {
                     btnElement.style.pointerEvents = 'auto';
                     icon.className = originalClass;
-                    showToast('Connection error. Please check your login status.', 'error');
+                    showToast('Please login to use your wishlist.', 'error');
                 });
         };
 
@@ -3427,6 +3421,12 @@
             });
         }
 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && searchOverlay) {
+                searchOverlay.classList.remove('active');
+            }
+        });
+
         // --- Page Transition Loader Logic ---
         const loader = document.getElementById('th-loader');
         const lettersEl = document.getElementById('th-letters');
@@ -3455,9 +3455,10 @@
 
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
-            if (link && link.href && 
-                !link.href.startsWith('javascript:') && 
-                !link.target && 
+            if (link && link.href &&
+                !e.defaultPrevented &&                          // Prevents loader if click handled by JS
+                !link.href.startsWith('javascript:') &&
+                !link.target &&
                 !link.href.includes('#') &&
                 link.hostname === window.location.hostname) {
                 showLoader();

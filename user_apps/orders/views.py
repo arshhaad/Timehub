@@ -222,15 +222,33 @@ def checkout_page(request):
     subtotal = sum(item.total_price for item in items)
     total_quantity = sum(item.quantity for item in items)
 
-    # How much the customer saved purely from product/category offers (display only)
-    offer_savings = sum(
-        max(
-            Decimal('0'),
-            (item.variant.effective_price if item.variant else item.product.price)
-            - (item.variant.display_price if item.variant else item.product.display_price),
-        ) * item.quantity
-        for item in items
-    )
+    # How much the customer saved from product-specific offers (display only)
+    from django.utils import timezone as _tz
+    _now = _tz.now()
+
+    product_offer_savings = Decimal('0')
+    category_offer_savings = Decimal('0')
+
+    for item in items:
+        base_price = item.variant.effective_price if item.variant else item.product.price
+        discounted = item.variant.display_price if item.variant else item.product.display_price
+        saving_per_unit = max(Decimal('0'), base_price - discounted)
+        if saving_per_unit > 0:
+            # Determine whether the best offer is product-level or category-level
+            p_off = item.product.product_offers.filter(
+                is_active=True, valid_from__lte=_now, valid_to__gte=_now
+            ).order_by('-discount_percentage').first()
+            c_off = item.product.collection.category_offers.filter(
+                is_active=True, valid_from__lte=_now, valid_to__gte=_now
+            ).order_by('-discount_percentage').first()
+            p_disc = p_off.discount_percentage if p_off else 0
+            c_disc = c_off.discount_percentage if c_off else 0
+            if p_disc >= c_disc:
+                product_offer_savings += saving_per_unit * item.quantity
+            else:
+                category_offer_savings += saving_per_unit * item.quantity
+
+    offer_savings = product_offer_savings + category_offer_savings
 
     if subtotal == 0:
         shipping = Decimal('0.00')
@@ -264,6 +282,7 @@ def checkout_page(request):
     default_address = addresses.filter(is_default=True).first() or addresses.first()
 
     # Shared context for both GET render and error re-renders on POST
+    total_saved = offer_savings + coupon_discount + referral_discount
     render_ctx = {
         'items': items,
         'subtotal': subtotal,
@@ -274,6 +293,9 @@ def checkout_page(request):
         'coupon_discount': coupon_discount,
         'referral_discount': referral_discount,
         'offer_savings': offer_savings,
+        'product_offer_savings': product_offer_savings,
+        'category_offer_savings': category_offer_savings,
+        'total_saved': total_saved,
         'cart': cart,
         'addresses': addresses,
         'default_address': default_address,
@@ -351,7 +373,7 @@ def checkout_page(request):
                     if not item.product.is_active or (
                         item.variant and not item.variant.is_active
                     ):
-                        raise Exception(f"'{item.product.name}' is no longer available.")
+                        raise Exception(f"'{item.product.name}' is not available now ")
 
                     available_stock = (
                         item.variant.stock if item.variant else item.product.stock
@@ -382,8 +404,10 @@ def checkout_page(request):
                         item.product.stock -= item.quantity
                         item.product.save()
 
-                # Remove ordered items from the cart
-                items.delete()
+                # Remove ordered items from the cart only for non-Razorpay payments
+                # Razorpay items are cleared in verify_payment after success
+                if payment_method != 'razorpay':
+                    items.delete()
                 if current_buy_now_id:
                     del request.session['buy_now_id']
 
@@ -484,12 +508,23 @@ def order_detail(request, order_uuid):
         )
 
     from datetime import datetime
+    from decimal import Decimal
+
+    # Pre-calculate online payment discount for COD unpaid orders
+    online_discount = Decimal('0')
+    online_payment_total = order.total_amount
+    if order.payment_method == 'cod' and not order.is_paid and order.status in ['Pending', 'Confirmed', 'Processing']:
+        online_discount = round(order.total_amount * Decimal('0.05'), 2)
+        online_payment_total = max(Decimal('0'), order.total_amount - online_discount)
+
     return render(request, 'order_detail.html', {
         'order': order,
         'items': items,
         'address': address,
         'reviewed_product_ids': reviewed_product_ids,
         'today': datetime.now(),
+        'online_discount': online_discount,
+        'online_payment_total': online_payment_total,
     })
 
 
@@ -960,14 +995,20 @@ def apply_coupon(request):
     else:
         shipping = Decimal('49.00')
 
+    # 1. Coupon Discount
     if coupon.discount_type == 'percentage':
-        discount = (applicable_subtotal * coupon.discount_value) / Decimal('100')
+        coupon_discount = (applicable_subtotal * coupon.discount_value) / Decimal('100')
         if coupon.max_discount_amount:
-            discount = min(discount, coupon.max_discount_amount)
+            coupon_discount = min(coupon_discount, coupon.max_discount_amount)
     else:
-        discount = min(coupon.discount_value, applicable_subtotal)
+        coupon_discount = min(coupon.discount_value, applicable_subtotal)
 
-    taxable = max(Decimal('0'), subtotal - discount)
+    # 2. Referral Discount (Must stack)
+    referral_discount = get_referral_first_order_discount(request.user, items=items)
+    
+    total_discount = coupon_discount + referral_discount
+
+    taxable = max(Decimal('0'), subtotal - total_discount)
     tax = round(taxable * TAX_RATE, 2)
     total = taxable + tax + shipping
 
@@ -975,7 +1016,8 @@ def apply_coupon(request):
         'success': True,
         'message': f'Coupon {coupon.code} applied successfully!',
         'subtotal': str(subtotal),
-        'discount': str(discount),
+        'discount': str(coupon_discount), # Still return just coupon discount for the coupon line
+        'referral_discount': str(referral_discount),
         'tax': str(tax),
         'shipping': str(shipping),
         'total': str(total),
@@ -1003,8 +1045,10 @@ def remove_coupon(request):
     else:
         shipping = Decimal('49.00')
 
-    # Note: discount is 0 here
-    taxable_amount = subtotal
+    # Referral Discount remains even if coupon is removed
+    referral_discount = get_referral_first_order_discount(request.user, items=items)
+
+    taxable_amount = max(Decimal('0'), subtotal - referral_discount)
     tax = round(taxable_amount * TAX_RATE, 2)
     total = taxable_amount + tax + shipping
 
@@ -1013,6 +1057,7 @@ def remove_coupon(request):
         'message': 'Coupon removed successfully',
         'subtotal': str(subtotal),
         'discount': '0.00',
+        'referral_discount': str(referral_discount),
         'tax': str(tax),
         'shipping': str(shipping),
         'total': str(total),

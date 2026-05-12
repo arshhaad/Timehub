@@ -619,13 +619,7 @@
         .table-row {
             display: grid;
 
-            grid-template-columns: 240px repeat({
-                    {
-                    products|length|add:fill_count
-                }
-            }
-
-            , 1fr);
+            grid-template-columns: 240px repeat({{ products|length|add:fill_count }}, 1fr);
         border-bottom: 1px solid var(--border);
         }
 
@@ -1210,9 +1204,11 @@
             <div class="specs-group">
                 <div class="table-row">
                     <div class="table-label"><i class="fas fa-tag"></i> <span>Price Point</span></div>
-                    {% for product in products %}<div class="table-val"
-                        style="color:var(--primary-color); font-weight:800; font-size:1.1rem;">₹{{ product.price }}
-                    </div>{% endfor %}
+                    {% for product in products %}
+                    <div class="table-val" style="color:var(--primary-color); font-weight:800; font-size:1.1rem;">
+                        ₹{{ product.display_price }}
+                    </div>
+                    {% endfor %}
                     {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
                 </div>
                 <div class="table-row">
@@ -1228,8 +1224,9 @@
 
                 <div class="table-row">
                     <div class="table-label"><i class="fas fa-user-friends"></i> <span>Gender</span></div>
-                    {% for product in products %}<div class="table-val">{{
-                        product.get_gender_display|default:product.gender }}</div>{% endfor %}
+                    {% for product in products %}
+                    <div class="table-val">{{ product.get_gender_display|default:product.gender }}</div>
+                    {% endfor %}
                     {% for i in places_to_fill %}<div class="table-val">—</div>{% endfor %}
                 </div>
                 <div class="table-row">
@@ -1259,18 +1256,31 @@
                         </div>
                         <div class="basket-details">
                             <h5>{{ product.name|truncatechars:22 }}</h5>
-                            <p>Qty: 1 · ₹{{ product.price }}</p>
+                            <p>Qty: 1 · ₹{{ product.display_price }}</p>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
 
                 <div class="basket-bill">
-                    <div class="price-line"><span>Subtotal ({{ products|length }} item{{ products|length|pluralize
-                            }})</span><span>₹{{ total_price|default:"--" }}</span></div>
-                    <div class="price-line"><span>Insured Shipping</span><span
-                            style="color:var(--primary-color);">₹99</span></div>
-                    <div class="price-line"><span>Estimated Tax</span><span>₹55</span></div>
+                    <div class="price-line">
+                        <span>Subtotal ({{ products|length }} item{{ products|length|pluralize }})</span>
+                        <span>₹{{ subtotal|default:"--" }}</span>
+                    </div>
+                    {% if offer_savings > 0 %}
+                    <div class="price-line" style="color: #22c55e;">
+                        <span>Offer Savings</span>
+                        <span>-₹{{ offer_savings }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="price-line">
+                        <span>Insured Shipping</span>
+                        <span style="color:var(--primary-color);">{% if shipping == 0 %}FREE{% else %}₹{{ shipping }}{% endif %}</span>
+                    </div>
+                    <div class="price-line">
+                        <span>Estimated Tax (3%)</span>
+                        <span>₹{{ tax|default:"0" }}</span>
+                    </div>
                     <div class="price-line total">
                         <span>Total Selection</span>
                         <span class="price-total">₹{{ total_price|default:"--" }}</span>
@@ -1337,7 +1347,7 @@
 
         const productsData = [
             {% for p in products %}
-    { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: { { p.variants.exists | yesno: "true,false" } } } {% if not forloop.last %}, {% endif %}
+    { id: "{{ p.uuid }}", name: "{{ p.name|escapejs }}", hasVariants: {{ p.variants.exists|yesno:"true,false" }} } {% if not forloop.last %}, {% endif %}
     {% endfor %}
         ];
 
@@ -1555,6 +1565,7 @@
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (link && link.href &&
+            !e.defaultPrevented &&                          // Prevents loader if click handled by JS
             !link.href.startsWith('javascript:') &&
             !link.target &&
             !link.href.includes('#') &&

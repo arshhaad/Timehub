@@ -124,7 +124,7 @@
             {% endif %}
         </div>
         <div class="profile-details">
-            <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+            <h2>{{ user.get_full_name|default:user.email }}</h2>
             <div class="role-badge">
                 <i class="fas fa-shield-alt"></i> Super Admin
             </div>

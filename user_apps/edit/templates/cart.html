@@ -295,8 +295,19 @@
                     {% endif %}
                 </div>
                 <div class="item-info">
-                    <h3>{{ item.product.name }}</h3>
-                    <p>{{ item.product.brand }} | {{ item.product.gender }}</p>
+                    <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
+                        {{ item.product.name }}
+                        {% if item.product.active_product_offer %}
+                        <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">{{ item.product.active_product_offer.discount_percentage }}% OFF</span>
+                        {% endif %}
+                    </h3>
+                    <p style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        {{ item.product.brand|default:item.product.collection.name }}
+                        {% if item.product.active_category_offer %}
+                        <span class="badge-offer-inline">{{ item.product.active_category_offer.discount_percentage }}% OFF</span>
+                        {% endif %}
+                        | {{ item.product.gender }}
+                    </p>
                     {% if item.variant %}
                     <p style="color: var(--primary-color); font-size: 0.8rem; font-weight: 600; margin-top: -5px;">
                         Variant: {{ item.variant.strap_color|default:"" }} {{ item.variant.strap_material|default:"" }}
@@ -339,14 +350,31 @@
         <div class="cart-summary-card">
             <div class="summary-title">Order Summary</div>
             
+            <!-- 1. Subtotal (After Offers) -->
             <div class="summary-row">
                 <span>Subtotal</span>
                 ₹<span id="cart-subtotal">{{ subtotal|floatformat:2 }}</span>
             </div>
-            <div class="summary-row">
-                <span>Estimated Tax</span>
-                ₹<span id="cart-tax">{{ tax|floatformat:2 }}</span>
+
+            <!-- 2. Coupon Discount -->
+            <div class="summary-row" id="cart-coupon-row" style="display: {% if coupon_discount > 0 %}flex{% else %}none{% endif %};">
+                <span style="display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-ticket-alt" style="color:#22c55e;font-size:0.75rem;"></i>
+                    Coupon{% if cart.coupon %} <em style="color:var(--primary-color);font-style:normal;font-weight:700;">({{ cart.coupon.code }})</em>{% endif %}
+                </span>
+                <span style="color:#22c55e;">−₹<span id="cart-coupon-discount">{{ coupon_discount|floatformat:2 }}</span></span>
             </div>
+
+            <!-- 3. Referral Discount -->
+            <div class="summary-row" id="cart-referral-row" style="display: {% if referral_discount > 0 %}flex{% else %}none{% endif %};">
+                <span style="display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-users" style="color:#22c55e;font-size:0.75rem;"></i>
+                    Referral Discount
+                </span>
+                <span style="color:#22c55e;">−₹<span id="cart-referral-discount">{{ referral_discount|floatformat:2 }}</span></span>
+            </div>
+
+            <!-- 4. Shipping -->
             <div class="summary-row">
                 <span>Shipping</span>
                 <span id="cart-shipping-container" style="text-align: right;">
@@ -357,6 +385,20 @@
                         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">(Free above ₹5,000)</div>
                     {% endif %}
                 </span>
+            </div>
+
+            <!-- 5. Estimated Tax -->
+            <div class="summary-row">
+                <span>Estimated Tax (3%)</span>
+                ₹<span id="cart-tax">{{ tax|floatformat:2 }}</span>
+            </div>
+
+            <!-- You're saving banner -->
+            <div id="cart-savings-banner" style="display: {% if total_saved > 0 %}flex{% else %}none{% endif %}; background:rgba(34,197,94,0.07); border:1px dashed rgba(34,197,94,0.3); border-radius:12px; padding:10px 14px; justify-content:space-between; align-items:center; font-size:0.8rem; margin:15px 0;">
+                <span style="color:#22c55e; font-weight:700; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-piggy-bank"></i> You're saving
+                </span>
+                <span style="color:#22c55e; font-weight:800;">₹<span id="cart-total-saved">{{ total_saved|floatformat:2 }}</span></span>
             </div>
 
             <!-- Free Shipping Progress Bar -->
@@ -425,10 +467,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Update exact elements
                     document.getElementById(`qty-val-${itemId}`).textContent = data.item_quantity;
                     document.getElementById(`item-price-${itemId}`).textContent = `₹${parseFloat(data.item_total).toFixed(2)}`;
-                    
+
                     document.getElementById('cart-subtotal').textContent = parseFloat(data.subtotal).toFixed(2);
                     document.getElementById('cart-tax').textContent = parseFloat(data.tax).toFixed(2);
-                    
+
+                    // Update Coupon row (if present in DOM)
+                    const couponVal = parseFloat(data.coupon_discount || 0);
+                    const couponRow = document.getElementById('cart-coupon-row');
+                    const couponEl = document.getElementById('cart-coupon-discount');
+                    if (couponRow) couponRow.style.display = couponVal > 0 ? 'flex' : 'none';
+                    if (couponEl) couponEl.textContent = couponVal.toFixed(2);
+
+                    // Update Referral row (if present in DOM)
+                    const referralVal = parseFloat(data.referral_discount || 0);
+                    const referralRow = document.getElementById('cart-referral-row');
+                    const referralEl = document.getElementById('cart-referral-discount');
+                    if (referralRow) referralRow.style.display = referralVal > 0 ? 'flex' : 'none';
+                    if (referralEl) referralEl.textContent = referralVal.toFixed(2);
+
+                    const totalSavedVal = parseFloat(data.total_saved || 0);
+                    document.getElementById('cart-total-saved').textContent = totalSavedVal.toFixed(2);
+                    document.getElementById('cart-savings-banner').style.display = totalSavedVal > 0 ? 'flex' : 'none';
+
                     const shippingEl = document.getElementById('cart-shipping-container');
                     const shipVal = parseFloat(data.shipping);
                     const subtotalVal = parseFloat(data.subtotal);

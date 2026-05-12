@@ -78,8 +78,9 @@
     .btn-primary-alt:hover { background: var(--primary-hover); transform: translateY(-2px); }
     .btn-outline-alt { background: transparent; border: 1px solid var(--border-color); color: #fff; }
     .btn-outline-alt:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
-    .btn-danger-alt { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
     .btn-danger-alt:hover { background: #ef4444; color: #fff; }
+    .btn-return-order { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); width: auto; flex: none; min-width: 160px; }
+    .btn-return-order:hover { background: #ef4444; color: #fff; }
 
     /* Pro-Style Modals */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
@@ -360,8 +361,17 @@
                         </div>
                     </div>
 
+                    <!-- Return Button under Scheduled Delivery -->
+                    {% if order.status == 'Delivered' and order.status != 'Return Requested' and order.status != 'Returned' %}
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <button class="btn-action btn-return-order" onclick="openOrderReturnModal()">
+                            <i class="fas fa-undo-alt"></i> Return Order
+                        </button>
+                    </div>
+                    {% endif %}
+
                     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color); display: flex; gap: 16px; flex-wrap: wrap;">
-                        {% if order.status == 'Pending' or order.status == 'CONFIRMED' or order.status == 'Processing' %}
+                        {% if order.status == 'Pending' or order.status == 'Confirmed' or order.status == 'Processing' or order.status == 'Shipped' or order.status == 'Out for Delivery' %}
                             {% if order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}
                                 <button class="btn-action btn-outline-alt" onclick="openRescheduleModal()"><i class="fas fa-calendar-alt"></i> Reschedule</button>
                             {% endif %}
@@ -374,20 +384,62 @@
 
         <!-- RIGHT COLUMN -->
         <div style="display: flex; flex-direction: column; gap: 24px;">
-            <!-- Summary -->
+            <!-- Order Summary -->
             <div class="card">
                 <div class="card-header"><div class="card-title"><i class="fas fa-receipt"></i> ORDER SUMMARY</div></div>
                 <div class="card-body">
                     <div class="summary-row"><span class="summary-label">Subtotal</span><span class="summary-value">₹{{ order.subtotal|floatformat:2 }}</span></div>
+                    {% if order.discount > 0 %}
+                    <div class="summary-row"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>
+                    {% endif %}
                     <div class="summary-row"><span class="summary-label">Tax (3%)</span><span class="summary-value">₹{{ order.tax|floatformat:2 }}</span></div>
                     <div class="summary-row">
                         <span class="summary-label">Shipping</span>
                         <span class="summary-value">{% if order.shipping_charge == 0 %}Free{% else %}₹{{ order.shipping_charge|floatformat:2 }}{% endif %}</span>
                     </div>
-                    {% if order.discount > 0 %}<div class="summary-row"><span class="summary-label">Discount</span><span class="summary-value discount-value">−₹{{ order.discount|floatformat:2 }}</span></div>{% endif %}
                     <div class="summary-row summary-total"><span class="summary-label">Total Amount</span><span class="summary-value">₹{{ order.total_amount|floatformat:2 }}</span></div>
                 </div>
             </div>
+
+            <!-- Pay Online Discount Card (Only for unpaid COD orders) -->
+            {% if order.payment_method == 'cod' and not order.is_paid and order.status in 'Pending,Confirmed,Processing' %}
+            <div class="card" style="border-color: rgba(34,197,94,0.4); background: linear-gradient(135deg, rgba(34,197,94,0.07) 0%, rgba(16,185,129,0.04) 100%);">
+                <div class="card-header" style="border-color: rgba(34,197,94,0.2);">
+                    <div class="card-title" style="color: #22c55e;"><i class="fas fa-bolt"></i> Online Payment Offer</div>
+                    <span style="background: rgba(34,197,94,0.15); color: #22c55e; font-size: .72rem; font-weight: 800; padding: 4px 10px; border-radius: 20px;">LIMITED TIME</span>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 18px;">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(34,197,94,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="fas fa-percent" style="color: #22c55e; font-size: 1.3rem;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 2px;">Save <span style="color: #22c55e;">5%</span> instantly!</p>
+                            <p style="font-size: 0.82rem; color: var(--text-muted);">Switch from COD to secure online payment</p>
+                        </div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; border: 1px solid rgba(34,197,94,0.15);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted); font-size: .85rem;">Current Total</span>
+                            <span style="font-weight: 700; color: #fff;">₹{{ order.total_amount|floatformat:2 }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted); font-size: .85rem;">Online Discount (5%)</span>
+                            <span style="font-weight: 700; color: #22c55e;">−₹{{ online_discount|floatformat:2 }}</span>
+                        </div>
+                        <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-weight: 800; font-size: .95rem; color: #fff;">You Pay</span>
+                            <span style="font-weight: 800; font-size: 1.1rem; color: #22c55e;">₹{{ online_payment_total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'payments:pay_online_cod' order.id %}" class="btn-action btn-primary-alt" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; width: 100%; justify-content: center; gap: 10px; text-decoration: none;">
+                        <i class="fas fa-shield-alt"></i> Pay Online &amp; Save 5%
+                    </a>
+                    <p style="text-align: center; margin-top: 10px; font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-lock" style="margin-right: 4px;"></i>Secured by Razorpay • 256-bit SSL</p>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Address -->
             <div class="card">
@@ -520,6 +572,15 @@
     function openRescheduleModal() { document.getElementById('rescheduleModal').classList.add('active'); }
     function openItemReturnModal(itemId, itemName) {
         document.getElementById('selectedItemsContainer').innerHTML = `<input type="hidden" name="item_ids" value="${itemId}">`;
+        document.getElementById('returnModal').classList.add('active');
+    }
+    function openOrderReturnModal() {
+        document.getElementById('selectedItemsContainer').innerHTML = '';
+        {% for item in items %}
+            {% if not item.is_cancelled and not item.is_returned %}
+                document.getElementById('selectedItemsContainer').innerHTML += `<input type="hidden" name="item_ids" value="{{ item.id }}">`;
+            {% endif %}
+        {% endfor %}
         document.getElementById('returnModal').classList.add('active');
     }
     function openReviewModal(productId, productName) {

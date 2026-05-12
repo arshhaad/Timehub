@@ -191,6 +191,123 @@
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Premium Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            z-index: 11000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(17, 17, 20, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 320px;
+            max-width: 420px;
+            transform: translateX(calc(100% + 40px));
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.95rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .toast i {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-error i {
+            color: #ef4444;
+        }
+
+        .toast-success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .toast-success i {
+            color: #22c55e;
+        }
+
+        .toast-info {
+            border-left: 4px solid #f98822;
+        }
+
+        .toast-info i {
+            color: #f98822;
+        }
+
+        .toast::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+            transform-origin: left;
+            animation: toast-progress 4s linear forwards;
+        }
+
+        @keyframes toast-progress {
+            from {
+                transform: scaleX(1);
+            }
+
+            to {
+                transform: scaleX(0);
+            }
+        }
+
+        .toast-error::after {
+            background: #ef4444;
+        }
+
+        .toast-success::after {
+            background: #22c55e;
+        }
+
+        .toast-info::after {
+            background: #f98822;
+        }
+
+        .badge-offer-inline {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: 6px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -1497,6 +1614,9 @@
 
 <!-- HERO SECTION -->
 <section class="hero">
+    <!-- Professional Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <video autoplay muted loop playsinline class="hero-bg-video">
         <source src="{% static 'images/watchs_hero.mp4' %}" type="video/mp4">
     </video>
@@ -1692,7 +1812,12 @@
                     <i class="fas fa-star" style="color:var(--primary-color);"></i>
                     <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
                 </div>
-                <h3>{{ p.name }}</h3>
+                <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
+                    {{ p.name }}
+                    {% if p.active_product_offer %}
+                    <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">{{ p.active_product_offer.discount_percentage }}% OFF</span>
+                    {% endif %}
+                </h3>
                 <div class="price-wrap">
                     {% if p.discount_price %}
                     <span class="price">₹{{ p.discount_price }}</span>
@@ -1868,6 +1993,39 @@
 </footer>
 
 <script>
+    // Global Toast System
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const icon = type === 'success' ? 'check-circle' :
+            (type === 'error' || type === 'danger' ? 'exclamation-circle' :
+                (type === 'warning' ? 'exclamation-triangle' : 'info-circle'));
+
+        toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div class="toast-message">${message}</div>
+            `;
+
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('active'), 10);
+
+        setTimeout(() => {
+            toast.classList.remove('active');
+            setTimeout(() => toast.remove(), 600);
+        }, 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if messages %}
+        {% for message in messages %}
+        showToast("{{ message|escapejs }}", "{{ message.tags|default:'success' }}");
+        {% endfor %}
+        {% endif %}
+    });
+
     window.addEventListener('scroll', () => {
         const header = document.getElementById('header');
         if (window.scrollY > 50) {

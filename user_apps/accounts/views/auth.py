@@ -85,7 +85,7 @@ def login_view(request):
             # all good — log in
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, f'Successfully signed in as {user.email}. Welcome back!')
-            return redirect('landing_view')
+            return redirect('home')
 
     else:
         form = LoginForm()

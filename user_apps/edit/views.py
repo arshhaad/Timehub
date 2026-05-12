@@ -264,10 +264,43 @@ def cart_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product', 'variant').all()
     
-    # 1. Base Calculations
-    subtotal = sum(item.total_price for item in items)
-    
-    # Shipping: Free on ₹5000+ else ₹49
+    # 1. Base Calculations & Offer Savings
+    from django.utils import timezone as _tz
+    _now = _tz.now()
+
+    base_subtotal = Decimal('0')
+    product_offer_savings = Decimal('0')
+    category_offer_savings = Decimal('0')
+    subtotal = Decimal('0')
+
+    for item in items:
+        # The price as it appears in the catalog (usually discounted)
+        item_price = item.variant.display_price if item.variant else item.product.display_price
+        # The original price (before any offers)
+        original_price = item.variant.effective_price if item.variant else item.product.price
+        
+        subtotal += item_price * item.quantity
+        base_subtotal += original_price * item.quantity
+        
+        # Calculate specific offer savings for this item
+        saving_per_unit = max(Decimal('0'), original_price - item_price)
+        if saving_per_unit > 0:
+            p_off = item.product.product_offers.filter(
+                is_active=True, valid_from__lte=_now, valid_to__gte=_now
+            ).order_by('-discount_percentage').first()
+            c_off = item.product.collection.category_offers.filter(
+                is_active=True, valid_from__lte=_now, valid_to__gte=_now
+            ).order_by('-discount_percentage').first()
+            
+            p_disc = p_off.discount_percentage if p_off else 0
+            c_disc = c_off.discount_percentage if c_off else 0
+            
+            if p_disc >= c_disc:
+                product_offer_savings += saving_per_unit * item.quantity
+            else:
+                category_offer_savings += saving_per_unit * item.quantity
+
+    # Shipping: Free on ₹5000+ else ₹49 (calculated on the discounted subtotal)
     if subtotal == 0: shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'): shipping = Decimal('0.00')
     else: shipping = Decimal('49.00')
@@ -314,9 +347,18 @@ def cart_view(request):
     shipping_needed = max(0, Decimal('5000.00') - subtotal)
     shipping_percent = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
 
+    total_saved = product_offer_savings + category_offer_savings + coupon_discount + referral_discount
+
     return render(request, 'cart.html', {
         'cart': cart, 'items': items,
-        'subtotal': subtotal, 'shipping': shipping, 'tax': tax, 'total': total,
+        'base_subtotal': base_subtotal,
+        'subtotal': subtotal, # This is the taxable amount before coupon/referral
+        'product_offer_savings': product_offer_savings,
+        'category_offer_savings': category_offer_savings,
+        'coupon_discount': coupon_discount,
+        'referral_discount': referral_discount,
+        'total_saved': total_saved,
+        'shipping': shipping, 'tax': tax, 'total': total,
         'has_stock_issues': has_stock_issues,
         'shipping_needed': shipping_needed, 'shipping_percentage': shipping_percent
     })
@@ -405,22 +447,83 @@ def update_cart(request, item_id):
             
         item.save()
         
-        # Fresh Totals
-        cart = item.cart
-        all_items = cart.items.all()
-        subtotal = sum(i.total_price for i in all_items)
-        ship = Decimal('0') if subtotal >= 5000 or subtotal == 0 else Decimal('49')
-        tax = round(subtotal * Decimal('0.03'), 2)
-        
+        # Fresh Totals Calculation
+        cart = item.cart  # re-bind after item.save()
+        all_items = cart.items.select_related('product', 'variant').all()
+        from django.utils import timezone as _tz
+        from admin_apps.offers.services import get_referral_first_order_discount
+        _now = _tz.now()
+
+        base_subtotal = Decimal('0')
+        product_offer_savings = Decimal('0')
+        category_offer_savings = Decimal('0')
+        subtotal = Decimal('0')
+
+        for i in all_items:
+            i_price = i.variant.display_price if i.variant else i.product.display_price
+            orig_price = i.variant.effective_price if i.variant else i.product.price
+
+            subtotal += i_price * i.quantity
+            base_subtotal += orig_price * i.quantity
+
+            save_per = max(Decimal('0'), orig_price - i_price)
+            if save_per > 0:
+                p_o = i.product.product_offers.filter(
+                    is_active=True, valid_from__lte=_now, valid_to__gte=_now
+                ).order_by('-discount_percentage').first()
+                c_o = i.product.collection.category_offers.filter(
+                    is_active=True, valid_from__lte=_now, valid_to__gte=_now
+                ).order_by('-discount_percentage').first()
+                if (p_o.discount_percentage if p_o else 0) >= (c_o.discount_percentage if c_o else 0):
+                    product_offer_savings += save_per * i.quantity
+                else:
+                    category_offer_savings += save_per * i.quantity
+
+        # Coupon discount (on post-offer subtotal)
+        coupon_discount = Decimal('0')
+        if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
+            if cart.coupon.applicable_collection:
+                collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
+                applicable_items = [i for i in all_items if i.product.collection_id in collection_ids]
+                applicable_subtotal = sum(i.total_price for i in applicable_items)
+            else:
+                applicable_subtotal = subtotal
+            if applicable_subtotal >= cart.coupon.min_purchase_amount:
+                if cart.coupon.discount_type == 'percentage':
+                    coupon_discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
+                    if cart.coupon.max_discount_amount:
+                        coupon_discount = min(coupon_discount, cart.coupon.max_discount_amount)
+                else:
+                    coupon_discount = min(cart.coupon.discount_value, applicable_subtotal)
+
+        referral_discount = get_referral_first_order_discount(cart.user, items=all_items)
+        discount = coupon_discount + referral_discount
+
+        # Shipping: based on post-offer subtotal
+        ship = Decimal('0') if subtotal == 0 or subtotal >= Decimal('5000') else Decimal('49')
+
+        # Tax on (subtotal − coupon/referral discount)
+        taxable = max(Decimal('0'), subtotal - discount)
+        tax = round(taxable * Decimal('0.03'), 2)
+        total = taxable + tax + ship
+        total_saved = product_offer_savings + category_offer_savings + coupon_discount + referral_discount
+
         return JsonResponse({
             'success': True,
             'cart_count': sum(i.quantity for i in all_items),
             'item_total': str(item.total_price),
             'item_quantity': item.quantity,
+            'base_subtotal': str(base_subtotal),
             'subtotal': str(subtotal),
+            'product_offer_savings': str(product_offer_savings),
+            'category_offer_savings': str(category_offer_savings),
+            'coupon_discount': str(coupon_discount),
+            'referral_discount': str(referral_discount),
             'shipping': str(ship),
             'tax': str(tax),
-            'total': str(subtotal + tax + ship)
+            'total': str(total),
+            'total_saved': str(total_saved),
+            'shipping_needed': str(max(Decimal('0'), Decimal('5000') - subtotal))
         })
     except: return JsonResponse({'success': False})
 

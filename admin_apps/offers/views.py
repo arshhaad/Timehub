@@ -539,8 +539,11 @@ def edit_coupon(request, coupon_id):
 @never_cache
 @superuser_required
 def delete_coupon(request, coupon_id):
-    coupon = get_object_or_404(Coupon, id=coupon_id)
-    code = coupon.code
-    coupon.delete()
-    messages.success(request, f"Coupon '{code}' deleted successfully.")
+    if request.method == 'POST':
+        coupon = get_object_or_404(Coupon, id=coupon_id)
+        code = coupon.code
+        coupon.delete()
+        messages.success(request, f"Coupon '{code}' deleted successfully.")
+        return redirect('coupon_manage')
+    messages.error(request, "Invalid request method.")
     return redirect('coupon_manage')

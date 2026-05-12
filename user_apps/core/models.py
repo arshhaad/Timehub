@@ -120,12 +120,24 @@ class Product(models.Model):
         """Check if product has an active offer discount."""
         return self.get_best_discounted_price() < self.price
 
-    def get_active_offer(self):
-        """Get best current offer for the product."""
+    @property
+    def active_product_offer(self):
+        """Returns the best currently active product-specific offer."""
         from django.utils import timezone
         now = timezone.now()
-        p_offer = self.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
-        c_offer = self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        return self.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+
+    @property
+    def active_category_offer(self):
+        """Returns the best currently active category-wide offer."""
+        from django.utils import timezone
+        now = timezone.now()
+        return self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+
+    def get_active_offer(self):
+        """Get best current offer for the product."""
+        p_offer = self.active_product_offer
+        c_offer = self.active_category_offer
         
         if not p_offer and not c_offer: return None
         return p_offer if (p_offer.discount_percentage if p_offer else 0) >= (c_offer.discount_percentage if c_offer else 0) else c_offer
@@ -316,7 +328,6 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    """Single entry in a user cart."""
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)

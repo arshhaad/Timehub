@@ -173,6 +173,23 @@
         <div class="order-info">
             <div class="order-id">Order ID: #{{ order.id }}</div>
             <div class="amount"><span>INR</span>{{ order.total_amount }}</div>
+            {% if is_cod_switch %}
+            <div style="margin-top: 14px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px 16px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem;">
+                    <span style="color: #9ca3af;">Original Total</span>
+                    <span style="color: #fff; font-weight: 600;">₹{{ order.total_amount }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem;">
+                    <span style="color: #9ca3af;">Online Discount ({{ discount_pct }}%)</span>
+                    <span style="color: #22c55e; font-weight: 700;">−₹{{ online_discount }}</span>
+                </div>
+                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 1rem;">
+                    <span style="color: #fff; font-weight: 800;">You Pay</span>
+                    <span style="color: #22c55e; font-weight: 800;">₹{{ discounted_total }}</span>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <button id="rzp-button1" class="payment-btn">

@@ -52,8 +52,17 @@ def home_view(request):
 
     # add wishlist and cart details
     if request.user.is_authenticated:
-        from user_apps.core.models import WishlistItem, CartItem
+        from user_apps.core.models import WishlistItem, CartItem, Notification
         from django.db.models import Sum
+        from django.contrib import messages
+
+        # --- Referral/Cashback Messages Integration ---
+        # Fetch unread notifications for the user and show them as flash messages
+        unread_notifications = Notification.objects.filter(user=request.user, is_read=False)
+        for notification in unread_notifications:
+            messages.success(request, notification.message)
+            notification.is_read = True
+            notification.save()
 
         wishlist_product_ids = WishlistItem.objects.filter(
             wishlist__user=request.user
