@@ -1,0 +1,286 @@
+{% extends "order_manage/base.html" %}
+{% load static %}
+
+{% block title %}Seller Earnings - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .earnings-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 30px;
+        min-height: calc(100vh - 200px);
+    }
+    
+    /* Seller Sidebar */
+    .seller-sidebar {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        background: #f8fafc;
+    }
+    .seller-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .seller-item {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+    }
+    .seller-item:hover { background: #f1f5f9; }
+    .seller-item.active {
+        background: var(--primary-bg);
+        color: #fff;
+        border-color: var(--primary-bg);
+    }
+    .seller-item.active .seller-meta { color: rgba(255,255,255,0.8); }
+    
+    .seller-name { font-weight: 700; font-size: 0.95rem; }
+    .seller-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Earnings Content */
+    .earning-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: 80px 1fr auto;
+        gap: 20px;
+        align-items: center;
+        transition: var(--transition);
+    }
+    .earning-card:hover { border-color: var(--primary-bg); }
+    
+    .product-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+
+    .status-Pending { color: #f59e0b; background: #fffbeb; }
+    .status-Approved { color: #10b981; background: #ecfdf5; }
+    .status-Rejected { color: #ef4444; background: #fef2f2; }
+    
+    .earning-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+        z-index: 1000; display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .modal-content {
+        background: #fff; border-radius: 20px; padding: 30px;
+        width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1 style="font-size: 1.8rem; font-weight: 800;">Seller Earnings Management</h1>
+    <p style="color: var(--text-muted);">Monitor payouts and approve transactions for independent curators.</p>
+</div>
+
+<div class="earnings-layout">
+    <!-- Left: Seller List -->
+    <aside class="seller-sidebar">
+        <div class="sidebar-header">
+            <h3 style="font-size: 1rem; font-weight: 700;">Seller Profiles</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Click a profile to see full transactions</p>
+        </div>
+        <div class="seller-list">
+            <a href="?status={{ selected_status }}" class="seller-item {% if not selected_seller_id %}active{% endif %}">
+                <div>
+                    <div class="seller-name">All Sellers</div>
+                    <div class="seller-meta">Global Transaction View</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% for s in sellers %}
+            <a href="?seller_id={{ s.id }}&status={{ selected_status }}" class="seller-item {% if selected_seller_id == s.id %}active{% endif %}">
+                <div>
+                    <div class="seller-name">{{ s.store_name }}</div>
+                    <div class="seller-meta">Total Paid: ₹{{ s.total_paid|default:"0.00" }}</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- Right: Transactions -->
+    <main class="earnings-content">
+        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.2rem; font-weight: 700;">
+                {% if selected_seller_id %}
+                    Transaction History: {{ earnings.first.seller.store_name|default:"Selected Seller" }}
+                {% else %}
+                    Recent Activity (All Sellers)
+                {% endif %}
+            </h2>
+            
+            <form method="GET" style="display: flex; gap: 10px;">
+                {% if selected_seller_id %}<input type="hidden" name="seller_id" value="{{ selected_seller_id }}">{% endif %}
+                <select name="status" class="btn btn-outline" onchange="this.form.submit()">
+                    <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All Status</option>
+                    <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if selected_status == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="earnings-list">
+            {% for earning in earnings %}
+            <div class="earning-card">
+                <img src="{% if earning.order_item.product.image %}{{ earning.order_item.product.image.url }}{% else %}{% static 'img/placeholder.png' %}{% endif %}" alt="" class="product-img">
+                
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                        <h3 style="font-size: 1rem; font-weight: 700;">{{ earning.order_item.product.name }}</h3>
+                        <span class="earning-status status-{{ earning.status }}">{{ earning.status }}</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">
+                        Seller: <strong>{{ earning.seller.store_name }}</strong> | 
+                        Qty: {{ earning.order_item.quantity }} | 
+                        Order: #{{ earning.order_item.order.id }}
+                    </p>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        <i class="fas fa-calendar-alt"></i> {{ earning.created_at|date:"M d, Y H:i" }}
+                    </div>
+                </div>
+                
+                <div style="text-align: right; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;">
+                    <div style="font-weight: 800; font-size: 1.3rem; color: var(--primary-bg);">₹{{ earning.amount }}</div>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        {% if earning.status == 'Pending' %}
+                        <form action="{% url 'admin_process_earning' earning.id %}" method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-outline" style="color: #ef4444; padding: 6px 12px; font-size: 0.8rem;">Reject</button>
+                        </form>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openProcessModal({{ earning.id }}, '{{ earning.amount }}', '{{ earning.seller.store_name|escapejs }}', '{{ earning.order_item.product.name|escapejs }}')">
+                            Approve
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openProcessModal({{ earning.id }}, '{{ earning.amount }}', '{{ earning.seller.store_name|escapejs }}', '{{ earning.order_item.product.name|escapejs }}', '{{ earning.admin_note|escapejs }}')">
+                            View Note
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 80px 40px; background: #fff; border-radius: 20px; border: 2px dashed var(--border-color);">
+                <i class="fas fa-receipt" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 20px;"></i>
+                <h2>No transactions found</h2>
+                <p style="color: var(--text-muted);">There are no earnings records matching your current selection.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+
+<!-- Process Modal -->
+<div id="processModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="font-weight: 800; margin-bottom: 10px;">Process Earning</h3>
+        <p id="modalSub" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;"></p>
+        
+        <form action="" id="processForm" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Final Amount (₹)</label>
+                <input type="number" name="amount" id="earningAmount" class="form-control" step="0.01" required>
+                <small style="color: var(--text-muted);">Review or adjust the amount before confirming.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Admin Note (Visible to Seller)</label>
+                <textarea name="admin_note" id="adminNote" class="form-control" style="height: 100px;" placeholder="Add a note for the seller..."></textarea>
+            </div>
+            
+            <div id="modalActions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="closeProcessModal()">Cancel</button>
+                <button type="submit" name="action" value="reject" class="btn btn-outline" style="color: #ef4444;">Reject</button>
+                <button type="submit" name="action" value="approve" class="btn btn-primary">Confirm & Credit</button>
+            </div>
+            <div id="viewActions" style="display: none; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="closeProcessModal()">Close</button>
+                <button type="submit" name="action" value="update" class="btn btn-primary">Update Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openProcessModal(id, amount, seller, product, note = '') {
+        const modal = document.getElementById('processModal');
+        const form = document.getElementById('processForm');
+        const amountInput = document.getElementById('earningAmount');
+        const noteTextarea = document.getElementById('adminNote');
+        
+        document.getElementById('modalTitle').textContent = `Earning: ${product}`;
+        document.getElementById('modalSub').textContent = `Seller: ${seller}`;
+        
+        form.action = `/adminpanel/sellers/earnings/process/${id}/`;
+        amountInput.value = amount;
+        noteTextarea.value = note;
+
+        // Determine if it's pending based on the presence of the Approve button in the card
+        const card = Array.from(document.querySelectorAll('.earning-card')).find(c => c.innerHTML.includes(`openProcessModal(${id}`));
+        const status = card.querySelector('.earning-status').textContent.trim();
+        
+        if (status !== 'Pending') {
+            document.getElementById('modalActions').style.display = 'none';
+            document.getElementById('viewActions').style.display = 'flex';
+            amountInput.readOnly = true;
+        } else {
+            document.getElementById('modalActions').style.display = 'flex';
+            document.getElementById('viewActions').style.display = 'none';
+            amountInput.readOnly = false;
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeProcessModal() {
+        document.getElementById('processModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('processModal')) closeProcessModal();
+    }
+</script>
+{% endblock %}

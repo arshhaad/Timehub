@@ -1,0 +1,231 @@
+{% extends "order_manage/base.html" %}
+
+{% block title %}Return Requests - TimeHub{% endblock %}
+
+{% block extra_css %}
+<!-- Google Font for special text -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    .page-header {
+        display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;
+    }
+    .page-title {
+        font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; letter-spacing: -0.02em;
+    }
+    .page-desc {
+        color: var(--text-muted); 
+        font-size: 0.95rem;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        line-height: 1.5;
+    }
+
+    /* ── Toolbar & Premium Search ── */
+    .toolbar {
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        padding: 18px 24px; display: flex; flex-wrap: wrap;
+        gap: 16px; align-items: center; justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        margin-bottom: -1px;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .premium-search-container {
+        display: flex; align-items: center;
+        background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 12px; padding: 2px 2px 2px 16px;
+        gap: 12px; min-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .premium-search-container:focus-within {
+        background: #fff; border-color: #000;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+    }
+    .premium-search-container i.search-icon { color: #94a3b8; font-size: 0.9rem; transition: var(--transition); }
+    .premium-search-container:focus-within i.search-icon { color: #000; }
+    .premium-search-container input {
+        border: none; background: transparent; outline: none; font-size: .875rem;
+        color: var(--text-main); width: 100%; font-weight: 500; height: 38px;
+    }
+    .premium-search-container input::placeholder { color: #94a3b8; font-weight: 400; }
+    .search-action-btn {
+        background: #000; color: #fff; border: none;
+        padding: 0 20px; height: 38px; border-radius: 10px;
+        font-size: 0.85rem; font-weight: 700; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+        transition: all 0.2s ease;
+    }
+    .search-action-btn:hover { background: #1f2937; transform: scale(1.02); }
+    .search-action-btn:active { transform: scale(0.98); }
+    .search-action-btn.clear-mode { background: #fee2e2; color: #dc2626; }
+    .search-action-btn.clear-mode:hover { background: #fecaca; color: #b91c1c; transform: scale(1.02); }
+
+    .table-panel {
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        box-shadow: 0 1px 3px rgba(0,0,0,.05); overflow: hidden;
+    }
+    .table-responsive {
+        width: 100%; overflow-x: auto;
+    }
+    .data-table {
+        width: 100%; border-collapse: collapse; text-align: left;
+    }
+    .data-table th {
+        background: #090808; color: #fff; padding: 16px 20px; font-size: 0.75rem;
+        text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .data-table td {
+        padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover { background: #fafbfc; }
+    
+    .status-badge {
+        padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+    }
+    .req-Return { background: #ffedd5; color: #c2410c; } 
+    
+    .btn-action {
+        width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border-color);
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s; text-decoration: none; background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-approve { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .btn-reject { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .btn-approve:hover { transform: scale(1.1); background: #dcfce7; }
+    .btn-reject:hover { transform: scale(1.1); background: #fee2e2; }
+
+    .return-reason-box {
+        background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 12px; padding: 12px 16px; margin-top: 10px;
+        font-size: 0.85rem; color: #475569; line-height: 1.5;
+        position: relative;
+    }
+    .return-reason-box::before {
+        content: '\f10d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+        position: absolute; left: 8px; top: -10px; background: #fff; padding: 0 4px;
+        color: var(--primary-bg); font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Return Requests</h1>
+        <p class="page-desc">Verify and process customer return applications with automated wallet refunds.</p>
+    </div>
+</div>
+
+<form action="{% url 'admin_return_requests' %}" method="GET" style="display:contents;">
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="premium-search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" placeholder="Search by order ID or customer..." value="{{ query|default:'' }}">
+                <button type="submit" class="search-action-btn">
+                    <i class="fas fa-magnifying-glass"></i> Search
+                </button>
+            </div>
+        </div>
+        {% if query %}
+        <a href="{% url 'admin_return_requests' %}" style="padding:10px 18px; border-radius:10px; font-weight:700; font-size:0.85rem; background:#f9fafb; border:1px solid var(--border-color); text-decoration:none; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-rotate-left"></i> Reset
+        </a>
+        {% endif %}
+    </div>
+</form>
+
+<div class="table-panel">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Return Details</th>
+                    <th>Amount to Refund</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td style="font-weight: 800; font-family: 'Outfit', sans-serif; font-size: 1rem;">#{{ order.id }}</td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-main);">{{ order.user.first_name }} {{ order.user.last_name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">{{ order.user.email }}</div>
+                    </td>
+                    <td style="max-width: 320px;">
+                        {% if order.return_status == 'Requested' %}
+                            <span class="status-badge req-Return"><i class="fas fa-undo"></i> PENDING VERIFICATION</span>
+                        {% elif order.return_status == 'Processing' %}
+                            <span class="status-badge" style="background: #dbeafe; color: #1e40af;"><i class="fas fa-cog"></i> PROCESSING</span>
+                        {% elif order.return_status == 'Pickup Scheduled' %}
+                            <span class="status-badge" style="background: #fef3c7; color: #92400e;"><i class="fas fa-calendar-check"></i> PICKUP SCHEDULED</span>
+                        {% elif order.return_status == 'Returned' %}
+                            <span class="status-badge" style="background: #dcfce7; color: #15803d;"><i class="fas fa-check-circle"></i> RETURNED (ACCEPTED)</span>
+                        {% elif order.return_status == 'Rejected' %}
+                            <span class="status-badge" style="background: #fee2e2; color: #b91c1c;"><i class="fas fa-times-circle"></i> REJECTED</span>
+                        {% endif %}
+                        <div class="return-reason-box">
+                            {{ order.return_reason|default:'No reason provided by customer.' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 800; color: #000; font-size: 1.1rem; font-family: 'Outfit', sans-serif;">₹{{ order.total_amount }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Via {{ order.payment_method|title }}</div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <a href="{% url 'admin_order_detail' order.id %}" class="btn-action" title="View Order Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if order.return_status != 'Returned' and order.return_status != 'Rejected' %}
+                            <form action="{% url 'process_return' order.id %}" method="POST" style="display: contents;">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="approve" class="btn-action btn-approve" title="Approve & Refund to Wallet">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn-action btn-reject" title="Reject Return">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 80px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.2;"><i class="fas fa-inbox"></i></div>
+                        <div style="font-weight: 600; font-size: 1.1rem;">No pending return requests</div>
+                        <p style="font-size: 0.9rem; margin-top: 4px;">When customers request a return, they will appear here.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if orders.paginator.num_pages > 1 %}
+    <div style="padding: 20px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafbfc;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+            Showing {{ orders.start_index }} to {{ orders.end_index }} of {{ orders.paginator.count }} requests
+        </div>
+        <div style="display: flex; gap: 8px;">
+            {% if orders.has_previous %}
+            <a href="?page={{ orders.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-outline" style="padding: 8px 16px;">Previous</a>
+            {% endif %}
+            <div style="padding: 8px 12px; font-weight: 700; color: #000; font-size: 0.9rem;">{{ orders.number }} / {{ orders.paginator.num_pages }}</div>
+            {% if orders.has_next %}
+            <a href="?page={{ orders.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-outline" style="padding: 8px 16px;">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

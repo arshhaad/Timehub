@@ -1,0 +1,242 @@
+{% extends "order_manage/base.html" %}
+
+{% block title %}Process Reschedule - Order #{{ order.id }} - TimeHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reschedule-wrapper {
+        max-width: 700px;
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    .process-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    
+    .card-header-alt {
+        padding: 30px 40px;
+        border-bottom: 1px solid var(--border-color);
+        background: #fafafa;
+    }
+    
+    .card-header-alt h1 {
+        font-size: 1.6rem;
+        font-weight: 850;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .order-id-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 4px 12px;
+        background: #000;
+        color: #fff;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+    }
+    
+    .card-body-alt {
+        padding: 40px;
+    }
+    
+    .info-banner {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 35px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .info-banner i {
+        color: #d97706;
+        margin-top: 3px;
+    }
+    
+    .info-banner p {
+        margin: 0;
+        color: #92400e;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 12px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 1rem;
+        color: var(--text-main);
+        background: #fff;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-input:focus {
+        border-color: #000;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03);
+    }
+    
+    textarea.form-input {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+    
+    .btn-row {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .btn-admin {
+        flex: 1;
+        padding: 16px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    
+    .btn-approve-admin {
+        background: #000;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-approve-admin:hover {
+        background: #222;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-reject-admin {
+        background: #fff;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+    }
+    
+    .btn-reject-admin:hover {
+        background: #fdfdfd;
+        border-color: #ef4444;
+        color: #ef4444;
+        transform: translateY(-2px);
+    }
+    
+    .input-hint {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block topbar_left %}
+<div class="topbar-breadcrumb-search">
+    <div class="admin-nav-crumbs">
+        <a href="{% url 'dashboard' %}">Admin</a>
+        <span class="sep">/</span>
+        <a href="{% url 'admin_user_reschedule' %}">Reschedule Requests</a>
+        <span class="sep">/</span>
+        <span class="curr">Process #{{ order.id }}</span>
+    </div>
+    <form action="{% url 'admin_user_reschedule' %}" method="GET" class="topbar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" name="q" placeholder="Search reschedules..." value="">
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="reschedule-wrapper">
+    <div style="margin-bottom: 20px;">
+        <a href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'admin_user_reschedule' %}{% endif %}" style="text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fas fa-chevron-left"></i> Back to Requests
+        </a>
+    </div>
+
+    <div class="process-card">
+        <div class="card-header-alt">
+            <h1>Reschedule Delivery</h1>
+            <div class="order-id-badge">ORDER #{{ order.id }}</div>
+            <p style="margin-top: 8px; font-weight: 500; font-size: 0.9rem;">Customer: {{ order.user.first_name }} {{ order.user.last_name }}</p>
+        </div>
+        
+        <div class="card-body-alt">
+            <div class="info-banner">
+                <i class="fas fa-info-circle"></i>
+                <p>
+                    <strong>Admin Review:</strong> You are currently reviewing a user-initiated reschedule request. You can modify the timeline or the records below before proceeding.
+                </p>
+            </div>
+
+            <form action="{% url 'process_reschedule' order.id %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+                
+                <div class="form-group">
+                    <label class="form-label" for="reschedule_date">Choose New Date</label>
+                    <input type="date" name="reschedule_date" id="reschedule_date" class="form-input" 
+                           value="{{ order.requested_reschedule_date|date:'Y-m-d' }}">
+                    <span class="input-hint">Requested: {{ order.requested_reschedule_date|date:"M d, Y" }}</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="reschedule_time">Choose New Time</label>
+                    <input type="time" name="reschedule_time" id="reschedule_time" class="form-input" 
+                           value="{{ order.requested_reschedule_time|time:'H:i' }}">
+                    <span class="input-hint">Requested: {{ order.requested_reschedule_time|time:"g:i A" }}</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="reschedule_reason">Reason for Rescheduling</label>
+                    <textarea name="reschedule_reason" id="reschedule_reason" class="form-input" required>{{ order.reschedule_reason }}</textarea>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" name="action" value="reject" class="btn-admin btn-reject-admin">
+                        Reject Request
+                    </button>
+                    <button type="submit" name="action" value="approve" class="btn-admin btn-approve-admin">
+                        Confirm Date
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

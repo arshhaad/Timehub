@@ -1,0 +1,940 @@
+{% extends 'order_manage/base.html' %}
+{% load static %}
+
+{% block title %}Sales Report - TimeHub Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Animated counter ── */
+    .stat-value { transition: all 0.3s ease; }
+
+    /* ── KPI card pop-in ── */
+    @keyframes cardPopIn {
+        0%   { opacity: 0; transform: translateY(20px) scale(0.97); }
+        60%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
+        100% { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+    .stat-card {
+        background-color: #fff;
+        padding: 24px;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 1px 3px rgba(0,0,0,.02);
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+        cursor: pointer;
+        animation: cardPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.2s; }
+    .stat-card:nth-child(5) { animation-delay: 0.25s; }
+
+    /* ── Note card slide-in ── */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0);    }
+    }
+    .note-card {
+        background-color: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+        animation: slideUp 0.6s ease both;
+    }
+    .dashboard-row .note-card:nth-child(1) { animation-delay: 0.3s;  }
+    .dashboard-row .note-card:nth-child(2) { animation-delay: 0.45s; }
+
+    /* ── Filter btn ── */
+    .filter-btn { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+    .filter-btn.active { transform: scale(1.02); }
+
+    /* ── Django messages ── */
+    .messages-wrap {
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .alert {
+        padding: 14px 18px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid transparent;
+        position: relative;
+        animation: slideUp 0.4s ease forwards;
+    }
+    .alert-success  { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .alert-error,
+    .alert-danger   { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .alert-warning  { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+    .alert-info     { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .alert-close {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        opacity: 0.6;
+        line-height: 1;
+        padding: 0;
+        color: inherit;
+    }
+    .alert-close:hover { opacity: 1; }
+
+    /* ── Page Header ── */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
+    }
+    .page-header p { color: var(--text-muted); font-size: 0.95rem; }
+
+    /* ── KPI Grid ── */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    .stat-card {
+        background-color: #fff;
+        padding: 24px;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 1px 3px rgba(0,0,0,.02);
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: var(--primary-bg);
+    }
+    .stat-card:hover .stat-icon {
+        background-color: var(--primary-bg) !important;
+        color: #fff !important;
+        transform: rotate(10deg);
+    }
+    .stat-title {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+    }
+
+    /* ── Chart Panel ── */
+    .chart-panel {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        margin-bottom: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+    }
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .panel-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-main);
+    }
+    .filter-btns {
+        display: flex;
+        background: #f3f4f6;
+        padding: 4px;
+        border-radius: 8px;
+        gap: 4px;
+    }
+    .filter-btn {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        transition: var(--transition);
+    }
+    .filter-btn.active {
+        background: #fff;
+        color: var(--text-main);
+        box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    }
+
+    /* ── No-data message ── */
+    #noDataMessage {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-align: center;
+        width: 100%;
+        display: none;
+    }
+    #noDataMessage i {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    /* ── Dashboard Row ── */
+    .dashboard-row {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    .note-card {
+        background-color: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    .note-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,.1);
+    }
+    .note-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 4px; height: 100%;
+    }
+    .note-selling::before { background-color: #10b981; }
+    .note-wanted::before  { background-color: #8b5cf6; }
+
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .note-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .panel-action {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .panel-action:hover { color: var(--primary-bg); }
+
+    /* ── Product List ── */
+    .product-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .product-img {
+        width: 44px; height: 44px;
+        border-radius: 8px;
+        background: #f3f4f6;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .product-info { flex: 1; min-width: 0; }
+    .product-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .progress-bar-wrap {
+        width: 100%;
+        height: 6px;
+        background: #f3f4f6;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 10px;
+        width: 0%;                /* JS animates to data-pct */
+        transition: width 1.1s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .product-meta { text-align: right; flex-shrink: 0; }
+    .product-revenue { font-weight: 700; font-size: 0.9rem; display: block; }
+    .product-sold    { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Empty state ── */
+    .empty-state {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 20px 0;
+        text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+        .dashboard-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+        .kpi-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+        .page-header { flex-direction: column; gap: 16px; }
+    }
+    @media (max-width: 480px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+    }
+    /* ── Sales Ledger Table ── */
+    .ledger-panel {
+        background: #fff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        margin-top: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+    }
+    .ledger-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .filter-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-group label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    .form-control {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.88rem;
+        transition: var(--transition);
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-bg);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+    }
+    .btn-apply {
+        background: var(--primary-bg);
+        color: #fff;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-apply:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+    .report-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background: #f9fafb;
+        color: var(--text-muted);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .report-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+    .report-table tr:hover {
+        background: #fcfcfc;
+    }
+    .export-btns {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .btn-csv {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+    }
+    .btn-pdf {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    @media print {
+        .sidebar, .page-header, .kpi-grid, .chart-panel, .dashboard-row, .filter-form, .export-btns {
+            display: none !important;
+        }
+        .ledger-panel {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+        }
+        .report-table th, .report-table td {
+            border: 1px solid #eee;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Django Flash Messages ── #}
+{% if messages %}
+<div class="messages-wrap">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+        {% if message.tags == 'success' %}
+            <i class="fas fa-check-circle"></i>
+        {% elif message.tags == 'error' or message.tags == 'danger' %}
+            <i class="fas fa-exclamation-circle"></i>
+        {% elif message.tags == 'warning' %}
+            <i class="fas fa-exclamation-triangle"></i>
+        {% else %}
+            <i class="fas fa-info-circle"></i>
+        {% endif %}
+        {{ message }}
+        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Dismiss">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ── Page Header ── #}
+<div class="page-header">
+    <div>
+        <h1>Sales Report</h1>
+        <p>Comprehensive overview of your store's financial performance.</p>
+    </div>
+    <div class="date-pill">
+        <strong>{% now "l, F j, Y" %}</strong>
+    </div>
+</div>
+
+{# ── KPI Grid ── #}
+<div class="kpi-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background-color:#fff7ed;color:#f97316;">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-change">All Time</div>
+        </div>
+        <div class="stat-title">Total Revenue</div>
+        <div class="stat-value" data-raw="{{ total_revenue }}" data-prefix="₹" data-float="true">
+            ₹{{ total_revenue|floatformat:2 }}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background-color:#f0fdf4;color:#16a34a;">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="stat-change">Excl. Cancelled</div>
+        </div>
+        <div class="stat-title">Total Orders</div>
+        <div class="stat-value" data-raw="{{ total_orders }}" data-prefix="" data-float="false">
+            {{ total_orders }}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background-color:#f0f9ff;color:#0284c7;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-change">Active</div>
+        </div>
+        <div class="stat-title">Total Customers</div>
+        <div class="stat-value" data-raw="{{ total_customers }}" data-prefix="" data-float="false">
+            {{ total_customers }}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background-color:#ecfdf5;color:#059669;">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-change">In Stock</div>
+        </div>
+        <div class="stat-title">Total Products</div>
+        <div class="stat-value" data-raw="{{ total_products_count }}" data-prefix="" data-float="false">
+            {{ total_products_count }}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background-color:#fdf2f8;color:#db2777;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-change">Per Order</div>
+        </div>
+        <div class="stat-title">Avg. Order Value</div>
+        <div class="stat-value" data-raw="{{ aov }}" data-prefix="₹" data-float="true">
+            ₹{{ aov|floatformat:2 }}
+        </div>
+    </div>
+</div>
+
+{# ── Sales Ledger & Filtering ── #}
+<div class="ledger-panel">
+    <div class="ledger-header">
+        <div class="panel-title">
+            <i class="fas fa-list-alt" style="color:var(--primary-bg);"></i>
+            Sales Ledger
+        </div>
+        <div class="export-btns">
+            <a href="?filter_type={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export=csv" class="btn-export btn-csv">
+                <i class="fas fa-file-excel"></i> Download Excel
+            </a>
+            <a href="#" onclick="window.print(); return false;" class="btn-export btn-pdf">
+                <i class="fas fa-file-pdf"></i> Print PDF
+            </a>
+        </div>
+    </div>
+
+    <form method="GET" class="filter-form">
+        <div class="form-group">
+            <label>Filter By</label>
+            <select name="filter_type" class="form-control" onchange="toggleCustomDates(this.value)">
+                <option value="all"     {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                <option value="daily"   {% if filter_type == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly"  {% if filter_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if filter_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                <option value="yearly"  {% if filter_type == 'yearly' %}selected{% endif %}>Yearly</option>
+                <option value="custom"  {% if filter_type == 'custom' %}selected{% endif %}>Custom Range</option>
+            </select>
+        </div>
+        <div id="custom-date-inputs" style="display: {% if filter_type == 'custom' %}flex{% else %}none{% endif %}; gap: 12px;">
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+        </div>
+        <button type="submit" class="btn-apply">Apply Filters</button>
+    </form>
+
+    <div class="report-table-wrap" style="margin-top: 24px;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Subtotal</th>
+                    <th>Discount</th>
+                    <th>Tax</th>
+                    <th>Shipping</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in filtered_orders %}
+                <tr>
+                    <td style="font-weight: 700;">#ORD-{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"d M Y, H:i" }}</td>
+                    <td>{{ order.user.email }}</td>
+                    <td>₹{{ order.subtotal }}</td>
+                    <td style="color: #dc2626;">-₹{{ order.discount }}</td>
+                    <td>₹{{ order.tax }}</td>
+                    <td>₹{{ order.shipping_charge }}</td>
+                    <td style="font-weight: 700; color: var(--text-main);">₹{{ order.total_amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="empty-state">No records found for the selected period.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if filtered_orders %}
+            <tfoot style="background: #f9fafb; font-weight: 700;">
+                <tr>
+                    <td colspan="2">Summary ({{ total_sales_count }} Orders)</td>
+                    <td></td>
+                    <td></td>
+                    <td style="color: #dc2626;">-₹{{ total_discount|floatformat:2 }}</td>
+                    <td></td>
+                    <td></td>
+                    <td style="font-size: 1.1rem; color: var(--primary-bg);">₹{{ total_order_amount|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+{# ── Revenue Trend Chart ── #}
+<div class="chart-panel">
+    <div class="chart-header">
+        <div class="panel-title">
+            <i class="fas fa-chart-area" style="color:var(--primary-bg);"></i>
+            Revenue Trends
+        </div>
+        <div class="filter-btns">
+            <button class="filter-btn active" data-period="daily">Daily</button>
+            <button class="filter-btn"        data-period="weekly">Weekly</button>
+            <button class="filter-btn"        data-period="monthly">Monthly</button>
+            <button class="filter-btn"        data-period="yearly">Yearly</button>
+        </div>
+    </div>
+    <div style="height:350px;position:relative;">
+        <canvas id="revenueChart"></canvas>
+        <div id="noDataMessage">
+            <i class="fas fa-info-circle"></i>
+            No revenue data recorded for this period.
+        </div>
+    </div>
+</div>
+
+{# ── Bottom Row: Most Wanted + Top Selling ── #}
+<div class="dashboard-row">
+
+    {# Most Wanted #}
+    <div class="note-card note-wanted">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-heart" style="color:#ef4444;"></i>
+                Most Wanted Items
+            </div>
+            <span class="panel-action">Based on Wishlists</span>
+        </div>
+        <div class="product-list">
+            {% if most_wanted %}
+                {# Store the max count so JS can compute percentages #}
+                {% with max_count=most_wanted.0.wishlist_count %}
+                {% for product in most_wanted %}
+                <div class="product-item">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="product-placeholder" style="display:none; width:44px; height:44px; border-radius:8px; background:#f3f4f6; align-items:center; justify-content:center;">
+                            <i class="fas fa-image" style="color:#ccc;"></i>
+                        </div>
+                    {% else %}
+                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-image" style="color:#ccc;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="product-info">
+                        <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill"
+                                 style="background-color:#8b5cf6;"
+                                 data-pct="{% widthratio product.wishlist_count max_count 100 %}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-revenue">{{ product.wishlist_count }}</span>
+                        <span class="product-sold">In wishlists</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endwith %}
+            {% else %}
+                <p class="empty-state">
+                    <i class="fas fa-heart-broken" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>
+                    No wishlist data yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Top Selling #}
+    <div class="note-card note-selling">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-fire" style="color:#f97316;"></i>
+                Top Selling Products
+            </div>
+            <a href="{% url 'product_list' %}" class="panel-action">View All →</a>
+        </div>
+        <div class="product-list">
+            {% if top_products %}
+                {% with max_contribution=top_products.0.contribution %}
+                {% for product in top_products %}
+                <div class="product-item">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="product-placeholder" style="display:none; width:44px; height:44px; border-radius:8px; background:#f3f4f6; align-items:center; justify-content:center;">
+                            <i class="fas fa-image" style="color:#ccc;"></i>
+                        </div>
+                    {% else %}
+                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-image" style="color:#ccc;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="product-info">
+                        <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill"
+                                 style="background-color:#10b981;"
+                                 data-pct="{% widthratio product.contribution max_contribution 100 %}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-revenue">₹{{ product.contribution|floatformat:0 }}</span>
+                        <span class="product-sold">{{ product.units_sold }} units</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endwith %}
+            {% else %}
+                <p class="empty-state">
+                    <i class="fas fa-box-open" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>
+                    No sales data yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// ── Data from Django ──────────────────────────────────────────────────────────
+const chartData = {{ chart_data_json|safe }};
+let salesChart = null;
+
+function buildChart(period) {
+    const canvas = document.getElementById('revenueChart');
+    const noData = document.getElementById('noDataMessage');
+    if (!canvas) return;
+
+    // ── FIX 1: Guard against missing or empty period data ──
+    const data = chartData && chartData[period];
+    const isEmpty = !data || !data.labels || data.labels.length === 0;
+
+    // ── FIX 2: Properly destroy and null out the old chart ──
+    if (salesChart) {
+        salesChart.destroy();
+        salesChart = null;
+    }
+
+    noData.style.display = isEmpty ? 'block' : 'none';
+    canvas.style.display = isEmpty ? 'none' : 'block';
+    if (isEmpty) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // ── FIX 3: Recreate gradient fresh each time (old ctx is gone after destroy) ──
+    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+    gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
+
+    // ── FIX 4: Wrap in try/catch so a bad data shape doesn't silently die ──
+    try {
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: data.values,
+                    borderColor: '#ff6b00',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ff6b00',
+                    pointBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#ff6b00',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: ctx => '₹' + ctx.parsed.y.toLocaleString('en-IN')
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: {
+                            callback: v => v >= 1000 ? '₹' + (v / 1000) + 'k' : '₹' + v
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    } catch (e) {
+        console.error('Chart render error:', e);
+        noData.style.display = 'block';
+        canvas.style.display = 'none';
+    }
+}
+
+// ── Period switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        buildChart(this.dataset.period);
+    });
+});
+
+// ── Animated counter ──────────────────────────────────────────────────────────
+function animateCounter(el, end, duration, prefix, isFloat) {
+    const startTime = performance.now();
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = end * eased;
+        el.textContent = prefix + (isFloat
+            ? current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : Math.floor(current).toLocaleString('en-IN'));
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function runCounters() {
+    document.querySelectorAll('.stat-value[data-raw]').forEach(el => {
+        const raw = parseFloat(el.dataset.raw);
+        const prefix = el.dataset.prefix || '';
+        const isFloat = el.dataset.float === 'true';
+        if (!isNaN(raw)) animateCounter(el, raw, 1600, prefix, isFloat);
+    });
+}
+
+function runProgressBars() {
+    document.querySelectorAll('.progress-bar-fill[data-pct]').forEach((bar, i) => {
+        const pct = parseFloat(bar.dataset.pct) || 0;
+        setTimeout(() => { bar.style.width = pct + '%'; }, 700 + i * 80);
+    });
+}
+
+function toggleCustomDates(val) {
+    const customDiv = document.getElementById('custom-date-inputs');
+    if (customDiv) customDiv.style.display = val === 'custom' ? 'flex' : 'none';
+}
+
+// ── FIX 5: Wait for Chart.js to fully load before building the chart ──
+document.addEventListener('DOMContentLoaded', () => {
+    // Small delay ensures Chart.js script from CDN has executed
+    setTimeout(() => buildChart('daily'), 100);
+    runCounters();
+    runProgressBars();
+    const filterSelect = document.querySelector('select[name="filter_type"]');
+    if (filterSelect) toggleCustomDates(filterSelect.value);
+});
+</script>
+{% endblock %}

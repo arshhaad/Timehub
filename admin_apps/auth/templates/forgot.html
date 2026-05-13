@@ -1,0 +1,364 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - TimeHub Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --primary-bg: #ff6b00; /* Vibrant orange for clock icon */
+            --input-border: #f3f4f6; /* Very light gray for the input box */
+            --input-bg: #fafafa;
+            --input-text: #374151;
+            --button-bg: #4b4b4b; /* Dark grey */
+            --button-text: #ffffff;
+            --card-bg: #ffffff;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 32px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 60px;
+        }
+
+        /* Left Side: Branding */
+        .brand-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-right: 40px;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.8rem;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
+        }
+
+        .brand-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .brand-section h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        .brand-divider {
+            width: 80px;
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 0 auto 40px auto;
+        }
+
+        .brand-tagline {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-bottom: 15px;
+        }
+
+        .brand-subline {
+            font-size: 0.85rem;
+            color: #d1d5db;
+        }
+
+        /* Right Side: Form Card */
+        .form-section {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 60px 50px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            position: relative;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        .form-header p {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px 16px;
+            font-size: 0.95rem;
+            color: var(--input-text);
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-md);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control::placeholder {
+            color: #d1d5db;
+            font-weight: 400;
+        }
+
+        .form-control:focus {
+            border-color: #9ca3af;
+            box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.1);
+        }
+
+        .input-hint {
+            display: block;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn-login {
+            width: 100%;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 25px;
+        }
+
+        .btn-login:hover {
+            background-color: #374151;
+            transform: translateY(-1px);
+        }
+
+        /* Alert styling */
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background-color: #f0fdf4;
+            color: #166534;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #bbf7d0;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            color: #111827;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-container {
+                gap: 40px;
+                padding: 30px;
+            }
+
+            .brand-section h1 {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .login-container {
+                flex-direction: column;
+                gap: 60px;
+                padding: 40px 20px;
+                text-align: center;
+            }
+
+            .brand-section {
+                padding-right: 0;
+            }
+
+            .brand-divider {
+                margin: 0 auto 30px auto;
+            }
+
+            .logo-box {
+                width: 70px;
+                height: 70px;
+                font-size: 2.2rem;
+            }
+
+            .brand-section h1 {
+                font-size: 2.8rem;
+            }
+            
+            .login-card {
+                padding: 40px 25px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .form-section {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-section h1 {
+                font-size: 2.2rem;
+            }
+
+            .brand-section h2 {
+                font-size: 1rem;
+            }
+
+            .login-card {
+                padding: 30px 20px;
+                border-radius: var(--radius-lg);
+                box-shadow: none;
+                background: transparent;
+            }
+
+            .btn-login {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        
+        <!-- Left Branding Section -->
+        <div class="brand-section">
+            <div class="logo-box">
+                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+            </div>
+            <h1>TimeHub</h1>
+            
+            <div class="brand-divider"></div>
+            
+            <p class="brand-tagline">TimeHub &mdash; Timeless by Design.</p>
+            <p class="brand-subline">Take control of every minute with us</p>
+        </div>
+
+        <!-- Right Form Section -->
+        <div class="form-section">
+            <div class="login-card">
+                <div class="form-header">
+                    <h3>Forgot Password</h3>
+                    <p>Enter your email address to reset your password</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'admin_forgot_password' %}">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="id_email">Email Address</label>
+                        <input type="email" name="email" id="id_email" class="form-control" placeholder="admin@timehub.com" required>
+                    </div>
+                    <span class="input-hint">We'll send a password reset link to your email</span>
+
+                    <button type="submit" class="btn-login">Send Reset Link</button>
+                    
+                    <a href="{% url 'admin_login' %}" class="back-link">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Login
+                    </a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

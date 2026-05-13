@@ -1,0 +1,631 @@
+{% extends "order_manage/base.html" %}
+
+{% block title %}Offer Management - TimeHub{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #6366f1;
+        --secondary: #4f46e5;
+        --accent: #f59e0b;
+        --success: #10b981;
+        --danger: #ef4444;
+        --bg-main: #f8fafc;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        --glass: rgba(255, 255, 255, 0.8);
+    }
+
+    .offers-wrapper { background-color: var(--bg-main); font-family: 'Outfit', sans-serif; color: var(--text-main); margin: -40px; padding: 40px; min-height: calc(100vh - 80px); }
+
+    .page-header {
+        display: flex; flex-direction: column; gap: 8px; margin-bottom: 40px;
+        animation: fadeInDown 0.6s ease-out;
+    }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .page-title {
+        font-size: 2.25rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.03em; margin: 0;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-desc {
+        color: var(--text-muted); font-size: 1rem; max-width: 700px; line-height: 1.6; font-weight: 400;
+    }
+    
+    .offer-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 32px;
+        align-items: start;
+    }
+    
+    @media (max-width: 768px) {
+        .offer-grid { grid-template-columns: 1fr; }
+    }
+
+    .section-card {
+        background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px;
+        box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .section-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    .section-header {
+        padding: 28px; border-bottom: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+        background: linear-gradient(to right, #ffffff, #fafafa);
+    }
+    .section-title { 
+        font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 14px; 
+        color: var(--text-main); letter-spacing: -0.01em;
+    }
+    
+    .icon-box {
+        width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .add-new-btn {
+        background: var(--text-main); color: #fff; border: none; padding: 10px 20px; border-radius: 12px;
+        font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 8px; letter-spacing: 0.03em;
+    }
+    .add-new-btn:hover { background: #000; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+    /* Table Styles */
+    .table-container { flex: 1; overflow-x: auto; }
+    .offer-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .offer-table th { 
+        background: #fcfcfc; padding: 18px 28px; text-align: left; font-size: 0.75rem; 
+        text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.08em;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .offer-table td { padding: 24px 28px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; vertical-align: middle; }
+    .offer-table tr:hover { background: #fafafa; }
+    
+    .discount-badge {
+        background: #f0fdf4; color: #166534; padding: 6px 14px;
+        border-radius: 30px; font-weight: 800; font-size: 0.8rem;
+        display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dcfce7;
+    }
+    .discount-badge.inactive { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    
+    .validity-info { display: flex; flex-direction: column; gap: 4px; }
+    .validity-date { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
+    .validity-countdown { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+    .action-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-circle {
+        width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-color);
+        background: #fff; cursor: pointer; display: flex;
+        align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .btn-edit { color: var(--primary); }
+    .btn-edit:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: rotate(15deg); }
+    .btn-delete { color: var(--danger); }
+    .btn-delete:hover { background: var(--danger); color: #fff; border-color: var(--danger); transform: scale(1.1); }
+
+    /* Referral Section Overhaul */
+    .referral-section {
+        margin-top: 48px; background: #fff; border: 1px solid var(--border-color); border-radius: 32px;
+        box-shadow: var(--shadow-md); padding: 40px; position: relative; overflow: hidden;
+    }
+    .referral-section::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--success);
+    }
+    .referral-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .referral-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 28px; align-items: flex-end; }
+
+    .input-wrapper { position: relative; }
+    .input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .input-wrapper .form-control { padding-left: 44px; }
+
+    /* Modals & Forms */
+    .form-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.4); z-index: 1000; align-items: center; justify-content: center;
+        backdrop-filter: blur(12px); padding: 20px;
+    }
+    .modal-content {
+        background: #fff; border-radius: 32px; width: 580px; max-width: 100%;
+        padding: 48px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.25);
+        position: relative; animation: modalPop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.28);
+    }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    
+    .form-control {
+        width: 100%; padding: 14px 20px; border-radius: 16px; border: 2px solid #f1f5f9;
+        font-size: 1rem; outline: none; transition: all 0.3s; background: #f8fafc;
+        color: var(--text-main); font-weight: 500;
+    }
+    .form-control:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; border: none; 
+        padding: 18px; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 1.1rem; 
+        width: 100%; transition: all 0.3s; margin-top: 12px; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+    }
+    .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.3); filter: brightness(1.1); }
+
+    /* Switch Customization */
+    .switch-container { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 12px; border-radius: 14px; background: #f8fafc; transition: 0.2s; }
+    .switch-container:hover { background: #f1f5f9; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e2e8f0; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    /* Inline validation error styles */
+    .form-control.has-error { border-color: var(--danger) !important; background-color: #fffafb !important; }
+    .field-error-msg {
+        display: block; margin-top: 8px; font-size: 0.8rem; font-weight: 600;
+        color: var(--danger); animation: shakeIn 0.4s ease;
+    }
+    @keyframes shakeIn { 0%{transform:translateX(-8px)} 25%{transform:translateX(8px)} 50%{transform:translateX(-4px)} 75%{transform:translateX(4px)} 100%{transform:translateX(0)} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="offers-wrapper">
+<div class="page-header">
+    <h1 class="page-title">Offer Management</h1>
+    <p class="page-desc">Maximize conversion by strategically layering product and category discounts. The TimeHub engine automatically selects the highest active discount for every customer.</p>
+</div>
+
+
+
+<div class="offer-grid">
+    <!-- PRODUCT OFFERS -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="icon-box" style="background: #fff7ed;">
+                    <i class="fas fa-box" style="color: #f97316; font-size: 1.1rem;"></i>
+                </div>
+                Product Offers
+            </div>
+            <button class="add-new-btn" onclick="openModal('productModal')"><i class="fas fa-plus"></i> ADD OFFER</button>
+        </div>
+        <div class="table-container">
+            <table class="offer-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Product</th>
+                        <th style="width: 25%;">Discount</th>
+                        <th style="width: 20%;">Validity</th>
+                        <th style="width: 10%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for offer in product_offers %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 800; color: var(--text-main); font-size: 1rem;">{{ offer.product.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px;">BASE: ₹{{ offer.product.price }}</div>
+                            {% if not offer.is_active %}
+                            <span style="font-size: 0.65rem; color: var(--danger); font-weight: 800; text-transform: uppercase; margin-top: 4px; display: inline-block;">• Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="discount-badge {% if not offer.is_active %}inactive{% endif %}">
+                                <i class="fas fa-arrow-down-long"></i> {{ offer.discount_percentage }}% OFF
+                            </span>
+                        </td>
+                        <td>
+                            <div class="validity-info">
+                                <span class="validity-date">{{ offer.valid_to|date:"M d, Y" }}</span>
+                                <span class="validity-countdown">Ends in {{ offer.valid_to|timeuntil }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-circle btn-edit" onclick="editProductOffer('{{ offer.id }}', '{{ offer.product.id }}', '{{ offer.discount_percentage }}', '{{ offer.valid_from|date:'Y-m-d\TH:i' }}', '{{ offer.valid_to|date:'Y-m-d\TH:i' }}', {{ offer.is_active|yesno:'true,false' }})" title="Edit Offer">
+                                    <i class="fas fa-pen-nib"></i>
+                                </button>
+                                <button type="button" class="btn-circle btn-delete" title="Delete Offer" onclick="confirmDeleteOffer('{% url 'delete_offer' 'product' offer.id %}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align:center; padding: 100px; color: #cbd5e1;">
+                        <i class="fas fa-layer-group" style="font-size: 3.5rem; display: block; margin-bottom: 20px; opacity: 0.2;"></i>
+                        <span style="font-weight: 700; font-size: 1.1rem; display: block;">No Active Product Offers</span>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CATEGORY OFFERS -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <div class="icon-box" style="background: #eff6ff;">
+                    <i class="fas fa-tags" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                </div>
+                Category Offers
+            </div>
+            <button class="add-new-btn" style="background: #3b82f6;" onclick="openModal('categoryModal')"><i class="fas fa-plus"></i> ADD OFFER</button>
+        </div>
+        <div class="table-container">
+            <table class="offer-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Category</th>
+                        <th style="width: 25%;">Discount</th>
+                        <th style="width: 20%;">Validity</th>
+                        <th style="width: 10%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for offer in category_offers %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 800; color: var(--text-main); font-size: 1rem;">{{ offer.category.name }}</div>
+                            {% if not offer.is_active %}
+                            <span style="font-size: 0.65rem; color: var(--danger); font-weight: 800; text-transform: uppercase; margin-top: 4px; display: inline-block;">• Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="discount-badge {% if not offer.is_active %}inactive{% endif %}" style="background: #eff6ff; color: #1e40af; border-color: #dbeafe;">
+                                <i class="fas fa-bookmark"></i> {{ offer.discount_percentage }}% OFF
+                            </span>
+                        </td>
+                        <td>
+                            <div class="validity-info">
+                                <span class="validity-date">{{ offer.valid_to|date:"M d, Y" }}</span>
+                                <span class="validity-countdown">Ends in {{ offer.valid_to|timeuntil }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-circle btn-edit" onclick="editCategoryOffer('{{ offer.id }}', '{{ offer.category.id }}', '{{ offer.discount_percentage }}', '{{ offer.valid_from|date:'Y-m-d\TH:i' }}', '{{ offer.valid_to|date:'Y-m-d\TH:i' }}', {{ offer.is_active|yesno:'true,false' }})" title="Edit Offer">
+                                    <i class="fas fa-pen-nib"></i>
+                                </button>
+                                <button type="button" class="btn-circle btn-delete" title="Delete Offer" onclick="confirmDeleteOffer('{% url 'delete_offer' 'category' offer.id %}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align:center; padding: 100px; color: #cbd5e1;">
+                        <i class="fas fa-tags" style="font-size: 3.5rem; display: block; margin-bottom: 20px; opacity: 0.2;"></i>
+                        <span style="font-weight: 700; font-size: 1.1rem; display: block;">No Active Category Offers</span>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- REFERRAL OFFERS -->
+<div class="referral-section">
+    <div class="referral-header">
+        <div class="referral-title" style="font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em;">
+            <div class="icon-box" style="background: #f0fdf4; width: 52px; height: 52px; border-radius: 16px;">
+                <i class="fas fa-users-viewfinder" style="color: #16a34a; font-size: 1.5rem;"></i>
+            </div>
+            Referral Program
+        </div>
+        {% if referral_offer %}
+        <span class="discount-badge {% if not referral_offer.is_active %}inactive{% endif %}" style="background: #f0fdf4; color: #166534; padding: 8px 20px; font-size: 0.9rem;">
+            <i class="fas fa-circle" style="font-size: 0.5rem;"></i> {% if referral_offer.is_active %}ACTIVE{% else %}INACTIVE{% endif %}
+        </span>
+        {% endif %}
+    </div>
+    
+    <form action="{% url 'update_referral_offer' %}" method="POST" class="referral-form">
+        {% csrf_token %}
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referrer Reward</label>
+            <div class="input-wrapper">
+                <i class="fas fa-wallet"></i>
+                <input type="number" name="referrer_reward" class="form-control" placeholder="E.g. 100" value="{{ referral_offer.referrer_reward|default:'' }}" required>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Reward for the existing user.</small>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Signup</label>
+            <div class="input-wrapper">
+                <i class="fas fa-user-plus"></i>
+                <input type="number" name="referee_signup_reward" class="form-control" placeholder="E.g. 20" value="{{ referral_offer.referee_signup_reward|default:'' }}" required>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Initial bonus for the new user.</small>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Order</label>
+            <div class="input-wrapper">
+                <i class="fas fa-shopping-cart"></i>
+                <input type="number" name="referee_order_reward" class="form-control" placeholder="E.g. 80" value="{{ referral_offer.referee_order_reward|default:'' }}" required>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Reward after their first order.</small>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="display:block; margin-bottom:8px; font-weight:700; font-size:0.9rem;">Referee Discount</label>
+            <div class="input-wrapper">
+                <i class="fas fa-percent"></i>
+                <input type="number" name="referee_discount_percent" class="form-control" placeholder="E.g. 50" value="{{ referral_offer.referee_discount_percent|default:'50' }}" required>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 8px; font-weight: 500;">Discount on first purchase.</small>
+        </div>
+        <div class="form-group" style="margin:0; align-self: center;">
+            <label class="switch-container">
+                <div class="switch">
+                    <input type="checkbox" name="is_active" {% if referral_offer.is_active %}checked{% endif %}>
+                    <span class="slider"></span>
+                </div>
+                <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">Live Status</span>
+            </label>
+        </div>
+        <button type="submit" class="btn-submit" style="margin:0; background: #16a34a;">Update Settings</button>
+    </form>
+</div>
+
+<!-- MODALS -->
+<!-- ADD/EDIT PRODUCT MODAL -->
+<div id="productModal" class="form-overlay" onclick="closeModal(event, 'productModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+            <div>
+                <h2 class="modal-title" id="productModalTitle" style="font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em;">New Product Offer</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Define custom discounts for specific products.</p>
+            </div>
+            <button class="close-modal" onclick="hideModal('productModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="{% url 'add_product_offer' %}" method="POST" id="productOfferForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Target Product</label>
+                <select name="product_id" id="prod_product_id" class="form-control" required>
+                    <option value="">-- Choose Product --</option>
+                    {% for p in all_products %}
+                    <option value="{{ p.id }}">{{ p.name }} (₹{{ p.price }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label>Discount %</label>
+                    <input type="number" name="discount" id="prod_discount" class="form-control" placeholder="E.g. 20" min="1" max="99" required>
+                </div>
+                <div class="form-group">
+                    <label>Valid From</label>
+                    <input type="datetime-local" name="valid_from" id="prod_valid_from" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Valid To</label>
+                <input type="datetime-local" name="valid_to" id="prod_valid_to" class="form-control" required>
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label class="switch-container">
+                    <div class="switch">
+                        <input type="checkbox" name="is_active" id="prod_is_active" checked>
+                        <span class="slider"></span>
+                    </div>
+                    <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">Publish Immediately</span>
+                </label>
+            </div>
+            <button type="submit" class="btn-submit" id="productSubmitBtn">Launch Product Offer</button>
+        </form>
+    </div>
+</div>
+
+<!-- ADD/EDIT CATEGORY MODAL -->
+<div id="categoryModal" class="form-overlay" onclick="closeModal(event, 'categoryModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+            <div>
+                <h2 class="modal-title" id="categoryModalTitle" style="font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em;">New Category Offer</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Apply sitewide discounts to entire categories.</p>
+            </div>
+            <button class="close-modal" onclick="hideModal('categoryModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="{% url 'add_category_offer' %}" method="POST" id="categoryOfferForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Target Category</label>
+                <select name="category_id" id="cat_category_id" class="form-control" required>
+                    <option value="">-- Choose Category --</option>
+                    {% for c in all_categories %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                    <label>Discount %</label>
+                    <input type="number" name="discount" id="cat_discount" class="form-control" placeholder="E.g. 15" min="1" max="99" required>
+                </div>
+                <div class="form-group">
+                    <label>Valid From</label>
+                    <input type="datetime-local" name="valid_from" id="cat_valid_from" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Valid To</label>
+                <input type="datetime-local" name="valid_to" id="cat_valid_to" class="form-control" required>
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label class="switch-container">
+                    <div class="switch">
+                        <input type="checkbox" name="is_active" id="cat_is_active" checked>
+                        <span class="slider"></span>
+                    </div>
+                    <span style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">Publish Immediately</span>
+                </label>
+            </div>
+            <button type="submit" class="btn-submit" id="categorySubmitBtn" style="background: #3b82f6;">Launch Category Offer</button>
+        </form>
+    </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="form-overlay" onclick="closeModal(event, 'deleteConfirmModal')">
+    <div class="modal-content" onclick="event.stopPropagation()" style="width: 400px; text-align: center; padding: 40px;">
+        <div style="font-size: 3.5rem; color: #ef4444; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 style="font-weight: 900; font-size: 1.6rem; margin-bottom: 12px;">Delete Offer?</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 32px;">
+            Are you sure you want to permanently delete this offer? This action cannot be undone.
+        </p>
+        <form method="POST" id="deleteOfferForm">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn-submit" onclick="hideModal('deleteConfirmModal')" style="flex:1; background: #f1f5f9; color: var(--text-main); box-shadow: none; margin-top: 0;">Cancel</button>
+                <button type="submit" class="btn-submit" style="flex:1; background: #ef4444; margin-top: 0;">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+<script>
+    function openModal(id) {
+        // Reset forms for "Add" mode
+        if(id === 'productModal') {
+            document.getElementById('productModalTitle').innerText = 'New Product Offer';
+            document.getElementById('productOfferForm').action = "{% url 'add_product_offer' %}";
+            document.getElementById('productSubmitBtn').innerText = 'Launch Product Offer';
+            document.getElementById('productOfferForm').reset();
+            document.getElementById('prod_is_active').checked = true;
+        } else if(id === 'categoryModal') {
+            document.getElementById('categoryModalTitle').innerText = 'New Category Offer';
+            document.getElementById('categoryOfferForm').action = "{% url 'add_category_offer' %}";
+            document.getElementById('categorySubmitBtn').innerText = 'Launch Category Offer';
+            document.getElementById('categoryOfferForm').reset();
+            document.getElementById('cat_is_active').checked = true;
+        }
+        document.getElementById(id).style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function editProductOffer(id, productId, discount, validFrom, validTo, isActive) {
+        document.getElementById('productModalTitle').innerText = 'Edit Product Offer';
+        document.getElementById('productOfferForm').action = `/adminpanel/offers/product/${id}/edit/`;
+        document.getElementById('productSubmitBtn').innerText = 'Update Product Offer';
+        
+        document.getElementById('prod_product_id').value = productId;
+        document.getElementById('prod_discount').value = discount;
+        document.getElementById('prod_valid_from').value = validFrom;
+        document.getElementById('prod_valid_to').value = validTo;
+        document.getElementById('prod_is_active').checked = isActive;
+        
+        document.getElementById('productModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function editCategoryOffer(id, categoryId, discount, validFrom, validTo, isActive) {
+        document.getElementById('categoryModalTitle').innerText = 'Edit Category Offer';
+        document.getElementById('categoryOfferForm').action = `/adminpanel/offers/category/${id}/edit/`;
+        document.getElementById('categorySubmitBtn').innerText = 'Update Category Offer';
+        
+        document.getElementById('cat_category_id').value = categoryId;
+        document.getElementById('cat_discount').value = discount;
+        document.getElementById('cat_valid_from').value = validFrom;
+        document.getElementById('cat_valid_to').value = validTo;
+        document.getElementById('cat_is_active').checked = isActive;
+        
+        document.getElementById('categoryModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(e, id) {
+        if (e.target.id === id) {
+            hideModal(id);
+        }
+    }
+
+    function hideModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.form-overlay').forEach(m => {
+                m.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        }
+    });
+
+    /* ---------- CLIENT-SIDE VALIDATION ---------- */
+    function clearFormErrors() {
+        document.querySelectorAll('.field-error-msg').forEach(el => el.remove());
+        document.querySelectorAll('.form-control.has-error').forEach(el => el.classList.remove('has-error'));
+    }
+
+    function showFieldError(inputEl, msg) {
+        inputEl.classList.add('has-error');
+        const span = document.createElement('span');
+        span.className = 'field-error-msg';
+        span.textContent = msg;
+        inputEl.parentElement.appendChild(span);
+    }
+
+    function validateOfferForm(formId) {
+        clearFormErrors();
+        let valid = true;
+        const form = document.getElementById(formId);
+        
+        const isProduct = formId === 'productOfferForm';
+        const targetSelect = isProduct ? document.getElementById('prod_product_id') : document.getElementById('cat_category_id');
+        const discount = isProduct ? document.getElementById('prod_discount') : document.getElementById('cat_discount');
+        const from = isProduct ? document.getElementById('prod_valid_from') : document.getElementById('cat_valid_from');
+        const to = isProduct ? document.getElementById('prod_valid_to') : document.getElementById('cat_valid_to');
+
+        if (!targetSelect.value) {
+            showFieldError(targetSelect, isProduct ? 'Please select a product.' : 'Please select a category.');
+            valid = false;
+        }
+
+        const discVal = parseInt(discount.value);
+        if (!discount.value.trim() || isNaN(discVal)) {
+            showFieldError(discount, 'Discount is required.');
+            valid = false;
+        } else if (discVal < 1 || discVal > 99) {
+            showFieldError(discount, 'Discount must be between 1 and 99.');
+            valid = false;
+        }
+
+        if (!from.value) {
+            showFieldError(from, 'Start date is required.');
+            valid = false;
+        }
+        if (!to.value) {
+            showFieldError(to, 'Expiry date is required.');
+            valid = false;
+        }
+        if (from.value && to.value && new Date(to.value) <= new Date(from.value)) {
+            showFieldError(to, 'Expiry must be after start date.');
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    document.getElementById('productOfferForm').addEventListener('submit', function(e) {
+        if (!validateOfferForm('productOfferForm')) e.preventDefault();
+    });
+
+    document.getElementById('categoryOfferForm').addEventListener('submit', function(e) {
+        if (!validateOfferForm('categoryOfferForm')) e.preventDefault();
+    });
+
+    function confirmDeleteOffer(url) {
+        const form = document.getElementById('deleteOfferForm');
+        form.action = url;
+        document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
+</script>
+{% endblock %}
