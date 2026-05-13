@@ -118,6 +118,18 @@ def process_referrer_reward(referee, order=None):
             if rewarded:
                 rewarded_anyone = True
 
+        # ── REFERRER REWARD (ON ORDER) ───────────────────────────────────
+        referrer_reward = referral_offer.referrer_reward
+        if referrer_reward and referrer_reward > 0:
+            desc = f"Referral commission: {referee.email} first order"
+            msg = (
+                f"🎁 Congratulations! You've earned ₹{referrer_reward} cashback because "
+                f"{referee.first_name or referee.email} successfully placed their first order. "
+                f"Keep sharing TimeHub to earn more!"
+            )
+            if _credit_wallet_and_notify(referrer, referrer_reward, desc, msg):
+                rewarded_anyone = True
+
     return rewarded_anyone
 
 
