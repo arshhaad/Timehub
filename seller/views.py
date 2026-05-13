@@ -20,6 +20,17 @@ from user_apps.core.models import (
 from user_apps.accounts.forms import SignupForm, LoginForm
 from user_apps.accounts.models import CustomUser, EmailOTP
 from user_apps.accounts.utils import send_otp_email
+from functools import wraps
+
+def seller_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('seller_login')
+        if not hasattr(request.user, 'seller_profile'):
+            return redirect('seller_signup')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 
 
@@ -124,7 +135,10 @@ def seller_verify_otp(request):
 def seller_login(request):
     """Standard login for sellers."""
     if request.user.is_authenticated:
-        return redirect('seller_dashboard')
+        if hasattr(request.user, 'seller_profile'):
+            return redirect('seller_dashboard')
+        else:
+            return redirect('seller_signup')
 
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -179,14 +193,10 @@ def become_seller(request):
 
 
 
-@login_required
+@seller_required
 def seller_dashboard(request):
     """Display seller dashboard with quick stats."""
-    try:
-        seller = request.user.seller_profile
-    except Seller.DoesNotExist:
-        return redirect('seller_signup')
-        
+    seller = request.user.seller_profile
     count = Product.objects.filter(seller=seller, is_deleted=False).count()
     return render(request, 'seller_dashboard.html', {
         'active_menu': 'dashboard',
@@ -194,10 +204,10 @@ def seller_dashboard(request):
     })
 
 
-@login_required
+@seller_required
 def seller_product_sell_list(request):
     """Lists all products owned by the seller with search support."""
-    seller = get_object_or_404(Seller, user=request.user)
+    seller = request.user.seller_profile
     query = request.GET.get('q', '').strip()
     
     products = Product.objects.filter(seller=seller, is_deleted=False).order_by('-created_at')
@@ -212,10 +222,10 @@ def seller_product_sell_list(request):
 
 
 
-@login_required
+@seller_required
 def seller_product_add(request):
     """Add a new product with images and variants."""
-    seller = get_object_or_404(Seller, user=request.user)
+    seller = request.user.seller_profile
     
     if request.method == 'POST':
         try:
@@ -294,10 +304,10 @@ def seller_product_add(request):
     })
 
 
-@login_required
+@seller_required
 def seller_product_edit(request, product_id):
     """Update existing product details and images."""
-    seller = get_object_or_404(Seller, user=request.user)
+    seller = request.user.seller_profile
     product = get_object_or_404(Product, id=product_id, seller=seller)
     
     if request.method == 'POST':
@@ -358,15 +368,15 @@ def seller_product_edit(request, product_id):
 
 
 
-@login_required
+@seller_required
 def seller_wallet(request):
     """View seller earnings and transaction history."""
     from .models import SellerEarnings
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
     txs = WalletTransaction.objects.filter(wallet=wallet).order_by('-timestamp')
     
-    seller = getattr(request.user, 'seller_profile', None)
-    pending = SellerEarnings.objects.filter(seller=seller, status='Pending').order_by('-created_at') if seller else []
+    seller = request.user.seller_profile
+    pending = SellerEarnings.objects.filter(seller=seller, status='Pending').order_by('-created_at')
         
     return render(request, 'seller_wallat.html', {
         'wallet': wallet, 'transactions': txs, 'pending_earnings': pending,
@@ -376,10 +386,10 @@ def seller_wallet(request):
 
 
 
-@login_required
+@seller_required
 def seller_settings(request):
     """Update store name and security settings."""
-    seller = get_object_or_404(Seller, user=request.user)
+    seller = request.user.seller_profile
     if request.method == 'POST':
         fname = request.POST.get('first_name', '').strip()
         lname = request.POST.get('last_name', '').strip()
@@ -418,10 +428,10 @@ def seller_settings(request):
     return render(request, 'seller_settings.html', {'active_menu': 'settings'})
 
 
-@login_required
+@seller_required
 def seller_product_status(request):
     """View sales status and performance for a product."""
-    seller = get_object_or_404(Seller, user=request.user)
+    seller = request.user.seller_profile
     p_id = request.GET.get('id')
     
     all_p = Product.objects.filter(seller=seller, is_deleted=False).order_by('-created_at')
