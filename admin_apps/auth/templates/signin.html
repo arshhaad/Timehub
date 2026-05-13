@@ -1,0 +1,422 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - TimeHub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --primary-bg: #ff6b00; /* Vibrant orange for clock icon */
+            --input-border: #e5e7eb;
+            --input-text: #374151;
+            --button-bg: #000000;
+            --button-text: #ffffff;
+            --card-bg: #ffffff;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 32px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 60px;
+        }
+
+        /* Left Side: Branding */
+        .brand-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-right: 40px;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.8rem;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.3);
+        }
+
+        .brand-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .brand-section h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        .brand-divider {
+            width: 80px;
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 0 auto 40px auto;
+        }
+
+        .brand-tagline {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-bottom: 15px;
+        }
+
+        .brand-subline {
+            font-size: 0.85rem;
+            color: #d1d5db;
+        }
+
+        /* Right Side: Form Card */
+        .form-section {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 60px 50px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            position: relative;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            color: var(--input-text);
+            background-color: #ffffff;
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-md);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control::placeholder {
+            color: #d1d5db;
+            font-weight: 400;
+        }
+
+        .form-control:focus {
+            border-color: #9ca3af;
+            box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.1);
+        }
+
+        .input-hint {
+            display: block;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 38px;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: #4b5563;
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--input-border);
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .forgot-link:hover {
+            color: #111827;
+        }
+
+        .btn-login {
+            width: 100%;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-login:hover {
+            background-color: #1f2937;
+            transform: translateY(-1px);
+        }
+
+        /* Alert styling */
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background-color: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #fca5a5;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-container {
+                gap: 40px;
+                padding: 30px;
+            }
+
+            .brand-section h1 {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .login-container {
+                flex-direction: column;
+                gap: 60px;
+                padding: 40px 20px;
+                text-align: center;
+            }
+
+            .brand-section {
+                padding-right: 0;
+            }
+
+            .brand-divider {
+                margin: 0 auto 30px auto;
+            }
+
+            .logo-box {
+                width: 70px;
+                height: 70px;
+                font-size: 2.2rem;
+            }
+
+            .brand-section h1 {
+                font-size: 2.8rem;
+            }
+            
+            .login-card {
+                padding: 40px 25px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .form-section {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-section h1 {
+                font-size: 2.2rem;
+            }
+
+            .brand-section h2 {
+                font-size: 1rem;
+            }
+
+            .login-card {
+                padding: 30px 20px;
+                border-radius: var(--radius-lg);
+                box-shadow: none;
+                background: transparent;
+            }
+
+            .btn-login {
+                padding: 14px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        
+        <!-- Left Branding Section -->
+        <div class="brand-section">
+            <div class="logo-box">
+                <i class="fa-regular fa-clock" style="transform: scaleX(-1);"></i>
+            </div>
+            <h1>TimeHub</h1>
+            
+            <div class="brand-divider"></div>
+            
+            <p class="brand-tagline">TimeHub &mdash; Timeless by Design.</p>
+            <p class="brand-subline">Take control of every minute with us</p>
+        </div>
+
+        <!-- Right Form Section -->
+        <div class="form-section">
+            <div class="login-card">
+                <div class="form-header">
+                    <h3>Welcome Back</h3>
+                    <p>Sign in to your admin account</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'admin_login' %}">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="id_email">Email Address</label>
+                        <input type="email" name="email" id="id_email" class="form-control" placeholder="admin@timehub.com" required>
+                        <span class="input-hint">Use your admin email (e.g. name@timehub.com)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_password">Password</label>
+                        <input type="password" name="password" id="id_password" class="form-control" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required>
+                        <i class="fa-regular fa-eye password-toggle" id="togglePassword"></i>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember">
+                            Remember me
+                        </label>
+                        <a href="{% url 'admin_forgot_password' %}" class="forgot-link">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login">Login to Dashboard</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Password toggle visibility
+        document.getElementById('togglePassword').addEventListener('click', function (e) {
+            const passwordInput = document.getElementById('id_password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon class
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
+</body>
+</html>
