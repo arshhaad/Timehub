@@ -105,10 +105,9 @@ def get_cart_totals(cart):
     # Stack the referral first-order discount on top of any coupon saving
     referral_discount = get_referral_first_order_discount(cart.user, items=items)
     discount += referral_discount
-
-    taxable_amount = max(Decimal('0'), subtotal - discount)
-    tax = round(taxable_amount * TAX_RATE, 2)
-    total = taxable_amount + tax + shipping
+    # Tax is 3% of the subtotal (after item-level offers)
+    tax = round(subtotal * TAX_RATE, 2)
+    total = subtotal - discount + tax + shipping
 
     return {
         'items': items,
@@ -274,9 +273,9 @@ def checkout_page(request):
     referral_discount = get_referral_first_order_discount(request.user, items=items)
     discount = coupon_discount + referral_discount
 
-    taxable_amount = max(Decimal('0'), subtotal - discount)
-    tax = round(taxable_amount * TAX_RATE, 2)
-    total = taxable_amount + tax + shipping
+    # Tax is calculated on subtotal (after item offers)
+    tax = round(subtotal * TAX_RATE, 2)
+    total = subtotal - discount + tax + shipping
 
     addresses = Address.objects.filter(user=request.user)
     default_address = addresses.filter(is_default=True).first() or addresses.first()
@@ -348,6 +347,7 @@ def checkout_page(request):
                     subtotal=subtotal,
                     tax=tax,
                     shipping_charge=shipping,
+                    offer_discount=offer_savings,
                     discount=discount,
                     total_amount=total,
                     status='Pending',
@@ -1008,16 +1008,24 @@ def apply_coupon(request):
     
     total_discount = coupon_discount + referral_discount
 
-    taxable = max(Decimal('0'), subtotal - total_discount)
-    tax = round(taxable * TAX_RATE, 2)
-    total = taxable + tax + shipping
+    # Tax is calculated on subtotal (after item offers)
+    tax = round(subtotal * TAX_RATE, 2)
+    total = subtotal - total_discount + tax + shipping
+
+    # Calculate offer savings for AJAX response
+    offer_savings = Decimal('0')
+    for item in items:
+        base = item.variant.effective_price if item.variant else item.product.price
+        disc = item.variant.display_price if item.variant else item.product.display_price
+        offer_savings += max(Decimal('0'), base - disc) * item.quantity
 
     return JsonResponse({
         'success': True,
         'message': f'Coupon {coupon.code} applied successfully!',
         'subtotal': str(subtotal),
-        'discount': str(coupon_discount), # Still return just coupon discount for the coupon line
+        'discount': str(coupon_discount),
         'referral_discount': str(referral_discount),
+        'offer_savings': str(offer_savings),
         'tax': str(tax),
         'shipping': str(shipping),
         'total': str(total),
@@ -1048,9 +1056,16 @@ def remove_coupon(request):
     # Referral Discount remains even if coupon is removed
     referral_discount = get_referral_first_order_discount(request.user, items=items)
 
-    taxable_amount = max(Decimal('0'), subtotal - referral_discount)
-    tax = round(taxable_amount * TAX_RATE, 2)
-    total = taxable_amount + tax + shipping
+    # Tax is calculated on subtotal (after item offers)
+    tax = round(subtotal * TAX_RATE, 2)
+    total = subtotal - referral_discount + tax + shipping
+
+    # Calculate offer savings for AJAX response
+    offer_savings = Decimal('0')
+    for item in items:
+        base = item.variant.effective_price if item.variant else item.product.price
+        disc = item.variant.display_price if item.variant else item.product.display_price
+        offer_savings += max(Decimal('0'), base - disc) * item.quantity
 
     return JsonResponse({
         'success': True,
@@ -1058,6 +1073,7 @@ def remove_coupon(request):
         'subtotal': str(subtotal),
         'discount': '0.00',
         'referral_discount': str(referral_discount),
+        'offer_savings': str(offer_savings),
         'tax': str(tax),
         'shipping': str(shipping),
         'total': str(total),

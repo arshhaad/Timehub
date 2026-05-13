@@ -240,7 +240,8 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    offer_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total savings from Product/Category offers")
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Savings from Coupons/Referrals")
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     
     # Statuses

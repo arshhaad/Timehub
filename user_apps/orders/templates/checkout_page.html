@@ -1668,13 +1668,13 @@
                         <!-- Price Breakdown -->
                         <div class="price-rows">
 
-                            <!-- 1. Subtotal (at listed/offer prices) -->
+                            <!-- 1. Subtotal (after item offers) -->
                             <div class="price-row">
                                 <span class="label">Subtotal ({{ total_quantity }} item{% if total_quantity != 1 %}s{% endif %})</span>
                                 <span class="val" id="summarySubtotal">₹{{ subtotal|floatformat:2 }}</span>
                             </div>
 
-                            <!-- 2. Coupon Discount -->
+                            <!-- 4. Coupon Discount -->
                             <div class="price-row" id="summaryCouponRow" style="display: {% if coupon_discount > 0 %}flex{% else %}none{% endif %};">
                                 <span class="label" style="display:flex;align-items:center;gap:6px;">
                                     <i class="fas fa-ticket-alt" style="color:#22c55e;font-size:0.75rem;"></i>
@@ -1683,7 +1683,7 @@
                                 <span class="val" style="color:#22c55e;" id="summaryCouponDiscount">−₹{{ coupon_discount|floatformat:2 }}</span>
                             </div>
 
-                            <!-- 3. Referral Discount -->
+                            <!-- 5. Referral Discount -->
                             <div class="price-row" id="summaryReferralRow" style="display: {% if referral_discount > 0 %}flex{% else %}none{% endif %};">
                                 <span class="label" style="display:flex;align-items:center;gap:6px;">
                                     <i class="fas fa-users" style="color:#22c55e;font-size:0.75rem;"></i>
@@ -2131,23 +2131,32 @@
         }
 
         function updateSummary(data) {
-            document.getElementById('summarySubtotal').innerText = '₹' + parseFloat(data.subtotal).toFixed(2);
-            document.getElementById('summaryTax').innerText = '₹' + parseFloat(data.tax).toFixed(2);
-            document.getElementById('summaryTotal').innerText = '₹' + parseFloat(data.total).toFixed(2);
+            const subtotal = parseFloat(data.subtotal || 0);
+            const tax = parseFloat(data.tax || 0);
+            const total = parseFloat(data.total || 0);
+            const couponVal = parseFloat(data.discount || 0);
+            const referralVal = parseFloat(data.referral_discount || 0);
+
+            // Update Subtotal
+            const subtotalEl = document.getElementById('summarySubtotal');
+            if (subtotalEl) subtotalEl.innerText = '₹' + subtotal.toFixed(2);
+
+            document.getElementById('summaryTax').innerText = '₹' + tax.toFixed(2);
+            document.getElementById('summaryTotal').innerText = '₹' + total.toFixed(2);
             
             const shippingSpan = document.getElementById('summaryShipping');
-            if (parseFloat(data.shipping) === 0) {
-                shippingSpan.innerText = 'FREE';
+            const shippingVal = parseFloat(data.shipping || 0);
+            if (shippingVal === 0) {
+                shippingSpan.innerHTML = 'FREE <div style="font-size:0.68rem;color:var(--text-muted);font-weight:normal;margin-top:2px;">(Free above ₹5,000)</div>';
                 shippingSpan.classList.add('free-shipping');
             } else {
-                shippingSpan.innerText = '₹' + parseFloat(data.shipping).toFixed(2);
+                shippingSpan.innerHTML = '₹' + shippingVal.toFixed(2) + ' <div style="font-size:0.68rem;color:var(--text-muted);font-weight:normal;margin-top:2px;">(Free above ₹5,000)</div>';
                 shippingSpan.classList.remove('free-shipping');
             }
             
             // Coupon discount row
             const couponRow = document.getElementById('summaryCouponRow');
             const couponSpan = document.getElementById('summaryCouponDiscount');
-            const couponVal = parseFloat(data.discount || 0);
             if (couponRow && couponSpan) {
                 couponRow.style.display = couponVal > 0 ? 'flex' : 'none';
                 couponSpan.innerText = '−₹' + couponVal.toFixed(2);
@@ -2156,7 +2165,6 @@
             // Referral discount row
             const referralRow = document.getElementById('summaryReferralRow');
             const referralSpan = document.getElementById('summaryReferralDiscount');
-            const referralVal = parseFloat(data.referral_discount || 0);
             if (referralRow && referralSpan) {
                 referralRow.style.display = referralVal > 0 ? 'flex' : 'none';
                 referralSpan.innerText = '−₹' + referralVal.toFixed(2);

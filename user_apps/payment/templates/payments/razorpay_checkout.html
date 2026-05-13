@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeHub | Secure Payment</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -16,6 +16,13 @@
             --text: #ffffff;
             --text-muted: #9ca3af;
             --border: #27272a;
+            --success: #22c55e;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
@@ -27,136 +34,246 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 106, 0, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255, 106, 0, 0.05) 0%, transparent 40%);
         }
 
         .payment-container {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 48px;
+            border-radius: 32px;
+            padding: 40px;
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            animation: fadeIn 0.8s ease-out;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            margin: 20px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .logo {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 24px;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 15px;
+            letter-spacing: -1px;
         }
 
         .logo i {
             color: var(--primary);
+            filter: drop-shadow(0 0 10px rgba(255, 106, 0, 0.3));
         }
 
         .status-badge {
-            background: rgba(255, 106, 0, 0.1);
+            background: rgba(255, 106, 0, 0.08);
             color: var(--primary);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 32px;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 35px;
+            border: 1px solid rgba(255, 106, 0, 0.15);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .order-info {
-            margin-bottom: 40px;
-            padding-bottom: 32px;
+        .order-summary-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 35px;
+            text-align: left;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 1px solid var(--border);
         }
 
-        .order-id {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        .amount {
-            font-size: 2.5rem;
+        .summary-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
             font-weight: 700;
+            color: #fff;
         }
 
-        .amount span {
-            font-size: 1.2rem;
+        .order-id {
+            font-size: 0.85rem;
             color: var(--text-muted);
-            margin-right: 4px;
+            font-weight: 500;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .summary-row .label {
+            color: var(--text-muted);
+        }
+
+        .summary-row .value {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .summary-row.discount .value {
+            color: var(--success);
+        }
+
+        .summary-total {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-total .label {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .summary-total .amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .summary-total .amount span {
+            font-size: 1rem;
+            font-weight: 600;
         }
 
         .payment-btn {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
-            padding: 18px 36px;
-            border-radius: 14px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            padding: 20px 40px;
+            border-radius: 18px;
+            font-size: 1.15rem;
+            font-weight: 700;
             width: 100%;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 10px 25px rgba(255, 106, 0, 0.3);
+            gap: 14px;
+            box-shadow: 0 15px 35px rgba(255, 106, 0, 0.3);
+            margin-bottom: 25px;
         }
 
         .payment-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(255, 106, 0, 0.4);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(255, 106, 0, 0.4);
         }
 
         .payment-btn:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
-        .footer-note {
-            margin-top: 32px;
+        .cancel-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cancel-link:hover {
+            color: #fff;
+            transform: translateX(-5px);
+        }
+
+        .footer-info {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             font-size: 0.85rem;
             color: var(--text-muted);
         }
 
-        .footer-note i {
-            color: #22c55e;
-            margin-right: 4px;
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--success);
+            font-weight: 600;
         }
 
         #loading-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(11, 11, 14, 0.9);
+            background: rgba(11, 11, 14, 0.95);
             z-index: 1000;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border: 4px solid rgba(255, 106, 0, 0.1);
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+            .payment-container {
+                padding: 30px 20px;
+                border-radius: 24px;
+            }
+            .summary-total .amount {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -168,50 +285,78 @@
             <span>TimeHub</span>
         </div>
         
-        <div class="status-badge">Secure Checkout</div>
+        <div class="status-badge">
+            <i class="fas fa-shield-alt"></i>
+            Secure Checkout
+        </div>
 
-        <div class="order-info">
-            <div class="order-id">Order ID: #{{ order.id }}</div>
-            <div class="amount"><span>INR</span>{{ order.total_amount }}</div>
+        <div class="order-summary-card">
+            <div class="summary-header">
+                <h3>Order Summary</h3>
+                <span class="order-id">#{{ order.id }}</span>
+            </div>
+            
+            <div class="summary-row">
+                <span class="label">Subtotal</span>
+                <span class="value">₹{{ order.subtotal|floatformat:2 }}</span>
+            </div>
+
+            {% if order.discount > 0 or is_cod_switch %}
+            <div class="summary-row discount">
+                <span class="label">Coupon/Referral Savings</span>
+                <span class="value">−₹{% if is_cod_switch %}{{ order.discount|add:online_discount|floatformat:2 }}{% else %}{{ order.discount|floatformat:2 }}{% endif %}</span>
+            </div>
+            {% endif %}
+
+            <div class="summary-row">
+                <span class="label">Tax (GST)</span>
+                <span class="value">₹{{ order.tax }}</span>
+            </div>
+
+            <div class="summary-row">
+                <span class="label">Shipping</span>
+                <span class="value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge }}{% else %}FREE{% endif %}</span>
+            </div>
+
+            <div class="summary-total">
+                <span class="label">Total Amount</span>
+                <div class="amount">
+                    <span>INR</span>
+                    {% if is_cod_switch %}{{ discounted_total }}{% else %}{{ order.total_amount }}{% endif %}
+                </div>
+            </div>
+            
             {% if is_cod_switch %}
-            <div style="margin-top: 14px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px 16px; text-align: left;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem;">
-                    <span style="color: #9ca3af;">Original Total</span>
-                    <span style="color: #fff; font-weight: 600;">₹{{ order.total_amount }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem;">
-                    <span style="color: #9ca3af;">Online Discount ({{ discount_pct }}%)</span>
-                    <span style="color: #22c55e; font-weight: 700;">−₹{{ online_discount }}</span>
-                </div>
-                <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin: 8px 0;"></div>
-                <div style="display: flex; justify-content: space-between; font-size: 1rem;">
-                    <span style="color: #fff; font-weight: 800;">You Pay</span>
-                    <span style="color: #22c55e; font-weight: 800;">₹{{ discounted_total }}</span>
-                </div>
+            <div style="margin-top: 15px; background: rgba(34,197,94,0.1); border-radius: 12px; padding: 10px; font-size: 0.8rem; color: #22c55e; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-gift"></i>
+                <span>Includes extra {{ discount_pct }}% off for online payment!</span>
             </div>
             {% endif %}
         </div>
 
         <button id="rzp-button1" class="payment-btn">
-            <i class="fas fa-shield-alt"></i>
-            Complete Secure Payment
+            <i class="fas fa-lock"></i>
+            Pay Now Securely
         </button>
 
-        <div style="margin-top: 20px;">
-            <a href="{% url 'checkout_page' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">
-                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Cancel and Return to Checkout
-            </a>
-        </div>
+        <a href="{% url 'checkout_page' %}" class="cancel-link">
+            <i class="fas fa-arrow-left"></i>
+            Return to Checkout
+        </a>
 
-        <div class="footer-note">
-            <i class="fas fa-lock"></i>
-            Encrypted with 256-bit SSL security
+        <div class="footer-info">
+            <div class="secure-badge">
+                <i class="fas fa-check-circle"></i>
+                256-bit SSL Secure Payment
+            </div>
+            <span>Your transaction is safe and encrypted.</span>
         </div>
     </div>
 
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <p>Processing your payment...</p>
+        <div class="loading-text">Processing your payment...</div>
+        <p style="color: var(--text-muted); margin-top: 10px;">Please do not refresh or close this window.</p>
     </div>
 
     <form action="{% url 'payments:verify_payment' %}" method="POST" id="verify-form" style="display: none;">
@@ -228,7 +373,7 @@
             "amount": "{{ amount }}",
             "currency": "{{ currency }}",
             "name": "TimeHub",
-            "description": "Secure Purchase",
+            "description": "Secure Purchase - Order #{{ order.id }}",
             "order_id": "{{ razorpay_order_id }}",
             "handler": function (response){
                 document.getElementById('loading-overlay').style.display = 'flex';
@@ -240,7 +385,7 @@
             "prefill": {
                 "name": "{{ request.user.get_full_name }}",
                 "email": "{{ request.user.email }}",
-                "contact": "{{ request.user.phone_number }}"
+                "contact": "{{ request.user.phone_number|default:'' }}"
             },
             "theme": {
                 "color": "#ff6a00"
@@ -259,7 +404,9 @@
         
         // Auto-open on load
         window.onload = function() {
-            rzp1.open();
+            setTimeout(function() {
+                rzp1.open();
+            }, 800);
         }
     </script>
 </body>

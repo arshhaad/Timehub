@@ -258,13 +258,36 @@ def _complete_order_payment(order, payment, razorpay_payment_id, razorpay_signat
     return order
 
 
+def _verify_and_complete_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature):
+    """
+    Core verification logic used by both AJAX and Redirect-based flows.
+    Verifies the signature and marks the order as paid.
+    Returns (success: bool, order: Order, error_msg: str)
+    """
+    client = get_razorpay_client()
+    try:
+        client.utility.verify_payment_signature({
+            "razorpay_order_id":   razorpay_order_id,
+            "razorpay_payment_id": razorpay_payment_id,
+            "razorpay_signature":  razorpay_signature,
+        })
+
+        payment = Payment.objects.get(razorpay_order_id=razorpay_order_id)
+        order = _complete_order_payment(payment.order, payment, razorpay_payment_id, razorpay_signature)
+        return True, order, payment, None
+
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[Payment Error] Verification failed: {error_msg}")
+        Payment.objects.filter(razorpay_order_id=razorpay_order_id).update(status="FAILED")
+        payment = Payment.objects.filter(razorpay_order_id=razorpay_order_id).first()
+        return False, None, payment, error_msg
+
+
 @csrf_exempt
 def verify_payment(request):
     """
     Step 3 (AJAX path): Verify the Razorpay payment signature and complete the order.
-
-    Razorpay calls this after the user finishes payment on their popup.
-    We verify the cryptographic signature to ensure the payload wasn't tampered with.
     """
     if request.method != "POST":
         return render(request, "payments/payment_failed.html")
@@ -274,36 +297,20 @@ def verify_payment(request):
     signature  = request.POST.get("razorpay_signature")
 
     if not all([payment_id, order_id, signature]):
-        return render(request, "payments/payment_failed.html")
+        return render(request, "payments/payment_failed.html", {"reason": "Missing required payment fields."})
 
-    client = get_razorpay_client()
-    try:
-        # Verify signature (raises an exception if invalid)
-        client.utility.verify_payment_signature({
-            "razorpay_payment_id": payment_id,
-            "razorpay_order_id":   order_id,
-            "razorpay_signature":  signature,
-        })
+    success, order, payment, error_msg = _verify_and_complete_payment(order_id, payment_id, signature)
 
-        payment = Payment.objects.get(razorpay_order_id=order_id)
-        order = _complete_order_payment(payment.order, payment, payment_id, signature)
-
-        return render(request, "payments/payment_success.html", {"order": order})
-
-    except Exception as e:
-        error_msg = str(e)
-        print(f"[Payment Error] Signature verification failed: {error_msg}")
-        Payment.objects.filter(razorpay_order_id=order_id).update(status="FAILED")
-        return render(request, "payments/payment_failed.html", {"reason": error_msg})
+    if success:
+        return render(request, "payments/payment_success.html", {"order": order, "payment": payment})
+    else:
+        return render(request, "payments/payment_failed.html", {"reason": error_msg, "payment": payment})
 
 
 @csrf_exempt
 def razorpay_callback(request):
     """
-    Step 3 (redirect path): Same as verify_payment but redirects instead of rendering.
-
-    Used when Razorpay is configured to redirect the user back to our site
-    rather than posting via AJAX.
+    Step 3 (redirect path): Redirect version of verify_payment.
     """
     if request.method != "POST":
         return redirect("payments:failed")
@@ -313,25 +320,13 @@ def razorpay_callback(request):
     signature  = request.POST.get("razorpay_signature")
 
     if not all([payment_id, order_id, signature]):
-        return redirect("payments:failed")
+        return redirect(f"{reverse('payments:failed')}?reason=Missing+payment+fields")
 
-    client = get_razorpay_client()
-    try:
-        client.utility.verify_payment_signature({
-            "razorpay_order_id":   order_id,
-            "razorpay_payment_id": payment_id,
-            "razorpay_signature":  signature,
-        })
+    success, order, payment, error_msg = _verify_and_complete_payment(order_id, payment_id, signature)
 
-        payment = Payment.objects.get(razorpay_order_id=order_id)
-        order = _complete_order_payment(payment.order, payment, payment_id, signature)
-
+    if success:
         return redirect("payments:success_with_order", order_uuid=order.uuid)
-
-    except Exception as e:
-        error_msg = str(e)
-        print(f"[Payment Error] Callback verification failed: {error_msg}")
-        Payment.objects.filter(razorpay_order_id=order_id).update(status="FAILED")
+    else:
         return redirect(f"{reverse('payments:failed')}?reason={error_msg}")
 
 
@@ -347,7 +342,10 @@ def payment_success(request, order_uuid=None):
     context = {}
 
     if order_uuid:
-        context["order"] = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+        order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+        context["order"] = order
+        # Attempt to find the successful payment for this order
+        context["payment"] = Payment.objects.filter(order=order, status="SUCCESS").order_by("-created_at").first()
 
     wallet_payment_id = request.GET.get("payment_id")
     if wallet_payment_id:

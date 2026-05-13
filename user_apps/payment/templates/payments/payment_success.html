@@ -9,12 +9,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 60px 20px;
         min-height: calc(100vh - 120px);
-        animation: fadeIn 0.8s ease-out;
+        animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
@@ -22,14 +23,14 @@
         background: var(--card-bg);
         backdrop-filter: var(--glass);
         border: 1px solid var(--border-color);
-        border-radius: 30px;
+        border-radius: 40px;
         padding: 60px 40px;
-        max-width: 600px;
+        max-width: 650px;
         width: 100%;
         text-align: center;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
     }
 
     .success-card::before {
@@ -38,116 +39,153 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 5px;
-        background: linear-gradient(90deg, #22c55e, #10b981);
+        height: 6px;
+        background: linear-gradient(90deg, #22c55e, #10b981, #22c55e);
+        background-size: 200% 100%;
+        animation: gradientMove 3s linear infinite;
+    }
+
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
     }
 
     .success-icon-circle {
-        width: 100px;
-        height: 100px;
+        width: 110px;
+        height: 110px;
         background: rgba(34, 197, 94, 0.1);
-        border: 1px solid rgba(34, 197, 94, 0.2);
+        border: 2px solid rgba(34, 197, 94, 0.2);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 30px;
+        margin: 0 auto 35px;
         position: relative;
+        box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
     }
 
     .success-icon-circle i {
-        font-size: 3.5rem;
+        font-size: 3.8rem;
         color: #22c55e;
-        filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.4));
-        animation: scaleCheck 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.4));
+        animation: popCheck 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s forwards;
+        transform: scale(0);
     }
 
-    @keyframes scaleCheck {
+    @keyframes popCheck {
         0% { transform: scale(0); }
         100% { transform: scale(1); }
     }
 
     .success-card h1 {
         font-family: 'Outfit', sans-serif;
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         font-weight: 800;
-        margin-bottom: 12px;
+        margin-bottom: 15px;
         background: linear-gradient(135deg, #fff 30%, #9ca3af 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
     }
 
     .success-card p {
         color: var(--text-muted);
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         line-height: 1.6;
-        margin-bottom: 40px;
+        margin-bottom: 45px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    .order-summary {
+    .detailed-summary {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 40px;
+        border-radius: 28px;
+        padding: 35px;
+        margin-bottom: 45px;
         text-align: left;
+    }
+
+    .summary-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .summary-title .ref {
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
     }
 
     .summary-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 15px;
+        margin-bottom: 18px;
+        font-size: 1rem;
     }
 
-    .summary-row:last-child {
-        margin-bottom: 0;
-        padding-top: 15px;
+    .summary-row.total {
+        margin-top: 20px;
+        padding-top: 20px;
         border-top: 1px dashed var(--border-color);
+        margin-bottom: 0;
     }
 
     .label {
         color: var(--text-muted);
-        font-size: 0.9rem;
         font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 1px;
     }
 
     .value {
         font-weight: 700;
         color: #fff;
-        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .value.success {
+        color: #22c55e;
+    }
+
+    .value.highlight {
+        color: var(--primary-color);
+        font-size: 1.4rem;
     }
 
     .btn-group {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        gap: 25px;
     }
 
     .action-btn {
-        padding: 16px 24px;
-        border-radius: 14px;
+        padding: 20px 30px;
+        border-radius: 18px;
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 1rem;
         text-decoration: none;
-        transition: var(--transition);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .btn-primary {
         background: #fff;
         color: #000;
+        box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
     }
 
     .btn-primary:hover {
         background: var(--primary-color);
         color: #fff;
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(249, 136, 34, 0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(249, 136, 34, 0.3);
     }
 
     .btn-outline {
@@ -159,23 +197,33 @@
     .btn-outline:hover {
         background: rgba(255, 255, 255, 0.05);
         border-color: #fff;
-        transform: translateY(-3px);
+        transform: translateY(-5px);
     }
 
-    .confetti-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 0;
+    .invoice-link {
+        margin-top: 35px;
+        display: inline-block;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        padding: 10px 20px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .invoice-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(1.05);
     }
 
     @media (max-width: 768px) {
-        .success-card { padding: 40px 25px; }
-        .success-card h1 { font-size: 2rem; }
-        .btn-group { grid-template-columns: 1fr; }
+        .success-card { padding: 45px 25px; border-radius: 30px; }
+        .success-card h1 { font-size: 2.2rem; }
+        .btn-group { grid-template-columns: 1fr; gap: 15px; }
+        .detailed-summary { padding: 25px; }
     }
 </style>
 {% endblock %}
@@ -183,32 +231,53 @@
 {% block content %}
 <div class="success-wrapper">
     <div class="success-card">
-        <div class="confetti-overlay" id="confetti"></div>
-        
         <div class="success-icon-circle">
-            <i class="fas fa-check-circle"></i>
+            <i class="fas fa-check"></i>
         </div>
 
         {% if is_wallet %}
-        <h1>Funds Added!</h1>
-        <p>Your payment was successful, and the funds have been credited to your TimeHub wallet.</p>
+        <h1>Funds Credited!</h1>
+        <p>Your wallet top-up was successful. The balance has been updated and is ready for your next purchase.</p>
         {% else %}
         <h1>Order Confirmed!</h1>
-        <p>Thank you for your purchase. Your payment was successful, and your luxury timepiece is being prepared for shipment.</p>
+        <p>Your luxury timepiece is officially yours. We're preparing your order with the utmost care and will ship it shortly.</p>
         {% endif %}
 
-        <div class="order-summary">
-            <div class="summary-row">
-                <span class="label">{% if is_wallet %}Transaction ID{% else %}Order ID{% endif %}</span>
-                <span class="value">#{{ order.id|default:payment.id }}</span>
+        <div class="detailed-summary">
+            <div class="summary-title">
+                <span>{% if is_wallet %}Transaction Details{% else %}Order Summary{% endif %}</span>
+                <span class="ref">#{{ order.id|default:payment.id }}</span>
             </div>
+            
+            {% if not is_wallet %}
+            <div class="summary-row">
+                <span class="label">Subtotal</span>
+                <span class="value">₹{{ order.subtotal|floatformat:2 }}</span>
+            </div>
+            {% if order.discount > 0 %}
+            <div class="summary-row">
+                <span class="label">Coupon/Referral Savings</span>
+                <span class="value success">−₹{{ order.discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="summary-row">
+                <span class="label">Tax (GST)</span>
+                <span class="value">₹{{ order.tax }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Shipping</span>
+                <span class="value">{% if order.shipping_charge > 0 %}₹{{ order.shipping_charge }}{% else %}FREE{% endif %}</span>
+            </div>
+            {% endif %}
+
             <div class="summary-row">
                 <span class="label">Payment Status</span>
-                <span class="value" style="color: #22c55e;">SUCCESSFUL</span>
+                <span class="value success">SUCCESSFUL</span>
             </div>
-            <div class="summary-row">
+
+            <div class="summary-row total">
                 <span class="label">Amount Paid</span>
-                <span class="value" style="color: var(--primary-color);">₹{{ order.total_amount|default:payment.amount|floatformat:2 }}</span>
+                <span class="value highlight">₹{{ order.total_amount|default:payment.amount|floatformat:2 }}</span>
             </div>
         </div>
 
@@ -228,11 +297,9 @@
         </div>
         
         {% if not is_wallet %}
-        <div style="margin-top: 30px;">
-            <a href="{% url 'download_invoice' order.id %}" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none; font-weight: 600; transition: var(--transition);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">
-                <i class="fas fa-file-invoice" style="margin-right: 5px;"></i> Download Invoice
-            </a>
-        </div>
+        <a href="{% url 'download_invoice' order.uuid %}" class="invoice-link">
+            <i class="fas fa-file-invoice" style="margin-right: 8px;"></i> Download PDF Invoice
+        </a>
         {% endif %}
     </div>
 </div>
@@ -242,10 +309,9 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Fire confetti
-        const duration = 3 * 1000;
+        const duration = 4 * 1000;
         const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        const defaults = { startVelocity: 40, spread: 360, ticks: 80, zIndex: 0 };
 
         function randomInRange(min, max) {
             return Math.random() * (max - min) + min;
@@ -258,7 +324,7 @@
                 return clearInterval(interval);
             }
 
-            const particleCount = 50 * (timeLeft / duration);
+            const particleCount = 60 * (timeLeft / duration);
             confetti(Object.assign({}, defaults, { 
                 particleCount, 
                 origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
