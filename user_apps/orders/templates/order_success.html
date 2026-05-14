@@ -161,14 +161,32 @@
         .footer-bottom-links a { color: var(--text-muted); }
         .footer-bottom-links a:hover { color: var(--primary-color); }
 
+        @media (max-width: 992px) {
+            .nav-links { display: none; }
+            .success-headline { font-size: 2rem; }
+            .order-details-grid { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 768px) {
             .container { padding: 0 20px; }
-            .nav-links { display: none; }
             .success-headline { font-size: 1.8rem; }
-            .order-details-grid { grid-template-columns: 1fr; }
-            .action-buttons { flex-direction: column; }
+            .success-sub { font-size: 0.95rem; }
+            .order-card { padding: 25px 20px; }
+            .action-buttons { flex-direction: column; gap: 12px; }
             .btn { width: 100%; justify-content: center; }
             .footer-bottom { flex-direction: column; text-align: center; }
+            .logo-icon { width: 30px; height: 30px; }
+            .logo { font-size: 1.4rem; }
+        }
+
+        @media (max-width: 480px) {
+            .success-headline { font-size: 1.6rem; }
+            .success-ring { width: 100px; height: 100px; }
+            .success-icon { font-size: 2.2rem; }
+            .order-num { font-size: 1rem; }
+            .total-value { font-size: 1.2rem; }
+            .trust-strip { gap: 15px; }
+            .trust-item { flex: 1 1 40%; font-size: 0.75rem; }
         }
     </style>
 </head>

@@ -652,112 +652,39 @@
             gap: 30px;
         }
 
-        @media (max-width: 1400px) {
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        @media (max-width: 1200px) {
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
+            .listing-container { gap: 30px; }
         }
 
         @media (max-width: 991px) {
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
+            .mobile-toggle { display: block; }
+            .nav-links { display: none; }
+            .listing-container { flex-direction: column; padding-top: 100px; }
+            .sidebar-filters { width: 100%; position: static; height: auto; margin-bottom: 30px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .tools-header { flex-direction: column; align-items: stretch; }
+            .search-wrapper { width: 100%; }
         }
 
-        @media (max-width: 576px) {
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-
-            .container {
-                padding: 0 12px;
-            }
-
-            .product-card {
-                padding: 12px;
-            }
-
-            .card-image-wrap {
-                height: 160px;
-                margin-bottom: 12px;
-            }
-
-            .product-card h3 {
-                font-size: 0.9rem;
-                margin-bottom: 4px;
-            }
-
-            .badge {
-                top: 6px;
-                left: 6px;
-                font-size: 0.6rem;
-                padding: 3px 6px;
-            }
-
-            .wishlist-btn {
-                top: 6px;
-                right: 6px;
-                width: 28px;
-                height: 28px;
-                font-size: 0.8rem;
-            }
-
-            .curr-price {
-                font-size: 1rem;
-            }
-
-            .disc-price {
-                font-size: 0.8rem;
-            }
-
-            .category-label {
-                margin-bottom: 4px;
-                font-size: 0.72rem;
-            }
-
-            .price-row {
-                gap: 8px;
-                margin-bottom: 10px;
-            }
-
-            .action-buttons-row {
-                gap: 6px;
-                margin-top: 6px;
-            }
-
-            .action-buttons-row button,
-            .action-buttons-row .btn {
-                font-size: 0.78rem;
-                padding: 8px 4px;
-            }
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .product-card { padding: 15px; }
+            .card-image-wrap { height: 200px; margin-bottom: 15px; }
+            .product-card h3 { font-size: 1rem; }
+            .curr-price { font-size: 1.1rem; }
+            .action-buttons-row { flex-direction: column; gap: 8px; }
+            .action-buttons-row .btn { width: 100%; }
+            .pagination { gap: 8px; }
+            .page-link { width: 38px; height: 38px; font-size: 0.9rem; }
         }
 
-        @media (max-width: 400px) {
-            .card-image-wrap {
-                height: 130px;
-            }
-
-            .product-card h3 {
-                font-size: 0.8rem;
-            }
-
-            .curr-price {
-                font-size: 0.9rem;
-            }
-
-            .action-buttons-row {
-                flex-direction: column;
-                gap: 4px;
-            }
-
-            .action-buttons-row button,
-            .action-buttons-row .btn {
-                width: 100%;
-                font-size: 0.75rem;
-                padding: 7px 4px;
-            }
+        @media (max-width: 480px) {
+            .product-grid { grid-template-columns: 1fr; }
+            .card-image-wrap { height: 250px; }
+            .tools-header { gap: 15px; }
+            .results-meta { text-align: center; }
         }
 
         .card-info-wrap {

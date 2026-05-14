@@ -855,78 +855,32 @@
         }
 
         @media (max-width: 991px) {
-            .mobile-toggle {
-                display: block;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            header {
-                padding: 15px 0;
-            }
-
-            .nav-actions {
-                gap: 15px;
-            }
-
-            .nav-icon {
-                font-size: 1.15rem;
-            }
-
-            .page-title {
-                font-size: 2.2rem;
-            }
-        }
-
-        @media (max-width: 1200px) {
-            .content-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar-wrap {
-                position: static;
-                margin-top: 50px;
-            }
+            .mobile-toggle { display: block; }
+            .nav-links { display: none; }
+            header { padding: 15px 0; }
+            .nav-actions { gap: 15px; }
+            .page-title { font-size: 2.2rem; }
+            .content-layout { grid-template-columns: 1fr; }
+            .sidebar-wrap { position: static; margin-top: 50px; }
         }
 
         @media (max-width: 768px) {
-            .modal-overlay {
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-            }
-
-            .modal-content {
-                transform: translateY(20px);
-            }
-
-            .modal-overlay.active .modal-content {
-                transform: translateY(0);
-            }
-
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .table-row {
-                grid-template-columns: 140px repeat({
-                        {
-                        products|length|add:fill_count
-                    }
-                }
-
-                , 1fr);
+            .products-grid { grid-template-columns: 1fr; gap: 20px; }
+            .table-row { grid-template-columns: 120px repeat({{ products|length|add:fill_count }}, 1fr); }
+            .table-label { padding: 20px 15px; font-size: 0.85rem; }
+            .table-val { padding: 20px 10px; font-size: 0.9rem; }
+            .container { padding: 0 20px; }
+            .page-title { font-size: 1.8rem; }
+            .img-wrap { height: 160px; }
         }
 
-        .table-label span {
-            display: none;
-        }
-
-        .container {
-            padding: 0 20px;
-        }
+        @media (max-width: 480px) {
+            .table-row { display: flex; flex-direction: column; align-items: stretch; border-bottom: 2px solid var(--border-color); }
+            .table-label { width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.05); padding: 12px 20px; border-bottom: 1px solid var(--border-color); }
+            .table-val { width: 100%; padding: 15px 20px; justify-content: flex-start; text-align: left; }
+            .table-val:not(:last-child) { border-bottom: 1px dashed var(--border-color); }
+            .summary-box { padding: 25px 20px; }
+            .price-total { font-size: 1.8rem; }
         }
 
         /* NEW TOAST SYSTEM */

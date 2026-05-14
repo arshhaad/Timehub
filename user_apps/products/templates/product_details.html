@@ -786,31 +786,34 @@
         @media (max-width: 1200px) {
             .product-content { gap: 40px; }
             .container { padding: 0 24px; }
+            .main-image-container { height: 500px; }
         }
 
         @media (max-width: 991px) {
             .product-content { grid-template-columns: 1fr; gap: 50px; }
+            .product-info { position: static; padding-top: 0; }
+            .main-image-container { height: 600px; }
             .product-grid { grid-template-columns: repeat(3, 1fr); }
-            .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
-            .main-image-container { height: 500px; }
+            .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
         }
+
         @media (max-width: 768px) {
             .nav-links { display: none; }
-            .nav-wrap { padding: 15px 0; }
+            .mobile-toggle { display: block; }
+            .breadcrumb-wrap { flex-direction: column; align-items: flex-start; gap: 15px; }
             .product-title { font-size: 2rem; }
             .price-wrap { font-size: 1.8rem; }
-            .main-image-container { height: 400px; }
-            .product-grid { grid-template-columns: repeat(2, 1fr); }
-            .action-buttons { flex-direction: column; }
-            .btn { width: 100%; }
-            .meta-row { gap: 10px; }
+            .main-image-container { height: 450px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .spec-item { flex-direction: column; gap: 5px; }
             .spec-label { width: 100%; }
             .spec-value { width: 100%; }
             .footer-bottom { flex-direction: column; gap: 20px; text-align: center; }
-            .nav-arrows { display: none; }
-            .trust-badges { gap: 15px; flex-wrap: wrap; }
+            .trust-badges { gap: 15px; flex-wrap: wrap; justify-content: center; }
             .trust-item { flex: 1 1 40%; }
+            .tabs-nav { gap: 20px; overflow-x: auto; padding-bottom: 10px; }
+            .tab-btn { white-space: nowrap; font-size: 0.9rem; }
+        }
             
             /* Sticky Mobile Actions */
             .mobile-sticky-actions {

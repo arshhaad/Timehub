@@ -638,73 +638,39 @@
         }
 
         /* RESPONSIVE BREAKPOINTS */
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
+            .page-hero h1 { font-size: 3.5rem; }
+            .about-grid { gap: 40px; }
+        }
 
-            .about-grid,
-            .contact-container {
-                grid-template-columns: 1fr;
-                gap: 60px;
-            }
-
-            .stats-row {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .page-hero h1 {
-                font-size: 3rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .mobile-toggle {
-                display: block;
-            }
+        @media (max-width: 992px) {
+            .nav-links { display: none; }
+            .mobile-toggle { display: block; }
+            .page-hero h1 { font-size: 3rem; }
+            .about-grid { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+            .about-img { max-width: 600px; margin: 0 auto; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .contact-container { grid-template-columns: 1fr; gap: 60px; }
+            .contact-info { text-align: center; }
+            .contact-methods { align-items: center; }
+            .method-item { width: 100%; max-width: 500px; text-align: left; }
+            .contact-form-wrap { padding: 40px 30px; }
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 0 25px;
-            }
-
-            .page-hero {
-                padding: 140px 0 80px;
-            }
-
-            .page-hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .contact-form-wrap {
-                padding: 40px 25px;
-            }
-
-            .stat-number {
-                font-size: 2.5rem;
-            }
+            .page-hero h1 { font-size: 2.5rem; }
+            .page-hero p { font-size: 1.1rem; }
+            .section-title { font-size: 2rem; }
+            .stat-number { font-size: 2.5rem; }
+            .footer-links { flex-direction: column; gap: 20px; }
         }
 
         @media (max-width: 480px) {
-            .stats-row {
-                grid-template-columns: 1fr;
-            }
-
-            .page-hero h1 {
-                font-size: 2.2rem;
-            }
-
-            .contact-methods {
-                gap: 20px;
-            }
-
-            .method-item {
-                padding: 15px;
-            }
+            .page-hero h1 { font-size: 2rem; }
+            .stats-row { grid-template-columns: 1fr; }
+            .stat-card { padding: 30px 20px; }
+            .whatsapp-btn { width: 100%; justify-content: center; }
+            .about-text h2 { font-size: 1.8rem; }
         }
     </style>
 </head>

@@ -1097,91 +1097,48 @@
                 transform: rotate(0);
             }
 
-            .nav-links {
-                display: none;
-            }
-
-            .round-cat-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .news-wrap {
-                flex-direction: column;
-                text-align: center;
-                padding: 40px;
-            }
-
-            .trust-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+        @media (max-width: 1200px) {
+            .hero-content h1 { font-size: 3.5rem; }
+            .round-cat-grid { grid-template-columns: repeat(3, 1fr); }
+            .trust-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
-        @media (max-width: 600px) {
-            .nav-wrap {
-                align-items: center;
-            }
+        @media (max-width: 992px) {
+            .nav-links { display: none; }
+            .mobile-toggle { display: block; }
+            .hero-content h1 { font-size: 3rem; }
+            .round-cat-grid { grid-template-columns: repeat(2, 1fr); }
+            .trust-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+            .news-wrap { flex-direction: column; text-align: center; padding: 40px 20px; }
+            .referral-container { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+            .ref-content p { margin: 0 auto 40px; }
+            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
+            .ref-image { display: none; }
+        }
 
-            .nav-actions {
-                gap: 10px;
-            }
+        @media (max-width: 768px) {
+            .section-header h2 { font-size: 2rem; }
+            .hero-content h1 { font-size: 2.5rem; }
+            .hero-buttons { flex-direction: column; width: 100%; gap: 15px; }
+            .hero-buttons .btn { width: 100%; }
+            .round-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .testi-grid { grid-template-columns: 1fr; }
+            .trust-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid { grid-template-columns: 1fr; }
+            .news-form { flex-direction: column; gap: 15px; }
+            .news-form input { width: 100% !important; border-radius: 30px !important; }
+            .news-form .btn { width: 100%; }
+            .ref-rewards-grid { grid-template-columns: 1fr; }
+        }
 
-            .nav-actions .btn {
-                padding: 8px 15px;
-                font-size: 0.75rem;
-            }
-
-            .section-header h2 {
-                font-size: 2.2rem;
-            }
-
-            .hero-content h1 {
-                font-size: 2.8rem;
-            }
-
-            .round-cat-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .round-cat-img-wrap {
-                width: 160px;
-                height: 160px;
-            }
-
-            .testi-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .news-form {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn {
-                width: auto;
-            }
-
-            /* Reset width from previous 100% since we want them inline if possible */
-            .btn-primary.add-cart-btn {
-                width: 100%;
-            }
-
-            /* But add-cart remains 100% */
-            .trust-grid {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 2rem; }
+            .round-cat-grid { grid-template-columns: 1fr; }
+            .round-cat-img-wrap { width: 140px; height: 140px; }
+            .trust-grid { grid-template-columns: 1fr; }
+            .section-header p { font-size: 0.9rem; }
+            .news-wrap h2 { font-size: 1.8rem; }
         }
 
         /* MOBILE MENU STYLES */

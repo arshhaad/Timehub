@@ -181,6 +181,23 @@
     .back-to-checkout:hover {
         color: #fff;
     }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 768px) {
+        .coupons-container { margin: 20px auto; }
+        .page-header h1 { font-size: 2rem; }
+        .coupons-grid { grid-template-columns: 1fr; gap: 15px; }
+        .coupon-card { padding: 25px 20px; }
+        .coupon-code { font-size: 1rem; padding: 6px 12px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h1 { font-size: 1.7rem; }
+        .page-header p { font-size: 0.9rem; }
+        .coupon-body h3 { font-size: 1.2rem; }
+        .apply-btn { padding: 12px; font-size: 0.9rem; }
+        .punch-hole { width: 16px; height: 16px; }
+    }
 </style>
 {% endblock %}
 
