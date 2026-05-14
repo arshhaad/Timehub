@@ -128,6 +128,26 @@
         border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box;
     }
     .form-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); }
+    @media (max-width: 1024px) {
+        .toolbar { padding: 15px; }
+        .premium-search-container { min-width: 300px; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+        .filters { overflow-x: auto; padding-bottom: 5px; }
+        .filter-btn { white-space: nowrap; }
+        .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
+        .premium-search-container { width: 100%; min-width: 0; }
+        .data-table th, .data-table td { padding: 12px 15px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-title { font-size: 1.25rem; }
+        .data-table th { font-size: 0.65rem; }
+        .data-table td { font-size: 0.8rem; }
+        .btn-action { padding: 6px 10px; font-size: 0.7rem; }
+    }
 </style>
 {% endblock %}
 

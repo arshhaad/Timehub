@@ -81,13 +81,28 @@
     }
     .btn-submit:hover { background: #1f2937; }
 
+    @media (max-width: 1024px) {
+        .profile-card { padding: 25px; }
+        .form-grid { gap: 15px; }
+    }
+
     @media (max-width: 768px) {
-        .profile-card { flex-direction: column; text-align: center; gap: 20px; }
-        .profile-info-main { flex-direction: column; }
-        .contact-info { flex-direction: column; gap: 10px; align-items: center; }
+        .profile-card { flex-direction: column; text-align: center; gap: 25px; padding: 30px 20px; }
+        .profile-info-main { flex-direction: column; gap: 15px; }
+        .contact-info { flex-direction: column; gap: 12px; align-items: center; }
         .form-grid { grid-template-columns: 1fr; }
         .full-width { grid-column: span 1; }
-        .avatar-upload-section { flex-direction: column; align-items: center; }
+        .avatar-upload-section { flex-direction: column; align-items: center; gap: 20px; }
+        .upload-box { width: 100%; }
+        .tab-buttons { overflow-x: auto; padding-bottom: 5px; white-space: nowrap; width: 100%; justify-content: flex-start; }
+        .tab-btn { padding: 10px 20px; flex-shrink: 0; }
+        .settings-panel { padding: 20px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h1 { font-size: 1.5rem; }
+        .profile-avatar { width: 80px; height: 80px; }
+        .profile-details h2 { font-size: 1.25rem; }
     }
 </style>
 {% endblock %}

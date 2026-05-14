@@ -118,6 +118,28 @@
         position: sticky;
         top: 110px;
     }
+    @media (max-width: 1024px) {
+        .review-grid { grid-template-columns: 1fr; }
+        .action-panel { position: static; margin-top: 30px; }
+    }
+
+    @media (max-width: 768px) {
+        .review-card { padding: 25px; }
+        .gallery-main { aspect-ratio: 1/1; }
+        .specs-list { grid-template-columns: 1fr; }
+        .spec-item { grid-template-columns: 1fr; gap: 4px; padding: 15px 0; }
+        .spec-label { font-size: 0.8rem; }
+        .spec-value { font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h1 { font-size: 1.25rem; }
+        .review-card { padding: 20px 15px; }
+        .gallery-thumb { width: 56px; height: 56px; }
+        .lb-btn { width: 36px; height: 36px; }
+        .lb-prev { left: 10px; }
+        .lb-next { right: 10px; }
+    }
 </style>
 {% endblock %}
 

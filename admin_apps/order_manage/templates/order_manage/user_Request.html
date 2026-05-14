@@ -88,13 +88,25 @@
     .req-Cancel { background: #fee2e2; color: #991b1b; } /* Danger red for Cancels */
     .req-Reschedule { background: #dbeafe; color: #1e40af; } /* Blue for Reschedule */
     
-    .btn-action {
-        padding: 8px 14px; background: #fff; border: 1px solid var(--border-color);
-        border-radius: 8px; color: var(--text-main); font-size: 0.8rem; font-weight: 600;
-        cursor: pointer; transition: all 0.2s; text-decoration: none;
+    @media (max-width: 1024px) {
+        .toolbar { padding: 15px; }
+        .premium-search-container { min-width: 260px; }
     }
-    .btn-action:hover {
-        background: #f3f4f6; border-color: #d1d5db;
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+        .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
+        .premium-search-container { width: 100%; min-width: 0; }
+        .data-table th, .data-table td { padding: 12px 15px; font-size: 0.85rem; }
+    }
+
+    @media (max-width: 480px) {
+        .page-title { font-size: 1.25rem; }
+        .page-desc { font-size: 0.85rem; }
+        .status-badge { padding: 4px 8px; font-size: 0.7rem; }
+        .btn-action { width: 32px; height: 32px; }
+        .data-table th { font-size: 0.65rem; }
+        .data-table td { font-size: 0.8rem; }
     }
 </style>
 {% endblock %}

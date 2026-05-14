@@ -154,18 +154,29 @@
     }
     @keyframes shakeIn { 0%{transform:translateX(-8px)} 25%{transform:translateX(8px)} 50%{transform:translateX(-4px)} 75%{transform:translateX(4px)} 100%{transform:translateX(0)} }
 
-    @media (max-width: 991px) {
-        .dashboard-container { padding: 20px; }
-        .page-header { flex-direction: column; align-items: stretch; padding: 24px; gap: 20px; }
-        .coupons-grid { grid-template-columns: 1fr; }
-        .modal-content { padding: 24px; }
-        .coupon-banner { padding: 24px; }
-        .coupon-body { padding: 24px; }
+    @media (max-width: 1024px) {
+        .dashboard-container { padding: 25px; }
+        .coupons-grid { gap: 20px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        .page-header { padding: 25px; border-radius: 24px; }
     }
-    @media (max-width: 576px) {
-        .coupon-code { font-size: 1.4rem; }
-        .discount-value { font-size: 2.2rem; }
-        .coupon-meta { grid-template-columns: 1fr; }
+
+    @media (max-width: 768px) {
+        .dashboard-container { padding: 20px 15px; }
+        .page-header { flex-direction: column; align-items: stretch; padding: 20px; gap: 20px; text-align: center; }
+        .header-title h1 { font-size: 1.75rem; }
+        .add-btn { justify-content: center; width: 100%; }
+        .coupons-grid { grid-template-columns: 1fr; }
+        .modal-content { padding: 30px 20px; border-radius: 24px; }
+        .coupon-banner { padding: 25px; }
+        .coupon-body { padding: 25px; }
+        .discount-value { font-size: 2.25rem; }
+    }
+
+    @media (max-width: 480px) {
+        .coupon-code { font-size: 1.25rem; }
+        .discount-value { font-size: 2rem; }
+        .coupon-meta { grid-template-columns: 1fr; gap: 10px; }
+        .status-badge { padding: 6px 12px; font-size: 0.65rem; }
     }
 </style>
 {% endblock %}

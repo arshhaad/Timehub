@@ -54,6 +54,21 @@
         border-color: var(--primary-bg);
         box-shadow: 0 0 0 4px var(--primary-glow);
     }
+
+    @media (max-width: 768px) {
+        .settings-card { padding: 25px; border-radius: 16px; }
+        .form-grid { grid-template-columns: 1fr; gap: 15px; }
+        .form-group.full { grid-column: span 1; }
+        .page-header { text-align: center; }
+        .page-header h1 { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+        .settings-card { padding: 20px; }
+        .settings-title { font-size: 1.1rem; justify-content: center; }
+        .btn { width: 100%; justify-content: center; }
+        div[style*="justify-content: flex-end"] { flex-direction: column-reverse; gap: 10px !important; }
+    }
 </style>
 {% endblock %}
 

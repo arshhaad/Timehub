@@ -139,10 +139,25 @@
 .page-indicator { font-weight: 700; font-size: .875rem; background: #f3f4f6; padding: 8px 16px; border-radius: 9px; min-width: 80px; text-align: center; }
 .page-indicator span { color: #9ca3af; font-weight: 400; }
 
+@media (max-width: 1024px) {
+    .toolbar { padding: 15px; }
+    .premium-search-container { min-width: 260px; }
+}
+
 @media (max-width: 768px) {
-    .toolbar { flex-direction: column; align-items: stretch; }
-    .toolbar-left { flex-direction: column; }
-    .toolbar-search { min-width: auto; }
+    .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+    .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
+    .toolbar-left { flex-direction: column; align-items: stretch; gap: 12px; }
+    .premium-search-container { width: 100%; min-width: 0; }
+    .select-filter { width: 100%; }
+    .filter-tabs-row { padding: 0 10px; }
+    .filter-tab { padding: 10px 12px; font-size: 0.8rem; }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 { font-size: 1.5rem; }
+    .order-table th, .order-table td { padding: 12px 15px; font-size: 0.8rem; }
+    .user-avatar, .user-initials { width: 32px; height: 32px; }
 }
 </style>
 {% endblock %}

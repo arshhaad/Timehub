@@ -109,6 +109,24 @@
         position: absolute; left: 8px; top: -10px; background: #fff; padding: 0 4px;
         color: var(--primary-bg); font-size: 0.7rem;
     }
+    @media (max-width: 1024px) {
+        .toolbar { padding: 15px; }
+        .premium-search-container { min-width: 300px; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+        .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
+        .premium-search-container { width: 100%; min-width: 0; }
+        .data-table th, .data-table td { padding: 12px 15px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-title { font-size: 1.25rem; }
+        .data-table th { font-size: 0.65rem; }
+        .data-table td { font-size: 0.8rem; }
+        .return-reason-box { font-size: 0.75rem; }
+    }
 </style>
 {% endblock %}
 

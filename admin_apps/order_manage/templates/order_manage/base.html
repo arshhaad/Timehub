@@ -349,18 +349,30 @@
 
         /* ── Responsive ── */
         @media (max-width: 1024px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; top: 0; left: 0; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1); top: 0; left: 0; z-index: 1000; box-shadow: 20px 0 50px rgba(0,0,0,0.1); }
             .sidebar.active { transform: translateX(0); }
             .main-wrapper { margin-left: 0; }
             .mobile-header { display: flex; }
-            .topbar { padding: 0 20px; height: 70px; }
-            .search-bar { width: 100% !important; max-width: none !important; margin: 0 10px; }
+            .topbar { padding: 0 20px; height: 70px; border-bottom: 1px solid var(--border-color); }
+            .search-bar { width: 100% !important; max-width: 280px !important; margin: 0; padding: 8px 14px; }
+            .search-bar:focus-within { max-width: 100% !important; }
             .topbar-search { width: 100% !important; max-width: none !important; }
         }
+
         @media (max-width: 768px) {
-            .content { padding: 20px; }
+            .content { padding: 25px 15px; }
             .admin-info { display: none; }
-            .topbar-breadcrumb-search { display: none; } /* Hide complex breadcrumbs on mobile */
+            .topbar-breadcrumb-search { display: none; }
+            .search-bar { display: none; }
+            .topbar { justify-content: flex-end; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-right { gap: 8px; }
+            .icon-btn { width: 38px; height: 38px; }
+            .profile-avatar { width: 36px; height: 36px; }
+            .mobile-brand { font-size: 1.1rem; }
+            .mobile-brand .brand-icon { width: 28px; height: 28px; font-size: 0.9rem; }
         }
 
     </style>

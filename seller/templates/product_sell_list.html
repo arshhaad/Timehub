@@ -103,9 +103,21 @@
         margin-bottom: 20px;
     }
 
-    @media (max-width: 576px) {
-        .page-header { flex-direction: column; align-items: stretch; gap: 15px; }
+    @media (max-width: 1024px) {
+        .product-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+        .page-header .btn { width: 100%; justify-content: center; }
+        .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    }
+
+    @media (max-width: 480px) {
         .product-grid { grid-template-columns: 1fr; }
+        .product-card { max-width: 100%; }
+        .header-left h1 { font-size: 1.5rem; }
+        .product-info { padding: 15px; }
     }
 </style>
 {% endblock %}

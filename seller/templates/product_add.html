@@ -295,17 +295,35 @@
         width: 90%; max-width: 600px;
     }
 
+    @media (max-width: 1024px) {
+        .form-container { margin: 0 15px 40px; }
+        .form-header { padding: 20px 25px; }
+        .tab-panel { padding: 25px; }
+    }
+
     @media (max-width: 768px) {
-        .form-header { flex-direction: column; align-items: stretch; gap: 15px; }
-        .modal-tabs { overflow-x: auto; }
+        .form-header { flex-direction: column; align-items: center; text-align: center; gap: 15px; }
+        .form-header .btn-outline { width: 100%; text-align: center; justify-content: center; }
+        .modal-tabs { overflow-x: auto; padding: 0 10px; justify-content: flex-start; }
+        .modal-tab { padding: 14px 15px; flex-shrink: 0; white-space: nowrap; }
         .tab-panel { padding: 20px; }
-        .form-grid, .variant-grid { grid-template-columns: 1fr; }
+        .form-grid, .variant-grid { grid-template-columns: 1fr; gap: 18px; }
         .form-group.full { grid-column: span 1; }
         .image-slots { flex-direction: column; gap: 20px; }
         .image-slot-container { flex: none; width: 100%; }
-        .image-slot { height: 200px; }
-        .variant-header { flex-direction: column; align-items: stretch; gap: 15px; }
-        .variant-img-grid { grid-template-columns: repeat(3, 1fr); }
+        .image-slot { height: 220px; }
+        .variant-header { flex-direction: column; align-items: center; text-align: center; gap: 15px; }
+        .variant-img-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    }
+
+    @media (max-width: 480px) {
+        .form-header h3 { font-size: 1.1rem; }
+        .form-footer { flex-direction: column; padding: 20px; gap: 10px; }
+        .form-footer button { width: 100%; }
+        .variant-card { padding: 18px; }
+        .variant-img-grid { grid-template-columns: repeat(2, 1fr); }
+        .cropper-modal-content { padding: 15px; width: 95%; }
+        .cropper-modal-content h4 { font-size: 1rem; }
     }
 </style>
 {% endblock %}

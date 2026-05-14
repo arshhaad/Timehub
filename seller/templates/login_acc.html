@@ -106,10 +106,22 @@
         .alert-close { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
 
-        @media (max-width: 768px) {
-            .auth-wrapper { grid-template-columns: 1fr; }
+        @media (max-width: 992px) {
+            .auth-wrapper { max-width: 500px; grid-template-columns: 1fr; }
             .auth-left { display: none; }
-            .auth-right { padding: 40px 30px; }
+            .auth-right { padding: 50px 40px; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .auth-wrapper { border-radius: 20px; }
+            .auth-right { padding: 40px 25px; }
+            .auth-right h2 { font-size: 1.4rem; }
+        }
+
+        @media (max-width: 480px) {
+            .auth-right { padding: 30px 20px; }
+            .btn-submit { padding: 12px; font-size: 0.9rem; }
         }
     </style>
 </head>

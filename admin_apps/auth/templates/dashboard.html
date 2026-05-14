@@ -312,14 +312,30 @@
         transform: translateY(-2px);
     }
 
-    @media (max-width: 1024px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+
+    @media (max-width: 991px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .page-header div[style*="display: flex"] { width: 100%; justify-content: space-between; }
     }
 
     @media (max-width: 768px) {
-        .page-header { flex-direction: column; gap: 15px; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .side-notes-grid { grid-template-columns: 1fr; }
+        .chart-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .chart-filters { width: 100%; overflow-x: auto; padding-bottom: 5px; }
+        .stat-card { padding: 20px; }
+        .stat-value { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
         .stats-grid { grid-template-columns: 1fr; }
+        .page-header h1 { font-size: 1.5rem; }
+        .ledger-btn { width: 100%; justify-content: center; }
+        .page-header div[style*="display: flex"] { flex-direction: column; align-items: stretch; }
     }
     /* Hover Effects & Illustrations (Micro-interactions) */
     .stat-card:hover {

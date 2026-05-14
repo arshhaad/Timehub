@@ -325,12 +325,24 @@
     @media (max-width: 1200px) {
         .dashboard-row { grid-template-columns: 1fr; }
     }
+    @media (max-width: 1024px) {
+        .ledger-header { flex-direction: column; align-items: stretch; gap: 15px; }
+        .export-btns { justify-content: space-between; }
+        .btn-export { flex: 1; justify-content: center; }
+    }
     @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
         .kpi-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
-        .page-header { flex-direction: column; gap: 16px; }
+        .filter-btns { width: 100%; overflow-x: auto; }
+        .filter-form { flex-direction: column; align-items: stretch; }
+        .btn-apply { width: 100%; margin-top: 10px; }
     }
     @media (max-width: 480px) {
         .kpi-grid { grid-template-columns: 1fr; }
+        .stat-card { padding: 18px; }
+        .stat-value { font-size: 1.5rem; }
+        .panel-title { font-size: 1rem; }
+        .product-meta { display: none; } /* Hide sales meta on very small screens to save space */
     }
     /* ── Sales Ledger Table ── */
     .ledger-panel {

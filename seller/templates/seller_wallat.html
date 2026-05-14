@@ -81,10 +81,30 @@
     .amount-plus { color: #166534; }
     .amount-minus { color: #991b1b; }
 
-    @media (max-width: 991px) {
+    @media (max-width: 1024px) {
         .wallet-layout { grid-template-columns: 1fr; }
-        .wallet-card { padding: 24px; }
-        .balance-amount { font-size: 2rem; }
+        .wallet-card { padding: 30px; }
+        .balance-amount { font-size: 2.2rem; }
+    }
+
+    @media (max-width: 768px) {
+        .page-header { text-align: center; }
+        .page-header h1 { font-size: 1.5rem; }
+        .wallet-card { padding: 25px; border-radius: 20px; }
+        .balance-amount { font-size: 1.8rem; margin-bottom: 20px; }
+        .transaction-list { padding: 20px; border-radius: 20px; }
+        .tx-info { gap: 12px; }
+        .tx-icon { width: 36px; height: 36px; font-size: 1rem; }
+        .tx-details h4 { font-size: 0.85rem; }
+        .tx-amount { font-size: 0.9rem; }
+    }
+
+    @media (max-width: 480px) {
+        .wallet-actions { grid-template-columns: 1fr; }
+        .wallet-actions .btn { width: 100%; }
+        .balance-amount { font-size: 1.6rem; }
+        .transaction-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .tx-amount { align-self: flex-end; }
     }
 </style>
 {% endblock %}

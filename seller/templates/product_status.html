@@ -105,9 +105,27 @@
         font-weight: 800;
     }
     
-    .badge-approved { background: #dcfce7; color: #166534; }
-    .badge-pending  { background: #fef9c3; color: #854d0e; }
-    .badge-rejected { background: #fee2e2; color: #991b1b; }
+    @media (max-width: 1024px) {
+        .status-container { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+        .product-header { flex-direction: column; align-items: center; text-align: center; gap: 20px; }
+        .product-image-large { width: 120px; height: 120px; }
+        .product-title-area h2 { font-size: 1.3rem; }
+        .status-card { padding: 20px; }
+        .timeline-item { gap: 15px; }
+        .timeline-content h4 { font-size: 0.95rem; }
+        .timeline-dot { width: 20px; height: 20px; }
+        .timeline-item::after { left: 9px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h1 { font-size: 1.5rem; text-align: center; }
+        .stat-box { padding: 15px; }
+        .stat-value { font-size: 1.1rem; }
+        .product-title-area h2 { font-size: 1.15rem; }
+    }
 </style>
 {% endblock %}
 
