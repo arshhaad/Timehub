@@ -280,7 +280,12 @@ class Order(models.Model):
 
     def update_totals(self):
         """Recalculate financial breakdown for active items."""
-        active = self.items.filter(is_cancelled=False)
+        # Exclude cancelled items and items that have been successfully returned
+        if self.return_status == 'Returned':
+            active = self.items.filter(is_cancelled=False, is_returned=False)
+        else:
+            active = self.items.filter(is_cancelled=False)
+            
         self.subtotal = sum(i.price * i.quantity for i in active)
         
         # Free shipping logic

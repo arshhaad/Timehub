@@ -703,7 +703,12 @@ def return_order(request, order_uuid):
 def download_invoice(request, order_uuid):
     """Render a printable invoice for an order."""
     order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
-    items = order.items.filter(is_cancelled=False)
+    
+    # Filter out cancelled and returned items (if return is completed)
+    if order.return_status == 'Returned':
+        items = order.items.filter(is_cancelled=False, is_returned=False)
+    else:
+        items = order.items.filter(is_cancelled=False)
 
     address = {}
     try:
@@ -711,7 +716,8 @@ def download_invoice(request, order_uuid):
     except Exception:
         pass
 
-    if order.status in ['Pending', 'Processing', 'Shipped']:
+    # Update totals to reflect current state (especially if returned)
+    if order.status in ['Pending', 'Processing', 'Shipped', 'Returned']:
         order.update_totals()
 
     return render(request, 'invoice.html', {

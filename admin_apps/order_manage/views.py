@@ -145,7 +145,7 @@ def order_detail(request, order_id):
                     )
             
             # 5. Detailed Return Flow Management
-            if new_return_status and new_return_status in [c[0] for c in Order.RETURN_STATUS_CHOICES]:
+            if new_return_status and new_return_status in [c[0] for c in Order.RETURN_CHOICES]:
                 current_return_status = order.return_status
                 
                 # Step-by-step return stages
@@ -220,7 +220,7 @@ def order_detail(request, order_id):
         'address': address,
         'active_menu': 'orders',
         'status_choices': allowed_statuses,
-        'return_status_choices': Order.RETURN_STATUS_CHOICES,
+        'return_status_choices': Order.RETURN_CHOICES,
         'timeline_steps': timeline_steps,
     }
     return render(request, 'order_manage/user_order_detail.html', context)
@@ -229,27 +229,45 @@ def order_detail(request, order_id):
 
 
 def process_full_return(order, refund_method):
-    """Process refund and restore stock for a returned order."""
-    if order.status == 'Returned':
+    """Process refund and restore stock for a returned order or returned items."""
+    if order.refund_processed_at:
         return # Already processed
         
-    order.refund_processed_at = timezone.now()
-    order.refund_method = refund_method
+    # Store original total for refund calculation
+    original_total = order.total_amount
     
-    # 1. Refund to Wallet for pre-paid orders
-    if order.payment_method in ['razorpay', 'wallet']:
+    # Ensure items are marked as returned and status is synced
+    if order.status == 'Returned' or order.return_status == 'Returned':
+        if order.status == 'Returned':
+            order.return_status = 'Returned'
+        
+        # If no items are marked as returned but the order is 'Returned', mark all active items
+        if not order.items.filter(is_returned=True).exists():
+            order.items.filter(is_cancelled=False).update(is_returned=True)
+
+    # Update totals (this will now exclude returned items thanks to the model change)
+    order.update_totals()
+    
+    # Calculate actual refund amount
+    refund_amount = original_total - order.total_amount
+    
+    if refund_amount > 0 and order.is_paid:
         wallet, _ = Wallet.objects.get_or_create(user=order.user)
-        wallet.balance += order.total_amount
+        wallet.balance += refund_amount
         wallet.save()
         WalletTransaction.objects.create(
             wallet=wallet,
             transaction_type='Credit',
-            amount=order.total_amount,
-            description=f'Refund for returned Order #{order.id}'
+            amount=refund_amount,
+            description=f'Refund for returned items in Order #{order.id}'
         )
     
-    # 2. Restore Stock Levels for all non-cancelled items
-    for item in order.items.filter(is_cancelled=False):
+    order.refund_processed_at = timezone.now()
+    order.refund_method = refund_method
+    order.save()
+    
+    # Restore Stock Levels for items being returned
+    for item in order.items.filter(is_cancelled=False, is_returned=True):
         if item.variant:
             item.variant.stock += item.quantity
             item.variant.save()
@@ -293,17 +311,9 @@ def update_order_status(request, order_id):
 
         # Handle full return logic if necessary
         if new_status == 'Returned' and order.status != 'Returned':
-            if order.is_paid:
-                process_full_return(order, request.POST.get('refund_method', 'Wallet'))
-            else:
-                # Restore stock even if not paid
-                for item in order.items.filter(is_cancelled=False):
-                    if item.variant:
-                        item.variant.stock += item.quantity
-                        item.variant.save()
-                    else:
-                        item.product.stock += item.quantity
-                        item.product.save()
+            # Always call process_full_return; it handles is_paid check for wallet refund 
+            # and restores stock for all non-cancelled items.
+            process_full_return(order, request.POST.get('refund_method', 'Wallet'))
                 
         order.status = new_status
         
