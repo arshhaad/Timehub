@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    container_name: timehub_db
+    restart: always
+    environment:
+      POSTGRES_DB: timehub_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "0909"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+    container_name: ecommerce_web
+    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:0909@db:5432/timehub_db
+      - DB_NAME=timehub_db
+      - DB_USER=postgres
+      - DB_PASSWORD="0909"
+      - DB_HOST=db
+      - DB_PORT=5432
+
+  nginx:
+    image: nginx:latest
+    container_name: ecommerce_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - .:/app
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:

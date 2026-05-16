@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import environ
+import os
+
 
 
 
@@ -149,9 +151,10 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {
+    'default': env.db('DATABASE_URL')
+}
 
-AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -181,6 +184,7 @@ USE_TZ = True
 
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
