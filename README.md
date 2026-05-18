@@ -203,6 +203,10 @@ TimeHub is a full-stack multi-role e-commerce platform for watch retail, designe
 - Razorpay API
 
 ---
+add 
+docker 
+nigex 
+ci/cd test
 
 ## 🎯 Highlights
 ✅ Multi-role platform (User / Seller / Admin)  
