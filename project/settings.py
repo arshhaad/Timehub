@@ -37,7 +37,13 @@ if env_path.exists():
 SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
+ALLOWED_HOSTS = [
+    "arrsh.shop", 
+    "www.arrsh.shop",
+    "timehub.arrsh.shop",
+    "127.0.0.1",
+    "localhost",
+]
 
 # Application definition
 
@@ -133,6 +139,7 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = 'home'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 # Default login redirect for standard users
 LOGIN_URL = '/accounts/login/'
@@ -213,4 +220,11 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 
-CSRF_TRUSTED_ORIGINS= env("CSRF_TRUSTED_ORIGINS").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    "https://arrsh.shop",
+    "https://www.arrsh.shop",
+    "https://timehub.arrsh.shop",
+]
+
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
