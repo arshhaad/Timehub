@@ -8,11 +8,10 @@
     <title>TimeHub - Where Time Meets Perfection</title>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Premium Trio -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -128,7 +127,7 @@
             font-weight: 800;
             color: #fff;
             letter-spacing: 1px;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Syne', sans-serif;
             opacity: 0;
             transform: translateY(10px);
             animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -193,7 +192,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            font-family: 'DM Sans', sans-serif;
         }
 
         body {
@@ -201,6 +200,19 @@
             color: var(--text-main);
             line-height: 1.6;
             overflow-x: hidden;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* Headings, prices, quotes → Cormorant Garamond */
+        h1, h2, h3, h4, h5, h6, .price, blockquote {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Labels, buttons, nav, badges → Syne */
+        .btn, .nav-links a, .logo,
+        .hero-badge, .badge-offer-inline,
+        .scroll-down, .stat-item p {
+            font-family: 'Syne', sans-serif;
         }
 
         a {
@@ -214,11 +226,14 @@
             padding: 12px 28px;
             border-radius: 30px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.3s ease;
             border: none;
             outline: none;
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
 
         .btn-primary {
@@ -283,10 +298,11 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
-            letter-spacing: -0.5px;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-family: 'Syne', sans-serif;
         }
 
         .logo-icon {
@@ -300,9 +316,12 @@
         }
 
         .nav-links a {
-            font-size: 0.95rem;
-            font-weight: 500;
+            font-size: 0.78rem;
+            font-weight: 600;
             opacity: 0.8;
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
         }
 
         .nav-links a:hover {
@@ -379,11 +398,13 @@
         }
 
         .hero h1 {
-            font-size: 4.5rem;
-            font-weight: 800;
-            line-height: 1.1;
+            font-size: 6rem;
+            font-weight: 500;
+            line-height: 1.0;
             margin-bottom: 25px;
-            letter-spacing: -1.5px;
+            letter-spacing: -2px;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
         }
 
         .hero h1 span {
@@ -391,13 +412,17 @@
             display: inline-block;
             padding: 0 15px;
             color: #000;
+            font-style: normal;
         }
 
         .hero p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--text-muted);
             max-width: 600px;
             margin: 0 auto 40px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.8;
         }
 
         .hero-buttons {
@@ -485,16 +510,18 @@
         }
 
         .stat-item h3 {
-            font-size: 2.2rem;
-            font-weight: 700;
+            font-size: 3rem;
+            font-weight: 500;
             margin-bottom: 5px;
+            font-family: 'Cormorant Garamond', serif;
         }
 
         .stat-item p {
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-family: 'Syne', sans-serif;
         }
 
         /* SECTION HEADERS */
@@ -504,15 +531,21 @@
         }
 
         .section-header h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 3.6rem;
+            font-weight: 500;
             margin-bottom: 15px;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: -1px;
         }
 
         .section-header p {
             color: var(--text-muted);
             max-width: 600px;
             margin: 0 auto;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.8;
+            font-size: 1rem;
         }
 
         /* THE ART OF TIMEKEEPING */
@@ -555,20 +588,26 @@
         }
 
         .art-content h2 {
-            font-size: 3rem;
-            font-weight: 800;
+            font-size: 3.8rem;
+            font-weight: 500;
             margin-bottom: 20px;
-            line-height: 1.2;
+            line-height: 1.1;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
         }
 
         .art-content h2 span {
             color: var(--accent);
+            font-style: normal;
         }
 
         .art-content>p {
             color: var(--text-muted);
             margin-bottom: 40px;
-            font-size: 1.05rem;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.8;
         }
 
         .feature-list {
@@ -597,18 +636,28 @@
         }
 
         .feature-text h4 {
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             margin-bottom: 5px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .feature-text p {
             color: var(--text-muted);
             font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
         }
 
         .link-arrow {
             color: var(--accent);
             font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
