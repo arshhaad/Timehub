@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Definitions for gradients/shadows -->
+  <defs>
+    <!-- Background Orange Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9d42" />
+      <stop offset="100%" stop-color="#f96400" />
+    </linearGradient>
+    <!-- Inner Shadow / Gloss Gradient -->
+    <linearGradient id="gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.4" />
+    </linearGradient>
+    <!-- Dark Core Gradient -->
+    <linearGradient id="core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1c24" />
+      <stop offset="100%" stop-color="#0b0b0e" />
+    </linearGradient>
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Glowing Ring -->
+  <circle cx="256" cy="256" r="240" fill="url(#bg-grad)" filter="url(#glow)" />
+  <circle cx="256" cy="256" r="240" fill="url(#gloss)" />
+
+  <!-- Inner Dark Face -->
+  <circle cx="256" cy="256" r="195" fill="url(#core-grad)" stroke="#ff9d42" stroke-width="6" stroke-opacity="0.5" />
+
+  <!-- Hour markers -->
+  <g stroke="#ff9d42" stroke-width="8" stroke-linecap="round" opacity="0.85">
+    <line x1="256" y1="90" x2="256" y2="110" />
+    <line x1="422" y1="256" x2="402" y2="256" />
+    <line x1="256" y1="422" x2="256" y2="402" />
+    <line x1="90" y1="256" x2="110" y2="256" />
+  </g>
+
+  <!-- Subtle inner decorative ring -->
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#ff9d42" stroke-width="2" stroke-dasharray="6,12" opacity="0.3" />
+
+  <!-- Hands -->
+  <!-- Hour hand (pointing to 10) -->
+  <line x1="256" y1="256" x2="170" y2="190" stroke="#ffffff" stroke-width="16" stroke-linecap="round" filter="url(#glow)" />
+  <!-- Minute hand (pointing to 2) -->
+  <line x1="256" y1="256" x2="350" y2="170" stroke="url(#bg-grad)" stroke-width="12" stroke-linecap="round" />
+
+  <!-- Center Pin (Orange outer, gold inner) -->
+  <circle cx="256" cy="256" r="24" fill="#1c1c24" stroke="#ff9d42" stroke-width="6" />
+  <circle cx="256" cy="256" r="8" fill="#ff9d42" />
+</svg>

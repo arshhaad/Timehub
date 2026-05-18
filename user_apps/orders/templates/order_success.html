@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeHub – Order Confirmed!</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <meta name="description" content="Your TimeHub order has been placed successfully. Thank you for shopping with us.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,9 +198,7 @@
     <header>
         <div class="container nav-wrap">
             <a href="/" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-                <div class="logo-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
+                <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 34px; height: 34px; object-fit: contain;">
                 <span class="logo">TimeHub<span class="logo-dot">.</span></span>
             </a>
             <div class="nav-links">

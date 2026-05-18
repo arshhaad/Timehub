@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}TimeHub{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -691,10 +693,8 @@
 
     <!-- Mobile Header -->
     <header class="mobile-header">
-        <a href="/" class="sidebar-logo" style="padding:0; border:none; background:transparent; text-decoration:none;">
-            <div class="logo-icon" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                <i class="fas fa-clock"></i>
-            </div>
+        <a href="/" class="sidebar-logo" style="padding:0; border:none; background:transparent; text-decoration:none; display:flex; align-items:center;">
+            <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 32px; height: 32px; object-fit: contain;">
             <span style="font-size:1.2rem; font-weight:800; color: #fff;">TimeHub</span>
         </a>
         <div class="mobile-actions" style="display: flex; align-items: center; gap: 15px; margin-left: auto; margin-right: 15px;">
@@ -715,10 +715,8 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <a href="/" class="sidebar-logo" style="text-decoration:none;">
-            <div class="logo-icon">
-                <i class="fas fa-clock"></i>
-            </div>
+        <a href="/" class="sidebar-logo" style="text-decoration:none; display:flex; align-items:center;">
+            <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 38px; height: 38px; object-fit: contain;">
             <span>TimeHub</span>
         </a>
 

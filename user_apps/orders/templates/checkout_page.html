@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeHub – Secure Checkout</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <meta name="description"
         content="Complete your TimeHub order securely. Select your delivery address and place your order with Cash on Delivery.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1376,9 +1378,7 @@
     <header class="dashboard-header">
         <div class="nav-wrap">
             <a href="/" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
+                <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 38px; height: 38px; object-fit: contain;">
                 <span>TimeHub</span>
             </a>
         </div>

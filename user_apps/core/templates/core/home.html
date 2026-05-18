@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeHub - Luxury Timepieces</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -568,23 +570,25 @@
             justify-content: flex-start;
         }
 
-        /* ROUND PREMIUM CATEGORIES (WHITE THEME & HORIZONTAL SCROLL) */
+        /* ROUND PREMIUM CATEGORIES (SLEEK DARK THEME & HORIZONTAL SCROLL) */
         .premium-categories {
             padding: 100px 0;
-            background: #fff;
-            color: #000;
+            background: linear-gradient(135deg, rgba(21, 21, 26, 0.6) 0%, rgba(11, 11, 14, 0.8) 100%);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: #fff;
             margin: 40px 0;
             border-radius: 40px;
         }
 
         .premium-categories .section-header h2 {
-            color: #000;
+            color: #fff;
             font-size: 3rem;
             letter-spacing: -1px;
         }
 
         .premium-categories .section-header p {
-            color: #666;
+            color: var(--text-muted);
         }
 
         .round-cat-grid {
@@ -618,19 +622,19 @@
             height: 220px;
             border-radius: 50%;
             overflow: hidden;
-            background: #f8f8f8;
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
             margin-bottom: 30px;
             transition: var(--transition);
-            border: 1px solid #eee;
+            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .round-cat-item:hover .round-cat-img-wrap {
-            transform: translateY(-15px);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(249, 136, 34, 0.15);
             border-color: var(--primary-color);
         }
 
@@ -648,10 +652,10 @@
         .round-cat-name {
             font-family: 'Outfit', sans-serif;
             font-size: 1.2rem;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 4px;
-            color: #000;
+            color: #fff;
             transition: var(--transition);
             text-align: center;
         }
@@ -1058,87 +1062,136 @@
         /* RESPONSIVE DESIGN */
         @media (max-width: 1200px) {
             .hero-content h1 {
-                font-size: 3.8rem;
+                font-size: 3.5rem;
             }
-
-            .round-cat-grid {
+            .trust-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
-
             .testi-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
         @media (max-width: 992px) {
+            .nav-links {
+                display: none;
+            }
+            .mobile-toggle {
+                display: block;
+            }
             .hero {
                 flex-direction: column;
                 text-align: center;
                 padding-top: 150px;
             }
-
             .hero-container {
                 flex-direction: column;
             }
-
             .hero-content {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 margin-bottom: 60px;
+                text-align: center;
             }
-
+            .hero-content p {
+                margin: 0 auto 40px;
+            }
+            .hero-buttons {
+                justify-content: center;
+            }
             .hero-image {
                 justify-content: center;
             }
-
             .hero-image img {
                 max-width: 80%;
                 transform: rotate(0);
             }
-
-        @media (max-width: 1200px) {
-            .hero-content h1 { font-size: 3.5rem; }
-            .round-cat-grid { grid-template-columns: repeat(3, 1fr); }
-            .trust-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        @media (max-width: 992px) {
-            .nav-links { display: none; }
-            .mobile-toggle { display: block; }
-            .hero-content h1 { font-size: 3rem; }
-            .round-cat-grid { grid-template-columns: repeat(2, 1fr); }
-            .trust-grid { grid-template-columns: repeat(2, 1fr); }
-            .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
-            .news-wrap { flex-direction: column; text-align: center; padding: 40px 20px; }
-            .referral-container { grid-template-columns: 1fr; text-align: center; gap: 40px; }
-            .ref-content p { margin: 0 auto 40px; }
-            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
-            .ref-image { display: none; }
+            .hero-content h1 {
+                font-size: 3rem;
+            }
+            .trust-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px;
+            }
+            .news-wrap {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 20px;
+            }
+            .referral-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 40px;
+            }
+            .ref-content p {
+                margin: 0 auto 40px;
+            }
+            .ref-rewards-grid {
+                max-width: 600px;
+                margin: 0 auto 40px;
+            }
+            .ref-image {
+                display: none;
+            }
         }
 
         @media (max-width: 768px) {
-            .section-header h2 { font-size: 2rem; }
-            .hero-content h1 { font-size: 2.5rem; }
-            .hero-buttons { flex-direction: column; width: 100%; gap: 15px; }
-            .hero-buttons .btn { width: 100%; }
-            .round-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-            .testi-grid { grid-template-columns: 1fr; }
-            .trust-grid { grid-template-columns: repeat(2, 1fr); }
-            .footer-grid { grid-template-columns: 1fr; }
-            .news-form { flex-direction: column; gap: 15px; }
-            .news-form input { width: 100% !important; border-radius: 30px !important; }
-            .news-form .btn { width: 100%; }
-            .ref-rewards-grid { grid-template-columns: 1fr; }
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 15px;
+            }
+            .hero-buttons .btn {
+                width: 100%;
+            }
+            .testi-grid {
+                grid-template-columns: 1fr;
+            }
+            .trust-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .news-form {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .news-form input {
+                width: 100% !important;
+                border-radius: 30px !important;
+            }
+            .news-form .btn {
+                width: 100%;
+            }
+            .ref-rewards-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
-            .hero-content h1 { font-size: 2rem; }
-            .round-cat-grid { grid-template-columns: 1fr; }
-            .round-cat-img-wrap { width: 140px; height: 140px; }
-            .trust-grid { grid-template-columns: 1fr; }
-            .section-header p { font-size: 0.9rem; }
-            .news-wrap h2 { font-size: 1.8rem; }
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            .trust-grid {
+                grid-template-columns: 1fr;
+            }
+            .section-header p {
+                font-size: 0.9rem;
+            }
+            .news-wrap h2 {
+                font-size: 1.8rem;
+            }
         }
 
         /* MOBILE MENU STYLES */
@@ -1508,9 +1561,7 @@
 <header id="header">
     <div class="container nav-wrap">
         <a href="/" class="logo">
-            <div class="logo-icon">
-                <i class="fas fa-clock"></i>
-            </div>
+            <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 38px; height: 38px; object-fit: contain;">
             TimeHub
         </a>
         <nav class="nav-links">
@@ -1895,7 +1946,7 @@
         <div class="footer-grid">
             <div class="footer-brand">
                 <a href="/" class="logo footer-logo">
-                    <i class="fas fa-clock"></i>
+                    <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 34px; height: 34px; object-fit: contain; margin-right: 4px;">
                     TimeHub
                 </a>
                 <p class="footer-desc">Your ultimate destination for luxury timepieces. Crafting moments that last a
