@@ -26,4 +26,5 @@ jobs:
             cd ~/Timehub
             git pull origin main
             docker compose up -d --build
+            docker compose restart web
           EOF
