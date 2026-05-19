@@ -10,7 +10,8 @@
     <meta name="description" content="Your TimeHub order has been placed successfully. Thank you for shopping with us.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Premium Trio -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -29,9 +30,38 @@
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Syne', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; overflow-x: hidden; min-height: 100vh; display: flex; flex-direction: column; }
-        h1, h2, h3, h4, .logo { font-family: 'Syne', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* Headings, prices, quotes, and logos → Cormorant Garamond */
+        h1, h2, h3, h4, h5, h6,
+        .logo, .price, blockquote, .section-title, .product-title {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Labels, buttons, nav, badges, active tabs → Syne */
+        .btn, .nav-links a,
+        .hero-badge, .badge-offer-inline,
+        .section-label, .round-cat-name,
+        .card-brand, .nav-wrap,
+        .mobile-nav-item, .mobile-bottom-nav-inner a {
+            font-family: 'Syne', sans-serif;
+        }
         ul { list-style: none; }
         a { text-decoration: none; color: inherit; transition: var(--transition); }
         .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }

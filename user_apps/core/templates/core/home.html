@@ -2389,8 +2389,11 @@
         if (loader) loader.classList.remove('active');
     }
 
+    let fallbackTimeout = setTimeout(hideLoader, 5000);
+
     window.addEventListener('load', () => {
-        setTimeout(hideLoader, 5000);
+        clearTimeout(fallbackTimeout);
+        setTimeout(hideLoader, 500);
     });
 
     document.addEventListener('click', (e) => {

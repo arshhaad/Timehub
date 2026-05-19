@@ -2,7 +2,7 @@
    TimeHub Auth Pages — Dark Purple Theme
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap');
 
 /* --- Reset & Base --- */
 *,
@@ -24,13 +24,13 @@
     --text-secondary: #9090b0;
     --text-muted: #606080;
     --accent-purple: #7c3aed;
-    --accent-purple-hover: #6d28d9;
+    --accent-purple-hover: #431293;
     --accent-purple-glow: rgba(124, 58, 237, 0.25);
     --accent-purple-soft: rgba(124, 58, 237, 0.12);
     --error-color: #ef4444;
     --error-bg: rgba(239, 68, 68, 0.1);
     --success-color: #22c55e;
-    --font-family: 'Syne', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
@@ -145,7 +145,8 @@ body.auth-body::after {
 }
 
 .auth-header h1 {
-    font-size: 1.75rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-bottom: 6px;
@@ -290,7 +291,7 @@ body.auth-body::after {
     color: white;
     border: none;
     border-radius: var(--radius-md);
-    font-family: var(--font-family);
+    font-family: 'Syne', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -338,7 +339,7 @@ body.auth-body::after {
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    font-family: var(--font-family);
+    font-family: 'Syne', sans-serif;
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
