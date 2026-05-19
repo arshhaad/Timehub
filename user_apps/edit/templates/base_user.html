@@ -498,6 +498,14 @@
             50% { opacity: 1; transform: scale(1.3); }
         }
 
+        @media (max-width: 480px) {
+            .th-card { flex-direction: column; gap: 15px; }
+            .th-clock { width: 40px; height: 40px; }
+            .th-face { width: 28px; height: 28px; }
+            .th-face svg { width: 18px; height: 18px; }
+            .th-letter { font-size: 20px; }
+        }
+
         /* Toast Notifications */
         .toast-container {
             position: fixed;
