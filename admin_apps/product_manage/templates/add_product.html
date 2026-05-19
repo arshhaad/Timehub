@@ -588,7 +588,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
     const DB_COLORS = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
-    const COLORS_LIST = DB_COLORS.length > 0 ? DB_COLORS : ['Black', 'White', 'Silver', 'Gold', 'Rose Gold', 'Blue', 'Green', 'Brown', 'Grey', 'Navy', 'Red', 'Champagne', 'Two-Tone'];
+    const BASE_COLORS = DB_COLORS.length > 0 ? DB_COLORS : ['Black', 'White', 'Silver', 'Gold', 'Rose Gold', 'Blue', 'Green', 'Brown', 'Grey', 'Navy', 'Red', 'Champagne', 'Two-Tone'];
+    const STRAP_COLORS = BASE_COLORS.filter(c => {
+        const lower = c.toLowerCase();
+        return lower !== 'champagne' && lower !== 'two-tone';
+    });
+    const DIAL_COLORS = BASE_COLORS.filter(c => {
+        const lower = c.toLowerCase();
+        return lower !== 'champagne' && lower !== 'two-tone' && lower !== 'navy' && lower !== 'grey' && lower !== 'gray';
+    });
     const MATERIALS_LIST = ['Leather', 'Stainless Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber', 'Nylon', 'Rose Gold'];
 
     function showToast(msg, type = 'error') {
@@ -824,14 +832,14 @@
                     <label>Strap Color</label>
                     <select name="variant_strap_color[]" class="form-control" required>
                         <option value="">Select Strap Color</option>
-                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.strap_color === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        ${STRAP_COLORS.map(c => `<option value="${c}" ${data && data.strap_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Dial Color</label>
                     <select name="variant_dial_color[]" class="form-control" required>
                         <option value="">Select Dial Color</option>
-                        ${COLORS_LIST.map(c => `<option value="${c}" ${data && data.dial_color === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        ${DIAL_COLORS.map(c => `<option value="${c}" ${data && data.dial_color === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
             </div>
