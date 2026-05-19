@@ -587,7 +587,8 @@
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
-    const COLORS_LIST = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
+    const DB_COLORS = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
+    const COLORS_LIST = DB_COLORS.length > 0 ? DB_COLORS : ['Black', 'White', 'Silver', 'Gold', 'Rose Gold', 'Blue', 'Green', 'Brown', 'Grey', 'Navy', 'Red', 'Champagne', 'Two-Tone'];
     const MATERIALS_LIST = ['Leather', 'Stainless Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber', 'Nylon', 'Rose Gold'];
 
     function showToast(msg, type = 'error') {

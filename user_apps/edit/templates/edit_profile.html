@@ -312,9 +312,15 @@
                 <div class="form-group">
                     <label for="id_email">Email Address</label>
                     <div class="input-wrap {% if form.email.errors %}is-invalid{% endif %}" id="wrap_email">
-                        <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" placeholder="email@example.com" {% if user.is_social_login %}readonly{% endif %}>
+                        <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" placeholder="email@example.com" readonly>
                         <i class="fas fa-envelope input-icon"></i>
                     </div>
+                    {% if not user.is_social_login %}
+                    <div style="margin-top: 5px;">
+                        <a href="#" id="change-email-btn" style="color: var(--primary-color); font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-block;">Want to change your email?</a>
+                        <span id="email-otp-note" style="display: none; font-size: 0.75rem; color: var(--text-muted);">* Changing your email will require OTP verification.</span>
+                    </div>
+                    {% endif %}
                     <div class="field-msg {% if form.email.errors %}error{% endif %}" id="msg_email">
                         {% if form.email.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.email.errors|first }} {% endif %}
                     </div>
@@ -385,6 +391,18 @@
                 }
             });
         });
+
+        const changeEmailBtn = document.getElementById('change-email-btn');
+        if (changeEmailBtn) {
+            changeEmailBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('id_email');
+                emailInput.removeAttribute('readonly');
+                emailInput.focus();
+                this.style.display = 'none';
+                document.getElementById('email-otp-note').style.display = 'inline-block';
+            });
+        }
     });
 </script>
 {% endblock %}

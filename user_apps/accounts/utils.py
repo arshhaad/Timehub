@@ -5,23 +5,23 @@ from django.utils.html import strip_tags
 def send_otp_email(email, otp, context="verification"):
     """
     Sends a professional, aesthetic OTP email using HTML.
-    Context can be 'verification' or 'password_reset'.
+    Context can be 'verification', 'password_reset', or 'email_change'.
     """
     subject_map = {
-        "verification": "Verify Your TimeHub Account ⏱",
-        "password_reset": "TimeHub — Password Reset OTP 🔐",
-        "email_change": "TimeHub — Email Change Verification ✉️",
+        "verification": "Verify Your TimeHub Account",
+        "password_reset": "TimeHub — Password Reset OTP",
+        "email_change": "TimeHub — Email Change Verification",
     }
     
     title_map = {
-        "verification": "Verify Your Account",
-        "password_reset": "Reset Your Password",
-        "email_change": "Verify Your New Email",
+        "verification": "Account Verification",
+        "password_reset": "Reset Password",
+        "email_change": "Verify New Email",
     }
     
     message_map = {
-        "verification": "Welcome to TimeHub! To complete your registration and start exploring our premium timepieces, please use the verification code below.",
-        "password_reset": "We received a request to reset your TimeHub password. Use the verification code below to proceed with the reset process.",
+        "verification": "Welcome to TimeHub. To complete your registration and explore our premium timepieces, please use the verification code below.",
+        "password_reset": "We received a request to reset your TimeHub password. Use the verification code below to securely proceed.",
         "email_change": "You've requested to update your email address on TimeHub. Please use the verification code below to confirm this change.",
     }
 
@@ -31,253 +31,150 @@ def send_otp_email(email, otp, context="verification"):
 
     html_message = f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;600&display=swap');
             
             body {{
                 margin: 0;
                 padding: 0;
-                background-color: #f1f5f9;
+                background-color: #050505;
                 -webkit-text-size-adjust: 100%;
                 -ms-text-size-adjust: 100%;
+                font-family: 'Inter', -apple-system, sans-serif;
+            }}
+            .wrapper {{
+                width: 100%;
+                table-layout: fixed;
+                background-color: #050505;
+                padding: 40px 0;
             }}
             .email-container {{
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                 max-width: 600px;
-                margin: 40px auto;
-                background-color: #ffffff;
-                border-radius: 24px;
+                margin: 0 auto;
+                background-color: #0a0a0a;
+                border: 1px solid #1f1f1f;
+                border-radius: 8px;
                 overflow: hidden;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             }}
             .header {{
-                background-color: #0f172a;
-                padding: 45px 20px;
                 text-align: center;
-                border-bottom: 4px solid #ff8a00;
+                padding: 50px 20px 30px;
+                border-bottom: 1px solid #1f1f1f;
             }}
-            .logo-wrapper {{
-                display: inline-block;
-                text-decoration: none;
-            }}
-            /* High-precision CSS Clock Logo */
-            .logo-clock-container {{
-                display: inline-block;
-                vertical-align: middle;
-                margin-right: 12px;
-            }}
-            .clock-outer {{
-                width: 56px;
-                height: 56px;
-                background-color: #ff8a00;
-                border-radius: 50%;
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }}
-            .clock-inner {{
-                width: 38px;
-                height: 38px;
-                background-color: #000000;
-                border-radius: 50%;
-                position: relative;
-            }}
-            .hand-hour {{
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 2px;
-                height: 10px;
-                background-color: #ffffff;
-                transform-origin: bottom;
-                transform: translate(-50%, -100%) rotate(0deg);
-                border-radius: 2px;
-            }}
-            .hand-min {{
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 12px;
-                height: 2px;
-                background-color: #ffffff;
-                transform-origin: left;
-                transform: translate(0, -50%) rotate(0deg);
-                border-radius: 2px;
-            }}
-            .logo-text {{
-                font-family: 'Inter', sans-serif;
-                font-size: 40px;
-                font-weight: 800;
-                color: #ffffff;
-                letter-spacing: -1.5px;
-                display: inline-block;
-                vertical-align: middle;
+            .brand-name {{
+                font-family: 'Cinzel', serif;
+                font-size: 32px;
+                color: #d4af37;
                 margin: 0;
-                line-height: 1;
+                letter-spacing: 4px;
+                text-transform: uppercase;
             }}
             .content {{
-                padding: 60px 45px;
+                padding: 50px 40px;
                 text-align: center;
-                color: #334155;
             }}
             .title {{
-                font-size: 30px;
-                font-weight: 800;
-                margin-bottom: 16px;
-                color: #0f172a;
-                letter-spacing: -0.025em;
+                font-family: 'Cinzel', serif;
+                font-size: 24px;
+                color: #ffffff;
+                margin-bottom: 20px;
+                font-weight: 500;
+                letter-spacing: 1px;
             }}
             .message {{
-                font-size: 17px;
-                line-height: 1.6;
-                margin-bottom: 35px;
-                color: #64748b;
+                font-size: 15px;
+                line-height: 1.8;
+                color: #a0a0a0;
+                margin-bottom: 40px;
+                font-weight: 300;
             }}
-            .otp-section {{
-                background-color: #f8fafc;
-                border-radius: 20px;
-                padding: 40px 20px;
-                margin: 30px 0;
-                border: 1px solid #f1f5f9;
+            .otp-box {{
+                background: linear-gradient(145deg, #111111, #0a0a0a);
+                border: 1px solid #d4af37;
+                border-radius: 6px;
+                padding: 30px;
+                margin: 0 auto 40px;
+                max-width: 300px;
+                box-shadow: 0 10px 30px rgba(212, 175, 55, 0.05);
             }}
             .otp-code {{
-                font-size: 52px;
-                font-weight: 800;
-                letter-spacing: 12px;
-                color: #0f172a;
-                display: block;
-                margin-bottom: 25px;
-                font-family: 'Courier New', Courier, monospace;
-                user-select: all;
-                -webkit-user-select: all;
-                cursor: pointer;
+                font-family: 'Inter', sans-serif;
+                font-size: 42px;
+                font-weight: 600;
+                letter-spacing: 16px;
+                color: #d4af37;
+                margin: 0;
+                text-align: center;
+                margin-right: -16px; /* Offset the tracking on the last char */
             }}
-            .copy-button {{
-                display: inline-block;
-                background-color: #ff8a00;
-                color: #ffffff;
-                padding: 14px 36px;
-                border-radius: 12px;
-                font-size: 16px;
-                font-weight: 700;
-                text-decoration: none;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                box-shadow: 0 4px 12px rgba(255, 138, 0, 0.3);
-                /* Fallback for environments that support inline JS (rare in email) */
-                cursor: copy;
-            }}
-            .copy-instruction {{
-                display: block;
+            .expiry {{
                 font-size: 12px;
-                color: #94a3b8;
-                margin-top: 15px;
-                font-weight: 500;
-            }}
-            .expiry-pill {{
-                font-size: 13px;
-                color: #ef4444;
-                font-weight: 700;
-                background-color: #fef2f2;
-                display: inline-block;
-                padding: 8px 16px;
-                border-radius: 9999px;
-                margin-top: 20px;
+                color: #666666;
+                text-transform: uppercase;
+                letter-spacing: 2px;
             }}
             .footer {{
-                background-color: #f8fafc;
-                padding: 45px;
+                background-color: #050505;
+                padding: 40px;
                 text-align: center;
-                border-top: 1px solid #f1f5f9;
+                border-top: 1px solid #1f1f1f;
             }}
-            .security-box {{
+            .security-notice {{
                 font-size: 12px;
-                color: #94a3b8;
-                max-width: 450px;
-                margin: 0 auto 30px auto;
+                color: #555555;
                 line-height: 1.6;
-                padding: 15px;
-                background-color: #ffffff;
-                border-radius: 12px;
-                border: 1px solid #f1f5f9;
-            }}
-            .social-links {{
                 margin-bottom: 20px;
             }}
-            .social-links a {{
-                color: #475569;
+            .footer-links a {{
+                color: #d4af37;
                 text-decoration: none;
-                margin: 0 12px;
-                font-weight: 700;
-                font-size: 14px;
+                font-size: 12px;
+                margin: 0 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }}
+            .copyright {{
+                margin-top: 20px;
+                font-size: 11px;
+                color: #444444;
             }}
         </style>
     </head>
     <body>
-        <div class="email-container">
-            <div class="header">
-                <div class="logo-wrapper">
-                    <div class="logo-clock-container">
-                        <div class="clock-outer">
-                            <div class="clock-inner">
-                                <div class="hand-hour"></div>
-                                <div class="hand-min"></div>
-                            </div>
-                        </div>
+        <div class="wrapper">
+            <div class="email-container">
+                <div class="header">
+                    <h1 class="brand-name">TimeHub</h1>
+                </div>
+                <div class="content">
+                    <h2 class="title">{title}</h2>
+                    <p class="message">{msg_text}</p>
+                    
+                    <div class="otp-box">
+                        <div class="otp-code">{otp}</div>
                     </div>
-                    <h1 class="logo-text">TimeHub</h1>
+                    
+                    <div class="expiry">This code expires in 60 seconds</div>
                 </div>
-            </div>
-            <div class="content">
-                <h2 class="title">{title}</h2>
-                <p class="message">{msg_text}</p>
-                
-                <div class="otp-section">
-                    <span class="otp-code" id="text">{otp}</span>
-                    <button id="copyBtn" onclick="copyText()" class="copy-button" style="border: none; cursor: pointer;">Copy Code</button>
-                    <span class="copy-instruction">Tap the code above to select instantly</span>
-                </div>
-
-                <div class="expiry-pill">⏳ Expires in 60 seconds</div>
-            </div>
-            <div class="footer">
-                <div class="security-box">
-                    <strong>SECURITY ALERT:</strong> This code is for your eyes only. TimeHub will never 
-                    call or email you asking for this code.
-                </div>
-                <div class="social-links">
-                    <a href="#">Instagram</a> • <a href="#">Twitter</a> • <a href="#">Facebook</a>
-                </div>
-                <div class="copyright" style="font-size: 13px; color: #94a3b8;">
-                    &copy; 2024 TimeHub Luxury Watches. All rights reserved.<br>
-                    <span style="color: #ff8a00; font-weight: 600;">Timeless Quality • Global Luxury</span>
+                <div class="footer">
+                    <div class="security-notice">
+                        SECURITY NOTICE: This code is highly confidential. TimeHub personnel will never ask for this code. Do not share it with anyone.
+                    </div>
+                    <div class="footer-links">
+                        <a href="#">Boutique</a>
+                        <a href="#">Collections</a>
+                        <a href="#">Support</a>
+                    </div>
+                    <div class="copyright">
+                        &copy; 2024 TimeHub Luxury Watches. All Rights Reserved.
+                    </div>
                 </div>
             </div>
         </div>
-
-        <script>
-            function copyText() {{
-                const text = document.getElementById("text").innerText;
-                const button = document.getElementById("copyBtn");
-
-                navigator.clipboard.writeText(text)
-                    .then(() => {{
-                        button.innerText = "Copied ✅";
-
-                        setTimeout(() => {{
-                            button.innerText = "Copy Code";
-                        }}, 2000);
-                    }})
-                    .catch(err => {{
-                        console.log("Copy failed:", err);
-                    }});
-            }}
-        </script>
     </body>
     </html>
     """

@@ -300,7 +300,72 @@
             .main-content { padding: 15px 10px; }
         }
 
-        /* =========================================
+        /* Mobile Bottom Nav */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .mobile-bottom-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mobile-bottom-nav-inner {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            gap: 30px;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 50px;
+            transition: var(--transition);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary-color);
+        }
+        
+        .mobile-nav-item.active i {
+            transform: scale(1.1);
+        }
+
+        .mobile-nav-item:hover {
+            color: #fff;
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-bottom-nav {
+                display: block;
+            }
+            .main-wrapper { 
+                padding-bottom: 75px; 
+            }
+        }
            PAGE TRANSITION LOADER
            ========================================= */
         #th-loader {
@@ -807,6 +872,70 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <div class="mobile-bottom-nav-inner">
+            <a href="{% url 'home' %}" class="mobile-nav-item {% if request.path == '/' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{% url 'product_listing' %}" class="mobile-nav-item {% if '/products/' in request.path %}active{% endif %}">
+                <i class="fas fa-shop"></i>
+                <span>Shop</span>
+            </a>
+            <a href="{% url 'cart_view' %}" class="mobile-nav-item {% block nav_cart %}{% endblock %}" style="position: relative;">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Cart</span>
+                {% if cart_count %}
+                <span style="position: absolute; top: -5px; right: 5px; background: var(--primary-color); color: #000; font-size: 0.55rem; font-weight: 800; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'order_history' %}" class="mobile-nav-item {% block nav_orders %}{% endblock %}">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Orders</span>
+            </a>
+            <a href="{% url 'wishlist_view' %}" class="mobile-nav-item {% block nav_wishlist %}{% endblock %}">
+                <i class="fas fa-heart"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="{% url 'user_wallet' %}" class="mobile-nav-item {% block nav_wallet %}{% endblock %}">
+                <i class="fas fa-wallet"></i>
+                <span>Wallet</span>
+            </a>
+            <a href="{% url 'payments:payment_list' %}" class="mobile-nav-item {% block nav_payments %}{% endblock %}">
+                <i class="fas fa-credit-card"></i>
+                <span>Payments</span>
+            </a>
+            <a href="{% url 'user_notifications' %}" class="mobile-nav-item {% block nav_notifications %}{% endblock %}" style="position: relative;">
+                <i class="fas fa-bell"></i>
+                <span>Alerts</span>
+                {% if user.unread_notifications_count > 0 %}
+                <span style="position: absolute; top: -5px; right: 5px; background: #ef4444; color: #fff; font-size: 0.55rem; font-weight: 800; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">{{ user.unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% block nav_dashboard %}{% endblock %}">
+                <i class="fas fa-grid-horizontal"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'address_list' %}" class="mobile-nav-item {% block nav_address %}{% endblock %}">
+                <i class="fas fa-map-location-dot"></i>
+                <span>Address</span>
+            </a>
+            <a href="{% url 'edit_profile' %}" class="mobile-nav-item {% block nav_profile %}{% endblock %}">
+                <i class="fas fa-user-gear"></i>
+                <span>Profile</span>
+            </a>
+            <a href="{% url 'account_edit' %}" class="mobile-nav-item {% block nav_security %}{% endblock %}">
+                <i class="fas fa-shield-halved"></i>
+                <span>Security</span>
+            </a>
+            <a href="{% url 'logout' %}" class="mobile-nav-item" style="color: #ef4444;">
+                <i class="fas fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </nav>
 
     <script>
         const menuToggle = document.getElementById('menuToggle');
