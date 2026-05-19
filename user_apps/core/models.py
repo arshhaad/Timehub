@@ -96,7 +96,7 @@ class Product(models.Model):
         # 1. Check Product-specific Offers
         p_offer = self.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
         # 2. Check Category-wide Offers
-        c_offer = self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        c_offer = self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first() if self.collection else None
         
         p_disc = p_offer.discount_percentage if p_offer else 0
         c_disc = c_offer.discount_percentage if c_offer else 0
@@ -132,7 +132,7 @@ class Product(models.Model):
         """Returns the best currently active category-wide offer."""
         from django.utils import timezone
         now = timezone.now()
-        return self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        return self.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first() if self.collection else None
 
     def get_active_offer(self):
         """Get best current offer for the product."""
@@ -169,7 +169,7 @@ class ProductVariant(models.Model):
         from django.utils import timezone
         now = timezone.now()
         p_off = self.product.product_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
-        c_off = self.product.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first()
+        c_off = self.product.collection.category_offers.filter(is_active=True, valid_from__lte=now, valid_to__gte=now).order_by('-discount_percentage').first() if self.product.collection else None
         
         best = max(p_off.discount_percentage if p_off else 0, c_off.discount_percentage if c_off else 0)
         if best > 0:

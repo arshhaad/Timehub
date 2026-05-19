@@ -239,7 +239,7 @@ def checkout_page(request):
             ).order_by('-discount_percentage').first()
             c_off = item.product.collection.category_offers.filter(
                 is_active=True, valid_from__lte=_now, valid_to__gte=_now
-            ).order_by('-discount_percentage').first()
+            ).order_by('-discount_percentage').first() if item.product.collection else None
             p_disc = p_off.discount_percentage if p_off else 0
             c_disc = c_off.discount_percentage if c_off else 0
             if p_disc >= c_disc:

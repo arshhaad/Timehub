@@ -290,7 +290,7 @@ def cart_view(request):
             ).order_by('-discount_percentage').first()
             c_off = item.product.collection.category_offers.filter(
                 is_active=True, valid_from__lte=_now, valid_to__gte=_now
-            ).order_by('-discount_percentage').first()
+            ).order_by('-discount_percentage').first() if item.product.collection else None
             
             p_disc = p_off.discount_percentage if p_off else 0
             c_disc = c_off.discount_percentage if c_off else 0
@@ -473,7 +473,7 @@ def update_cart(request, item_id):
                 ).order_by('-discount_percentage').first()
                 c_o = i.product.collection.category_offers.filter(
                     is_active=True, valid_from__lte=_now, valid_to__gte=_now
-                ).order_by('-discount_percentage').first()
+                ).order_by('-discount_percentage').first() if i.product.collection else None
                 if (p_o.discount_percentage if p_o else 0) >= (c_o.discount_percentage if c_o else 0):
                     product_offer_savings += save_per * i.quantity
                 else:
