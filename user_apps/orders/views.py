@@ -167,11 +167,13 @@ def _build_coupon_discount(coupon, items, subtotal):
 
 
 
-@login_required
 @never_cache
 @ensure_csrf_cookie
 def checkout_page(request):
     """Render checkout page and process order placement."""
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+
     cart, _ = Cart.objects.get_or_create(user=request.user)
 
     # --- Resolve Buy Now session ---
