@@ -1856,19 +1856,24 @@
         </div><!-- end tabs-container -->
     </div><!-- end container -->
     <!-- Mobile Sticky Actions -->
-        <div class="mobile-sticky-actions">
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-right: 10px; border-right: 1px solid var(--border-color); margin-right: 5px;">
-                <div style="font-size: 1.1rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.display_price }}</div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.has_offer or product.discount_price %}₹{{ product.price }}{% endif %}</div>
+        <div class="mobile-sticky-actions" style="padding: 12px 15px 25px; gap: 8px;">
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-right: 8px; border-right: 1px solid var(--border-color); margin-right: 2px; flex-shrink: 0;">
+                <div style="font-size: 1rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.display_price }}</div>
+                <div style="font-size: 0.65rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.has_offer or product.discount_price %}₹{{ product.price }}{% endif %}</div>
             </div>
-            <button class="btn btn-outline" style="flex: 0 0 44px; padding: 0; min-width: 44px;" onclick="toggleWishlist(event, '{{ product.uuid }}', document.querySelector('.wishlist-btn'))">
-                <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="color: {% if is_in_wishlist %}#ff4757{% else %}inherit{% endif %};"></i>
+            
+            <button class="btn btn-outline" style="flex: 0 0 38px; padding: 0; min-width: 38px; height: 44px; border-radius: 10px;" onclick="toggleWishlist(event, '{{ product.uuid }}', document.querySelector('.wishlist-btn'))">
+                <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="color: {% if is_in_wishlist %}#ff4757{% else %}inherit{% endif %}; font-size: 0.9rem;"></i>
             </button>
 
-            <button class="btn btn-outline" style="flex: 0 0 44px; padding: 0; min-width: 44px;" onclick="shareProduct()">
-                <i class="fas fa-share-alt"></i>
-            </button>
-            <button class="btn btn-primary" style="flex: 1; border-radius: 12px; height: 50px; font-size: 0.9rem;" onclick="window.addToCart('{{ product.uuid }}')" id="sticky-cart-btn">Add to Cart</button>
+            <div style="display: flex; gap: 6px; flex: 1;">
+                <button class="btn btn-outline add-cart-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.addToCart('{{ product.uuid }}')" id="sticky-cart-btn" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
+                    Cart
+                </button>
+                <button class="btn btn-primary buy-now-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.buyNow('{{ product.uuid }}')" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
+                    Buy Now
+                </button>
+            </div>
         </div>
 
 
