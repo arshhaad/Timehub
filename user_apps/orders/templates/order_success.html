@@ -217,7 +217,8 @@
             display: flex;
             align-items: center;
             padding: 10px 16px 14px;
-            gap: 6px;
+            gap: 12px;
+            width: max-content;
         }
 
         /* Individual nav button */
@@ -231,7 +232,7 @@
             font-size: 0.62rem;
             font-weight: 600;
             letter-spacing: 0.3px;
-            min-width: 56px;
+            min-width: 58px;
             padding: 8px 6px;
             border-radius: 14px;
             transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
@@ -262,212 +263,13 @@
             filter: drop-shadow(0 0 6px rgba(255,106,0,0.5));
         }
 
-        /* Divider between store nav and account button */
-        .mobile-nav-divider {
-            width: 1px;
-            height: 36px;
-            background: rgba(255,255,255,0.1);
-            flex-shrink: 0;
-            margin: 0 6px;
-        }
-
-        /* Account trigger button */
-        .mobile-nav-account-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: #9ca3af;
-            font-size: 0.62rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            min-width: 56px;
-            padding: 8px 6px;
-            border-radius: 14px;
-            border: 1.5px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.04);
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
-        }
-
-        .mobile-nav-account-btn i {
-            font-size: 1.2rem;
-            display: block;
-        }
-
-        .mobile-nav-account-btn:hover,
-        .mobile-nav-account-btn.open {
-            color: var(--primary-color);
-            background: rgba(255,106,0,0.1);
-            border-color: rgba(255,106,0,0.3);
-        }
-
-        /* ═══ ACCOUNT SLIDE-UP PANEL ═══ */
-        .account-panel-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .account-panel-overlay.visible {
-            display: block;
-        }
-
-        .account-panel-overlay.active {
-            opacity: 1;
-        }
-
-        .account-panel {
-            position: fixed;
-            bottom: 75px;
-            left: 12px;
-            right: 12px;
-            background: linear-gradient(145deg, #111116, #0e0e13);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            z-index: 10001;
-            transform: translateY(30px);
-            opacity: 0;
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
-            box-shadow: 0 -10px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,106,0,0.08);
-            padding: 6px;
-            pointer-events: none;
-        }
-
-        .account-panel.active {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        /* Panel header */
-        .account-panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 18px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            margin-bottom: 6px;
-        }
-
-        .account-panel-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .account-panel-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary-color), #e05e00);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            color: #000;
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-
-        .account-panel-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .account-panel-label {
-            font-size: 0.68rem;
-            color: var(--primary-color);
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .account-panel-close {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.06);
-            border: none;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-        .account-panel-close:hover {
-            background: rgba(255,255,255,0.12);
-            color: #fff;
-        }
-
-        /* Panel grid links */
-        .account-panel-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-            padding: 4px;
-        }
-
-        .account-panel-link {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            padding: 14px 8px;
-            border-radius: 16px;
-            border: 1.5px solid transparent;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            text-align: center;
-            transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
-            cursor: pointer;
-        }
-
-        .account-panel-link i {
-            font-size: 1.3rem;
-            transition: all 0.22s ease;
-            display: block;
-        }
-
-        .account-panel-link:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.06);
-            border-color: rgba(255,255,255,0.08);
-        }
-
-        .account-panel-link.active {
-            color: var(--primary-color);
-            background: rgba(255,106,0,0.1);
-            border-color: rgba(255,106,0,0.2);
-        }
-
-        .account-panel-link.active i {
-            filter: drop-shadow(0 0 6px rgba(255,106,0,0.4));
-        }
-
-        /* Logout link in panel */
-        .account-panel-link.logout-link {
+        .mobile-nav-item.logout-btn {
             color: #ef4444;
         }
 
-        .account-panel-link.logout-link:hover {
-            background: rgba(239,68,68,0.1);
-            border-color: rgba(239,68,68,0.2);
-            color: #ef4444;
+        .mobile-nav-item.logout-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
         }
 
         @media (max-width: 1024px) {
@@ -667,81 +469,6 @@
         }
     </script>
 
-    <!-- Account Panel Overlay -->
-    <div class="account-panel-overlay" id="accountOverlay" onclick="closeAccountPanel()"></div>
-
-    <!-- Account Slide-Up Panel -->
-    <div class="account-panel" id="accountPanel">
-        <div class="account-panel-header">
-            <div class="account-panel-title">
-                <div class="account-panel-avatar">
-                    {% if request.user.first_name %}
-                        {{ request.user.first_name|first|upper }}
-                    {% else %}
-                        <i class="fas fa-user"></i>
-                    {% endif %}
-                </div>
-                <div>
-                    <div class="account-panel-name">
-                        {% if request.user.first_name %}{{ request.user.first_name }}{% else %}My Account{% endif %}
-                    </div>
-                    <div class="account-panel-label">My Dashboard</div>
-                </div>
-            </div>
-            <button class="account-panel-close" onclick="closeAccountPanel()">
-                <i class="fas fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="account-panel-grid">
-            <a href="{% url 'user_dashboard' %}" class="account-panel-link {% if '/dashboard/' in request.path %}active{% endif %}">
-                <i class="fas fa-border-all"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="{% url 'order_history' %}" class="account-panel-link {% if '/orders/' in request.path %}active{% endif %}">
-                <i class="fas fa-shopping-bag"></i>
-                <span>Orders</span>
-            </a>
-            <a href="{% url 'address_list' %}" class="account-panel-link {% if '/addresses/' in request.path %}active{% endif %}">
-                <i class="fas fa-map-location-dot"></i>
-                <span>Address</span>
-            </a>
-            <a href="{% url 'user_wallet' %}" class="account-panel-link {% if '/wallet/' in request.path %}active{% endif %}">
-                <i class="fas fa-wallet"></i>
-                <span>Wallet</span>
-            </a>
-            <a href="{% url 'wishlist_view' %}" class="account-panel-link {% if '/wishlist/' in request.path %}active{% endif %}">
-                <i class="fas fa-heart"></i>
-                <span>Wishlist</span>
-            </a>
-            <a href="{% url 'payments:payment_list' %}" class="account-panel-link {% if '/payments/' in request.path %}active{% endif %}">
-                <i class="fas fa-credit-card"></i>
-                <span>Payments</span>
-            </a>
-            <a href="{% url 'edit_profile' %}" class="account-panel-link {% if '/profile/' in request.path %}active{% endif %}">
-                <i class="fas fa-user-gear"></i>
-                <span>Profile</span>
-            </a>
-            <a href="{% url 'account_edit' %}" class="account-panel-link {% if '/security/' in request.path %}active{% endif %}">
-                <i class="fas fa-shield-halved"></i>
-                <span>Security</span>
-            </a>
-            <a href="{% url 'user_notifications' %}" class="account-panel-link {% if '/notifications/' in request.path %}active{% endif %}" style="position:relative;">
-                <i class="fas fa-bell"></i>
-                <span>Alerts</span>
-                {% if user.unread_notifications_count > 0 %}
-                <span style="position:absolute;top:10px;right:12px;background:#ef4444;color:#fff;font-size:0.5rem;font-weight:800;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;">{{ user.unread_notifications_count }}</span>
-                {% endif %}
-            </a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="account-panel-link logout-link">
-                <i class="fas fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </a>
-            {% endif %}
-        </div>
-    </div>
-
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav">
         <div class="mobile-bottom-nav-inner">
@@ -768,48 +495,24 @@
                 <i class="fas fa-heart"></i>
                 <span>Wishlist</span>
             </a>
-
-            <!-- Divider -->
-            <div class="mobile-nav-divider"></div>
-
-            <!-- Account Button → triggers slide-up panel -->
-            <button class="mobile-nav-account-btn" id="accountBtn" onclick="toggleAccountPanel()">
+            <a href="{% url 'account_edit' %}" class="mobile-nav-item {% if '/security/' in request.path or '/account-edit/' in request.path %}active{% endif %}">
+                <i class="fas fa-shield-halved"></i>
+                <span>Security</span>
+            </a>
+            <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% if '/dashboard/' in request.path or '/profile/' in request.path or '/wallet/' in request.path or '/addresses/' in request.path or '/notifications/' in request.path %}active{% endif %}">
                 <i class="fas fa-circle-user"></i>
                 <span>Account</span>
-            </button>
+            </a>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="mobile-nav-item logout-btn">
+                <i class="fas fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+            {% endif %}
         </div>
     </nav>
 
-    <script>
-        function toggleAccountPanel() {
-            const panel = document.getElementById('accountPanel');
-            const overlay = document.getElementById('accountOverlay');
-            const btn = document.getElementById('accountBtn');
-            const isOpen = panel.classList.contains('active');
-            if (isOpen) {
-                closeAccountPanel();
-            } else {
-                overlay.classList.add('visible');
-                btn.classList.add('open');
-                requestAnimationFrame(() => {
-                    overlay.classList.add('active');
-                    panel.classList.add('active');
-                });
-                document.body.style.overflow = 'hidden';
-            }
-        }
 
-        function closeAccountPanel() {
-            const panel = document.getElementById('accountPanel');
-            const overlay = document.getElementById('accountOverlay');
-            const btn = document.getElementById('accountBtn');
-            panel.classList.remove('active');
-            overlay.classList.remove('active');
-            btn.classList.remove('open');
-            document.body.style.overflow = '';
-            setTimeout(() => overlay.classList.remove('visible'), 300);
-        }
-    </script>
 
 </body>
 </html>
