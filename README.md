@@ -207,6 +207,7 @@ add
 docker 
 nigex 
 ci/cd test
+redis for ceches 
 
 ## 🎯 Highlights
 ✅ Multi-role platform (User / Seller / Admin)  
