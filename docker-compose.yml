@@ -22,6 +22,8 @@ services:
              gunicorn project.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
     depends_on:
       - db
     environment:
@@ -40,6 +42,8 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - .:/app
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
     depends_on:
       - web
 
