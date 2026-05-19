@@ -2,7 +2,7 @@
    TimeHub Auth Pages — Dark Purple Theme
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* --- Reset & Base --- */
 *,
@@ -30,7 +30,7 @@
     --error-color: #ef4444;
     --error-bg: rgba(239, 68, 68, 0.1);
     --success-color: #22c55e;
-    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-family: 'Syne', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
