@@ -339,7 +339,7 @@ body.auth-body::after {
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-family);
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
@@ -413,24 +413,74 @@ body.auth-body::after {
 }
 
 /* --- Responsive --- */
-    @media (max-width: 640px) {
-        .auth-container { padding: 0 16px; margin: 20px auto; }
-        .auth-card { padding: 35px 25px; border-radius: var(--radius-lg); }
-        .auth-header h1 { font-size: 1.6rem; }
-        .auth-header p { font-size: 0.85rem; }
-        .auth-icon { width: 48px; height: 48px; margin-bottom: 12px; }
-        .auth-icon svg { width: 24px; height: 24px; }
-        .form-group input { padding: 12px 14px; font-size: 0.9rem; }
+@media (max-width: 640px) {
+    .auth-container {
+        padding: 0 16px;
+        margin: 20px auto;
     }
 
-    @media (max-width: 480px) {
-        .auth-container { padding: 0 12px; }
-        .auth-card { padding: 30px 20px; border: 1px solid var(--border-color); background: var(--bg-card); }
-        .form-row { flex-direction: column; gap: 0; }
-        .btn-primary, .btn-social { padding: 13px; font-size: 0.9rem; }
-        .auth-switch { margin-top: 20px; font-size: 0.85rem; }
-        .otp-input { font-size: 1.2rem; padding: 14px; }
+    .auth-card {
+        padding: 35px 25px;
+        border-radius: var(--radius-lg);
     }
+
+    .auth-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .auth-header p {
+        font-size: 0.85rem;
+    }
+
+    .auth-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+    }
+
+    .auth-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .form-group input {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 0 12px;
+    }
+
+    .auth-card {
+        padding: 30px 20px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .btn-primary,
+    .btn-social {
+        padding: 13px;
+        font-size: 0.9rem;
+    }
+
+    .auth-switch {
+        margin-top: 20px;
+        font-size: 0.85rem;
+    }
+
+    .otp-input {
+        font-size: 1.2rem;
+        padding: 14px;
+    }
+}
 
 /* --- Django Messages / Alerts --- */
 .auth-messages {
@@ -475,6 +525,7 @@ body.auth-body::after {
         opacity: 0;
         transform: translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

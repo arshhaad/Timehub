@@ -41,6 +41,8 @@ services:
       - DB_PASSWORD="0909"
       - DB_HOST=db
       - DB_PORT=5432
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
 
   nginx:
     image: nginx:latest

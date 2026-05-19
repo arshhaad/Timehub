@@ -133,6 +133,16 @@
             animation: letterIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
+        /* Mobile Loader Responsive */
+        @media (max-width: 480px) {
+            .th-card { gap: 14px; }
+            .th-clock { width: 38px; height: 38px; }
+            .th-face { width: 27px; height: 27px; }
+            .th-face svg { width: 16px; height: 16px; }
+            .th-letter { font-size: 19px; letter-spacing: 0.5px; }
+            .th-dot { width: 4px; height: 4px; }
+        }
+
         @keyframes letterIn {
             to {
                 opacity: 1;
@@ -1906,6 +1916,11 @@
         function hideLoader() {
             if (loader) loader.classList.remove('active');
         }
+
+        // Hide immediately if coming from bfcache (browser back/forward)
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) hideLoader();
+        });
 
         let fallbackTimeout = setTimeout(hideLoader, 5000);
 
