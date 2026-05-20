@@ -2492,6 +2492,7 @@
                 {% for message in messages %}
                     showToast("{{ message|escapejs }}", "{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}");
                 {% endfor %}
+            {% endif %}
         });
     </script>
 

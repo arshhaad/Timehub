@@ -231,8 +231,17 @@ def checkout_page(request):
     category_offer_savings = Decimal('0')
 
     for item in items:
-        base_price = item.variant.effective_price if item.variant else item.product.price
-        discounted = item.variant.display_price if item.variant else item.product.display_price
+        base_price = (
+            item.variant.effective_price
+            if item.variant and item.variant.effective_price
+            else item.product.price
+        )
+
+        discounted = (
+            item.variant.display_price
+            if item.variant and item.variant.display_price
+            else item.product.display_price
+        )
         saving_per_unit = max(Decimal('0'), base_price - discounted)
         if saving_per_unit > 0:
             # Determine whether the best offer is product-level or category-level
