@@ -1231,17 +1231,33 @@
             border-color: rgba(239, 68, 68, 0.2);
         }
 
-        @media (max-width: 1024px) {
-            .mobile-bottom-nav { display: block; }
-            body { padding-bottom: 75px; }
-        }1);
-            border-color: rgba(239,68,68,0.2);
-            color: #ef4444;
+        /* PREMIUM MOBILE STICKY ACTIONS */
+        .mobile-sticky-actions {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(9, 9, 12, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10001;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: space-between;
         }
 
         @media (max-width: 1024px) {
-            .mobile-bottom-nav { display: block; }
-            body { padding-bottom: 75px; }
+            .mobile-sticky-actions {
+                display: flex !important;
+            }
+            .mobile-bottom-nav {
+                display: none !important;
+            }
+            body {
+                padding-bottom: 85px !important;
+            }
         }
     </style>
 </head>
@@ -1856,25 +1872,32 @@
         </div><!-- end tabs-container -->
     </div><!-- end container -->
     <!-- Mobile Sticky Actions -->
-        <div class="mobile-sticky-actions" style="padding: 12px 15px 25px; gap: 8px;">
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-right: 8px; border-right: 1px solid var(--border-color); margin-right: 2px; flex-shrink: 0;">
-                <div style="font-size: 1rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.display_price }}</div>
-                <div style="font-size: 0.65rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.has_offer or product.discount_price %}₹{{ product.price }}{% endif %}</div>
-            </div>
-            
-            <button class="btn btn-outline" style="flex: 0 0 38px; padding: 0; min-width: 38px; height: 44px; border-radius: 10px;" onclick="toggleWishlist(event, '{{ product.uuid }}', document.querySelector('.wishlist-btn'))">
-                <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="color: {% if is_in_wishlist %}#ff4757{% else %}inherit{% endif %}; font-size: 0.9rem;"></i>
-            </button>
-
-            <div style="display: flex; gap: 6px; flex: 1;">
-                <button class="btn btn-outline add-cart-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.addToCart('{{ product.uuid }}')" id="sticky-cart-btn" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
-                    Cart
-                </button>
-                <button class="btn btn-primary buy-now-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.buyNow('{{ product.uuid }}')" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
-                    Buy Now
-                </button>
-            </div>
+    <div class="mobile-sticky-actions" style="padding: 12px 15px 25px; gap: 8px;">
+        <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-right: 8px; border-right: 1px solid var(--border-color); margin-right: 2px; flex-shrink: 0;">
+            <div style="font-size: 1rem; font-weight: 800; color: #fff;" id="sticky-price">₹{{ product.display_price }}</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-decoration: line-through;" id="sticky-old-price">{% if product.has_offer or product.discount_price %}₹{{ product.price }}{% endif %}</div>
         </div>
+        
+        <button class="btn btn-outline" style="flex: 0 0 38px; padding: 0; min-width: 38px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center;" onclick="toggleWishlist(event, '{{ product.uuid }}', document.querySelector('.wishlist-btn'))">
+            <i class="{% if is_in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="color: {% if is_in_wishlist %}#ff4757{% else %}inherit{% endif %}; font-size: 0.9rem;"></i>
+        </button>
+
+        <a href="{% url 'cart_view' %}" class="btn btn-outline" style="flex: 0 0 38px; padding: 0; min-width: 38px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #6b7280; position: relative;">
+            <i class="fas fa-shopping-cart" style="font-size: 0.9rem;"></i>
+            {% if cart_count %}
+            <span style="position: absolute; top: -5px; right: -5px; background: var(--primary-color); color: #000; font-size: 0.55rem; font-weight: 800; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">{{ cart_count }}</span>
+            {% endif %}
+        </a>
+
+        <div style="display: flex; gap: 6px; flex: 1;">
+            <button class="btn btn-outline add-cart-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.addToCart('{{ product.uuid }}', this)" id="sticky-cart-btn" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
+                Cart
+            </button>
+            <button class="btn btn-primary buy-now-btn" style="flex: 1; border-radius: 10px; height: 44px; font-size: 0.8rem; padding: 0;" onclick="window.buyNow('{{ product.uuid }}', this)" {% if not product.is_active or product.stock == 0 %}disabled{% endif %}>
+                Buy Now
+            </button>
+        </div>
+    </div>
 
 
 
@@ -2676,8 +2699,8 @@
         };
 
         // --- Buy Now Logic ---
-        window.buyNow = function(productId) {
-            const btn = document.querySelector('.buy-now-btn');
+        window.buyNow = function(productId, btnElement = null) {
+            const btn = btnElement || document.querySelector('.buy-now-btn');
             if(btn.disabled) return;
             const originalHtml = btn.innerHTML;
             const quantity = document.getElementById('qtyInput')?.value || 1;
@@ -2913,6 +2936,12 @@
             setTimeout(hideLoader, 500);
         });
 
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                hideLoader();
+            }
+        });
+
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link && link.href && 
@@ -2956,20 +2985,10 @@
                 <i class="fas fa-heart"></i>
                 <span>Wishlist</span>
             </a>
-            <a href="{% url 'account_edit' %}" class="mobile-nav-item {% if '/security/' in request.path or '/account-edit/' in request.path %}active{% endif %}">
-                <i class="fas fa-shield-halved"></i>
-                <span>Security</span>
-            </a>
             <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% if '/dashboard/' in request.path or '/profile/' in request.path or '/wallet/' in request.path or '/addresses/' in request.path or '/notifications/' in request.path %}active{% endif %}">
                 <i class="fas fa-circle-user"></i>
                 <span>Account</span>
             </a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="mobile-nav-item logout-btn">
-                <i class="fas fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </a>
-            {% endif %}
         </div>
     </nav>
 

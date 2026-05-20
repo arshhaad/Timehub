@@ -813,13 +813,17 @@
         }
 
         /* ORDER SUMMARY SIDEBAR */
+        .checkout-right {
+            position: sticky;
+            top: 100px;
+            height: max-content;
+        }
+
         .summary-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 28px;
-            position: sticky;
-            top: 100px;
         }
 
         .summary-title {
@@ -1349,8 +1353,8 @@
         @media (max-width: 992px) {
             .nav-links { display: none; }
             .checkout-grid { grid-template-columns: 1fr; }
-            .summary-card { position: static; margin-bottom: 30px; }
-            .checkout-right { order: -1; }
+            .checkout-right { order: -1; position: static; }
+            .summary-card { margin-bottom: 30px; }
             .page-header h1 { font-size: 2rem; }
             .secure-badge { display: none; }
         }

@@ -3490,6 +3490,12 @@
             setTimeout(hideLoader, 500);
         });
 
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                hideLoader();
+            }
+        });
+
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link && link.href &&
@@ -3534,20 +3540,10 @@
                 <i class="fas fa-heart"></i>
                 <span>Wishlist</span>
             </a>
-            <a href="{% url 'account_edit' %}" class="mobile-nav-item {% if '/security/' in request.path or '/account-edit/' in request.path %}active{% endif %}">
-                <i class="fas fa-shield-halved"></i>
-                <span>Security</span>
-            </a>
             <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% if '/dashboard/' in request.path or '/profile/' in request.path or '/wallet/' in request.path or '/addresses/' in request.path or '/notifications/' in request.path %}active{% endif %}">
                 <i class="fas fa-circle-user"></i>
                 <span>Account</span>
             </a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="mobile-nav-item logout-btn">
-                <i class="fas fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </a>
-            {% endif %}
         </div>
     </nav>
 

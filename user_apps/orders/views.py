@@ -217,6 +217,14 @@ def checkout_page(request):
                 f"Sorry, the selected variant for '{item.product.name}' is no longer available.",
             )
             return redirect('cart_view')
+        
+        available_stock = item.variant.stock if item.variant else item.product.stock
+        if available_stock < item.quantity:
+            messages.error(
+                request,
+                f"Sorry, only {available_stock} units of '{item.product.name}' are available."
+            )
+            return redirect('cart_view')
 
     # --- Price calculations ---
     # display_price already reflects any active product/category offers
@@ -319,6 +327,10 @@ def checkout_page(request):
         address_id = request.POST.get('address_id')
         payment_method = request.POST.get('payment_method', 'cod')
 
+        if payment_method not in ['cod', 'wallet', 'razorpay']:
+            messages.error(request, 'Invalid payment method selected.')
+            return render(request, 'checkout_page.html', render_ctx)
+
         if not address_id:
             messages.error(request, 'Please select a delivery address.')
             return render(request, 'checkout_page.html', render_ctx)
@@ -346,8 +358,7 @@ def checkout_page(request):
                 if payment_method == 'wallet':
                     wallet, _ = Wallet.objects.get_or_create(user=request.user)
                     if wallet.balance < total:
-                        messages.error(request, 'Insufficient wallet balance.')
-                        return render(request, 'checkout_page.html', render_ctx)
+                        raise Exception('Insufficient wallet balance.')
                     wallet.balance -= total
                     wallet.save()
 
