@@ -231,6 +231,13 @@ def checkout_page(request):
     subtotal = sum(item.total_price for item in items)
     total_quantity = sum(item.quantity for item in items)
 
+    if subtotal == 20000 and total_quantity >= 1:
+        if payment_method == 'cod':
+            messages.error(
+                request,
+                f"Sorry, only not able to {payment_method} of '{item.product.price}'must be  under 20000."
+            )
+
     # How much the customer saved from product-specific offers (display only)
     from django.utils import timezone as _tz
     _now = _tz.now()
