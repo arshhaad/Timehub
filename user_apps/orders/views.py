@@ -231,12 +231,7 @@ def checkout_page(request):
     subtotal = sum(item.total_price for item in items)
     total_quantity = sum(item.quantity for item in items)
 
-    if subtotal == 20000 and total_quantity >= 1:
-        if payment_method == 'cod':
-            messages.error(
-                request,
-                f"Sorry, only not able to {payment_method} of '{item.product.price}'must be  under 20000."
-            )
+
 
     # How much the customer saved from product-specific offers (display only)
     from django.utils import timezone as _tz
@@ -333,6 +328,10 @@ def checkout_page(request):
     if request.method == 'POST':
         address_id = request.POST.get('address_id')
         payment_method = request.POST.get('payment_method', 'cod')
+        # Validate COD for high subtotal
+        if payment_method == 'cod' and subtotal > 30000:
+            messages.error(request, "Sorry, COD payment is not allowed for orders exceeding ₹20,000.")
+            return render(request, 'checkout_page.html', render_ctx)
 
         if payment_method not in ['cod', 'wallet', 'razorpay']:
             messages.error(request, 'Invalid payment method selected.')
