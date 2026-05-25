@@ -301,24 +301,24 @@ def toggle_compare_mode(request):
 @never_cache
 def product_details(request, product_uuid):
     product = get_object_or_404(Product, uuid=product_uuid)
-    
+
     # Check if the product is active or if its collection/itself is deleted
     if not product.is_active or product.is_deleted or (product.collection and product.collection.is_deleted):
         messages.error(request, "This product is currently unavailable or has been removed.")
         return redirect('product_listing')
-        
+
     # Get additional images
     images = product.images.all()
-    
+
     # Process features for the specifications tab
     features_list = []
     if product.features:
         features_list = [f.strip() for f in product.features.split(',')]
-        
+
     # --- Content-Based Recommendation Engine (Cached) ---
     cache_key = f'product_recommendations_{product.id}'
     related_products = cache.get(cache_key)
-    
+
     if related_products is None:
         candidates = (
             Product.objects
@@ -326,11 +326,10 @@ def product_details(request, product_uuid):
             .exclude(id=product.id)
             .select_related('collection')
         )
-        
+
         scored_candidates = []
         for candidate in candidates:
             score = 0
-            
             if candidate.collection_id == product.collection_id:
                 score += 3
             if candidate.brand == product.brand:
@@ -343,52 +342,61 @@ def product_details(request, product_uuid):
                 score += 1
             if candidate.function == product.function:
                 score += 1
-                
             scored_candidates.append((score, candidate))
-        
+
         scored_candidates.sort(key=lambda x: (x[0], x[1].rating or 0), reverse=True)
         related_products = [item[1] for item in scored_candidates[:4]]
-        
+
         # Cache for 30 minutes
         cache.set(cache_key, related_products, 60 * 30)
-    
+
     MAX_QTY = 10
-    savings = 0
-    if product.discount_price:
-        savings = product.price - product.discount_price
+
+    # ─────────────────────────────────────────────────────────────────────
+    # BUG FIX #4 & #6: Previously `savings` was computed twice:
+    #   1. Before the context dict  →  product.price - product.discount_price
+    #   2. At the end of the view   →  product.price - product.display_price  (overwrote #1)
+    #
+    # The first computation was dead code — it was placed into context then
+    # immediately overwritten.  More importantly, #1 ignored active offers
+    # (product_offer / category_offer) and could differ from the real
+    # displayed savings.  #2 is correct because `display_price` already
+    # accounts for all active offers.
+    #
+    # Fix: compute savings ONCE using display_price, clamped to >= 0 so
+    # products with no discount never show a negative value.
+    # ─────────────────────────────────────────────────────────────────────
+    savings = max(0, product.price - product.display_price)
+
     # Get active variants
     active_variants = product.variants.filter(is_active=True).order_by('id')
-    
+
     # Extract unique attributes for professional selection
     strap_colors = []
+    materials    = []
+    dial_colors  = []
 
-    materials = []
-    dial_colors = []
-    
-    seen_strap = set()
+    seen_strap    = set()
     seen_material = set()
-    seen_dial = set()
-    
-    # Try to map color names to hex codes from Color model
+    seen_dial     = set()
+
     from user_apps.core.models import Color
     color_map = {c.name.lower(): c.hex_code for c in Color.objects.all()}
-    
+
     for v in active_variants:
         if v.strap_color and v.strap_color.strip().lower() not in seen_strap:
             c_name = v.strap_color.strip()
             strap_colors.append({
                 'name': c_name,
-                'hex': color_map.get(c_name.lower(), '#888') # Default gray if not found
+                'hex': color_map.get(c_name.lower(), '#888')
             })
             seen_strap.add(c_name.lower())
-            
 
-            
         if v.strap_material and v.strap_material.strip().lower() not in seen_material:
             m_name = v.strap_material.strip()
             materials.append(m_name)
             seen_material.add(m_name.lower())
-            
+
         if v.dial_color and v.dial_color.strip().lower() not in seen_dial:
             d_name = v.dial_color.strip()
             dial_colors.append({
@@ -399,14 +407,14 @@ def product_details(request, product_uuid):
 
     # Add reviews
     reviews = product.reviews.all().order_by('-created_at')
-    
+
     context = {
         'product': product,
         'images': images,
         'features_list': features_list,
         'related_products': related_products,
         'MAX_QTY': MAX_QTY,
-        'savings': savings,
+        'savings': savings,          # ← single, correct value (display_price based)
         'active_variants': active_variants,
         'strap_colors': strap_colors,
         'dial_colors': dial_colors,
@@ -418,33 +426,39 @@ def product_details(request, product_uuid):
     if request.user.is_authenticated:
         from user_apps.core.models import WishlistItem, OrderItem
         from admin_apps.offers.models import Coupon
-        
-        is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
+
+        is_in_wishlist = WishlistItem.objects.filter(
+            wishlist__user=request.user, product=product
+        ).exists()
         context['is_in_wishlist'] = is_in_wishlist
-        
+
         can_review = OrderItem.objects.filter(
             order__user=request.user,
             order__status='Delivered',
             product=product
         ).exists()
-        
-        has_reviewed = product.reviews.filter(user=request.user).exists()
-        
-        context['can_review'] = can_review and not has_reviewed
-        context['has_reviewed'] = has_reviewed
 
-        
+        has_reviewed = product.reviews.filter(user=request.user).exists()
+
+        context['can_review']    = can_review and not has_reviewed
+        context['has_reviewed']  = has_reviewed
+
         # Get active coupons for display
-        active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=timezone.now(), valid_to__gte=timezone.now())
+        active_coupons = Coupon.objects.filter(
+            is_active=True,
+            valid_from__lte=timezone.now(),
+            valid_to__gte=timezone.now()
+        )
         context['available_coupons'] = active_coupons
 
-    # Comparison Data
+    # Comparison data
     compare_ids = request.session.get('compare_list', [])
-    context['current_compare_ids'] = [int(pid) for pid in compare_ids if str(pid).isdigit()]
-    context['current_compare_products'] = Product.objects.filter(id__in=compare_ids, is_active=True, is_deleted=False)
-    
-    # Calculate savings based on display_price
-    context['savings'] = product.price - product.display_price
+    context['current_compare_ids']      = [int(pid) for pid in compare_ids if str(pid).isdigit()]
+    context['current_compare_products'] = Product.objects.filter(
+        id__in=compare_ids, is_active=True, is_deleted=False
+    )
+
+    # NOTE: `savings` is already set correctly above — no second assignment needed.
 
     return render(request, 'product_details.html', context)
 
