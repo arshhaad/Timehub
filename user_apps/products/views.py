@@ -315,42 +315,80 @@ def product_details(request, product_uuid):
     if product.features:
         features_list = [f.strip() for f in product.features.split(',')]
         
-    # --- Content-Based Recommendation Engine (Cached) ---
-    cache_key = f'product_recommendations_{product.id}'
-    related_products = cache.get(cache_key)
-    
-    if related_products is None:
-        candidates = (
-            Product.objects
-            .filter(is_active=True, is_deleted=False)
-            .exclude(id=product.id)
-            .select_related('collection')
-        )
+    # --- Beginner-Friendly Content-Based Recommendation Engine with Redis Caching ---
+    from django.core.cache import cache
+    import logging
+    logger = logging.getLogger(__name__)
+
+    cache_key = f"product_recommendations_{product.uuid}"
+    recommended_ids = None
+    try:
+        recommended_ids = cache.get(cache_key)
+    except Exception as e:
+        logger.error(f"Redis cache error on details page: {e}")
+
+    if recommended_ids is None:
+        # Step 1: Fetch candidate products (all products that are active, not deleted, and NOT the current product)
+        candidates = Product.objects.filter(is_active=True, is_deleted=False).exclude(id=product.id)
         
+        # Step 2: Score each candidate product based on matching features
         scored_candidates = []
         for candidate in candidates:
             score = 0
             
-            if candidate.collection_id == product.collection_id:
+            # Rule A: Same collection/category is highly relevant (adds 3 points)
+            if candidate.collection == product.collection:
                 score += 3
+                
+            # Rule B: Same brand is important (adds 2 points)
             if candidate.brand == product.brand:
                 score += 2
+                
+            # Rule C: Matching target gender is important (adds 2 points)
             if candidate.gender == product.gender:
                 score += 2
+                
+            # Rule D: Matching occasion adds 1 point
             if candidate.occasion == product.occasion:
                 score += 1
+                
+            # Rule E: Matching strap material adds 1 point
             if candidate.strap_material and candidate.strap_material == product.strap_material:
                 score += 1
+                
+            # Rule F: Matching watch function/movement type adds 1 point
             if candidate.function == product.function:
                 score += 1
                 
+            # Store the calculated score along with the candidate watch
             scored_candidates.append((score, candidate))
         
-        scored_candidates.sort(key=lambda x: (x[0], x[1].rating or 0), reverse=True)
-        related_products = [item[1] for item in scored_candidates[:4]]
+        # Step 3: Sort candidates by score (highest first). Use rating as a tie-breaker.
+        scored_candidates.sort(key=lambda x: (x[0], x[1].rating), reverse=True)
         
-        # Cache for 30 minutes
-        cache.set(cache_key, related_products, 60 * 30)
+        # Step 4: Keep only the top 4 recommended watches
+        related_products = [item[1] for item in scored_candidates[:4]]
+        recommended_ids = [p.id for p in related_products]
+        try:
+            cache.set(cache_key, recommended_ids, timeout=86400)
+        except Exception as e:
+            logger.error(f"Redis cache set error on details page: {e}")
+
+    # Fetch product details for the cached IDs, preserving the sorted order
+    related_products = list(Product.objects.filter(id__in=recommended_ids, is_active=True, is_deleted=False))
+    preserved = {pid: pos for pos, pid in enumerate(recommended_ids)}
+    related_products.sort(key=lambda p: preserved.get(p.id, 999))
+
+    # Pad if we have less than 4 items (e.g. if some got deleted or deactivated)
+    if len(related_products) < 4:
+        needed = 4 - len(related_products)
+        exclude_ids = [p.id for p in related_products] + [product.id]
+        fallbacks = Product.objects.filter(
+            is_active=True, is_deleted=False
+        ).exclude(id__in=exclude_ids).order_by('-rating', '-created_at')[:needed]
+        related_products.extend(list(fallbacks))
+
+    # this is recomations side view 
     
     MAX_QTY = 10
     savings = 0
@@ -412,15 +450,25 @@ def product_details(request, product_uuid):
         'dial_colors': dial_colors,
         'materials': materials,
         'reviews': reviews,
+        'cart_count': 0,
+        'is_in_wishlist': False,
     }
 
     # Add wishlist status and review permission
     if request.user.is_authenticated:
-        from user_apps.core.models import WishlistItem, OrderItem
+        from user_apps.core.models import WishlistItem, OrderItem, CartItem
         from admin_apps.offers.models import Coupon
+        from django.db.models import Sum
         
         is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
         context['is_in_wishlist'] = is_in_wishlist
+
+        # Cart count for header badge
+        cart_count = (
+            CartItem.objects.filter(cart__user=request.user)
+            .aggregate(Sum('quantity'))['quantity__sum'] or 0
+        )
+        context['cart_count'] = cart_count
         
         can_review = OrderItem.objects.filter(
             order__user=request.user,
