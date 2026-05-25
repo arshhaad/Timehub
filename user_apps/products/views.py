@@ -315,11 +315,49 @@ def product_details(request, product_uuid):
     if product.features:
         features_list = [f.strip() for f in product.features.split(',')]
         
-    # Get related products (same collection or same brand, active and not deleted, max 4)
-    related_products = Product.objects.filter(
-        Q(collection=product.collection) | Q(brand=product.brand),
-        is_active=True, is_deleted=False
-    ).exclude(id=product.id).distinct()[:4]
+    # --- Beginner-Friendly Content-Based Recommendation Engine ---
+    # Step 1: Fetch candidate products (all products that are active, not deleted, and NOT the current product)
+    candidates = Product.objects.filter(is_active=True, is_deleted=False).exclude(id=product.id)
+    
+    # Step 2: Score each candidate product based on matching features
+    scored_candidates = []
+    for candidate in candidates:
+        score = 0
+        
+        # Rule A: Same collection/category is highly relevant (adds 3 points)
+        if candidate.collection == product.collection:
+            score += 3
+            
+        # Rule B: Same brand is important (adds 2 points)
+        if candidate.brand == product.brand:
+            score += 2
+            
+        # Rule C: Matching target gender is important (adds 2 points)
+        if candidate.gender == product.gender:
+            score += 2
+            
+        # Rule D: Matching occasion adds 1 point
+        if candidate.occasion == product.occasion:
+            score += 1
+            
+        # Rule E: Matching strap material adds 1 point
+        if candidate.strap_material and candidate.strap_material == product.strap_material:
+            score += 1
+            
+        # Rule F: Matching watch function/movement type adds 1 point
+        if candidate.function == product.function:
+            score += 1
+            
+        # Store the calculated score along with the candidate watch
+        scored_candidates.append((score, candidate))
+    
+    # Step 3: Sort candidates by score (highest first). Use rating as a tie-breaker.
+    scored_candidates.sort(key=lambda x: (x[0], x[1].rating), reverse=True)
+    
+    # Step 4: Keep only the top 4 recommended watches
+    related_products = [item[1] for item in scored_candidates[:4]]
+
+    # this is recomations side view 
     
     MAX_QTY = 10
     savings = 0

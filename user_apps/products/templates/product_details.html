@@ -792,6 +792,7 @@
         .nav-arrow:hover { background: var(--primary-color); border-color: var(--primary-color); color: #000; }
 
         /* PRODUCT CARD - Copied from listing */
+        .highlights-section ul { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
         .product-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 25px; border: 1px solid var(--border-color); transition: var(--transition); position: relative; display: flex; flex-direction: column; }
         .product-card:hover { transform: translateY(-10px); border-color: var(--primary-color); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
@@ -835,6 +836,7 @@
 
         @media (max-width: 768px) {
             .nav-links { display: none; }
+            .dashboard-header { padding: 15px 20px; }
             .mobile-toggle { display: block; }
             .breadcrumb-wrap { flex-direction: column; align-items: flex-start; gap: 15px; }
             .product-title { font-size: 2rem; }
@@ -1475,7 +1477,7 @@
                 {% if features_list %}
                 <div class="highlights-section" style="margin-bottom: 20px;">
                     <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">Product Highlights</h4>
-                    <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <ul>
                         {% for feature in features_list %}
                         <li style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
                             <i class="fas fa-check-circle" style="color: var(--primary-color); font-size: 0.75rem;"></i>
@@ -1831,7 +1833,7 @@
                 </div>
             </div>
             
-            <div class="product-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;">
+            <div class="product-grid">
                 {% for related in related_products %}
                 <a href="{% url 'product_details' product_uuid=related.uuid %}" class="product-card {% if not related.is_active or related.stock == 0 %}is-unavailable{% endif %}" style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); position: relative; transition: var(--transition); display: block; text-decoration: none; color: inherit;">
                     {% if not related.is_active or related.stock == 0 %}
