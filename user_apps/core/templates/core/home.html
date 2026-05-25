@@ -68,9 +68,7 @@
         }
 
         @keyframes spinArc {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
         .th-face {
@@ -101,13 +99,8 @@
         }
 
         @keyframes rotHand {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
         }
 
         .th-text {
@@ -133,10 +126,7 @@
         }
 
         @keyframes letterIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .th-dots {
@@ -154,63 +144,34 @@
             animation: dotPulse 0.8s ease-in-out infinite;
         }
 
-        .th-dot:nth-child(2) {
-            animation-delay: 0.15s;
-        }
-
-        .th-dot:nth-child(3) {
-            animation-delay: 0.3s;
-        }
+        .th-dot:nth-child(2) { animation-delay: 0.15s; }
+        .th-dot:nth-child(3) { animation-delay: 0.3s; }
 
         @keyframes dotPulse {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.3);
-            }
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50%       { opacity: 1;   transform: scale(1.3); }
         }
 
         @media (max-width: 480px) {
-            .th-card {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .th-clock {
-                width: 40px;
-                height: 40px;
-            }
-            .th-face {
-                width: 28px;
-                height: 28px;
-            }
-            .th-face svg {
-                width: 18px;
-                height: 18px;
-            }
-            .th-letter {
-                font-size: 20px;
-            }
+            .th-card  { flex-direction: column; gap: 15px; }
+            .th-clock { width: 40px; height: 40px; }
+            .th-face  { width: 28px; height: 28px; }
+            .th-face svg { width: 18px; height: 18px; }
+            .th-letter  { font-size: 20px; }
         }
 
         :root {
-            --bg-color: #0b0b0e;
-            --bg-card: #15151a;
-            --bg-card-hover: #1c1c23;
-            --text-main: #ffffff;
-            --text-muted: #9ca3af;
-            --primary-color: #f98822;
-            /* Premium Orange/Gold */
-            --primary-hover: #e07a1b;
-            --border-color: #27272a;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-color:       #0b0b0e;
+            --bg-card:        #15151a;
+            --bg-card-hover:  #1c1c23;
+            --text-main:      #ffffff;
+            --text-muted:     #9ca3af;
+            --primary-color:  #f98822;
+            --primary-hover:  #e07a1b;
+            --border-color:   #27272a;
+            --radius-md:      12px;
+            --radius-lg:      20px;
+            --transition:     all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Premium Toast Notifications */
@@ -248,38 +209,17 @@
             text-align: left;
         }
 
-        .toast.active {
-            transform: translateX(0);
-        }
+        .toast.active { transform: translateX(0); }
+        .toast i { font-size: 1.2rem; flex-shrink: 0; }
 
-        .toast i {
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
+        .toast-error   { border-left: 4px solid #ef4444; }
+        .toast-error i { color: #ef4444; }
 
-        .toast-error {
-            border-left: 4px solid #ef4444;
-        }
+        .toast-success   { border-left: 4px solid #22c55e; }
+        .toast-success i { color: #22c55e; }
 
-        .toast-error i {
-            color: #ef4444;
-        }
-
-        .toast-success {
-            border-left: 4px solid #22c55e;
-        }
-
-        .toast-success i {
-            color: #22c55e;
-        }
-
-        .toast-info {
-            border-left: 4px solid #f98822;
-        }
-
-        .toast-info i {
-            color: #f98822;
-        }
+        .toast-info   { border-left: 4px solid #f98822; }
+        .toast-info i { color: #f98822; }
 
         .toast::after {
             content: '';
@@ -294,26 +234,13 @@
         }
 
         @keyframes toast-progress {
-            from {
-                transform: scaleX(1);
-            }
-
-            to {
-                transform: scaleX(0);
-            }
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
         }
 
-        .toast-error::after {
-            background: #ef4444;
-        }
-
-        .toast-success::after {
-            background: #22c55e;
-        }
-
-        .toast-info::after {
-            background: #f98822;
-        }
+        .toast-error::after   { background: #ef4444; }
+        .toast-success::after { background: #22c55e; }
+        .toast-info::after    { background: #f98822; }
 
         .badge-offer-inline {
             display: inline-flex;
@@ -346,13 +273,11 @@
             font-family: 'DM Sans', sans-serif;
         }
 
-        /* Headings, prices, quotes → Cormorant Garamond */
         h1, h2, h3, h4, h5, h6,
         .logo, .price, blockquote {
             font-family: 'Cormorant Garamond', serif;
         }
 
-        /* Labels, buttons, nav, badges → Syne */
         .btn, .nav-links a, .logo,
         .hero-badge, .badge-offer-inline,
         .section-label, .round-cat-name,
@@ -360,9 +285,7 @@
             font-family: 'Syne', sans-serif;
         }
 
-        ul {
-            list-style: none;
-        }
+        ul { list-style: none; }
 
         a {
             text-decoration: none;
@@ -487,10 +410,7 @@
             box-shadow: 0 4px 15px rgba(249, 136, 34, 0.3);
         }
 
-        .nav-links {
-            display: flex;
-            gap: 35px;
-        }
+        .nav-links { display: flex; gap: 35px; }
 
         .nav-links a {
             font-size: 0.8rem;
@@ -501,9 +421,7 @@
             letter-spacing: 1.2px;
         }
 
-        .nav-links a:hover {
-            color: var(--primary-color);
-        }
+        .nav-links a:hover { color: var(--primary-color); }
 
         .nav-actions {
             display: flex;
@@ -517,9 +435,7 @@
             cursor: pointer;
         }
 
-        .icon-btn:hover {
-            color: var(--primary-color);
-        }
+        .icon-btn:hover { color: var(--primary-color); }
 
         /* HERO SECTION */
         .hero {
@@ -548,10 +464,7 @@
 
         .hero-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(to bottom, rgba(11, 11, 14, 0.4) 0%, #0b0b0e 100%);
             z-index: -1;
         }
@@ -620,7 +533,7 @@
             justify-content: flex-start;
         }
 
-        /* ROUND PREMIUM CATEGORIES (STUNNING PREMIUM WHITE THEME & HORIZONTAL SCROLL) */
+        /* ROUND PREMIUM CATEGORIES */
         .premium-categories {
             padding: 100px 0;
             background: #ffffff;
@@ -657,9 +570,7 @@
             margin-top: 20px;
         }
 
-        .round-cat-grid::-webkit-scrollbar {
-            display: none;
-        }
+        .round-cat-grid::-webkit-scrollbar { display: none; }
 
         .round-cat-item {
             flex: 0 0 auto;
@@ -700,9 +611,7 @@
             transition: var(--transition);
         }
 
-        .round-cat-item:hover img {
-            transform: scale(1.1);
-        }
+        .round-cat-item:hover img { transform: scale(1.1); }
 
         .round-cat-name {
             font-family: 'Syne', sans-serif;
@@ -721,25 +630,13 @@
         }
 
         @media (max-width: 768px) {
-            .round-cat-img-wrap {
-                width: 160px;
-                height: 160px;
-            }
-
-            .round-cat-item {
-                width: 160px;
-            }
-
-            .round-cat-name {
-                font-size: 1rem;
-                letter-spacing: 2px;
-            }
+            .round-cat-img-wrap { width: 160px; height: 160px; }
+            .round-cat-item     { width: 160px; }
+            .round-cat-name     { font-size: 1rem; letter-spacing: 2px; }
         }
 
         /* PRODUCT SECTIONS */
-        .products-section {
-            padding: 80px 0;
-        }
+        .products-section { padding: 80px 0; }
 
         .card-grid {
             display: grid;
@@ -779,9 +676,7 @@
             transition: var(--transition);
         }
 
-        .product-card:hover img {
-            transform: scale(1.1);
-        }
+        .product-card:hover img { transform: scale(1.1); }
 
         .card-badge {
             position: absolute;
@@ -812,10 +707,7 @@
             z-index: 20;
         }
 
-        .wish-btn:hover {
-            background: #ff4757;
-            color: #fff;
-        }
+        .wish-btn:hover { background: #ff4757; color: #fff; }
 
         .rating {
             color: #f1c40f;
@@ -823,15 +715,9 @@
             margin-bottom: 8px;
         }
 
-        .wish-btn.active {
-            background: #ff4757;
-            color: #fff;
-        }
+        .wish-btn.active { background: #ff4757; color: #fff; }
 
-        .product-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-        }
+        .product-card h3 { font-size: 1.1rem; margin-bottom: 12px; }
 
         .price-wrap {
             display: flex;
@@ -840,11 +726,7 @@
             margin-bottom: 20px;
         }
 
-        .price {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #fff;
-        }
+        .price { font-size: 1.2rem; font-weight: 800; color: #fff; }
 
         .old-price {
             color: var(--text-muted);
@@ -881,11 +763,7 @@
             gap: 60px;
         }
 
-        .flash-timer {
-            display: flex;
-            gap: 20px;
-            margin: 30px 0;
-        }
+        .flash-timer { display: flex; gap: 20px; margin: 30px 0; }
 
         .timer-unit {
             background: rgba(255, 255, 255, 0.05);
@@ -923,9 +801,7 @@
             gap: 40px;
         }
 
-        .trust-item {
-            text-align: center;
-        }
+        .trust-item { text-align: center; }
 
         .trust-item i {
             font-size: 2.5rem;
@@ -933,20 +809,11 @@
             margin-bottom: 20px;
         }
 
-        .trust-item h4 {
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .trust-item p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
+        .trust-item h4 { margin-bottom: 10px; font-size: 1.1rem; }
+        .trust-item p  { color: var(--text-muted); font-size: 0.9rem; }
 
         /* TESTIMONIALS */
-        .testimonials {
-            padding: 100px 0;
-        }
+        .testimonials { padding: 100px 0; }
 
         .testi-grid {
             display: grid;
@@ -968,17 +835,8 @@
             margin-top: 30px;
         }
 
-        .testi-user img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .testi-info h5 {
-            font-size: 1rem;
-            margin-bottom: 2px;
-        }
+        .testi-user img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .testi-info h5 { font-size: 1rem; margin-bottom: 2px; }
 
         .testi-info p {
             font-size: 0.75rem;
@@ -990,9 +848,7 @@
         }
 
         /* NEWSLETTER */
-        .newsletter {
-            padding: 80px 0;
-        }
+        .newsletter { padding: 80px 0; }
 
         .news-wrap {
             background: var(--primary-color);
@@ -1005,10 +861,7 @@
             gap: 40px;
         }
 
-        .news-content h2 {
-            font-size: 2.4rem;
-            margin-bottom: 10px;
-        }
+        .news-content h2 { font-size: 2.4rem; margin-bottom: 10px; }
 
         .news-form {
             display: flex;
@@ -1026,10 +879,7 @@
             font-weight: 600;
         }
 
-        .news-form .btn {
-            background: #000;
-            color: #fff;
-        }
+        .news-form .btn { background: #000; color: #fff; }
 
         /* FOOTER */
         footer {
@@ -1045,20 +895,10 @@
             margin-bottom: 60px;
         }
 
-        .footer-logo {
-            margin-bottom: 25px;
-        }
+        .footer-logo { margin-bottom: 25px; }
+        .footer-desc { color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
 
-        .footer-desc {
-            color: var(--text-muted);
-            margin-bottom: 30px;
-            font-size: 0.95rem;
-        }
-
-        .socials {
-            display: flex;
-            gap: 15px;
-        }
+        .socials { display: flex; gap: 15px; }
 
         .social-icon {
             width: 40px;
@@ -1080,23 +920,10 @@
             transform: translateY(-5px);
         }
 
-        .footer-col h4 {
-            font-size: 1.2rem;
-            margin-bottom: 25px;
-        }
-
-        .footer-col li {
-            margin-bottom: 15px;
-        }
-
-        .footer-col a {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .footer-col a:hover {
-            color: var(--primary-color);
-        }
+        .footer-col h4    { font-size: 1.2rem; margin-bottom: 25px; }
+        .footer-col li    { margin-bottom: 15px; }
+        .footer-col a     { color: var(--text-muted); font-size: 0.9rem; }
+        .footer-col a:hover { color: var(--primary-color); }
 
         .footer-bottom {
             border-top: 1px solid var(--border-color);
@@ -1108,152 +935,60 @@
             font-size: 0.85rem;
         }
 
-        .payments {
-            display: flex;
-            gap: 15px;
-            font-size: 1.5rem;
-        }
+        .payments { display: flex; gap: 15px; font-size: 1.5rem; }
 
-        /* RESPONSIVE DESIGN */
+        /* RESPONSIVE */
         @media (max-width: 1200px) {
-            .hero-content h1 {
-                font-size: 3.5rem;
-            }
-            .trust-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .testi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .hero-content h1 { font-size: 3.5rem; }
+            .trust-grid      { grid-template-columns: repeat(3, 1fr); }
+            .testi-grid      { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 992px) {
-            .nav-links {
-                display: none;
-            }
-            .mobile-toggle {
-                display: block;
-            }
-            .hero {
-                flex-direction: column;
-                text-align: center;
-                padding-top: 150px;
-            }
-            .hero-container {
-                flex-direction: column;
-            }
-            .hero-content {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                margin-bottom: 60px;
-                text-align: center;
-            }
-            .hero-content p {
-                margin: 0 auto 40px;
-            }
-            .hero-buttons {
-                justify-content: center;
-            }
-            .hero-image {
-                justify-content: center;
-            }
-            .hero-image img {
-                max-width: 80%;
-                transform: rotate(0);
-            }
-            .hero-content h1 {
-                font-size: 3rem;
-            }
-            .trust-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 40px;
-            }
-            .news-wrap {
-                flex-direction: column;
-                text-align: center;
-                padding: 40px 20px;
-            }
-            .referral-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 40px;
-            }
-            .ref-content p {
-                margin: 0 auto 40px;
-            }
-            .ref-rewards-grid {
-                max-width: 600px;
-                margin: 0 auto 40px;
-            }
-            .ref-image {
-                display: none;
-            }
+            .nav-links      { display: none; }
+            .mobile-toggle  { display: block; }
+            .hero           { flex-direction: column; text-align: center; padding-top: 150px; }
+            .hero-container { flex-direction: column; }
+            .hero-content   { display: flex; flex-direction: column; align-items: center; margin-bottom: 60px; text-align: center; }
+            .hero-content p { margin: 0 auto 40px; }
+            .hero-buttons   { justify-content: center; }
+            .hero-image     { justify-content: center; }
+            .hero-image img { max-width: 80%; transform: rotate(0); }
+            .hero-content h1 { font-size: 3rem; }
+            .trust-grid     { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid    { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+            .news-wrap      { flex-direction: column; text-align: center; padding: 40px 20px; }
+            .referral-container { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+            .ref-content p  { margin: 0 auto 40px; }
+            .ref-rewards-grid { max-width: 600px; margin: 0 auto 40px; }
+            .ref-image      { display: none; }
         }
 
         @media (max-width: 768px) {
-            .section-header h2 {
-                font-size: 2rem;
-            }
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-            .hero-buttons {
-                flex-direction: column;
-                width: 100%;
-                gap: 15px;
-            }
-            .hero-buttons .btn {
-                width: 100%;
-            }
-            .testi-grid {
-                grid-template-columns: 1fr;
-            }
-            .trust-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-            .news-form {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .news-form input {
-                width: 100% !important;
-                border-radius: 30px !important;
-            }
-            .news-form .btn {
-                width: 100%;
-            }
-            .ref-rewards-grid {
-                grid-template-columns: 1fr;
-            }
+            .section-header h2  { font-size: 2rem; }
+            .hero-content h1    { font-size: 2.5rem; }
+            .hero-buttons       { flex-direction: column; width: 100%; gap: 15px; }
+            .hero-buttons .btn  { width: 100%; }
+            .testi-grid         { grid-template-columns: 1fr; }
+            .trust-grid         { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid        { grid-template-columns: 1fr; }
+            .news-form          { flex-direction: column; gap: 15px; }
+            .news-form input    { width: 100% !important; border-radius: 30px !important; }
+            .news-form .btn     { width: 100%; }
+            .ref-rewards-grid   { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 480px) {
-            .hero-content h1 {
-                font-size: 2rem;
-            }
-            .trust-grid {
-                grid-template-columns: 1fr;
-            }
-            .section-header p {
-                font-size: 0.9rem;
-            }
-            .news-wrap h2 {
-                font-size: 1.8rem;
-            }
+            .hero-content h1 { font-size: 2rem; }
+            .trust-grid      { grid-template-columns: 1fr; }
+            .section-header p { font-size: 0.9rem; }
+            .news-wrap h2    { font-size: 1.8rem; }
         }
 
-        /* MOBILE MENU STYLES */
+        /* MOBILE MENU */
         .mobile-menu {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100%;
             height: 100vh;
             background: rgba(11, 11, 14, 0.98);
@@ -1268,10 +1003,7 @@
             transition: var(--transition);
         }
 
-        .mobile-menu.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .mobile-menu.active { opacity: 1; visibility: visible; }
 
         .mobile-nav-links {
             display: flex;
@@ -1284,35 +1016,23 @@
         .mobile-nav-links a {
             font-size: 1.8rem;
             font-weight: 700;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Syne', sans-serif;
             color: #fff;
         }
 
-        .mobile-nav-links a:hover {
-            color: var(--primary-color);
-        }
+        .mobile-nav-links a:hover { color: var(--primary-color); }
 
         .close-menu {
             position: absolute;
-            top: 30px;
-            right: 30px;
+            top: 30px; right: 30px;
             font-size: 2rem;
             color: var(--text-muted);
             cursor: pointer;
         }
 
-        .mobile-toggle {
-            display: none;
-            font-size: 1.5rem;
-            color: #fff;
-            cursor: pointer;
-        }
+        .mobile-toggle { display: none; font-size: 1.5rem; color: #fff; cursor: pointer; }
 
-        @media (max-width: 992px) {
-            .mobile-toggle {
-                display: block;
-            }
-        }
+        @media (max-width: 992px) { .mobile-toggle { display: block; } }
 
         /* SEARCH OVERLAY */
         .search-overlay {
@@ -1332,15 +1052,9 @@
             padding: 0 6%;
         }
 
-        .search-overlay.active {
-            top: 0;
-        }
+        .search-overlay.active { top: 0; }
 
-        .search-container {
-            width: 100%;
-            max-width: 800px;
-            position: relative;
-        }
+        .search-container { width: 100%; max-width: 800px; position: relative; }
 
         .search-input {
             width: 100%;
@@ -1372,9 +1086,7 @@
             transition: var(--transition);
         }
 
-        .search-close:hover {
-            color: var(--primary-color);
-        }
+        .search-close:hover { color: var(--primary-color); }
 
         /* REFERRAL SECTION */
         .referral-section {
@@ -1405,30 +1117,11 @@
             border: 1px solid rgba(255, 106, 0, 0.2);
         }
 
-        .ref-content h2 {
-            font-size: 3rem;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 24px;
-        }
+        .ref-content h2 { font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 24px; }
+        .ref-content h2 span { color: var(--primary-color); }
+        .ref-content p  { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 40px; max-width: 500px; }
 
-        .ref-content h2 span {
-            color: var(--primary-color);
-        }
-
-        .ref-content p {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            max-width: 500px;
-        }
-
-        .ref-rewards-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 40px;
-        }
+        .ref-rewards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px; }
 
         .ref-reward-item {
             background: rgba(255, 255, 255, 0.03);
@@ -1448,8 +1141,7 @@
         }
 
         .ref-reward-icon {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: rgba(255, 106, 0, 0.15);
             color: var(--primary-color);
             border-radius: 12px;
@@ -1467,12 +1159,7 @@
             letter-spacing: 1px;
         }
 
-        .ref-reward-info p {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 0;
-        }
+        .ref-reward-info p { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 0; }
 
         .ref-code-box {
             display: flex;
@@ -1484,11 +1171,7 @@
             width: fit-content;
         }
 
-        .ref-code-label {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-right: 12px;
-        }
+        .ref-code-label  { font-size: 0.9rem; color: var(--text-muted); margin-right: 12px; }
 
         .ref-code-value {
             font-size: 1.1rem;
@@ -1512,15 +1195,9 @@
             gap: 8px;
         }
 
-        .copy-btn:hover {
-            background: #e05e00;
-            color: #fff;
-        }
+        .copy-btn:hover { background: #e05e00; color: #fff; }
 
-        .ref-image {
-            position: relative;
-            text-align: right;
-        }
+        .ref-image { position: relative; text-align: right; }
 
         .ref-image img {
             max-width: 90%;
@@ -1529,59 +1206,20 @@
         }
 
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-
-        @media (max-width: 992px) {
-            .referral-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .ref-content p {
-                margin: 0 auto 40px;
-            }
-
-            .ref-rewards-grid {
-                max-width: 600px;
-                margin: 0 auto 40px;
-            }
-
-            .ref-code-box {
-                margin: 0 auto;
-            }
-
-            .ref-image {
-                display: none;
-            }
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-20px); }
         }
 
         @media (max-width: 600px) {
-            .ref-content h2 {
-                font-size: 2.2rem;
-            }
-
-            .ref-rewards-grid {
-                grid-template-columns: 1fr;
-            }
+            .ref-content h2   { font-size: 2.2rem; }
+            .ref-rewards-grid { grid-template-columns: 1fr; }
         }
 
-        /* ═══════════════════════════════════
-           PREMIUM MOBILE BOTTOM NAV
-        ═══════════════════════════════════ */
+        /* MOBILE BOTTOM NAV */
         .mobile-bottom-nav {
             display: none;
             position: fixed;
-            bottom: 0;
-            left: 0;
+            bottom: 0; left: 0;
             width: 100%;
             background: rgba(9, 9, 12, 0.97);
             backdrop-filter: blur(20px);
@@ -1604,7 +1242,6 @@
             width: max-content;
         }
 
-        /* Individual nav button */
         .mobile-nav-item {
             display: flex;
             flex-direction: column;
@@ -1630,10 +1267,7 @@
             display: block;
         }
 
-        .mobile-nav-item:hover {
-            color: #d1d5db;
-            background: rgba(255,255,255,0.05);
-        }
+        .mobile-nav-item:hover { color: #d1d5db; background: rgba(255,255,255,0.05); }
 
         .mobile-nav-item.active {
             color: var(--primary-color);
@@ -1646,9 +1280,7 @@
             filter: drop-shadow(0 0 6px rgba(255,106,0,0.5));
         }
 
-        .mobile-nav-item.logout-btn {
-            color: #ef4444;
-        }
+        .mobile-nav-item.logout-btn { color: #ef4444; }
 
         .mobile-nav-item.logout-btn:hover {
             background: rgba(239, 68, 68, 0.1);
@@ -1659,8 +1291,76 @@
             .mobile-bottom-nav { display: block; }
             body { padding-bottom: 75px; }
         }
+
+        /* ── Recommendation section styles ── */
+        .rec-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(249, 136, 34, 0.08);
+            border: 1px solid rgba(249, 136, 34, 0.25);
+            color: var(--primary-color);
+            padding: 7px 18px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 22px;
+        }
+
+        .rec-section .section-header h2 em {
+            font-style: italic;
+            color: var(--primary-color);
+        }
+
+        .rec-card-grid {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .rec-card-grid.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .rec-card:nth-child(1) { transition-delay: 0.05s; }
+        .rec-card:nth-child(2) { transition-delay: 0.12s; }
+        .rec-card:nth-child(3) { transition-delay: 0.19s; }
+        .rec-card:nth-child(4) { transition-delay: 0.26s; }
+
+        .rec-why-badge {
+            position: absolute;
+            bottom: 12px; left: 12px;
+            background: rgba(249, 136, 34, 0.12);
+            border: 1px solid rgba(249, 136, 34, 0.3);
+            color: var(--primary-color);
+            font-size: 0.62rem;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .rec-more-btn:hover {
+            background: rgba(249, 136, 34, 0.06);
+            box-shadow: 0 0 20px rgba(249, 136, 34, 0.15);
+        }
+
+        .rec-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 90px;
+        }
     </style>
 </head>
+
+<body>
 
 <div id="th-loader">
     <div class="th-card">
@@ -1668,10 +1368,8 @@
             <div class="th-arc"></div>
             <div class="th-face">
                 <svg viewBox="0 0 28 28" fill="none">
-                    <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2"
-                        stroke-linecap="round" />
-                    <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8"
-                        stroke-linecap="round" />
+                    <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2" stroke-linecap="round" />
+                    <line class="hand-hr"  x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round" />
                     <circle cx="14" cy="14" r="2" fill="white" />
                 </svg>
             </div>
@@ -1680,6 +1378,7 @@
 </div>
 
 {% csrf_token %}
+
 <!-- SEARCH OVERLAY -->
 <div class="search-overlay" id="searchOverlay">
     <div class="search-container">
@@ -1706,8 +1405,7 @@
         <div class="nav-actions">
             <a href="{% url 'wishlist_view' %}" class="icon-btn" title="Wishlist"><i class="far fa-heart"></i></a>
             <div class="icon-btn search-trigger"><i class="fas fa-search"></i></div>
-            <a href="{% url 'cart_view' %}" class="icon-btn"
-                style="text-decoration:none; color:inherit; position:relative;">
+            <a href="{% url 'cart_view' %}" class="icon-btn" style="text-decoration:none; color:inherit; position:relative;">
                 <i class="fas fa-shopping-cart"></i>
                 <span id="cartBadge"
                     style="position: absolute; top: -8px; right: -8px; background: var(--primary-color); color: #000; font-size: 0.65rem; font-weight: 800; width: 18px; height: 18px; border-radius: 50%; display: {% if cart_count %}flex{% else %}none{% endif %}; align-items: center; justify-content: center; border: 2px solid var(--bg-color);">{{ cart_count }}</span>
@@ -1716,13 +1414,12 @@
                 <i class="fas fa-bars"></i>
             </div>
             {% if user.is_authenticated %}
-            <a href="{% url 'user_dashboard' %}" class="icon-btn"><i class="fas fa-user-circle"
-                    style="color: var(--primary-color);"></i></a>
+            <a href="{% url 'user_dashboard' %}" class="icon-btn">
+                <i class="fas fa-user-circle" style="color: var(--primary-color);"></i>
+            </a>
             {% else %}
-            <a href="{% url 'login' %}" class="btn btn-outline"
-                style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
-            <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">Sign
-                Up</a>
+            <a href="{% url 'login' %}"  class="btn btn-outline" style="border:none; padding: 10px 14px; font-size: 0.85rem;">Login</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">Sign Up</a>
             {% endif %}
         </div>
     </div>
@@ -1730,9 +1427,7 @@
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-    <div class="close-menu" id="closeMenu">
-        <i class="fas fa-times"></i>
-    </div>
+    <div class="close-menu" id="closeMenu"><i class="fas fa-times"></i></div>
     <nav class="mobile-nav-links">
         <a href="/">Home</a>
         <a href="{% url 'wishlist_view' %}">Wishlist</a>
@@ -1755,7 +1450,6 @@
 
 <!-- HERO SECTION -->
 <section class="hero">
-    <!-- Professional Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <video autoplay muted loop playsinline class="hero-bg-video">
@@ -1768,11 +1462,9 @@
             <div class="hero-badge">Limited Edition: Premium Collection</div>
             <h4>Timeless Elegance</h4>
             <h1>Where <span>Precision</span> Meets Luxury</h1>
-            <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional
-                craftsmanship starting at ₹2,999.</p>
+            <p>Discover our curated collection of luxury timepieces. Every watch tells a story of exceptional craftsmanship starting at ₹2,999.</p>
             <div class="hero-buttons">
-                <a href="{% url 'product_listing' %}" class="btn btn-primary">Shop Collection <i
-                        class="fas fa-arrow-right"></i></a>
+                <a href="{% url 'product_listing' %}" class="btn btn-primary">Shop Collection <i class="fas fa-arrow-right"></i></a>
                 <a href="#" class="btn btn-outline">Watch Our Story <i class="fas fa-play-circle"></i></a>
             </div>
         </div>
@@ -1785,8 +1477,7 @@
         <div class="ref-content">
             <div class="ref-badge">Referral Rewards</div>
             <h2>Spread the <span>TimeHub</span> Elegance</h2>
-            <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium craftsmanship
-                is better shared.</p>
+            <p>Invite your friends to join TimeHub and both of you will receive exclusive rewards. Premium craftsmanship is better shared.</p>
             <div class="ref-rewards-grid">
                 <div class="ref-reward-item">
                     <div class="ref-reward-icon"><i class="fas fa-user-plus"></i></div>
@@ -1813,8 +1504,7 @@
                     </button>
                 </div>
                 {% else %}
-                <a href="{% url 'signup' %}" class="btn btn-primary">Join & Start Earning <i
-                        class="fas fa-arrow-right"></i></a>
+                <a href="{% url 'signup' %}" class="btn btn-primary">Join &amp; Start Earning <i class="fas fa-arrow-right"></i></a>
                 {% endif %}
             </div>
         </div>
@@ -1824,7 +1514,7 @@
     </div>
 </section>
 
-<!-- PREMIUM CATEGORIES (WHITE THEME & SCROLLABLE) -->
+<!-- PREMIUM CATEGORIES -->
 <section class="premium-categories">
     <div class="container">
         <div class="section-header">
@@ -1833,57 +1523,39 @@
         </div>
         <div class="round-cat-grid">
             <a href="{% url 'product_listing' %}?q=automatic" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/automatic_cat.png' %}" alt="Automatic">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/automatic_cat.png' %}" alt="Automatic"></div>
                 <div class="round-cat-name">Automatic</div>
             </a>
             <a href="{% url 'product_listing' %}?q=mechanical" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/mechanical_cat.png' %}" alt="Mechanical"></div>
                 <div class="round-cat-name">Mechanical</div>
             </a>
             <a href="{% url 'product_listing' %}?q=analog" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/chronograph_cat.png' %}" alt="Analog">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/chronograph_cat.png' %}" alt="Analog"></div>
                 <div class="round-cat-name">Analog</div>
             </a>
             <a href="{% url 'product_listing' %}?q=luxury" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/luxury_cat_new.png' %}" alt="Luxury"></div>
                 <div class="round-cat-name">Luxury</div>
             </a>
             <a href="{% url 'product_listing' %}?q=sports" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/sport_category.png' %}" alt="Sports">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/sport_category.png' %}" alt="Sports"></div>
                 <div class="round-cat-name">Sports</div>
             </a>
             <a href="{% url 'product_listing' %}?q=smart" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/smart_category.png' %}" alt="Smart">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/smart_category.png' %}" alt="Smart"></div>
                 <div class="round-cat-name">Smart</div>
             </a>
             <a href="{% url 'product_listing' %}?q=digital" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/digital_category.png' %}" alt="Digital">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/digital_category.png' %}" alt="Digital"></div>
                 <div class="round-cat-name">Digital</div>
             </a>
             <a href="{% url 'product_listing' %}?q=casual" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/vintage_cat_new.png' %}" alt="Casual"></div>
                 <div class="round-cat-name">Casual</div>
             </a>
             <a href="{% url 'product_listing' %}?q=premium" class="round-cat-item">
-                <div class="round-cat-img-wrap">
-                    <img src="{% static 'images/luxury_category.png' %}" alt="Premium">
-                </div>
+                <div class="round-cat-img-wrap"><img src="{% static 'images/luxury_category.png' %}" alt="Premium"></div>
                 <div class="round-cat-name">Premium</div>
             </a>
         </div>
@@ -1895,11 +1567,9 @@
     <div class="flash-deals">
         <div class="container flash-content">
             <div style="flex: 1;">
-                <div class="hero-badge" style="background:#000; border-color:var(--primary-color);">Midnight Sale
-                </div>
+                <div class="hero-badge" style="background:#000; border-color:var(--primary-color);">Midnight Sale</div>
                 <h2 style="font-size: 3rem; margin-bottom: 20px;">Flash Deals of <br>The Day</h2>
-                <p style="color: var(--text-muted);">Hurry up! Grab your favorite luxury watches at heavily
-                    discounted prices before they run out. Valid for today only!</p>
+                <p style="color: var(--text-muted);">Hurry up! Grab your favorite luxury watches at heavily discounted prices before they run out. Valid for today only!</p>
                 <div class="flash-timer">
                     <div class="timer-unit"><span id="hours">08</span><label>Hours</label></div>
                     <div class="timer-unit"><span id="minutes">42</span><label>Mins</label></div>
@@ -1908,16 +1578,120 @@
                 <a href="#" class="btn btn-primary">Grab The Deal <i class="fas fa-bolt"></i></a>
             </div>
             <div style="flex: 1; text-align: center;">
-                <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; margin-bottom: 20px;">
-                    Limited Edition <br>Starting from ₹1,999</p>
-                <img src="{% static 'images/art_watch.png' %}" alt="Flash Deal Watch"
-                    style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));">
-                <p style="color: #ef4444; font-weight: 700; margin-top: 20px;"><i class="fas fa-exclamation-circle"></i>
-                    Only 12 items left in stock!</p>
+                <p style="color: var(--primary-color); font-weight: 800; font-size: 1.5rem; margin-bottom: 20px;">Limited Edition <br>Starting from ₹1,999</p>
+                <img src="{% static 'images/art_watch.png' %}" alt="Flash Deal Watch" style="max-width: 80%; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));">
+                <p style="color: #ef4444; font-weight: 700; margin-top: 20px;"><i class="fas fa-exclamation-circle"></i> Only 12 items left in stock!</p>
             </div>
         </div>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════════════
+     PERSONALISED RECOMMENDATIONS
+     BUG FIX: moved outside / separate from "Best Sellers"
+     section, and {% endif %} added.
+     ═══════════════════════════════════════════════════════ -->
+{% if recommended_products %}
+<section class="products-section rec-section">
+    <div class="container">
+
+        <div class="section-header">
+            <div class="rec-pill">
+                {% if user.is_authenticated %}
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                {% else %}
+                    <i class="fas fa-fire-flame-curved"></i>
+                {% endif %}
+                {{ recommendation_label }}
+            </div>
+            <h2>
+                {% if user.is_authenticated %}
+                    Curated <em>Just For You</em>
+                {% else %}
+                    What Everyone's <em>Loving</em>
+                {% endif %}
+            </h2>
+            <p>
+                {% if user.is_authenticated %}
+                    Based on your wishlist &amp; purchase history — watches we think you'll love.
+                {% else %}
+                    Our most-loved pieces right now. Sign in for recommendations tailored to your taste.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card-grid rec-card-grid">
+            {% for p in recommended_products %}
+            <a href="{% url 'product_details' product_uuid=p.uuid %}"
+               class="product-card rec-card"
+               style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
+
+                <div class="card-top">
+                    {% if p.stock == 0 %}
+                        <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+                    {% elif p.badge %}
+                        <span class="card-badge">{{ p.badge }}</span>
+                    {% elif p.discount_price %}
+                        <span class="card-badge">Sale</span>
+                    {% endif %}
+
+                    <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
+                            onclick="toggleWishlist(event, '{{ p.uuid }}', this)"
+                            style="border:none; color:inherit;">
+                        <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                        <span class="rec-why-badge"><i class="fas fa-sparkles"></i> For you</span>
+                    {% endif %}
+
+                    {% if p.image %}
+                        <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.png' %}" alt="No Image">
+                    {% endif %}
+                </div>
+
+                <div class="rating">
+                    <i class="fas fa-star" style="color:var(--primary-color);"></i>
+                    <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
+                </div>
+
+                <h3 style="display:flex; align-items:center; flex-wrap:wrap;">
+                    {{ p.name }}
+                    {% if p.active_product_offer %}
+                        <span class="badge-offer-inline" style="background:rgba(255,106,0,0.1); color:var(--primary-color); border-color:rgba(255,106,0,0.2);">
+                            {{ p.active_product_offer.discount_percentage }}% OFF
+                        </span>
+                    {% endif %}
+                </h3>
+
+                <div class="price-wrap">
+                    {% if p.discount_price %}
+                        <span class="price">₹{{ p.discount_price }}</span>
+                        <span class="old-price">₹{{ p.price }}</span>
+                    {% else %}
+                        <span class="price">₹{{ p.price }}</span>
+                    {% endif %}
+                </div>
+
+                <button class="btn btn-primary add-cart-btn"
+                        onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div style="text-align:center; margin-top:50px;">
+            <a href="{% url 'product_listing' %}" class="btn btn-outline rec-more-btn">
+                Explore Full Collection <i class="fas fa-compass"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{# ── BUG FIX: {% endif %} was missing above ── #}
 
 <!-- BEST SELLERS -->
 <section class="products-section">
@@ -1926,284 +1700,63 @@
             <h2>You Might Like</h2>
             <p>The most loved timepieces by our global community.</p>
         </div>
-        
-{% if recommended_products %}
-<!-- ═══════════════════════════════════════════════════════
-     PERSONALISED RECOMMENDATIONS
-     ═══════════════════════════════════════════════════════ -->
-<section class="products-section rec-section">
-  <div class="container">
- 
-    <!-- Section header ──────────────────────────────────── -->
-    <div class="section-header">
- 
-      <!-- Pill badge: changes label depending on login state -->
-      <div class="rec-pill">
-        {% if user.is_authenticated %}
-          <i class="fas fa-wand-magic-sparkles"></i>
-        {% else %}
-          <i class="fas fa-fire-flame-curved"></i>
-        {% endif %}
-        {{ recommendation_label }}
-      </div>
- 
-      <h2>
-        {% if user.is_authenticated %}
-          Curated <em>Just For You</em>
-        {% else %}
-          What Everyone's <em>Loving</em>
-        {% endif %}
-      </h2>
- 
-      <p>
-        {% if user.is_authenticated %}
-          Based on your wishlist &amp; purchase history — watches we think you'll love.
-        {% else %}
-          Our most-loved pieces right now. Sign in for recommendations tailored to your taste.
-        {% endif %}
-      </p>
-    </div>
-    <!-- /section-header -->
- 
-    <!-- Product cards grid ──────────────────────────────── -->
-    <div class="card-grid rec-card-grid">
-      {% for p in recommended_products %}
-      <a href="{% url 'product_details' product_uuid=p.uuid %}"
-         class="product-card rec-card"
-         style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
- 
-        <div class="card-top">
- 
-          <!-- Stock / sale badge -->
-          {% if p.stock == 0 %}
-            <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
-          {% elif p.badge %}
-            <span class="card-badge">{{ p.badge }}</span>
-          {% elif p.discount_price %}
-            <span class="card-badge">Sale</span>
-          {% endif %}
- 
-          <!-- Wishlist heart -->
-          <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
-                  onclick="toggleWishlist(event, '{{ p.uuid }}', this)"
-                  style="border:none; color:inherit;">
-            <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
-          </button>
- 
-          <!-- "Why recommended" micro-badge (only for logged-in users) -->
-          {% if user.is_authenticated %}
-            <span class="rec-why-badge">
-              <i class="fas fa-sparkles"></i> For you
-            </span>
-          {% endif %}
- 
-          <!-- Product image -->
-          {% if p.image %}
-            <img src="{{ p.image.url }}" alt="{{ p.name }}">
-          {% else %}
-            <img src="{% static 'images/placeholder.png' %}" alt="No Image">
-          {% endif %}
-        </div>
-        <!-- /card-top -->
- 
-        <!-- Star rating -->
-        <div class="rating">
-          <i class="fas fa-star" style="color:var(--primary-color);"></i>
-          <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
-        </div>
- 
-        <!-- Name + offer badge -->
-        <h3 style="display:flex; align-items:center; flex-wrap:wrap;">
-          {{ p.name }}
-          {% if p.active_product_offer %}
-            <span class="badge-offer-inline"
-                  style="background:rgba(255,106,0,0.1); color:var(--primary-color); border-color:rgba(255,106,0,0.2);">
-              {{ p.active_product_offer.discount_percentage }}% OFF
-            </span>
-          {% endif %}
-        </h3>
- 
-        <!-- Price -->
-        <div class="price-wrap">
-          {% if p.discount_price %}
-            <span class="price">₹{{ p.discount_price }}</span>
-            <span class="old-price">₹{{ p.price }}</span>
-          {% else %}
-            <span class="price">₹{{ p.price }}</span>
-          {% endif %}
-        </div>
- 
-        <!-- Add to Cart -->
-        <button class="btn btn-primary add-cart-btn"
-                onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
-          <i class="fas fa-cart-plus"></i> Add to Cart
-        </button>
- 
-      </a>
-      {% endfor %}
-    </div>
-    <!-- /card-grid -->
- 
-    <!-- "See more" CTA ──────────────────────────────────── -->
-    <div style="text-align:center; margin-top:50px;">
-      <a href="{% url 'product_listing' %}" class="btn btn-outline rec-more-btn">
-        Explore Full Collection <i class="fas fa-compass"></i>
-      </a>
-    </div>
- 
-  </div>
-</section>
- 
-<!-- ── Recommendation section styles ────────────────────── -->
-<style>
-  /* Pill badge above the heading */
-  .rec-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(249, 136, 34, 0.08);
-    border: 1px solid rgba(249, 136, 34, 0.25);
-    color: var(--primary-color);
-    padding: 7px 18px;
-    border-radius: 50px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 22px;
-  }
- 
-  /* Italic accent in the heading */
-  .rec-section .section-header h2 em {
-    font-style: italic;
-    color: var(--primary-color);
-  }
- 
-  /* Subtle entrance animation for the cards */
-  .rec-card-grid {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .rec-card-grid.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
- 
-  /* Stagger each card's fade-in */
-  .rec-card:nth-child(1) { transition-delay: 0.05s; }
-  .rec-card:nth-child(2) { transition-delay: 0.12s; }
-  .rec-card:nth-child(3) { transition-delay: 0.19s; }
-  .rec-card:nth-child(4) { transition-delay: 0.26s; }
- 
-  /* "For you" micro-label in the card image area */
-  .rec-why-badge {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    background: rgba(249, 136, 34, 0.12);
-    border: 1px solid rgba(249, 136, 34, 0.3);
-    color: var(--primary-color);
-    font-size: 0.62rem;
-    font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    padding: 4px 10px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    z-index: 10;
-    pointer-events: none; /* doesn't block clicks */
-  }
- 
-  /* Outlined CTA with hover glow */
-  .rec-more-btn:hover {
-    background: rgba(249, 136, 34, 0.06);
-    box-shadow: 0 0 20px rgba(249, 136, 34, 0.15);
-  }
- 
-  /* Gentle top divider so the section doesn't bleed into Best Sellers */
-  .rec-section {
-    border-top: 1px solid var(--border-color);
-    padding-top: 90px;
-  }
-</style>
- 
-<!-- Intersection Observer: trigger the card grid animation when scrolled into view -->
-<script>
-  (function () {
-    const grid = document.querySelector('.rec-card-grid');
-    if (!grid) return;
- 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            grid.classList.add('visible');
-            observer.disconnect(); // fire only once
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
- 
-    observer.observe(grid);
-  })();
-</script>
+
         <div class="card-grid">
             {% for p in products %}
             <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card"
-                style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
+               style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
                 <div class="card-top">
                     {% if p.stock == 0 %}
-                    <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+                        <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
                     {% elif p.badge %}
-                    <span class="card-badge">{{ p.badge }}</span>
+                        <span class="card-badge">{{ p.badge }}</span>
                     {% elif p.discount_price %}
-                    <span class="card-badge">Sale</span>
+                        <span class="card-badge">Sale</span>
                     {% endif %}
                     <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
-                        onclick="toggleWishlist(event, '{{ p.uuid }}', this)" style="border:none; color:inherit;">
+                            onclick="toggleWishlist(event, '{{ p.uuid }}', this)"
+                            style="border:none; color:inherit;">
                         <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
                     </button>
                     {% if p.image %}
-                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                        <img src="{{ p.image.url }}" alt="{{ p.name }}">
                     {% else %}
-                    <img src="{% static 'images/placeholder.png' %}" alt="No Image">
+                        <img src="{% static 'images/placeholder.png' %}" alt="No Image">
                     {% endif %}
                 </div>
                 <div class="rating">
-                    <!-- Simplified star rating -->
                     <i class="fas fa-star" style="color:var(--primary-color);"></i>
                     <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
                 </div>
                 <h3 style="display: flex; align-items: center; flex-wrap: wrap;">
                     {{ p.name }}
                     {% if p.active_product_offer %}
-                    <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">{{ p.active_product_offer.discount_percentage }}% OFF</span>
+                        <span class="badge-offer-inline" style="background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border-color: rgba(255, 106, 0, 0.2);">
+                            {{ p.active_product_offer.discount_percentage }}% OFF
+                        </span>
                     {% endif %}
                 </h3>
                 <div class="price-wrap">
                     {% if p.discount_price %}
-                    <span class="price">₹{{ p.discount_price }}</span>
-                    <span class="old-price">₹{{ p.price }}</span>
+                        <span class="price">₹{{ p.discount_price }}</span>
+                        <span class="old-price">₹{{ p.price }}</span>
                     {% else %}
-                    <span class="price">₹{{ p.price }}</span>
+                        <span class="price">₹{{ p.price }}</span>
                     {% endif %}
                 </div>
                 <button class="btn btn-primary add-cart-btn"
-                    onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
+                        onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
                     <i class="fas fa-cart-plus"></i> Add to Cart
                 </button>
             </a>
             {% endfor %}
         </div>
-    </div>
-    <div style="text-align: center; margin-top: 50px;">
-        <a href="{% url 'product_listing' %}" class="btn btn-primary" style="padding: 14px 40px; font-size: 1rem;">
-            See More Best Sellers <i class="fas fa-plus"></i>
-        </a>
-    </div>
+
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="{% url 'product_listing' %}" class="btn btn-primary" style="padding: 14px 40px; font-size: 1rem;">
+                See More Best Sellers <i class="fas fa-plus"></i>
+            </a>
+        </div>
     </div>
 </section>
 
@@ -2242,10 +1795,8 @@
         </div>
         <div class="testi-grid">
             <div class="testi-card">
-                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                        class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                <p>"The Rolex I purchased was in pristine condition. The authentication process gave me total peace
-                    of mind. Truly a premium experience."</p>
+                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p>"The Rolex I purchased was in pristine condition. The authentication process gave me total peace of mind. Truly a premium experience."</p>
                 <div class="testi-user">
                     <div class="testi-info">
                         <h5>Arjun Sharma</h5>
@@ -2254,10 +1805,8 @@
                 </div>
             </div>
             <div class="testi-card">
-                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                        class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                <p>"Incredible service. The watch arrived within 2 days in beautiful packaging. The support team
-                    answered all my technical questions."</p>
+                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p>"Incredible service. The watch arrived within 2 days in beautiful packaging. The support team answered all my technical questions."</p>
                 <div class="testi-user">
                     <div class="testi-info">
                         <h5>Sarah Williams</h5>
@@ -2266,10 +1815,8 @@
                 </div>
             </div>
             <div class="testi-card">
-                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                        class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                <p>"Found a rare Omega piece I've been searching for years. The pricing was fair and the condition
-                    was exactly as described."</p>
+                <div class="rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <p>"Found a rare Omega piece I've been searching for years. The pricing was fair and the condition was exactly as described."</p>
                 <div class="testi-user">
                     <div class="testi-info">
                         <h5>Vikram Mehra</h5>
@@ -2306,8 +1853,7 @@
                     <img src="{% static 'images/favicon.svg' %}" alt="TimeHub Logo" style="width: 34px; height: 34px; object-fit: contain; margin-right: 4px;">
                     TimeHub
                 </a>
-                <p class="footer-desc">Your ultimate destination for luxury timepieces. Crafting moments that last a
-                    lifetime through precision and heritage.</p>
+                <p class="footer-desc">Your ultimate destination for luxury timepieces. Crafting moments that last a lifetime through precision and heritage.</p>
                 <div class="socials">
                     <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
@@ -2336,12 +1882,9 @@
             <div class="footer-col">
                 <h4>Contact</h4>
                 <ul>
-                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-map-marker-alt"
-                            style="margin-right:10px; color:var(--primary-color);"></i> Mumbai, MH, India</li>
-                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-phone-alt"
-                            style="margin-right:10px; color:var(--primary-color);"></i> +91 98765 43210</li>
-                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-envelope"
-                            style="margin-right:10px; color:var(--primary-color);"></i> support@timehub.com</li>
+                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-map-marker-alt" style="margin-right:10px; color:var(--primary-color);"></i> Mumbai, MH, India</li>
+                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-phone-alt"       style="margin-right:10px; color:var(--primary-color);"></i> +91 98765 43210</li>
+                    <li style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-envelope"       style="margin-right:10px; color:var(--primary-color);"></i> support@timehub.com</li>
                 </ul>
             </div>
         </div>
@@ -2357,69 +1900,50 @@
     </div>
 </footer>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav">
-        <div class="mobile-bottom-nav-inner">
-            <a href="{% url 'home' %}" class="mobile-nav-item {% if request.path == '/' %}active{% endif %}">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="{% url 'product_listing' %}" class="mobile-nav-item {% if '/products/' in request.path %}active{% endif %}">
-                <i class="fas fa-shop"></i>
-                <span>Shop</span>
-            </a>
-            <a href="{% url 'cart_view' %}" class="mobile-nav-item {% block nav_cart %}{% endblock %}" style="position: relative;">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Cart</span>
-                {% if cart_count %}
-                <span style="position:absolute;top:-5px;right:5px;background:var(--primary-color);color:#000;font-size:0.55rem;font-weight:800;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;">{{ cart_count }}</span>
-                {% endif %}
-            </a>
-            <a href="{% url 'order_history' %}" class="mobile-nav-item {% block nav_orders %}{% endblock %}">
-                <i class="fas fa-shopping-bag"></i>
-                <span>Orders</span>
-            </a>
-            <a href="{% url 'wishlist_view' %}" class="mobile-nav-item {% block nav_wishlist %}{% endblock %}">
-                <i class="fas fa-heart"></i>
-                <span>Wishlist</span>
-            </a>
-            <a href="{% url 'account_edit' %}" class="mobile-nav-item {% if '/security/' in request.path or '/account-edit/' in request.path %}active{% endif %}">
-                <i class="fas fa-shield-halved"></i>
-                <span>Security</span>
-            </a>
-            <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% if '/dashboard/' in request.path or '/profile/' in request.path or '/wallet/' in request.path or '/addresses/' in request.path or '/notifications/' in request.path %}active{% endif %}">
-                <i class="fas fa-circle-user"></i>
-                <span>Account</span>
-            </a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'logout' %}" class="mobile-nav-item logout-btn">
-                <i class="fas fa-right-from-bracket"></i>
-                <span>Logout</span>
-            </a>
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-bottom-nav">
+    <div class="mobile-bottom-nav-inner">
+        <a href="{% url 'home' %}" class="mobile-nav-item {% if request.path == '/' %}active{% endif %}">
+            <i class="fas fa-home"></i><span>Home</span>
+        </a>
+        <a href="{% url 'product_listing' %}" class="mobile-nav-item {% if '/products/' in request.path %}active{% endif %}">
+            <i class="fas fa-shop"></i><span>Shop</span>
+        </a>
+        <a href="{% url 'cart_view' %}" class="mobile-nav-item" style="position: relative;">
+            <i class="fas fa-shopping-cart"></i><span>Cart</span>
+            {% if cart_count %}
+            <span style="position:absolute;top:-5px;right:5px;background:var(--primary-color);color:#000;font-size:0.55rem;font-weight:800;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;">{{ cart_count }}</span>
             {% endif %}
-        </div>
-    </nav>
+        </a>
+        <a href="{% url 'order_history' %}"  class="mobile-nav-item"><i class="fas fa-shopping-bag"></i><span>Orders</span></a>
+        <a href="{% url 'wishlist_view' %}"  class="mobile-nav-item"><i class="fas fa-heart"></i><span>Wishlist</span></a>
+        <a href="{% url 'account_edit' %}"   class="mobile-nav-item {% if '/security/' in request.path or '/account-edit/' in request.path %}active{% endif %}">
+            <i class="fas fa-shield-halved"></i><span>Security</span>
+        </a>
+        <a href="{% url 'user_dashboard' %}" class="mobile-nav-item {% if '/dashboard/' in request.path or '/profile/' in request.path or '/wallet/' in request.path or '/addresses/' in request.path or '/notifications/' in request.path %}active{% endif %}">
+            <i class="fas fa-circle-user"></i><span>Account</span>
+        </a>
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="mobile-nav-item logout-btn">
+            <i class="fas fa-right-from-bracket"></i><span>Logout</span>
+        </a>
+        {% endif %}
+    </div>
+</nav>
 
-    <script>
+<script>
     // Global Toast System
     function showToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return;
-
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         const icon = type === 'success' ? 'check-circle' :
             (type === 'error' || type === 'danger' ? 'exclamation-circle' :
                 (type === 'warning' ? 'exclamation-triangle' : 'info-circle'));
-
-        toast.innerHTML = `
-                <i class="fas fa-${icon}"></i>
-                <div class="toast-message">${message}</div>
-            `;
-
+        toast.innerHTML = `<i class="fas fa-${icon}"></i><div class="toast-message">${message}</div>`;
         container.appendChild(toast);
         setTimeout(() => toast.classList.add('active'), 10);
-
         setTimeout(() => {
             toast.classList.remove('active');
             setTimeout(() => toast.remove(), 600);
@@ -2432,34 +1956,50 @@
         showToast("{{ message|escapejs }}", "{{ message.tags|default:'success' }}");
         {% endfor %}
         {% endif %}
+
+        // BUG FIX: IntersectionObserver moved here (was duplicated — once inline,
+        // once at bottom of page). Single authoritative instance only.
+        const grid = document.querySelector('.rec-card-grid');
+        if (grid) {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            grid.classList.add('visible');
+                            observer.disconnect();
+                        }
+                    });
+                },
+                { threshold: 0.12 }
+            );
+            observer.observe(grid);
+        }
     });
 
     window.addEventListener('scroll', () => {
         const header = document.getElementById('header');
-        if (window.scrollY > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
+        if (window.scrollY > 50) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
     });
 
     // Mobile Menu Toggle
     const mobileToggle = document.getElementById('mobileToggle');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const closeMenu = document.getElementById('closeMenu');
+    const mobileMenu   = document.getElementById('mobileMenu');
+    const closeMenu    = document.getElementById('closeMenu');
 
     function toggleMenu() {
         mobileMenu.classList.toggle('active');
         document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : 'auto';
     }
 
-    if (closeMenu) closeMenu.addEventListener('click', toggleMenu);
+    if (mobileToggle) mobileToggle.addEventListener('click', toggleMenu);
+    if (closeMenu)    closeMenu.addEventListener('click', toggleMenu);
 
-    // Search Overlay Logic
+    // Search Overlay
     const searchTrigger = document.querySelector('.search-trigger');
     const searchOverlay = document.getElementById('searchOverlay');
-    const closeSearch = document.getElementById('closeSearch');
-    const searchInput = document.getElementById('searchInput');
+    const closeSearch   = document.getElementById('closeSearch');
+    const searchInput   = document.getElementById('searchInput');
 
     if (searchTrigger) {
         searchTrigger.addEventListener('click', () => {
@@ -2467,12 +2007,7 @@
             setTimeout(() => searchInput.focus(), 300);
         });
     }
-
-    if (closeSearch) {
-        closeSearch.addEventListener('click', () => {
-            searchOverlay.classList.remove('active');
-        });
-    }
+    if (closeSearch) closeSearch.addEventListener('click', () => searchOverlay.classList.remove('active'));
 
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
@@ -2483,11 +2018,8 @@
         });
     }
 
-    // Close on Escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            searchOverlay.classList.remove('active');
-        }
+        if (e.key === 'Escape') searchOverlay.classList.remove('active');
     });
 
     // Countdown Timer
@@ -2499,32 +2031,30 @@
             const h = Math.floor(gap / (1000 * 60 * 60));
             const m = Math.floor((gap % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((gap % (1000 * 60)) / 1000);
-            document.getElementById('hours').innerText = String(h).padStart(2, '0');
+            document.getElementById('hours').innerText   = String(h).padStart(2, '0');
             document.getElementById('minutes').innerText = String(m).padStart(2, '0');
             document.getElementById('seconds').innerText = String(s).padStart(2, '0');
         }, 1000);
     };
     countdown();
 
-    // Close menu on link click
+    // Close mobile menu on nav link click
     document.querySelectorAll('.mobile-nav-links a').forEach(link => {
         link.addEventListener('click', () => {
             mobileMenu.classList.remove('active');
             document.body.style.overflow = 'auto';
         });
     });
-    // --- Wishlist Toggle Logic ---
+
+    // Wishlist Toggle
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            document.cookie.split(';').forEach(cookie => {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '='))
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+            });
         }
         return cookieValue;
     }
@@ -2532,33 +2062,29 @@
     window.toggleWishlist = function (event, productId, btnElement) {
         event.preventDefault();
         event.stopPropagation();
-
         fetch(`/user/wishlist/toggle/${productId}/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const icon = btnElement.querySelector('i');
+                if (data.action === 'added') {
+                    btnElement.classList.add('active');
+                    icon.classList.replace('far', 'fas');
+                } else {
+                    btnElement.classList.remove('active');
+                    icon.classList.replace('fas', 'far');
+                }
+            } else {
+                alert(data.error || 'Please login to modify your wishlist.');
             }
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const icon = btnElement.querySelector('i');
-                    if (data.action === 'added') {
-                        btnElement.classList.add('active');
-                        icon.classList.replace('far', 'fas');
-                    } else {
-                        btnElement.classList.remove('active');
-                        icon.classList.replace('fas', 'far');
-                    }
-                } else {
-                    alert(data.error || 'Please login to modify your wishlist.');
-                }
-            })
-            .catch(err => alert('Please login to modify your wishlist.'));
+        .catch(() => alert('Please login to modify your wishlist.'));
     };
 
-    // --- Cart Functionality ---
+    // Add to Cart
     window.addToCart = function (productId, btn) {
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
@@ -2566,62 +2092,45 @@
 
         fetch(`/user/cart/add/${productId}/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            }
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    btn.innerHTML = `<i class="fas fa-check"></i> Added`;
-                    btn.style.background = '#22c55e';
-                    btn.style.borderColor = '#22c55e';
-                    btn.style.color = '#fff';
-
-                    // Update cart count badge
-                    const badge = document.getElementById('cartBadge');
-                    if (badge && data.cart_count !== undefined) {
-                        badge.innerText = data.cart_count;
-                        badge.style.display = 'flex';
-                    }
-
-                    setTimeout(() => {
-                        btn.innerHTML = originalHtml;
-                        btn.style.background = '';
-                        btn.style.borderColor = '';
-                        btn.style.color = '';
-                        btn.style.pointerEvents = 'auto';
-                    }, 2000);
-                } else {
-                    alert(data.error || 'Failed to add item to cart');
-                    btn.innerHTML = originalHtml;
-                    btn.style.pointerEvents = 'auto';
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                btn.innerHTML = `<i class="fas fa-check"></i> Added`;
+                btn.style.background = '#22c55e';
+                btn.style.color = '#fff';
+                const badge = document.getElementById('cartBadge');
+                if (badge && data.cart_count !== undefined) {
+                    badge.innerText = data.cart_count;
+                    badge.style.display = 'flex';
                 }
-            })
-            .catch(err => {
-                alert('Please login to add items to your cart.');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.pointerEvents = 'auto';
+                }, 2000);
+            } else {
+                alert(data.error || 'Failed to add item to cart');
                 btn.innerHTML = originalHtml;
                 btn.style.pointerEvents = 'auto';
-            });
+            }
+        })
+        .catch(() => {
+            alert('Please login to add items to your cart.');
+            btn.innerHTML = originalHtml;
+            btn.style.pointerEvents = 'auto';
+        });
     };
-    // --- Page Transition Loader Logic ---
-    const loader = document.getElementById('th-loader');
-    function showLoader() {
-            if (!loader) return;
-            loader.classList.add('active');
-        }
 
-    function hideLoader() {
-        if (loader) loader.classList.remove('active');
-    }
+    // Page Transition Loader
+    const loader = document.getElementById('th-loader');
+    function showLoader() { if (loader) loader.classList.add('active'); }
+    function hideLoader() { if (loader) loader.classList.remove('active'); }
 
     let fallbackTimeout = setTimeout(hideLoader, 6000);
-
-    window.addEventListener('load', () => {
-        clearTimeout(fallbackTimeout);
-        setTimeout(hideLoader, 6000);
-    });
+    window.addEventListener('load', () => { clearTimeout(fallbackTimeout); setTimeout(hideLoader, 6000); });
 
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
@@ -2634,9 +2143,7 @@
         }
     });
 
-    document.addEventListener('submit', (e) => {
-        if (!e.defaultPrevented) showLoader();
-    });
+    document.addEventListener('submit', (e) => { if (!e.defaultPrevented) showLoader(); });
 
     function copyRefCode(code, btn) {
         navigator.clipboard.writeText(code).then(() => {
@@ -2651,37 +2158,11 @@
             }, 2000);
         });
     }
+
+    // Prevent backward navigation
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () { window.history.pushState(null, "", window.location.href); };
 </script>
-    <script>
-
-  (function () {
-    const grid = document.querySelector('.rec-card-grid');
-    if (!grid) return;
- 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            grid.classList.add('visible');
-            observer.disconnect(); // fire only once
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
- 
-    observer.observe(grid);
-  })();
-
-
-    
-        // Prevent backward navigation
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function() {
-            window.history.pushState(null, "", window.location.href);
-        };
-    </script>
 
 </body>
-
 </html>
