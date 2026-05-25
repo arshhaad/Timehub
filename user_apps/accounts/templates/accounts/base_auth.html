@@ -199,21 +199,8 @@
 
         // --- Page Transition Loader Logic ---
         const loader = document.getElementById('th-loader');
-        const lettersEl = document.getElementById('th-letters');
-        const word = 'TimeHub';
-
         function showLoader() {
             if (!loader) return;
-            if (lettersEl) {
-                lettersEl.innerHTML = '';
-                word.split('').forEach((ch, i) => {
-                    const s = document.createElement('span');
-                    s.className = 'th-letter';
-                    s.textContent = ch;
-                    s.style.animationDelay = (0.05 + i * 0.05) + 's';
-                    lettersEl.appendChild(s);
-                });
-            }
             loader.classList.add('active');
         }
 
@@ -242,5 +229,14 @@
             if (!e.defaultPrevented) showLoader();
         });
     </script>
+
+    <script>
+        // Prevent backward navigation
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
+    </script>
+
 </body>
 </html>

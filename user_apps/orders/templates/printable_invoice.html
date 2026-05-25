@@ -39,8 +39,59 @@
             .btn-print { display: none; }
         }
     </style>
+
+    <style>
+        #th-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(11, 11, 14, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #th-loader.active { opacity: 1; visibility: visible; pointer-events: all; }
+        .th-card { display: flex; flex-direction: row; align-items: center; gap: 25px; background: transparent; }
+        .th-clock { position: relative; width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .th-arc { position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; border-top: 3px solid var(--primary-color); border-right: 3px solid rgba(249, 136, 34, 0.2); animation: spinArc 0.85s linear infinite; }
+        @keyframes spinArc { to { transform: rotate(360deg); } }
+        .th-face { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(249, 136, 34, 0.4); }
+        .th-face svg { width: 22px; height: 22px; overflow: visible; }
+        .hand-min { transform-origin: 14px 14px; animation: rotHand 1.5s linear infinite; }
+        .hand-hr { transform-origin: 14px 14px; animation: rotHand 18s linear infinite; }
+        @keyframes rotHand { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+            .th-card { flex-direction: column; gap: 15px; }
+            .th-clock { width: 40px; height: 40px; }
+            .th-face { width: 28px; height: 28px; }
+            .th-face svg { width: 18px; height: 18px; }
+        }
+    </style>
+
 </head>
 <body>
+
+    <!-- FULL PAGE LOADER -->
+    <div id="th-loader">
+        <div class="th-card">
+            <div class="th-clock">
+                <div class="th-arc"></div>
+                <div class="th-face">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <line class="hand-min" x1="14" y1="14" x2="14" y2="4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                        <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="14" cy="14" r="2" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div style="max-width: 800px; margin: 0 auto 20px; text-align: right;">
         <button onclick="window.print()" class="btn-print" style="padding: 10px 20px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
@@ -115,6 +166,53 @@
             <p style="margin-top: 5px;">support@timehub.com | www.timehub.com</p>
         </div>
     </div>
+
+
+    <script>
+        // Prevent backward navigation
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
+    </script>
+
+
+    <script>
+        // --- Page Transition Loader Logic ---
+        const loader = document.getElementById('th-loader');
+
+        function showLoader() {
+            if (!loader) return;
+            loader.classList.add('active');
+        }
+
+        function hideLoader() {
+            if (loader) loader.classList.remove('active');
+        }
+
+        let fallbackTimeout = setTimeout(hideLoader, 5000);
+
+        window.addEventListener('load', () => {
+            clearTimeout(fallbackTimeout);
+            setTimeout(hideLoader, 500);
+        });
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                hideLoader();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && !link.href.startsWith('#') && !link.href.startsWith('javascript:') && link.target !== '_blank' && !link.hasAttribute('download')) {
+                const url = new URL(link.href, window.location.href);
+                if (url.origin === window.location.origin) {
+                    showLoader();
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
