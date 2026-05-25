@@ -1923,9 +1923,233 @@
 <section class="products-section">
     <div class="container">
         <div class="section-header">
-            <h2>Best Sellers</h2>
+            <h2>You Might Like</h2>
             <p>The most loved timepieces by our global community.</p>
         </div>
+        
+{% if recommended_products %}
+<!-- ═══════════════════════════════════════════════════════
+     PERSONALISED RECOMMENDATIONS
+     ═══════════════════════════════════════════════════════ -->
+<section class="products-section rec-section">
+  <div class="container">
+ 
+    <!-- Section header ──────────────────────────────────── -->
+    <div class="section-header">
+ 
+      <!-- Pill badge: changes label depending on login state -->
+      <div class="rec-pill">
+        {% if user.is_authenticated %}
+          <i class="fas fa-wand-magic-sparkles"></i>
+        {% else %}
+          <i class="fas fa-fire-flame-curved"></i>
+        {% endif %}
+        {{ recommendation_label }}
+      </div>
+ 
+      <h2>
+        {% if user.is_authenticated %}
+          Curated <em>Just For You</em>
+        {% else %}
+          What Everyone's <em>Loving</em>
+        {% endif %}
+      </h2>
+ 
+      <p>
+        {% if user.is_authenticated %}
+          Based on your wishlist &amp; purchase history — watches we think you'll love.
+        {% else %}
+          Our most-loved pieces right now. Sign in for recommendations tailored to your taste.
+        {% endif %}
+      </p>
+    </div>
+    <!-- /section-header -->
+ 
+    <!-- Product cards grid ──────────────────────────────── -->
+    <div class="card-grid rec-card-grid">
+      {% for p in recommended_products %}
+      <a href="{% url 'product_details' product_uuid=p.uuid %}"
+         class="product-card rec-card"
+         style="text-decoration:none; color:inherit; display:flex; flex-direction:column;">
+ 
+        <div class="card-top">
+ 
+          <!-- Stock / sale badge -->
+          {% if p.stock == 0 %}
+            <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
+          {% elif p.badge %}
+            <span class="card-badge">{{ p.badge }}</span>
+          {% elif p.discount_price %}
+            <span class="card-badge">Sale</span>
+          {% endif %}
+ 
+          <!-- Wishlist heart -->
+          <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"
+                  onclick="toggleWishlist(event, '{{ p.uuid }}', this)"
+                  style="border:none; color:inherit;">
+            <i class="{% if p.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+          </button>
+ 
+          <!-- "Why recommended" micro-badge (only for logged-in users) -->
+          {% if user.is_authenticated %}
+            <span class="rec-why-badge">
+              <i class="fas fa-sparkles"></i> For you
+            </span>
+          {% endif %}
+ 
+          <!-- Product image -->
+          {% if p.image %}
+            <img src="{{ p.image.url }}" alt="{{ p.name }}">
+          {% else %}
+            <img src="{% static 'images/placeholder.png' %}" alt="No Image">
+          {% endif %}
+        </div>
+        <!-- /card-top -->
+ 
+        <!-- Star rating -->
+        <div class="rating">
+          <i class="fas fa-star" style="color:var(--primary-color);"></i>
+          <span style="color:var(--text-muted); font-size:0.9rem;">{{ p.rating|default:"4.5" }}</span>
+        </div>
+ 
+        <!-- Name + offer badge -->
+        <h3 style="display:flex; align-items:center; flex-wrap:wrap;">
+          {{ p.name }}
+          {% if p.active_product_offer %}
+            <span class="badge-offer-inline"
+                  style="background:rgba(255,106,0,0.1); color:var(--primary-color); border-color:rgba(255,106,0,0.2);">
+              {{ p.active_product_offer.discount_percentage }}% OFF
+            </span>
+          {% endif %}
+        </h3>
+ 
+        <!-- Price -->
+        <div class="price-wrap">
+          {% if p.discount_price %}
+            <span class="price">₹{{ p.discount_price }}</span>
+            <span class="old-price">₹{{ p.price }}</span>
+          {% else %}
+            <span class="price">₹{{ p.price }}</span>
+          {% endif %}
+        </div>
+ 
+        <!-- Add to Cart -->
+        <button class="btn btn-primary add-cart-btn"
+                onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.uuid }}', this);">
+          <i class="fas fa-cart-plus"></i> Add to Cart
+        </button>
+ 
+      </a>
+      {% endfor %}
+    </div>
+    <!-- /card-grid -->
+ 
+    <!-- "See more" CTA ──────────────────────────────────── -->
+    <div style="text-align:center; margin-top:50px;">
+      <a href="{% url 'product_listing' %}" class="btn btn-outline rec-more-btn">
+        Explore Full Collection <i class="fas fa-compass"></i>
+      </a>
+    </div>
+ 
+  </div>
+</section>
+ 
+<!-- ── Recommendation section styles ────────────────────── -->
+<style>
+  /* Pill badge above the heading */
+  .rec-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(249, 136, 34, 0.08);
+    border: 1px solid rgba(249, 136, 34, 0.25);
+    color: var(--primary-color);
+    padding: 7px 18px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 22px;
+  }
+ 
+  /* Italic accent in the heading */
+  .rec-section .section-header h2 em {
+    font-style: italic;
+    color: var(--primary-color);
+  }
+ 
+  /* Subtle entrance animation for the cards */
+  .rec-card-grid {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .rec-card-grid.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+ 
+  /* Stagger each card's fade-in */
+  .rec-card:nth-child(1) { transition-delay: 0.05s; }
+  .rec-card:nth-child(2) { transition-delay: 0.12s; }
+  .rec-card:nth-child(3) { transition-delay: 0.19s; }
+  .rec-card:nth-child(4) { transition-delay: 0.26s; }
+ 
+  /* "For you" micro-label in the card image area */
+  .rec-why-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(249, 136, 34, 0.12);
+    border: 1px solid rgba(249, 136, 34, 0.3);
+    color: var(--primary-color);
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 10;
+    pointer-events: none; /* doesn't block clicks */
+  }
+ 
+  /* Outlined CTA with hover glow */
+  .rec-more-btn:hover {
+    background: rgba(249, 136, 34, 0.06);
+    box-shadow: 0 0 20px rgba(249, 136, 34, 0.15);
+  }
+ 
+  /* Gentle top divider so the section doesn't bleed into Best Sellers */
+  .rec-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 90px;
+  }
+</style>
+ 
+<!-- Intersection Observer: trigger the card grid animation when scrolled into view -->
+<script>
+  (function () {
+    const grid = document.querySelector('.rec-card-grid');
+    if (!grid) return;
+ 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            grid.classList.add('visible');
+            observer.disconnect(); // fire only once
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+ 
+    observer.observe(grid);
+  })();
+</script>
         <div class="card-grid">
             {% for p in products %}
             <a href="{% url 'product_details' product_uuid=p.uuid %}" class="product-card"
@@ -2428,8 +2652,29 @@
         });
     }
 </script>
-
     <script>
+
+  (function () {
+    const grid = document.querySelector('.rec-card-grid');
+    if (!grid) return;
+ 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            grid.classList.add('visible');
+            observer.disconnect(); // fire only once
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+ 
+    observer.observe(grid);
+  })();
+
+
+    
         // Prevent backward navigation
         window.history.pushState(null, "", window.location.href);
         window.onpopstate = function() {
