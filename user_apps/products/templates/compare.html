@@ -1593,11 +1593,11 @@
         if (loader) loader.classList.remove('active');
     }
 
-    let fallbackTimeout = setTimeout(hideLoader, 5000);
+    let fallbackTimeout = setTimeout(hideLoader, 6000);
 
     window.addEventListener('load', () => {
         clearTimeout(fallbackTimeout);
-        setTimeout(hideLoader, 500);
+        setTimeout(hideLoader, 6000);
     });
 
     document.addEventListener('click', (e) => {
