@@ -121,14 +121,6 @@
                     </svg>
                 </div>
             </div>
-            <div class="th-text">
-                <div class="th-letters" id="th-letters"></div>
-                <div class="th-dots">
-                    <div class="th-dot"></div>
-                    <div class="th-dot"></div>
-                    <div class="th-dot"></div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -211,15 +203,17 @@
         const word = 'TimeHub';
 
         function showLoader() {
-            if (!loader || !lettersEl) return;
-            lettersEl.innerHTML = '';
-            word.split('').forEach((ch, i) => {
-                const s = document.createElement('span');
-                s.className = 'th-letter';
-                s.textContent = ch;
-                s.style.animationDelay = (0.05 + i * 0.05) + 's';
-                lettersEl.appendChild(s);
-            });
+            if (!loader) return;
+            if (lettersEl) {
+                lettersEl.innerHTML = '';
+                word.split('').forEach((ch, i) => {
+                    const s = document.createElement('span');
+                    s.className = 'th-letter';
+                    s.textContent = ch;
+                    s.style.animationDelay = (0.05 + i * 0.05) + 's';
+                    lettersEl.appendChild(s);
+                });
+            }
             loader.classList.add('active');
         }
 

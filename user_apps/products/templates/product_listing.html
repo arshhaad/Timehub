@@ -990,7 +990,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(5px);
-            z-index: 1500;
+            z-index: 10000;
             display: none;
         }
 
@@ -1129,7 +1129,7 @@
             bottom: 0;
             width: 360px;
             background: #0b0b0e;
-            z-index: 3000;
+            z-index: 10001;
             transition: var(--transition);
             border-right: 1px solid var(--border-color);
             box-shadow: 20px 0 50px rgba(0, 0, 0, 0.6);
@@ -1767,7 +1767,7 @@
 
         @media (max-width: 768px) {
             .discovery-hub {
-                bottom: 25px;
+                bottom: 95px;
                 right: 25px;
                 transform: none;
                 width: auto;
@@ -2359,6 +2359,9 @@
         @media (max-width: 1024px) {
             .mobile-bottom-nav { display: block; }
             body { padding-bottom: 75px; }
+            .discovery-hub {
+                bottom: 95px;
+            }
         }
     </style>
 </head>
@@ -2374,14 +2377,6 @@
                         <line class="hand-hr" x1="14" y1="14" x2="21" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
                         <circle cx="14" cy="14" r="2" fill="white"/>
                     </svg>
-                </div>
-            </div>
-            <div class="th-text">
-                <div class="th-letters" id="th-letters"></div>
-                <div class="th-dots">
-                    <div class="th-dot"></div>
-                    <div class="th-dot"></div>
-                    <div class="th-dot"></div>
                 </div>
             </div>
         </div>
@@ -3463,19 +3458,9 @@
 
         // --- Page Transition Loader Logic ---
         const loader = document.getElementById('th-loader');
-        const lettersEl = document.getElementById('th-letters');
-        const word = 'TimeHub';
 
         function showLoader() {
-            if (!loader || !lettersEl) return;
-            lettersEl.innerHTML = '';
-            word.split('').forEach((ch, i) => {
-                const s = document.createElement('span');
-                s.className = 'th-letter';
-                s.textContent = ch;
-                s.style.animationDelay = (0.05 + i * 0.05) + 's';
-                lettersEl.appendChild(s);
-            });
+            if (!loader) return;
             loader.classList.add('active');
         }
 
