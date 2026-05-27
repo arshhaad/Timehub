@@ -1,19 +1,3 @@
-"""
-Payment Processing Views
-
-Handles Razorpay payment flow, wallet funding, and payment history.
-
-Flow overview:
-    1. start_payment        → Create Razorpay order for a new checkout
-    2. razorpay_checkout    → User completes payment on Razorpay popup
-    3. verify_payment       → Verify signature & mark order as paid
-    4. razorpay_callback    → Alternate callback route (redirect-based)
-
-    Wallet funding:
-    1. add_wallet_fund      → Create Razorpay order for wallet top-up
-    2. verify_wallet_fund   → Verify & credit balance to wallet
-"""
-
 import json
 from decimal import Decimal
 
@@ -36,21 +20,13 @@ from user_apps.core.models import CartItem, Order, Wallet, WalletTransaction
 from .models import Payment
 from .services import get_razorpay_client
 
-ONLINE_PAYMENT_DISCOUNT_PCT = Decimal("5")   # 5% off when switching COD → Online
+ONLINE_PAYMENT_DISCOUNT_PCT = Decimal("3")   # 5% off when switching COD → Online
 ORDERS_PER_PAGE = 10
 TRANSACTIONS_PER_PAGE = 15
 
 @login_required
 @never_cache
 def payment_list(request):
-    """
-    Show the user's full payment and transaction history.
-
-    Displays:
-    - Paginated order history (10 per page)
-    - Paginated wallet transaction ledger (15 per page)
-    - Summary metrics: total spent, total cashback earned, wallet balance
-    """
     user = request.user
 
     # --- Summary metrics ---
