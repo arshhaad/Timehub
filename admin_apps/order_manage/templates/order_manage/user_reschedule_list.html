@@ -218,7 +218,7 @@
                 <tr>
                     <td style="font-weight: 700;">#{{ order.id }}</td>
                     <td>
-                        <div style="font-weight: 600;">{{ order.user.first_name }} {{ order.user.last_name }}</div>
+                        <div style="font-weight: 600;">{% if order.user.get_full_name %}{{ order.user.get_full_name }}{% else %}{{ order.user.email }}{% endif %}</div>
                         <div style="font-size: 0.8rem; color: var(--text-muted);">{{ order.user.email }}</div>
                     </td>
                     <td>

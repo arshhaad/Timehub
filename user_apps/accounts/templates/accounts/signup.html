@@ -92,7 +92,7 @@
             <label for="id_last_name">Last Name <span
                     style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
             <input type="text" name="last_name" id="id_last_name" placeholder="Doe"
-                value="{{ form.last_name.value|default:'' }}">
+                value="{% if form.last_name.value and form.last_name.value != 'None' %}{{ form.last_name.value }}{% endif %}">
         </div>
     </div>
 

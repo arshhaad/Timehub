@@ -206,7 +206,7 @@
         <div class="card-header-alt">
             <h1>Reschedule Delivery</h1>
             <div class="order-id-badge">ORDER #{{ order.id }}</div>
-            <p style="margin-top: 8px; font-weight: 500; font-size: 0.9rem;">Customer: {{ order.user.first_name }} {{ order.user.last_name }}</p>
+            <p style="margin-top: 8px; font-weight: 500; font-size: 0.9rem;">Customer: {% if order.user.get_full_name %}{{ order.user.get_full_name }}{% else %}{{ order.user.email }}{% endif %}</p>
         </div>
         
         <div class="card-body-alt">

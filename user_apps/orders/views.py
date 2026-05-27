@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils import timezone
@@ -587,6 +587,10 @@ def cancel_order(request, order_uuid):
                 if item.variant:
                     item.variant.stock += item.quantity
                     item.variant.save()
+                    # Sync product-level stock aggregate
+                    p = item.variant.product
+                    p.stock = p.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
+                    p.save(update_fields=['stock'])
                 else:
                     product = item.product
                     product.stock += item.quantity
@@ -632,7 +636,9 @@ def cancel_order_item(request, item_uuid):
             return redirect('order_detail', order_uuid=order.uuid)
 
         with transaction.atomic():
-            original_total = order.total_amount
+            # Capture values before any mutation for refund calculation
+            item_subtotal = item.price * item.quantity
+            original_order_subtotal = order.subtotal
 
             item.is_cancelled = True
             item.cancel_reason = reason
@@ -641,6 +647,10 @@ def cancel_order_item(request, item_uuid):
             if item.variant:
                 item.variant.stock += item.quantity
                 item.variant.save()
+                # Sync product-level stock aggregate
+                p = item.variant.product
+                p.stock = p.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
+                p.save(update_fields=['stock'])
             else:
                 product = item.product
                 product.stock += item.quantity
@@ -648,9 +658,15 @@ def cancel_order_item(request, item_uuid):
 
             order.update_totals()
 
-            # Refund the difference caused by removing this item
+            # Refund: prorate discount to avoid zero-refund when coupon absorbs full subtotal
             if order.is_paid:
-                refund_amount = original_total - order.total_amount
+                if original_order_subtotal > 0:
+                    item_discount_share = (item_subtotal / original_order_subtotal) * order.discount
+                else:
+                    item_discount_share = Decimal('0')
+                item_taxable = max(Decimal('0'), item_subtotal - item_discount_share)
+                item_tax = (item_taxable * Decimal('0.03')).quantize(Decimal('0.01'))
+                refund_amount = item_taxable + item_tax
                 if refund_amount > 0:
                     wallet, _ = Wallet.objects.get_or_create(user=request.user)
                     wallet.balance += refund_amount

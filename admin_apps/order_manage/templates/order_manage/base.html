@@ -508,7 +508,7 @@
                             <img src="{{ user.avatar.url }}" alt="">
                         {% else %}
                             <div class="avatar-placeholder">
-                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{% if user.last_name and user.last_name != 'None' %}{{ user.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
                             </div>
                         {% endif %}
                     </div>

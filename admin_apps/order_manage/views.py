@@ -127,9 +127,17 @@ def order_detail(request, order_id):
                 if new_status not in allowed_next:
                     messages.error(request, f"Invalid transition: Cannot move from {current_status} to {new_status}.")
                     return redirect('admin_order_detail', order_id=order.id)
+                
+                # Check for return request requirements
+                if new_status in ['Returned', 'Return Requested'] and order.return_status == 'None':
+                    messages.error(request, f"Cannot change status to {new_status}: No return request has been submitted for this order.")
+                    return redirect('admin_order_detail', order_id=order.id)
 
             # 2. Legacy Return Logic (Fallback)
             if new_status == 'Returned' and order.status != 'Returned':
+                if order.return_status == 'None':
+                    messages.error(request, "Cannot mark order as Returned: No return request has been submitted for this order.")
+                    return redirect('admin_order_detail', order_id=order.id)
                 process_full_return(order, request.POST.get('refund_method'))
             
             # 3. Update Order Status
@@ -150,7 +158,7 @@ def order_detail(request, order_id):
                 
                 # Step-by-step return stages
                 RETURN_FLOW = {
-                    'None': ['Requested'],
+                    'None': [],
                     'Requested': ['Processing'],
                     'Processing': ['Pickup Scheduled', 'Rejected'],
                     'Pickup Scheduled': ['Returned', 'Rejected'],
@@ -213,6 +221,10 @@ def order_detail(request, order_id):
     }
     
     allowed_next = ALLOWED_TRANSITIONS.get(order.status, [])
+    # Filter out return statuses if no return request has been made
+    if order.return_status == 'None':
+        allowed_next = [s for s in allowed_next if s not in ['Returned', 'Return Requested']]
+    
     allowed_statuses = [s for s in Order.STATUS_CHOICES if s[0] == order.status or s[0] in allowed_next]
 
     context = {
@@ -348,28 +360,39 @@ def cancel_order_item(request, item_id):
     
     if not item.is_cancelled:
         with transaction.atomic():
-            original_total = order.total_amount
-            
+            # Capture values before mutation for refund calculation
+            item_subtotal = item.price * item.quantity
+            original_order_subtotal = order.subtotal
+
             # 1. Mark as cancelled
             item.is_cancelled = True
             item.cancel_reason = request.POST.get('reason', 'Cancelled by Admin')
             item.save()
-            
-            # 2. Restore Stock
+
+            # 2. Restore Stock + sync product aggregate
             if item.variant:
                 item.variant.stock += item.quantity
                 item.variant.save()
+                p = item.variant.product
+                p.stock = p.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
+                p.save(update_fields=['stock'])
             else:
                 product = item.product
                 product.stock += item.quantity
                 product.save()
-            
+
             # 3. Recalculate Order Totals
             order.update_totals()
-            
-            # 4. Partial Refund for pre-paid orders
+
+            # 4. Partial Refund: prorate discount to avoid zero-refund bug
             if order.is_paid and order.payment_method in ['razorpay', 'wallet']:
-                refund_amount = original_total - order.total_amount
+                if original_order_subtotal > 0:
+                    item_discount_share = (item_subtotal / original_order_subtotal) * order.discount
+                else:
+                    item_discount_share = Decimal('0')
+                item_taxable = max(Decimal('0'), item_subtotal - item_discount_share)
+                item_tax = (item_taxable * Decimal('0.03')).quantize(Decimal('0.01'))
+                refund_amount = item_taxable + item_tax
                 if refund_amount > 0:
                     wallet, _ = Wallet.objects.get_or_create(user=order.user)
                     wallet.balance += refund_amount

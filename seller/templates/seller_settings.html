@@ -92,7 +92,7 @@
                 </div>
                 <div class="form-group">
                     <label>Last Name (Optional)</label>
-                    <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                    <input type="text" name="last_name" class="form-control" value="{% if user.last_name and user.last_name != 'None' %}{{ user.last_name }}{% endif %}">
                 </div>
                 <div class="form-group full">
                     <label>Store Name</label>

@@ -283,7 +283,7 @@
                 {% elif customer.avatar %}
                     <img src="{{ customer.avatar.url }}" alt="">
                 {% else %}
-                    {{ customer.first_name|slice:":1"|upper }}{{ customer.last_name|slice:":1"|upper|default:customer.email|slice:":1"|upper }}
+                    {% if customer.first_name %}{{ customer.first_name|slice:":1"|upper }}{% if customer.last_name and customer.last_name != 'None' %}{{ customer.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ customer.email|slice:":1"|upper }}{% endif %}
                 {% endif %}
             </div>
             <div class="identity-text">

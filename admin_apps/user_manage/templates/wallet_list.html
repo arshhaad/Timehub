@@ -291,8 +291,7 @@
                                     {% elif wallet.user.avatar %}
                                     <img src="{{ wallet.user.avatar.url }}" class="customer-avatar-img" alt="">
                                     {% else %}
-                                    {{ wallet.user.first_name|slice:":1"|upper }}{{
-                                    wallet.user.last_name|slice:":1"|upper|default:wallet.user.email|slice:":1"|upper }}
+                                    {% if wallet.user.first_name %}{{ wallet.user.first_name|slice:":1"|upper }}{% if wallet.user.last_name and wallet.user.last_name != 'None' %}{{ wallet.user.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ wallet.user.email|slice:":1"|upper }}{% endif %}
                                     {% endif %}
                                 </div>
                                 <div class="customer-details">

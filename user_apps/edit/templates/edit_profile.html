@@ -280,6 +280,9 @@
                         <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;" onchange="previewImage(event)">
                     </label>
                     <span class="avatar-hint">JPG, PNG or WEBP. Recommended size: 400x400px.</span>
+                    <div class="field-msg {% if form.avatar.errors %}error{% endif %}" id="msg_avatar" style="margin-top: 5px;">
+                        {% if form.avatar.errors %} <i class="fas fa-exclamation-circle"></i> {{ form.avatar.errors|first }} {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -298,7 +301,7 @@
                 <div class="form-group">
                     <label for="id_last_name">Last Name</label>
                     <div class="input-wrap {% if form.last_name.errors %}is-invalid{% endif %}" id="wrap_last_name">
-                        <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Enter last name" maxlength="150">
+                        <input type="text" name="last_name" id="id_last_name" value="{% if form.last_name.value and form.last_name.value != 'None' %}{{ form.last_name.value }}{% endif %}" placeholder="Enter last name" maxlength="150">
                         <i class="fas fa-user input-icon"></i>
                     </div>
                     <div class="field-msg {% if form.last_name.errors %}error{% endif %}" id="msg_last_name">

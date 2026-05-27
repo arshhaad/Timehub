@@ -316,7 +316,8 @@ def seller_product_edit(request, product_id):
             product.brand = request.POST.get('brand', 'TimeHub')
             product.collection_id = request.POST.get('collection_id')
             product.price = request.POST.get('price')
-            product.discount_price = request.POST.get('discount_price') or None
+            if 'discount_price' in request.POST:
+                product.discount_price = request.POST.get('discount_price') or None
             product.description = request.POST.get('description')
             product.gender = request.POST.get('gender')
             product.occasion = request.POST.get('occasion')

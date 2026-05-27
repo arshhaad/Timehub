@@ -471,7 +471,7 @@
                 <a href="{% url 'admin_profile' %}" class="admin-profile">
                     <div class="admin-info" style="text-align:right;">
                         <span class="admin-name">
-                            {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}
+                            {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.email }}{% endif %}
                         </span>
                         <span class="admin-role">Super admin</span>
                     </div>
@@ -482,7 +482,7 @@
                             <img src="{{ user.avatar.url }}" alt="">
                         {% else %}
                             <div class="avatar-placeholder">
-                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
+                                {% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{% if user.last_name and user.last_name != 'None' %}{{ user.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ user.email|slice:":1"|upper }}{% endif %}
                             </div>
                         {% endif %}
                     </div>

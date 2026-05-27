@@ -498,11 +498,11 @@ display:inline-flex; align-items:center; gap:6px; }
                     <img src="{{ order.user.avatar.url }}" class="user-avatar-lg" alt="">
                     {% else %}
                     <div class="user-initials-lg">
-                        {% if order.user.first_name %}{{ order.user.first_name|slice:":1"|upper }}{{ order.user.last_name|slice:":1"|upper }}{% else %}{{ order.user.email|slice:":1"|upper }}{% endif %}
+                        {% if order.user.first_name %}{{ order.user.first_name|slice:":1"|upper }}{% if order.user.last_name and order.user.last_name != 'None' %}{{ order.user.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ order.user.email|slice:":1"|upper }}{% endif %}
                     </div>
                     {% endif %}
                     <div>
-                        <div style="font-weight:800; font-size:.95rem;">{% if order.user.first_name %}{{ order.user.first_name }} {{ order.user.last_name }}{% else %}{{ order.user.email }}{% endif %}</div>
+                        <div style="font-weight:800; font-size:.95rem;">{% if order.user.get_full_name %}{{ order.user.get_full_name }}{% else %}{{ order.user.email }}{% endif %}</div>
                         <div style="font-size:.8rem; color:var(--text-muted); margin-top:2px;">{{ order.user.email }}
                         </div>
                     </div>

@@ -248,11 +248,11 @@
                                 <img src="{{ order.user.avatar.url }}" class="user-avatar" alt="">
                             {% else %}
                                 <div class="user-initials">
-                                    {% if order.user.first_name %}{{ order.user.first_name|slice:":1"|upper }}{{ order.user.last_name|slice:":1"|upper }}{% else %}{{ order.user.email|slice:":1"|upper }}{% endif %}
+                                    {% if order.user.first_name %}{{ order.user.first_name|slice:":1"|upper }}{% if order.user.last_name and order.user.last_name != 'None' %}{{ order.user.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ order.user.email|slice:":1"|upper }}{% endif %}
                                 </div>
                             {% endif %}
                             <div>
-                                <span class="user-name">{% if order.user.first_name %}{{ order.user.first_name }} {{ order.user.last_name }}{% else %}{{ order.user.email }}{% endif %}</span>
+                                <span class="user-name">{% if order.user.get_full_name %}{{ order.user.get_full_name }}{% else %}{{ order.user.email }}{% endif %}</span>
                                 <span class="user-email">{{ order.user.email }}</span>
                             </div>
                         </a>

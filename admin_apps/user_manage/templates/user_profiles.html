@@ -255,7 +255,7 @@
                 <img src="{{ customer.avatar.url }}" class="profile-avatar-large" alt="">
             {% else %}
                 <div class="profile-initials-large">
-                    {{ customer.first_name|slice:":1"|upper }}{{ customer.last_name|slice:":1"|upper|default:customer.email|slice:":1"|upper }}
+                    {% if customer.first_name %}{{ customer.first_name|slice:":1"|upper }}{% if customer.last_name and customer.last_name != 'None' %}{{ customer.last_name|slice:":1"|upper }}{% endif %}{% else %}{{ customer.email|slice:":1"|upper }}{% endif %}
                 </div>
             {% endif %}
             <div class="profile-names">

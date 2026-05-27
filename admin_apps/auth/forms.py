@@ -33,10 +33,11 @@ class AdminProfileForm(forms.ModelForm):
     def clean_phone_number(self):
         phone = self.cleaned_data.get('phone_number')
         if phone:
-            if not phone.isdigit():
-                raise forms.ValidationError("Phone number should only contain digits.")
+            phone = phone.replace(' ', '').replace('-', '')
+            if not phone.isdigit() and not (phone.startswith('+') and phone[1:].isdigit()):
+                raise forms.ValidationError("Phone number must contain only digits and an optional '+' prefix.")
             if len(phone) < 10 or len(phone) > 13:
-                raise forms.ValidationError("Phone number should be between 10 and 13 digits.")
+                raise forms.ValidationError("Phone number must be between 10 and 13 characters.")
         return phone
 
 class AdminLoginForm(forms.Form):

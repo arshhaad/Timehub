@@ -300,6 +300,7 @@ def _save_variants(product, request):
     dials = request.POST.getlist("variant_dial_color[]")
     stks = request.POST.getlist("variant_stock[]")
     idxs = request.POST.getlist("variant_image_idx[]")
+    descs = request.POST.getlist("variant_description[]")
     
     seen_ids = set()
     v_map = {}
@@ -314,6 +315,7 @@ def _save_variants(product, request):
             v = ProductVariant(product=product)
 
         v.sku, v.stock, v.strap_material, v.strap_color, v.dial_color = sku, stock, mats[i], clrs[i], dials[i] if i < len(dials) else ''
+        v.description = descs[i] if i < len(descs) else ''
         v.is_active = True
         v.save()
         seen_ids.add(v.id)
