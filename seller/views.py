@@ -222,9 +222,31 @@ def seller_product_sell_list(request):
 
 
 
+def ensure_default_colors():
+    """Seed default colors if none exist in the database."""
+    if not Color.objects.exists():
+        default_colors = [
+            ('Black', '#000000'),
+            ('Brown', '#8B4513'),
+            ('Silver', '#C0C0C0'),
+            ('Gold', '#FFD700'),
+            ('Blue', '#0000FF'),
+            ('Red', '#FF0000'),
+            ('Green', '#008000'),
+            ('White', '#FFFFFF'),
+            ('Grey', '#808080'),
+            ('Rose Gold', '#B76E79'),
+            ('Orange', '#FFA500'),
+            ('Yellow', '#FFFF00'),
+        ]
+        for name, hex_code in default_colors:
+            Color.objects.get_or_create(name=name, defaults={'hex_code': hex_code})
+
+
 @seller_required
 def seller_product_add(request):
     """Add a new product with images and variants."""
+    ensure_default_colors()
     seller = request.user.seller_profile
     
     if request.method == 'POST':
@@ -307,6 +329,7 @@ def seller_product_add(request):
 @seller_required
 def seller_product_edit(request, product_id):
     """Update existing product details and images."""
+    ensure_default_colors()
     seller = request.user.seller_profile
     product = get_object_or_404(Product, id=product_id, seller=seller)
     

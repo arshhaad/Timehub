@@ -520,7 +520,8 @@
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
-    const COLORS_LIST = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
+    let colorsFromDb = [{% for c in all_colors %}"{{ c.name|escapejs }}",{% endfor %}];
+    const COLORS_LIST = colorsFromDb.length > 0 ? colorsFromDb : ['Black', 'Brown', 'Silver', 'Gold', 'Blue', 'Red', 'Green', 'White', 'Grey', 'Rose Gold', 'Orange', 'Yellow'];
     const MATERIALS_LIST = ['Leather', 'Stainless Steel', 'Silicone', 'Titanium', 'Ceramic', 'Canvas', 'Rubber', 'Nylon', 'Rose Gold'];
 
     // Tab logic
