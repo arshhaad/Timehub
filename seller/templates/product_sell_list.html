@@ -137,12 +137,16 @@
 <div class="product-grid">
     {% for product in products %}
     <div class="product-card">
-        {% if product.images.all %}
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+        {% elif product.images.all %}
             <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
         {% else %}
             {% with first_variant=product.variants.all|first %}
-                {% if first_variant and first_variant.variant_images.all %}
-                    <img src="{{ first_variant.variant_images.first.image.url }}" alt="{{ product.name }}" class="product-image">
+                {% if first_variant and first_variant.image %}
+                    <img src="{{ first_variant.image.url }}" alt="{{ product.name }}" class="product-image">
+                {% elif first_variant and first_variant.images.all %}
+                    <img src="{{ first_variant.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
                 {% else %}
                     <div class="product-image" style="display:flex; align-items:center; justify-content:center;">
                         <i class="fas fa-image" style="font-size: 2rem; color: #cbd5e1;"></i>
@@ -154,7 +158,10 @@
         <!-- Variant Thumbnails -->
         <div class="variant-thumbnails" style="display: flex; gap: 8px; padding: 10px 20px 0; overflow-x: auto;">
             {% for variant in product.variants.all %}
-                {% for v_img in variant.variant_images.all %}
+                {% if variant.image %}
+                    <img src="{{ variant.image.url }}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;" alt="Variant">
+                {% endif %}
+                {% for v_img in variant.images.all %}
                     <img src="{{ v_img.image.url }}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;" alt="Variant">
                 {% endfor %}
             {% endfor %}
