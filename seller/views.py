@@ -132,6 +132,22 @@ def seller_verify_otp(request):
 
 
 @never_cache
+def seller_resend_otp(request):
+    """Resend a new OTP to the pending seller email."""
+    email = request.session.get('verify_email')
+    if not email:
+        messages.error(request, "Session expired, please register again.")
+        return redirect('seller_signup')
+        
+    # Generate new OTP
+    otp_obj = EmailOTP.objects.create(email=email)
+    send_otp_email(email, otp_obj.otp, context="verification")
+    
+    messages.success(request, 'A new verification code has been sent to your email.')
+    return redirect('seller_verify_otp')
+
+
+@never_cache
 def seller_login(request):
     """Standard login for sellers."""
     if request.user.is_authenticated:
@@ -290,23 +306,48 @@ def seller_product_add(request):
                 
                 total_stock = 0
                 for i in range(len(skus)):
-                    qty = int(stks[i])
+                    qty = int(stks[i]) if (i < len(stks) and stks[i]) else 0
                     total_stock += qty
+                    
+                    sku_val = skus[i] if i < len(skus) else ''
+                    mat_val = mats[i] if i < len(mats) else ''
+                    clr_val = clrs[i] if i < len(clrs) else ''
+                    desc_val = desc[i] if i < len(desc) else ''
+                    
                     variant = ProductVariant.objects.create(
-                        product=product, sku=skus[i], strap_material=mats[i],
-                        stock=qty, strap_color=clrs[i], description=desc[i]
+                        product=product, sku=sku_val, strap_material=mat_val,
+                        stock=qty, strap_color=clr_val, description=desc_val
                     )
                     
                     # Handle Images for this specific variant
-                    v_idx = idxs[i]
-                    for sub in range(1, 4):
-                        v_img = request.FILES.get(f'variant_image_input_{v_idx}_{sub}') or \
-                                request.FILES.get(f'variant_image_{v_idx}_{sub}')
-                        if v_img:
-                            VariantImage.objects.create(variant=variant, image=v_img)
+                    v_idx = idxs[i] if i < len(idxs) else None
+                    if v_idx:
+                        for sub in range(1, 4):
+                            v_img = request.FILES.get(f'variant_image_input_{v_idx}_{sub}') or \
+                                    request.FILES.get(f'variant_image_{v_idx}_{sub}')
+                            if v_img:
+                                vi = VariantImage.objects.create(variant=variant, image=v_img, is_main=(sub == 1))
+                                if sub == 1:
+                                    variant.image = vi.image
+                                    variant.save()
                 
-                # Update total inventory count
+                # Sync total product stock and color filters
+                active_variants = product.variants.filter(is_active=True)
                 product.stock = total_stock
+                
+                # Set dynamic product colors from active variants
+                product.colors.set(Color.objects.filter(name__in=active_variants.values_list('strap_color', flat=True).distinct()))
+                
+                # Ensure product has a main/fallback image
+                if not product.image:
+                    main_img = ProductImage.objects.filter(product=product).first()
+                    if main_img:
+                        product.image = main_img.image
+                    else:
+                        v_with_img = active_variants.exclude(image="").exclude(image=None).first()
+                        if v_with_img:
+                            product.image = v_with_img.image
+                
                 product.save()
                 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
