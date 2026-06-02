@@ -29,6 +29,10 @@ def seller_required(view_func):
             return redirect('seller_login')
         if not hasattr(request.user, 'seller_profile'):
             return redirect('seller_signup')
+        if request.user.seller_profile.is_blocked:
+            logout(request)
+            messages.error(request, "Your seller account has been blocked by the administrator.")
+            return redirect('seller_login')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -152,6 +156,10 @@ def seller_login(request):
     """Standard login for sellers."""
     if request.user.is_authenticated:
         if hasattr(request.user, 'seller_profile'):
+            if request.user.seller_profile.is_blocked:
+                logout(request)
+                messages.error(request, "Your seller account has been blocked by the administrator.")
+                return redirect('seller_login')
             return redirect('seller_dashboard')
         else:
             return redirect('seller_signup')
@@ -165,9 +173,12 @@ def seller_login(request):
             
             if user:
                 if user.is_active and hasattr(user, 'seller_profile'):
-                    login(request, user)
-                    messages.success(request, f'Welcome back, {user.first_name or user.email}')
-                    return redirect('seller_dashboard')
+                    if user.seller_profile.is_blocked:
+                        messages.error(request, 'Your seller account has been blocked by the administrator.')
+                    else:
+                        login(request, user)
+                        messages.success(request, f'Welcome back, {user.first_name or user.email}')
+                        return redirect('seller_dashboard')
                 elif not user.is_active:
                     messages.error(request, 'Your account is deactivated.')
                 else:
