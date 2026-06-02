@@ -92,40 +92,62 @@ def seller_verify_otp(request):
     
     if request.method == 'POST':
         otp_input = request.POST.get('otp')
-        otp_obj = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
         
-        if otp_obj and not otp_obj.is_expired and otp_obj.otp == otp_input:
-            with transaction.atomic():
-                # 1. Create the User Account
-                user = CustomUser.objects.create_user(
-                    email=data['email'],
-                    password=data['password'],
-                    first_name=data['first_name'],
-                    last_name=data['last_name'],
-                    phone_number=data['phone_number']
-                )
-                
-                # 2. Create Seller Profile
-                Seller.objects.create(user=user, store_name=f"{user.first_name}'s Store")
-                
-                # 3. Create Wallet
-                Wallet.objects.get_or_create(user=user)
-                
-                # Cleanup
-                otp_obj.delete()
-                del request.session['pending_seller_data']
-                del request.session['verify_email']
-                
-                # Log the user in
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                messages.success(request, 'Welcome to the TimeHub Seller Panel!')
-                return redirect('seller_dashboard')
-        else:
-            messages.error(request, 'Invalid or expired code.')
+        # 1. Locate the valid OTP object
+        otp_obj = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+        if not otp_obj:
+            user_obj = CustomUser.objects.filter(email=email).first()
+            if user_obj:
+                otp_obj = user_obj.otps.order_by('-created_at').first()
+
+        # 2. Validation Checks
+        if not otp_obj:
+            messages.error(request, "Verification session not found. Please sign up again.")
+            return redirect("seller_verify_otp")
+
+        if otp_obj.is_expired:
+            messages.error(request, "The verification code has expired. Please request a fresh one.")
+            return redirect("seller_verify_otp")
+
+        if otp_obj.otp != otp_input:
+            messages.error(request, "Invalid verification code. Please check your email and try again.")
+            return redirect("seller_verify_otp")
+            
+        # 3. SUCCESS — Commit to Database
+        with transaction.atomic():
+            # 1. Create the User Account
+            user = CustomUser.objects.create_user(
+                email=data['email'],
+                password=data['password'],
+                first_name=data['first_name'],
+                last_name=data['last_name'],
+                phone_number=data['phone_number']
+            )
+            
+            # 2. Create Seller Profile
+            Seller.objects.create(user=user, store_name=f"{user.first_name}'s Store")
+            
+            # 3. Create Wallet
+            Wallet.objects.get_or_create(user=user)
+            
+            # Cleanup
+            otp_obj.delete()
+            del request.session['pending_seller_data']
+            del request.session['verify_email']
+            
+            # Log the user in
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, 'Welcome to the TimeHub Seller Panel!')
+            return redirect('seller_dashboard')
             
     # Calculate seconds remaining for UI timer
     seconds_left = 0
     latest_otp = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+    if not latest_otp:
+        user_obj = CustomUser.objects.filter(email=email).first()
+        if user_obj:
+            latest_otp = user_obj.otps.order_by('-created_at').first()
+            
     if latest_otp:
         expiry = latest_otp.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
         seconds_left = max(0, int((expiry - timezone.now()).total_seconds()))
@@ -142,13 +164,135 @@ def seller_resend_otp(request):
     if not email:
         messages.error(request, "Session expired, please register again.")
         return redirect('seller_signup')
+
+    # Cooldown Security Check
+    last_otp = EmailOTP.objects.filter(email=email).order_by('-created_at').first()
+    if not last_otp:
+        u = CustomUser.objects.filter(email=email).first()
+        if u:
+            last_otp = u.otps.order_by('-created_at').first()
+
+    if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < settings.RESET_OTP_COOLDWON_SEC:
+        messages.error(request, "Security wait: Please wait a moment before requesting another code.")
+        return redirect("seller_verify_otp")
         
-    # Generate new OTP
+    # Generate new OTP and send
     otp_obj = EmailOTP.objects.create(email=email)
     send_otp_email(email, otp_obj.otp, context="verification")
     
-    messages.success(request, 'A new verification code has been sent to your email.')
+    messages.success(request, f"A new security code has been dispatched to {email}.")
     return redirect('seller_verify_otp')
+
+
+@never_cache
+def seller_forgot_password(request):
+    """Send a password-reset OTP to the seller's email."""
+    if request.user.is_authenticated:
+        return redirect('seller_dashboard')
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        try:
+            user = CustomUser.objects.get(email=email)
+            if not hasattr(user, 'seller_profile'):
+                messages.error(request, 'No seller account found with that email.')
+                return render(request, 'seller_forgot_password.html')
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'No account found with that email.')
+            return render(request, 'seller_forgot_password.html')
+
+        # Generate OTP and store reset session
+        otp_obj = EmailOTP.objects.create(user=user)
+        request.session['seller_reset_email'] = email
+        send_otp_email(email, otp_obj.otp, context="password_reset")
+        messages.success(request, 'A reset code has been sent to your email.')
+        return redirect('seller_verify_otp_reset')
+
+    return render(request, 'seller_forgot_password.html')
+
+
+@never_cache
+def seller_verify_otp_reset(request):
+    """Verify OTP for seller password reset."""
+    email = request.session.get('seller_reset_email')
+    if not email:
+        return redirect('seller_forgot_password')
+
+    if request.method == 'POST':
+        otp_input = request.POST.get('otp', '').strip()
+
+        try:
+            user = CustomUser.objects.get(email=email)
+            otp_obj = user.otps.latest('created_at')
+        except (CustomUser.DoesNotExist, EmailOTP.DoesNotExist):
+            messages.error(request, 'Verification session not found. Please restart the reset process.')
+            return redirect('seller_forgot_password')
+
+        if otp_obj.is_expired:
+            messages.error(request, 'The code has expired. Please request a new one.')
+            return redirect('seller_verify_otp_reset')
+
+        if otp_obj.otp != otp_input:
+            messages.error(request, 'Incorrect verification code. Please try again.')
+            return redirect('seller_verify_otp_reset')
+
+        # Mark session as verified
+        otp_obj.delete()
+        request.session['seller_otp_verified'] = True
+        return redirect('seller_reset_password')
+
+    # Timer logic
+    seconds_left = 0
+    try:
+        user = CustomUser.objects.get(email=email)
+        latest = user.otps.latest('created_at')
+        expiry = latest.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        seconds_left = max(0, int((expiry - timezone.now()).total_seconds()))
+    except Exception:
+        pass
+
+    return render(request, 'seller_verify_otp_reset.html', {
+        'email': email, 'seconds_left': seconds_left
+    })
+
+
+@never_cache
+def seller_reset_password(request):
+    """Reset password for the seller after OTP verification."""
+    if not request.session.get('seller_otp_verified'):
+        return redirect('seller_forgot_password')
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        confirm = request.POST.get('confirm_password', '')
+
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters.')
+            return render(request, 'seller_reset_password.html')
+
+        if password != confirm:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'seller_reset_password.html')
+
+        email = request.session.get('seller_reset_email')
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'Session expired. Please start again.')
+            return redirect('seller_forgot_password')
+
+        user.set_password(password)
+        user.save()
+
+        # Clear all reset session flags
+        request.session.pop('seller_otp_verified', None)
+        request.session.pop('seller_reset_email', None)
+
+        messages.success(request, 'Password reset successful! You can now sign in.')
+        return redirect('seller_login')
+
+    return render(request, 'seller_reset_password.html')
+
 
 
 @never_cache

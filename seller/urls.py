@@ -9,6 +9,10 @@ urlpatterns = [
     path('resend-otp/', views.seller_resend_otp, name='seller_resend_otp'),
     path('become-seller/', views.become_seller, name='become_seller'),
     
+    path('forgot-password/', views.seller_forgot_password, name='seller_forgot_password'),
+    path('verify-otp-reset/', views.seller_verify_otp_reset, name='seller_verify_otp_reset'),
+    path('reset-password/', views.seller_reset_password, name='seller_reset_password'),
+    
     path('dashboard/', views.seller_dashboard, name='seller_dashboard'),
     path('products/', views.seller_product_sell_list, name='seller_product_sell_list'),
     path('products/add/', views.seller_product_add, name='seller_product_add'),
