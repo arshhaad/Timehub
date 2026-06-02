@@ -598,7 +598,7 @@ def seller_wallet(request):
     seller = request.user.seller_profile
     pending = SellerEarnings.objects.filter(seller=seller, status='Pending').order_by('-created_at')
         
-    return render(request, 'seller_wallat.html', {
+    return render(request, 'seller_wallet.html', {
         'wallet': wallet, 'transactions': txs, 'pending_earnings': pending,
         'active_menu': 'wallet'
     })
