@@ -88,6 +88,14 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        # Recalculate stock from active variants if variants exist
+        if self.id:
+            active_variants = self.variants.filter(is_active=True)
+            if active_variants.exists():
+                self.stock = active_variants.aggregate(models.Sum('stock'))['stock__sum'] or 0
+        super().save(*args, **kwargs)
+
     def get_best_discounted_price(self):
         """Calculate actual selling price with offers."""
         from django.utils import timezone
@@ -185,6 +193,14 @@ class ProductVariant(models.Model):
         if self.strap_color: parts.append(f"Strap: {self.strap_color}")
         if self.dial_color: parts.append(f"Dial: {self.dial_color}")
         return ' — '.join(parts)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Recalculate parent product's stock and update in database
+        p = self.product
+        active = p.variants.filter(is_active=True)
+        total_stock = active.aggregate(models.Sum('stock'))['stock__sum'] or 0
+        Product.objects.filter(id=p.id).update(stock=total_stock)
 
     def get_all_images(self):
         """Aggregate all unique image URLs for the variant."""
