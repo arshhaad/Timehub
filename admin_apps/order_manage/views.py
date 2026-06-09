@@ -733,6 +733,10 @@ def sales_report(request):
 
     delivered = Order.objects.filter(status='Delivered')
     
+    # All-time stats for KPI
+    total_revenue = delivered.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_orders = delivered.count()
+
     # 1. Daily Trend (7 Days)
     daily_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=7)), 'day')
     daily_labels = [(now - timedelta(days=i)).strftime('%b %d') for i in range(6, -1, -1)]
@@ -772,19 +776,63 @@ def sales_report(request):
                 val = v; break
         yearly_values.append(val)
 
+    # Serialize chart trends to JSON
+    chart_data = {
+        'daily': {
+            'labels': daily_labels,
+            'values': daily_values,
+        },
+        'weekly': {
+            'labels': weekly_labels,
+            'values': weekly_values,
+        },
+        'monthly': {
+            'labels': monthly_labels,
+            'values': monthly_values,
+        },
+        'yearly': {
+            'labels': yearly_labels,
+            'values': yearly_values,
+        }
+    }
+    chart_data_json = json.dumps(chart_data)
+
+    # Bottom Row Widgets: Most Wanted + Top Selling
+    most_wanted = Product.objects.filter(
+        is_deleted=False
+    ).annotate(
+        wishlist_count=Count('wishlistitem')
+    ).filter(
+        wishlist_count__gt=0
+    ).order_by('-wishlist_count')[:5]
+
+    top_products = Product.objects.filter(
+        is_deleted=False,
+        orderitem__order__status='Delivered',
+        orderitem__is_cancelled=False,
+        orderitem__is_returned=False
+    ).annotate(
+        contribution=Sum(F('orderitem__price') * F('orderitem__quantity')),
+        units_sold=Sum('orderitem__quantity')
+    ).filter(
+        contribution__gt=0
+    ).order_by('-contribution')[:5]
+
     context = {
         'orders': orders,
+        'filtered_orders': orders,
         'total_sales_count': total_sales_count,
         'total_order_amount': total_order_amount,
         'total_discount': total_discount,
+        'total_revenue': total_revenue,
+        'total_orders': total_orders,
         'filter_type': filter_type,
         'start_date': start_date,
         'end_date': end_date,
         'active_menu': 'sales_report',
-        'daily_labels': daily_labels, 'daily_values': daily_values,
-        'monthly_labels': monthly_labels, 'monthly_values': monthly_values,
-        'weekly_labels': weekly_labels, 'weekly_values': weekly_values,
-        'yearly_labels': yearly_labels, 'yearly_values': yearly_values,
+        'chart_data_json': chart_data_json,
+        'most_wanted': most_wanted,
+        'top_products': top_products,
         'aov': delivered.aggregate(Avg('total_amount'))['total_amount__avg'] or 0,
         'total_customers': User.objects.filter(is_superuser=False).count(),
         'total_products_count': Product.objects.filter(is_deleted=False).count(),
