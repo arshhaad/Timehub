@@ -777,7 +777,7 @@ def sales_report(request):
         wishlist_count=Count('wishlistitem')
     ).filter(
         wishlist_count__gt=0
-    ).order_by('-wishlist_count')[:5]
+    ).order_by('-wishlist_count')[:10]
 
     top_products = Product.objects.filter(
         is_deleted=False,
@@ -789,7 +789,19 @@ def sales_report(request):
         units_sold=Sum('orderitem__quantity')
     ).filter(
         contribution__gt=0
-    ).order_by('-contribution')[:5]
+    ).order_by('-contribution')[:10]
+
+    recent_returned = Order.objects.filter(
+        status='Returned'
+    ).select_related('user').prefetch_related('items__product').order_by('-updated_at')[:10]
+
+    recent_cancelled = Order.objects.filter(
+        status='Cancelled'
+    ).select_related('user').prefetch_related('items__product').order_by('-updated_at')[:10]
+
+    low_stock = Product.objects.filter(
+        is_deleted=False, stock__gt=0, stock__lt=10
+    ).order_by('stock')[:15]
 
     context = {
         'orders': orders,
@@ -806,6 +818,9 @@ def sales_report(request):
         'chart_data_json': chart_data_json,
         'most_wanted': most_wanted,
         'top_products': top_products,
+        'recent_returned': recent_returned,
+        'recent_cancelled': recent_cancelled,
+        'low_stock': low_stock,
         'aov': delivered.aggregate(Avg('total_amount'))['total_amount__avg'] or 0,
         'total_customers': User.objects.filter(is_superuser=False).count(),
         'total_products_count': Product.objects.filter(is_deleted=False).count(),

@@ -149,68 +149,20 @@
         letter-spacing: -0.5px;
     }
 
-    /* ── Chart Panel ── */
-    .chart-panel {
-        background-color: #ffffff;
-        padding: 24px;
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border-color);
-        margin-bottom: 35px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    }
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    .chart-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text-main);
-    }
-    .chart-filters {
-        display: flex;
-        gap: 10px;
-    }
-    .chart-filter-btn {
-        background: #f3f4f6;
-        border: none;
-        padding: 6px 12px;
-        border-radius: var(--radius-sm);
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-    .chart-filter-btn.active {
-        background-color: var(--primary-bg);
-        color: #ffffff;
-    }
 
-    /* ── No-data message ── */
-    #noDataMessage {
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        text-align: center;
-        width: 100%;
-        display: none;
-    }
-    #noDataMessage i {
-        display: block;
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-        opacity: 0.5;
-    }
 
-    /* ── Dashboard Row ── */
+    /* ── Dashboard Row (2-col) ── */
     .dashboard-row {
         display: grid;
-        grid-template-columns: 1fr 400px;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    /* ── Three-column row ── */
+    .three-col-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 25px;
         margin-bottom: 40px;
     }
@@ -312,9 +264,47 @@
         text-align: center;
     }
 
+    /* ── Activity list (returns/cancellations) ── */
+    .activity-list { display: flex; flex-direction: column; gap: 8px; }
+    .activity-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px; border-radius: 10px;
+        text-decoration: none; color: inherit;
+        transition: background 0.2s;
+    }
+    .activity-item:hover { background: #f9fafb; }
+    .activity-icon {
+        width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.85rem;
+    }
+    .activity-body { flex: 1; min-width: 0; }
+    .activity-title { font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
+    .activity-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .activity-right { text-align: right; flex-shrink: 0; }
+    .activity-amount { font-weight: 700; font-size: 0.85rem; display: block; }
+    .activity-date { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── Stock badges ── */
+    .stock-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .stock-low      { background: #fff7ed; color: #f97316; }
+    .stock-critical { background: #fef2f2; color: #ef4444; }
+
+    /* ── Note card accent bars ── */
+    .note-returned::before { background-color: #ef4444; }
+    .note-cancelled::before { background-color: #f59e0b; }
+    .note-lowstock::before { background-color: #f97316; }
+
     /* ── Responsive ── */
     @media (max-width: 1200px) {
         .dashboard-row { grid-template-columns: 1fr; }
+        .three-col-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 900px) {
+        .three-col-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 1024px) {
         .ledger-header { flex-direction: column; align-items: stretch; gap: 15px; }
@@ -661,25 +651,7 @@
     </div>
 </div>
 
-{# ── Revenue Trend Chart ── #}
-<div class="chart-panel">
-    <div class="chart-header">
-        <div class="chart-title">Sales Revenue Trends</div>
-        <div class="chart-filters">
-            <button class="chart-filter-btn active" data-period="daily">Daily</button>
-            <button class="chart-filter-btn"        data-period="weekly">Weekly</button>
-            <button class="chart-filter-btn"        data-period="monthly">Monthly</button>
-            <button class="chart-filter-btn"        data-period="yearly">Yearly</button>
-        </div>
-    </div>
-    <div style="height:350px;position:relative;">
-        <canvas id="salesChart"></canvas>
-        <div id="noDataMessage">
-            <i class="fas fa-info-circle"></i>
-            No revenue data recorded for this period.
-        </div>
-    </div>
-</div>
+
 
 {# ── Bottom Row: Most Wanted + Top Selling ── #}
 <div class="dashboard-row">
@@ -689,48 +661,37 @@
         <div class="note-header">
             <div class="note-title">
                 <i class="fas fa-heart" style="color:#ef4444;"></i>
-                Most Wanted Items
+                Most Wanted <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Top 10</span>
             </div>
-            <span class="panel-action">Based on Wishlists</span>
+            <span class="panel-action">By Wishlists</span>
         </div>
         <div class="product-list">
             {% if most_wanted %}
-                {# Store the max count so JS can compute percentages #}
                 {% with max_count=most_wanted.0.wishlist_count %}
                 {% for product in most_wanted %}
                 <div class="product-item">
                     {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="product-placeholder" style="display:none; width:44px; height:44px; border-radius:8px; background:#f3f4f6; align-items:center; justify-content:center;">
-                            <i class="fas fa-image" style="color:#ccc;"></i>
-                        </div>
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="product-placeholder" style="display:none;width:44px;height:44px;border-radius:8px;background:#f3f4f6;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#ccc;"></i></div>
                     {% else %}
-                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;">
-                            <i class="fas fa-image" style="color:#ccc;"></i>
-                        </div>
+                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#ccc;"></i></div>
                     {% endif %}
                     <div class="product-info">
                         <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
                         <div class="progress-bar-wrap">
-                            <div class="progress-bar-fill"
-                                 style="background-color:#8b5cf6;"
-                                 data-pct="{% widthratio product.wishlist_count max_count 100 %}">
-                            </div>
+                            <div class="progress-bar-fill" style="background:#8b5cf6;" data-pct="{% widthratio product.wishlist_count max_count 100 %}"></div>
                         </div>
                     </div>
                     <div class="product-meta">
                         <span class="product-revenue">{{ product.wishlist_count }}</span>
-                        <span class="product-sold">In wishlists</span>
+                        <span class="product-sold">wishlists</span>
                     </div>
                 </div>
                 {% endfor %}
                 {% endwith %}
             {% else %}
-                <p class="empty-state">
-                    <i class="fas fa-heart-broken" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>
-                    No wishlist data yet.
-                </p>
+                <p class="empty-state"><i class="fas fa-heart-broken" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>No wishlist data yet.</p>
             {% endif %}
         </div>
     </div>
@@ -740,7 +701,7 @@
         <div class="note-header">
             <div class="note-title">
                 <i class="fas fa-fire" style="color:#f97316;"></i>
-                Top Selling Products
+                Top Selling <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Top 10</span>
             </div>
             <a href="{% url 'product_list' %}" class="panel-action">View All →</a>
         </div>
@@ -750,23 +711,16 @@
                 {% for product in top_products %}
                 <div class="product-item">
                     {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="product-placeholder" style="display:none; width:44px; height:44px; border-radius:8px; background:#f3f4f6; align-items:center; justify-content:center;">
-                            <i class="fas fa-image" style="color:#ccc;"></i>
-                        </div>
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="product-placeholder" style="display:none;width:44px;height:44px;border-radius:8px;background:#f3f4f6;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#ccc;"></i></div>
                     {% else %}
-                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;">
-                            <i class="fas fa-image" style="color:#ccc;"></i>
-                        </div>
+                        <div class="product-img" style="display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#ccc;"></i></div>
                     {% endif %}
                     <div class="product-info">
                         <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
                         <div class="progress-bar-wrap">
-                            <div class="progress-bar-fill"
-                                 style="background-color:#10b981;"
-                                 data-pct="{% widthratio product.contribution max_contribution 100 %}">
-                            </div>
+                            <div class="progress-bar-fill" style="background:#10b981;" data-pct="{% widthratio product.contribution max_contribution 100 %}"></div>
                         </div>
                     </div>
                     <div class="product-meta">
@@ -777,12 +731,111 @@
                 {% endfor %}
                 {% endwith %}
             {% else %}
-                <p class="empty-state">
-                    <i class="fas fa-box-open" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>
-                    No sales data yet.
-                </p>
+                <p class="empty-state"><i class="fas fa-box-open" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;"></i>No sales data yet.</p>
             {% endif %}
         </div>
+    </div>
+
+</div>
+
+{# ── Three-column row: Recent Returns | Recent Cancellations | Low Stock ── #}
+<div class="three-col-row">
+
+    {# Recent Returns #}
+    <div class="note-card note-returned">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-undo-alt" style="color:#ef4444;"></i>
+                Recent Returns
+            </div>
+            <a href="{% url 'admin_return_requests' %}" class="panel-action">View All →</a>
+        </div>
+        {% if recent_returned %}
+        <div class="activity-list">
+            {% for order in recent_returned %}
+            <a href="{% url 'admin_order_detail' order.id %}" class="activity-item">
+                <div class="activity-icon" style="background:#fef2f2;color:#ef4444;">
+                    <i class="fas fa-rotate-left"></i>
+                </div>
+                <div class="activity-body">
+                    <div class="activity-title">#ORD-{{ order.id }}</div>
+                    <div class="activity-sub">{{ order.user.email|truncatechars:28 }}</div>
+                </div>
+                <div class="activity-right">
+                    <span class="activity-amount" style="color:#ef4444;">₹{{ order.total_amount|floatformat:0 }}</span>
+                    <span class="activity-date">{{ order.updated_at|date:"d M" }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state"><i class="fas fa-check-circle" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;color:#10b981;"></i>No returns yet.</p>
+        {% endif %}
+    </div>
+
+    {# Recent Cancellations #}
+    <div class="note-card note-cancelled">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-ban" style="color:#f59e0b;"></i>
+                Recent Cancellations
+            </div>
+            <a href="{% url 'admin_user_requests' %}" class="panel-action">View All →</a>
+        </div>
+        {% if recent_cancelled %}
+        <div class="activity-list">
+            {% for order in recent_cancelled %}
+            <a href="{% url 'admin_order_detail' order.id %}" class="activity-item">
+                <div class="activity-icon" style="background:#fffbeb;color:#f59e0b;">
+                    <i class="fas fa-xmark"></i>
+                </div>
+                <div class="activity-body">
+                    <div class="activity-title">#ORD-{{ order.id }}</div>
+                    <div class="activity-sub">{{ order.user.email|truncatechars:28 }}</div>
+                </div>
+                <div class="activity-right">
+                    <span class="activity-amount" style="color:#f59e0b;">₹{{ order.total_amount|floatformat:0 }}</span>
+                    <span class="activity-date">{{ order.updated_at|date:"d M" }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state"><i class="fas fa-check-circle" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;color:#10b981;"></i>No cancellations yet.</p>
+        {% endif %}
+    </div>
+
+    {# Low Stock #}
+    <div class="note-card note-lowstock">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-triangle-exclamation" style="color:#f97316;"></i>
+                Low Stock Alert
+            </div>
+            <a href="{% url 'admin_inventory_list' %}" class="panel-action">Manage →</a>
+        </div>
+        {% if low_stock %}
+        <div class="activity-list">
+            {% for product in low_stock %}
+            <div class="activity-item" style="cursor:default;">
+                <div class="activity-icon" style="background:#fff7ed;color:#f97316;">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="activity-body">
+                    <div class="activity-title">{{ product.name|truncatechars:30 }}</div>
+                    <div class="activity-sub">Stock: <strong style="color:{% if product.stock <= 3 %}#ef4444{% else %}#f97316{% endif %};">{{ product.stock }} left</strong></div>
+                </div>
+                <div class="activity-right">
+                    <span class="stock-badge {% if product.stock <= 3 %}stock-critical{% else %}stock-low{% endif %}">
+                        {% if product.stock <= 3 %}Critical{% else %}Low{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state"><i class="fas fa-boxes-stacked" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;color:#10b981;"></i>All products well stocked.</p>
+        {% endif %}
     </div>
 
 </div>
@@ -790,108 +843,7 @@
 
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ── Data from Django ──────────────────────────────────────────────────────────
-const chartData = {{ chart_data_json|safe }};
-let salesChart = null;
-
-function buildChart(period) {
-    const canvas = document.getElementById('salesChart');
-    const noData = document.getElementById('noDataMessage');
-    if (!canvas) return;
-
-    // ── FIX 1: Guard against missing or empty period data ──
-    const data = chartData && chartData[period];
-    const isEmpty = !data || !data.labels || data.labels.length === 0;
-
-    // ── FIX 2: Properly destroy and null out the old chart ──
-    if (salesChart) {
-        salesChart.destroy();
-        salesChart = null;
-    }
-
-    noData.style.display = isEmpty ? 'block' : 'none';
-    canvas.style.display = isEmpty ? 'none' : 'block';
-    if (isEmpty) return;
-
-    const ctx = canvas.getContext('2d');
-
-    // ── FIX 3: Recreate gradient fresh each time (old ctx is gone after destroy) ──
-    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
-    gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
-
-    // ── FIX 4: Wrap in try/catch so a bad data shape doesn't silently die ──
-    try {
-        salesChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Revenue',
-                    data: data.values,
-                    borderColor: '#ff6b00',
-                    backgroundColor: gradient,
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#ff6b00',
-                    pointBorderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#ff6b00',
-                    pointHoverBorderColor: '#ffffff',
-                    pointHoverBorderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: true,
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 12,
-                        cornerRadius: 8,
-                        displayColors: false,
-                        callbacks: {
-                            label: ctx => '₹' + ctx.parsed.y.toLocaleString('en-IN')
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6', drawBorder: false },
-                        ticks: {
-                            callback: v => v >= 1000 ? '₹' + (v / 1000) + 'k' : '₹' + v
-                        }
-                    },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    } catch (e) {
-        console.error('Chart render error:', e);
-        noData.style.display = 'block';
-        canvas.style.display = 'none';
-    }
-}
-
-// ── Period switching ──────────────────────────────────────────────────────────
-document.querySelectorAll('.chart-filter-btn[data-period]').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        buildChart(this.dataset.period);
-    });
-});
-
-// ── Animated counter ──────────────────────────────────────────────────────────
 function animateCounter(el, end, duration, prefix, isFloat) {
     const startTime = performance.now();
     function step(now) {
@@ -927,10 +879,7 @@ function toggleCustomDates(val) {
     if (customDiv) customDiv.style.display = val === 'custom' ? 'flex' : 'none';
 }
 
-// ── FIX 5: Wait for Chart.js to fully load before building the chart ──
 document.addEventListener('DOMContentLoaded', () => {
-    // Small delay ensures Chart.js script from CDN has executed
-    setTimeout(() => buildChart('daily'), 100);
     runCounters();
     runProgressBars();
     const filterSelect = document.querySelector('select[name="filter_type"]');
