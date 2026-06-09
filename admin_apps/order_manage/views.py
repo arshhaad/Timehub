@@ -31,10 +31,9 @@ User = get_user_model()
 @login_required
 def order_list(request):
     """List all orders with filtering and sorting."""
-    # Fetch orders with related user data for better performance
     orders = Order.objects.select_related('user').order_by('-created_at')
 
-    # --- Search Functionality ---
+    # Search
     query = request.GET.get('q', '').strip()
     if query:
         search_filter = (
@@ -42,17 +41,17 @@ def order_list(request):
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query)
         )
-        # If the query is a number, search by Order ID as well
+        # Search by order ID if search query is numeric
         if query.isdigit():
             search_filter |= Q(id=query)
         orders = orders.filter(search_filter)
 
-    # --- Status Filtering ---
+    # Status filter
     status_filter = request.GET.get('status', 'all')
     if status_filter and status_filter != 'all':
         orders = orders.filter(status=status_filter)
 
-    # --- Sorting ---
+    # Sorting
     sort = request.GET.get('sort', 'newest')
     sort_map = {
         'oldest': 'created_at',
@@ -62,7 +61,7 @@ def order_list(request):
     }
     orders = orders.order_by(sort_map.get(sort, '-created_at'))
 
-    # --- Pagination (10 orders per page) ---
+    # Pagination
     paginator = Paginator(orders, 10)
     page_number = request.GET.get('page', 1)
     orders_page = paginator.get_page(page_number)
@@ -86,19 +85,16 @@ def order_detail(request, order_id):
         id=order_id
     )
 
-    # --- Address Handling ---
-    # Parse the address snapshot taken at the time of purchase
     address = {}
     try:
         address = json.loads(order.address_snapshot)
     except Exception:
         address = {}
         
-    # Auto-recalculate totals for active orders to ensure accuracy
+    # Recalculate totals for active orders
     if order.status in ['Pending', 'Processing', 'Shipped']:
         order.update_totals()
 
-    # --- POST: Update Status or Return Flow ---
     if request.method == 'POST':
         new_status = request.POST.get('status')
         new_return_status = request.POST.get('return_status')
@@ -106,7 +102,7 @@ def order_detail(request, order_id):
         
         valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
         
-        # Security: Map of allowed next steps for order status
+        # Allowed transitions map
         ALLOWED_TRANSITIONS = {
             'Pending': ['Confirmed', 'Cancelled', 'Processing'],
             'Confirmed': ['Processing', 'Shipped', 'Cancelled'],
@@ -120,7 +116,7 @@ def order_detail(request, order_id):
         }
 
         if new_status in valid_statuses:
-            # 1. Validate Transition
+            # Validate transition
             current_status = order.status
             if new_status != current_status:
                 allowed_next = ALLOWED_TRANSITIONS.get(current_status, [])
@@ -128,7 +124,7 @@ def order_detail(request, order_id):
                     messages.error(request, f"Invalid transition: Cannot move from {current_status} to {new_status}.")
                     return redirect('admin_order_detail', order_id=order.id)
                 
-                # Check for return request requirements
+                # Check if return request was actually made
                 if new_status in ['Returned', 'Return Requested'] and order.return_status == 'None':
                     messages.error(request, f"Cannot change status to {new_status}: No return request has been submitted for this order.")
                     return redirect('admin_order_detail', order_id=order.id)
@@ -140,10 +136,10 @@ def order_detail(request, order_id):
                     return redirect('admin_order_detail', order_id=order.id)
                 process_full_return(order, request.POST.get('refund_method'))
             
-            # 3. Update Order Status
+            # Update status
             order.status = new_status
             
-            # 4. Handle Earnings Distribution on Delivery
+            # Seller earnings on delivery
             if new_status == 'Delivered':
                 for item in order.items.filter(is_cancelled=False, product__seller__isnull=False):
                     SellerEarnings.objects.get_or_create(
@@ -152,11 +148,11 @@ def order_detail(request, order_id):
                         defaults={'amount': item.price * item.quantity}
                     )
             
-            # 5. Detailed Return Flow Management
+            # Detailed return flow management
             if new_return_status and new_return_status in [c[0] for c in Order.RETURN_CHOICES]:
                 current_return_status = order.return_status
                 
-                # Step-by-step return stages
+                # Stages for return flow
                 RETURN_FLOW = {
                     'None': [],
                     'Requested': ['Processing'],
@@ -172,7 +168,7 @@ def order_detail(request, order_id):
                         messages.error(request, f"Invalid stage: Cannot move return from {current_return_status} to {new_return_status}.")
                         return redirect('admin_order_detail', order_id=order.id)
                     
-                    # Sync Order status with specific return stages
+                    # Sync return stage with order status
                     if new_return_status == 'Rejected':
                         order.status = 'Delivered'
                         order.return_status = 'Rejected'
@@ -186,7 +182,7 @@ def order_detail(request, order_id):
                         if order.status == 'Delivered':
                             order.status = 'Return Requested'
             
-            # 6. Update Delivery Scheduling
+            # Update delivery date
             if new_date:
                 order.scheduled_delivery_date = new_date
             elif new_date == '':
@@ -198,7 +194,6 @@ def order_detail(request, order_id):
             messages.error(request, 'Invalid status selection.')
         return redirect('admin_order_detail', order_id=order.id)
 
-    # --- Prepare GET Response Data ---
     timeline_steps = [
         ('Pending', 'Order received'),
         ('Processing', 'Being prepared'),
@@ -207,7 +202,6 @@ def order_detail(request, order_id):
         ('Delivered', 'Delivered to customer'),
     ]
 
-    # Re-calculate allowed transitions for the frontend UI
     ALLOWED_TRANSITIONS = {
         'Pending': ['Confirmed', 'Cancelled', 'Processing'],
         'Confirmed': ['Shipped', 'Cancelled', 'Processing'],
@@ -221,7 +215,6 @@ def order_detail(request, order_id):
     }
     
     allowed_next = ALLOWED_TRANSITIONS.get(order.status, [])
-    # Filter out return statuses if no return request has been made
     if order.return_status == 'None':
         allowed_next = [s for s in allowed_next if s not in ['Returned', 'Return Requested']]
     
@@ -241,29 +234,23 @@ def order_detail(request, order_id):
 
 
 def process_full_return(order, refund_method):
-    """Process refund and restore stock for a returned order or returned items."""
     if order.refund_processed_at:
-        return # Already processed
+        return
         
-    # Store original total for refund calculation
     original_total = order.total_amount
     
-    # Ensure items are marked as returned and status is synced
     if order.status == 'Returned' or order.return_status == 'Returned':
         if order.status == 'Returned':
             order.return_status = 'Returned'
         
-        # If no items are marked as returned but the order is 'Returned', mark all active items
         if not order.items.filter(is_returned=True).exists():
             order.items.filter(is_cancelled=False).update(is_returned=True)
 
-    # Update totals (this will now exclude returned items thanks to the model change)
     order.update_totals()
-    
-    # Calculate actual refund amount
     refund_amount = original_total - order.total_amount
     
-    if refund_amount > 0 and order.is_paid:
+    if refund_amount > 0:
+        order.is_paid = True
         wallet, _ = Wallet.objects.get_or_create(user=order.user)
         wallet.balance += refund_amount
         wallet.save()
@@ -278,7 +265,7 @@ def process_full_return(order, refund_method):
     order.refund_method = refund_method
     order.save()
     
-    # Restore Stock Levels for items being returned
+    # Restore stock
     for item in order.items.filter(is_cancelled=False, is_returned=True):
         if item.variant:
             item.variant.stock += item.quantity
@@ -299,7 +286,6 @@ def update_order_status(request, order_id):
     new_status = request.POST.get('status')
     valid_statuses = [s[0] for s in Order.STATUS_CHOICES]
     
-    # Security: Allowed transitions map
     ALLOWED_TRANSITIONS = {
         'Pending': ['Confirmed', 'Cancelled', 'Processing'],
         'Confirmed': ['Shipped', 'Cancelled', 'Processing'],
@@ -313,7 +299,6 @@ def update_order_status(request, order_id):
     }
 
     if new_status in valid_statuses:
-        # Check transition validity
         current_status = order.status
         if new_status != current_status:
             allowed_next = ALLOWED_TRANSITIONS.get(current_status, [])
@@ -321,15 +306,11 @@ def update_order_status(request, order_id):
                 messages.error(request, f"Invalid transition: {current_status} → {new_status}")
                 return redirect('admin_order_list')
 
-        # Handle full return logic if necessary
         if new_status == 'Returned' and order.status != 'Returned':
-            # Always call process_full_return; it handles is_paid check for wallet refund 
-            # and restores stock for all non-cancelled items.
             process_full_return(order, request.POST.get('refund_method', 'Wallet'))
                 
         order.status = new_status
         
-        # Handle delivery-specific actions (Auto-pay for COD, Referrer rewards, Seller earnings)
         if new_status == 'Delivered':
             if not order.is_paid:
                 order.is_paid = True
@@ -354,22 +335,19 @@ def update_order_status(request, order_id):
 @login_required
 @require_POST
 def cancel_order_item(request, item_id):
-    """Cancel a specific item and issue partial refund."""
     item = get_object_or_404(OrderItem, id=item_id)
     order = item.order
     
     if not item.is_cancelled:
         with transaction.atomic():
-            # Capture values before mutation for refund calculation
             item_subtotal = item.price * item.quantity
             original_order_subtotal = order.subtotal
 
-            # 1. Mark as cancelled
             item.is_cancelled = True
             item.cancel_reason = request.POST.get('reason', 'Cancelled by Admin')
             item.save()
 
-            # 2. Restore Stock + sync product aggregate
+            # Restore stock
             if item.variant:
                 item.variant.stock += item.quantity
                 item.variant.save()
@@ -381,10 +359,9 @@ def cancel_order_item(request, item_id):
                 product.stock += item.quantity
                 product.save()
 
-            # 3. Recalculate Order Totals
             order.update_totals()
 
-            # 4. Partial Refund: prorate discount to avoid zero-refund bug
+            # Partial Refund
             if order.is_paid and order.payment_method in ['razorpay', 'wallet']:
                 if original_order_subtotal > 0:
                     item_discount_share = (item_subtotal / original_order_subtotal) * order.discount
@@ -426,7 +403,6 @@ def inventory_list(request):
     total_low = 0
     total_out = 0
 
-    # Aggregate products and their variants for a unified view
     for product in products:
         variants = product.variants.filter(is_active=True)
         if variants.exists():
@@ -458,8 +434,6 @@ def inventory_list(request):
             })
             if product.stock == 0: total_out += 1
             elif product.stock < 10: total_low += 1
-
-    # Paginate unified list
     paginator = Paginator(inventory_items, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -484,7 +458,7 @@ def inventory_update(request):
         item_type = data.get('type')
         item_id = data.get('id')
 
-        # 1. Update Stock Level
+        # Update stock level
         if 'stock' in data:
             new_stock = int(data.get('stock'))
             if new_stock < 0:
@@ -499,7 +473,7 @@ def inventory_update(request):
             item.save()
             return JsonResponse({'success': True, 'new_stock': item.stock})
             
-        # 2. Update Badge (Hot, New, etc.)
+        # Update badge
         elif 'badge' in data:
             badge = data.get('badge') or None
             if item_type == 'variant':
@@ -511,14 +485,14 @@ def inventory_update(request):
             item.save()
             return JsonResponse({'success': True, 'badge': badge})
 
-        # 3. Soft Delete Item
+        # Soft delete
         elif data.get('delete'):
             if item_type == 'variant':
                 item = ProductVariant.objects.get(id=item_id)
-                item.is_active = False # Variants are de-activated
+                item.is_active = False
             else:
                 item = Product.objects.get(id=item_id)
-                item.is_deleted = True # Products are soft-deleted
+                item.is_deleted = True
             item.save()
             return JsonResponse({'success': True})
 
@@ -534,7 +508,6 @@ def user_requests(request):
     """Monitor active return and cancellation requests."""
     search_query = request.GET.get('q', '').strip()
     
-    # Filter orders that have pending user actions
     orders = Order.objects.filter(
         Q(status='Return Requested') | 
         Q(cancel_reason__isnull=False, cancel_reason__gt='') |
@@ -599,7 +572,6 @@ def process_reschedule(request, order_id):
         
     action = request.POST.get('action') 
     if action == 'approve':
-        # Apply the new dates provided by admin (or default to requested ones)
         new_date = request.POST.get('reschedule_date') or order.requested_reschedule_date
         new_time = request.POST.get('reschedule_time') or order.requested_reschedule_time
         
@@ -670,7 +642,7 @@ def sales_report(request):
     if not request.user.is_superuser:
         return redirect("dashboard")
 
-    # --- Time-based Filtering ---
+    # Filter by date
     filter_type = request.GET.get('filter_type', 'all')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -689,7 +661,7 @@ def sales_report(request):
     elif filter_type == 'custom' and start_date and end_date:
         orders = orders.filter(created_at__date__range=[start_date, end_date])
 
-    # --- Statistics Calculation ---
+    # Calculate statistics
     stats = orders.aggregate(
         count=Count('id'),
         revenue=Sum('total_amount'),
@@ -700,7 +672,7 @@ def sales_report(request):
     total_order_amount = stats['revenue'] or 0
     total_discount = stats['discount'] or 0
 
-    # --- CSV Export Logic ---
+    # CSV Export
     if request.GET.get('export') == 'csv':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="timehub_sales_report.csv"'
@@ -714,16 +686,14 @@ def sales_report(request):
                 o.user.email, o.total_amount, o.discount, o.coupon_code or 'None'
             ])
         
-        # Summary row
         writer.writerow([])
         writer.writerow(['TOTALS', '', '', total_order_amount, total_discount, f'Count: {total_sales_count}'])
         return response
 
-    # --- Dashboard Trend Data (Charts) ---
+    # Chart trends
     now = timezone.now()
 
     def get_revenue_data(queryset, period='day', limit=7):
-        """Generate time-series data for chart visualization."""
         trunc_fn = {
             'day': TruncDay, 'week': TruncWeek, 'month': TruncMonth, 'year': TruncYear
         }.get(period, TruncDay)
@@ -733,16 +703,15 @@ def sales_report(request):
 
     delivered = Order.objects.filter(status='Delivered')
     
-    # All-time stats for KPI
     total_revenue = delivered.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     total_orders = delivered.count()
 
-    # 1. Daily Trend (7 Days)
+    # Daily trend
     daily_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=7)), 'day')
     daily_labels = [(now - timedelta(days=i)).strftime('%b %d') for i in range(6, -1, -1)]
     daily_values = [daily_map.get((now - timedelta(days=i)).date(), 0.0) for i in range(6, -1, -1)]
 
-    # 2. Monthly Trend (6 Months)
+    # Monthly trend
     monthly_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=180)), 'month')
     monthly_labels = []
     monthly_values = []
@@ -754,14 +723,13 @@ def sales_report(request):
             y -= 1
         m_date = now.replace(year=y, month=m, day=1).date()
         monthly_labels.append(m_date.strftime('%b %Y'))
-        # Check by year/month key matching if needed, or simple date matching
         val = 0.0
         for k, v in monthly_map.items():
             if k.year == m_date.year and k.month == m_date.month:
                 val = v; break
         monthly_values.append(val)
 
-    # 3. Weekly Trend (8 Weeks)
+    # Weekly trend
     weekly_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=56)), 'week')
     weekly_labels = []
     weekly_values = []
@@ -770,7 +738,7 @@ def sales_report(request):
         weekly_labels.append(f"Week {w_date.strftime('%W')}")
         weekly_values.append(weekly_map.get(w_date, 0.0))
 
-    # 4. Yearly Trend (5 Years)
+    # Yearly trend
     yearly_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=365*5)), 'year')
     yearly_labels = [str(now.year - i) for i in range(4, -1, -1)]
     yearly_values = []
@@ -781,7 +749,7 @@ def sales_report(request):
                 val = v; break
         yearly_values.append(val)
 
-    # Serialize chart trends to JSON
+    # Serialize
     chart_data = {
         'daily': {
             'labels': daily_labels,
@@ -802,7 +770,7 @@ def sales_report(request):
     }
     chart_data_json = json.dumps(chart_data)
 
-    # Bottom Row Widgets: Most Wanted + Top Selling
+    # Top metrics
     most_wanted = Product.objects.filter(
         is_deleted=False
     ).annotate(
