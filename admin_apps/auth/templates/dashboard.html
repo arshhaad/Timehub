@@ -514,6 +514,7 @@
         <div class="stat-header">
             <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
             <div class="stat-change {% if revenue_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                <i class="fas {% if revenue_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}" style="margin-right: 4px;"></i>
                 {% if revenue_change >= 0 %}+{% endif %}{{ revenue_change }}%
             </div>
         </div>
@@ -525,6 +526,7 @@
         <div class="stat-header">
             <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
             <div class="stat-change {% if orders_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                <i class="fas {% if orders_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}" style="margin-right: 4px;"></i>
                 {% if orders_change >= 0 %}+{% endif %}{{ orders_change }}%
             </div>
         </div>
@@ -536,6 +538,7 @@
         <div class="stat-header">
             <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
             <div class="stat-change {% if customers_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                <i class="fas {% if customers_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}" style="margin-right: 4px;"></i>
                 {% if customers_change >= 0 %}+{% endif %}{{ customers_change }}%
             </div>
         </div>
@@ -547,6 +550,7 @@
         <div class="stat-header">
             <div class="stat-icon"><i class="fas fa-clock"></i></div>
             <div class="stat-change {% if products_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                <i class="fas {% if products_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}" style="margin-right: 4px;"></i>
                 {% if products_change >= 0 %}+{% endif %}{{ products_change }}%
             </div>
         </div>

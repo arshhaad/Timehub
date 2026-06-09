@@ -128,8 +128,12 @@ def dashboard(request):
     monthly_labels = []
     monthly_values = []
     for i in range(5, -1, -1):
-        # Approximate month subtraction
-        month_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        m = now.month - i
+        y = now.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        month_date = now.replace(year=y, month=m, day=1).date()
         monthly_labels.append(month_date.strftime('%b %Y'))
         val = 0.0
         for s in monthly_sales:

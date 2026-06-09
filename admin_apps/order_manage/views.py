@@ -747,7 +747,12 @@ def sales_report(request):
     monthly_labels = []
     monthly_values = []
     for i in range(5, -1, -1):
-        m_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        m = now.month - i
+        y = now.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        m_date = now.replace(year=y, month=m, day=1).date()
         monthly_labels.append(m_date.strftime('%b %Y'))
         # Check by year/month key matching if needed, or simple date matching
         val = 0.0
