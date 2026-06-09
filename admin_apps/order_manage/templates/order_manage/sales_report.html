@@ -151,51 +151,42 @@
 
     /* ── Chart Panel ── */
     .chart-panel {
-        background: #fff;
+        background-color: #ffffff;
+        padding: 24px;
         border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
-        padding: 24px;
-        margin-bottom: 32px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+        margin-bottom: 35px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
     .chart-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-        gap: 12px;
+        margin-bottom: 20px;
     }
-    .panel-title {
-        font-size: 1.1rem;
+    .chart-title {
+        font-size: 1rem;
         font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 10px;
         color: var(--text-main);
     }
-    .filter-btns {
+    .chart-filters {
         display: flex;
-        background: #f3f4f6;
-        padding: 4px;
-        border-radius: 8px;
-        gap: 4px;
+        gap: 10px;
     }
-    .filter-btn {
-        padding: 6px 16px;
-        border-radius: 6px;
+    .chart-filter-btn {
+        background: #f3f4f6;
+        border: none;
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
         font-size: 0.8rem;
         font-weight: 600;
-        cursor: pointer;
-        border: none;
-        background: transparent;
         color: var(--text-muted);
+        cursor: pointer;
         transition: var(--transition);
     }
-    .filter-btn.active {
-        background: #fff;
-        color: var(--text-main);
-        box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    .chart-filter-btn.active {
+        background-color: var(--primary-bg);
+        color: #ffffff;
     }
 
     /* ── No-data message ── */
@@ -673,19 +664,16 @@
 {# ── Revenue Trend Chart ── #}
 <div class="chart-panel">
     <div class="chart-header">
-        <div class="panel-title">
-            <i class="fas fa-chart-area" style="color:var(--primary-bg);"></i>
-            Revenue Trends
-        </div>
-        <div class="filter-btns">
-            <button class="filter-btn active" data-period="daily">Daily</button>
-            <button class="filter-btn"        data-period="weekly">Weekly</button>
-            <button class="filter-btn"        data-period="monthly">Monthly</button>
-            <button class="filter-btn"        data-period="yearly">Yearly</button>
+        <div class="chart-title">Sales Revenue Trends</div>
+        <div class="chart-filters">
+            <button class="chart-filter-btn active" data-period="daily">Daily</button>
+            <button class="chart-filter-btn"        data-period="weekly">Weekly</button>
+            <button class="chart-filter-btn"        data-period="monthly">Monthly</button>
+            <button class="chart-filter-btn"        data-period="yearly">Yearly</button>
         </div>
     </div>
     <div style="height:350px;position:relative;">
-        <canvas id="revenueChart"></canvas>
+        <canvas id="salesChart"></canvas>
         <div id="noDataMessage">
             <i class="fas fa-info-circle"></i>
             No revenue data recorded for this period.
@@ -809,7 +797,7 @@ const chartData = {{ chart_data_json|safe }};
 let salesChart = null;
 
 function buildChart(period) {
-    const canvas = document.getElementById('revenueChart');
+    const canvas = document.getElementById('salesChart');
     const noData = document.getElementById('noDataMessage');
     if (!canvas) return;
 
@@ -895,9 +883,9 @@ function buildChart(period) {
 }
 
 // ── Period switching ──────────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
+document.querySelectorAll('.chart-filter-btn[data-period]').forEach(btn => {
     btn.addEventListener('click', function () {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         buildChart(this.dataset.period);
     });

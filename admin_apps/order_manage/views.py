@@ -834,7 +834,7 @@ def sales_report(request):
         'filter_type': filter_type,
         'start_date': start_date,
         'end_date': end_date,
-        'active_menu': 'sales_report',
+        'active_menu': 'sales',
         'chart_data_json': chart_data_json,
         'most_wanted': most_wanted,
         'top_products': top_products,
