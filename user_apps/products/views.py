@@ -23,7 +23,7 @@ def product_list(request):
     categories = Collection.objects.filter(is_deleted=False).annotate(
         product_count=Count('products', filter=Q(products__is_active=True, products__is_deleted=False))
     )
-    paginator = Paginator(products, 4) # 4 per page
+    paginator = Paginator(products, 12) # 12 per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
