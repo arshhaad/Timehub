@@ -131,7 +131,7 @@ def home_view(request):
     products = list(Product.objects.filter(id__in=recommended_ids, is_active=True, is_deleted=False))
     preserved = {pid: pos for pos, pid in enumerate(recommended_ids)}
     products.sort(key=lambda p: preserved.get(p.id, 999))
-
+    #Sort the product based on the recomenProduct 
     # Pad if we have less than 4 items (e.g. if some got deleted/deactivated after caching)
     if len(products) < 4:
         needed = 4 - len(products)
