@@ -861,7 +861,7 @@
                             {% for c in prod.colors.all %}
                             <div class="color-dot" style="background: {{ c.hex_code }};" title="{{ c.name }}"></div>
                             {% empty %}
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">None</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">—</span>
                             {% endfor %}
                         </div>
                     </td>

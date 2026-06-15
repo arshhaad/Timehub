@@ -48,7 +48,10 @@ class Product(models.Model):
     # Choice sets for standardized filtering
     GENDER_CHOICES = (('Men', 'Men'), ('Women', 'Women'), ('Unisex', 'Unisex'))
     OCCASION_CHOICES = (('Casual', 'Casual'), ('Formal', 'Formal'), ('Sport', 'Sport'), ('Luxury', 'Luxury'))
-    FUNCTION_CHOICES = (('Analog', 'Analog'), ('Digital', 'Digital'), ('Chronograph', 'Chronograph'), ('Automatic', 'Automatic'))
+    FUNCTION_CHOICES = (
+        ('Analog', 'Analog'), ('Digital', 'Digital'), ('Chronograph', 'Chronograph'), 
+        ('Automatic', 'Automatic'), ('Smart', 'Smart'), ('Mechanical', 'Mechanical')
+    )
     BADGE_CHOICES = (
         ('Sale', 'Sale'), ('Limited Edition', 'Limited Edition'), ('New Arrival', 'New Arrival'),
         ('Exclusive', 'Exclusive'), ('Luxury', 'Luxury'), ('Premium', 'Premium'),

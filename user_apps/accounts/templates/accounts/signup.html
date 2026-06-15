@@ -112,7 +112,11 @@
         <label for="id_phone_number">Phone Number <span
                 style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
         <input type="tel" name="phone_number" id="id_phone_number" placeholder="+91 98765 43210"
-            value="{{ form.phone_number.value|default:'' }}">
+            value="{{ form.phone_number.value|default:'' }}"
+            class="{% if form.phone_number.errors %}is-invalid{% endif %}">
+        {% for error in form.phone_number.errors %}
+        <div class="field-error">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <!-- Referral Code -->

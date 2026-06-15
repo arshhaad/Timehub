@@ -497,7 +497,9 @@
                             <option value="Analog" {% if product.function == 'Analog' %}selected{% endif %}>Analog</option>
                             <option value="Digital" {% if product.function == 'Digital' %}selected{% endif %}>Digital</option>
                             <option value="Chronograph" {% if product.function == 'Chronograph' %}selected{% endif %}>Chronograph</option>
+                            <option value="Automatic" {% if product.function == 'Automatic' %}selected{% endif %}>Automatic</option>
                             <option value="Smart" {% if product.function == 'Smart' %}selected{% endif %}>Smart</option>
+                            <option value="Mechanical" {% if product.function == 'Mechanical' %}selected{% endif %}>Mechanical</option>
                         </select>
                     </div>
                     <div class="form-group full">
@@ -559,9 +561,15 @@
             </div>
         </div>
 
-        <div class="form-footer">
-            <button type="button" class="btn btn-outline" onclick="window.location.href='{% url 'product_list' %}'">Discard Changes</button>
-            <button type="submit" id="submitBtn" class="btn btn-primary">{% if is_edit %}Save Changes{% else %}Create Product{% endif %}</button>
+        <div class="form-footer" style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: 100%;">
+            <div id="pending-stages-msg" style="font-size: 0.85rem; color: #d97706; background-color: #fffbeb; border: 1px solid #fde68a; padding: 10px 16px; border-radius: 8px; display: none; align-items: center; gap: 8px; width: fit-content;">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span id="pending-msg-text">Please complete the pending stages before creating the product.</span>
+            </div>
+            <div style="display: flex; gap: 16px; justify-content: flex-end; width: 100%;">
+                <button type="button" class="btn btn-outline" onclick="window.location.href='{% url 'product_list' %}'">Discard Changes</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary">{% if is_edit %}Save Changes{% else %}Create Product{% endif %}</button>
+            </div>
         </div>
     </form>
 </div>
@@ -890,6 +898,7 @@
         renumberVariants();
         updateVariantSelectors();
         calculateTotalStock();
+        if (typeof checkPendingStages === 'function') checkPendingStages();
     }
 
     function removeVariant(btn) {
@@ -906,6 +915,7 @@
         renumberVariants();
         updateVariantSelectors();
         calculateTotalStock();
+        if (typeof checkPendingStages === 'function') checkPendingStages();
     }
 
     // Form Submit
@@ -1090,6 +1100,42 @@
                 {% endif %}
             {% endfor %}
         {% endif %}
+        
+        if (typeof checkPendingStages === 'function') checkPendingStages();
+    });
+
+    function checkPendingStages() {
+        const msgDiv = document.getElementById('pending-stages-msg');
+        const msgText = document.getElementById('pending-msg-text');
+        if (!msgDiv || !msgText) return;
+
+        const name = document.getElementById('formName')?.value.trim();
+        const category = document.getElementById('formCategory')?.value;
+        const price = document.getElementById('formPrice')?.value;
+        const description = document.getElementById('formDescription')?.value.trim();
+        const variantCount = document.querySelectorAll('.variant-card').length;
+
+        const pending = [];
+        if (!name || !category || !price || !description) pending.push('General Info');
+        if (variantCount === 0) pending.push('Variants & Stock');
+
+        if (pending.length > 0) {
+            msgText.innerHTML = `<b>Guidance:</b> Additional product creation stages (<b>${pending.join(' & ')}</b>) are still pending. Completing them is recommended before clicking {% if is_edit %}Save Changes{% else %}Create Product{% endif %}.`;
+            msgDiv.style.display = 'flex';
+        } else {
+            msgDiv.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.matches('#formName, #formPrice, #formDescription')) {
+            checkPendingStages();
+        }
+    });
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('#formCategory')) {
+            checkPendingStages();
+        }
     });
 </script>
 {% endblock %}

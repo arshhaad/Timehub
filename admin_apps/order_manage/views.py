@@ -258,7 +258,7 @@ def process_full_return(order, refund_method):
             wallet=wallet,
             transaction_type='Credit',
             amount=refund_amount,
-            description=f'Refund for returned items in Order #{order.id}'
+            description=f'Refund for returned items in Order {order.id}'
         )
     
     order.refund_processed_at = timezone.now()
@@ -703,8 +703,8 @@ def sales_report(request):
 
     delivered = Order.objects.filter(status='Delivered')
     
-    total_revenue = delivered.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    total_orders = delivered.count()
+    total_revenue = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_orders = orders.count()
 
     # Daily trend
     daily_map = get_revenue_data(delivered.filter(created_at__gte=now - timedelta(days=7)), 'day')
@@ -821,7 +821,7 @@ def sales_report(request):
         'recent_returned': recent_returned,
         'recent_cancelled': recent_cancelled,
         'low_stock': low_stock,
-        'aov': delivered.aggregate(Avg('total_amount'))['total_amount__avg'] or 0,
+        'aov': orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0,
         'total_customers': User.objects.filter(is_superuser=False).count(),
         'total_products_count': Product.objects.filter(is_deleted=False).count(),
     }

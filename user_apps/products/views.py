@@ -107,7 +107,7 @@ def product_list(request):
     # Filter Options for UI
     occasions = ['Casual', 'Formal', 'Sport', 'Luxury']
     genders = ['Men', 'Women', 'Unisex']
-    functions = ['Analog', 'Digital', 'machenical', 'Automatic']
+    functions = ['Analog', 'Digital', 'Chronograph', 'Automatic', 'Smart', 'Mechanical']
     strap_materials_options = ['Leather', 'Steel', 'Silicon', 'Fabric']
     strap_colors_options = ['Black', 'Brown', 'Silver', 'Gold', 'Blue']
 

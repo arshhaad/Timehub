@@ -1458,6 +1458,15 @@
             <!-- Left Gallery -->
             <div class="gallery-wrapper animate-scale">
                 <div class="main-image-container" id="mainImageContainer">
+                    <div class="badge-container" id="productBadgeContainer" style="position: absolute; top: 20px; left: 20px; z-index: 20; display: flex; flex-direction: column; gap: 8px;">
+                        {% if product.stock == 0 %}
+                        <span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>
+                        {% elif product.badge %}
+                        <span class="badge">{{ product.badge }}</span>
+                        {% elif product.has_offer or product.discount_price %}
+                        <span class="badge">Sale</span>
+                        {% endif %}
+                    </div>
                     <button class="carousel-btn prev-btn" id="prevImgBtn" aria-label="Previous Image" onclick="event.stopPropagation();"><i class="fas fa-chevron-left"></i></button>
                     <button class="carousel-btn next-btn" id="nextImgBtn" aria-label="Next Image" onclick="event.stopPropagation();"><i class="fas fa-chevron-right"></i></button>
                     <div id="zoomLens" class="zoom-lens"></div>
@@ -2460,6 +2469,7 @@
             updatePriceUI(element.dataset.price, element.dataset.oldPrice);
             const stock = parseInt(element.dataset.stock);
             updateStockUI(stock);
+            updateBadgeUI(stock, element.dataset.price, element.dataset.oldPrice);
 
             if (qtyInput) {
                 qtyInput.value = 1;
@@ -2637,6 +2647,27 @@
                 if (stickyOldPriceEl) stickyOldPriceEl.style.display = 'none';
                 if (savingsBadge) savingsBadge.style.display = 'none';
             }
+        }
+
+        function updateBadgeUI(stock, price, oldPrice) {
+            const container = document.getElementById('productBadgeContainer');
+            if (!container) return;
+
+            let badgeHtml = '';
+            const productBadge = "{{ product.badge|default:''|escapejs }}";
+
+            if (stock <= 0) {
+                badgeHtml = `<span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>`;
+            } else if (productBadge) {
+                badgeHtml = `<span class="badge">${productBadge}</span>`;
+            } else {
+                const currentPrice = parseFloat(price);
+                const originalPrice = parseFloat(oldPrice);
+                if (!isNaN(originalPrice) && !isNaN(currentPrice) && currentPrice < originalPrice) {
+                    badgeHtml = `<span class="badge">Sale</span>`;
+                }
+            }
+            container.innerHTML = badgeHtml;
         }
 
         function updateStockUI(stockCount) {

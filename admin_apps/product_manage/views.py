@@ -212,9 +212,14 @@ def add_product(request):
                     raise ValidationError("Product must have at least one variant.")
                 
                 _ensure_product_main_image(p)
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True, 'message': f"Product '{p.name}' added successfully."})
                 messages.success(request, f"Product '{p.name}' added successfully.")
                 return redirect("product_list")
         except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': str(e)}, status=400)
             messages.error(request, f"Error: {str(e)}")
 
     return render(request, "add_product.html", {
@@ -236,6 +241,18 @@ def edit_product(request, product_id):
                 p.price = float(request.POST.get("price", p.price))
                 p.description = request.POST.get("description", "").strip()
                 p.is_active = request.POST.get("is_active") == "on"
+
+                raw_discount = request.POST.get("discount_price", "").strip()
+                if raw_discount:
+                    try:
+                        dp_val = float(raw_discount)
+                        dp_unit = float(request.POST.get("discount_price_unit", 1) or 1)
+                        p.discount_price = round(dp_val * dp_unit, 2) if dp_val > 0 else None
+                    except (ValueError, TypeError):
+                        pass 
+                else:
+                    p.discount_price = None  
+
                 p.save()
                 
                 v_map = _save_variants(p, request)
@@ -245,9 +262,14 @@ def edit_product(request, product_id):
                     raise ValidationError("Product must have an active variant.")
                 
                 _ensure_product_main_image(p)
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True, 'message': 'Product updated successfully.'})
                 messages.success(request, "Product updated.")
                 return redirect("product_list")
         except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': str(e)}, status=400)
             messages.error(request, str(e))
 
     return render(request, "add_product.html", {

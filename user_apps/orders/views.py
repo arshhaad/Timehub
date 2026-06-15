@@ -1058,9 +1058,10 @@ def apply_coupon(request):
     
     total_discount = coupon_discount + referral_discount
 
-    # Tax is calculated on subtotal (after item offers)
-    tax = round(subtotal * TAX_RATE, 2)
-    total = subtotal - total_discount + tax + shipping
+    # Tax is calculated on the taxable amount (subtotal minus all discounts)
+    taxable = max(Decimal('0'), subtotal - total_discount)
+    tax = round(taxable * TAX_RATE, 2)
+    total = taxable + tax + shipping
 
     # Calculate offer savings for AJAX response
     offer_savings = Decimal('0')
@@ -1106,9 +1107,10 @@ def remove_coupon(request):
     # Referral Discount remains even if coupon is removed
     referral_discount = get_referral_first_order_discount(request.user, items=items)
 
-    # Tax is calculated on subtotal (after item offers)
-    tax = round(subtotal * TAX_RATE, 2)
-    total = subtotal - referral_discount + tax + shipping
+    # Tax is calculated on the taxable amount (subtotal minus referral discount)
+    taxable = max(Decimal('0'), subtotal - referral_discount)
+    tax = round(taxable * TAX_RATE, 2)
+    total = taxable + tax + shipping
 
     # Calculate offer savings for AJAX response
     offer_savings = Decimal('0')

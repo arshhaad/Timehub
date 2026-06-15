@@ -37,10 +37,12 @@ class UserEditForm(forms.ModelForm):
     def clean_avatar(self):
         avatar = self.cleaned_data.get('avatar')
         if avatar:
-            if avatar.size > 2 * 1024 * 1024: # 2MB limit
-                raise forms.ValidationError("Image size should not exceed 2MB.")
-            if not avatar.name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                raise forms.ValidationError("Only PNG, JPG, JPEG, and WEBP images are allowed.")
+            from django.core.files.uploadedfile import UploadedFile
+            if isinstance(avatar, UploadedFile):
+                if avatar.size > 2 * 1024 * 1024: # 2MB limit
+                    raise forms.ValidationError("Image size should not exceed 2MB.")
+                if not avatar.name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                    raise forms.ValidationError("Only PNG, JPG, JPEG, and WEBP images are allowed.")
         return avatar
 
 class AddressForm(forms.ModelForm):

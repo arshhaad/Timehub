@@ -499,11 +499,20 @@
             <div class="stat-icon" style="background-color:#fff7ed;color:#f97316;">
                 <i class="fas fa-coins"></i>
             </div>
-            <div class="stat-change">All Time</div>
+            <div class="stat-change">
+                {% if filter_type == 'all' %}All Time
+                {% elif filter_type == 'daily' %}Daily
+                {% elif filter_type == 'weekly' %}Weekly
+                {% elif filter_type == 'monthly' %}Monthly
+                {% elif filter_type == 'yearly' %}Yearly
+                {% elif filter_type == 'custom' %}Custom Range
+                {% else %}{{ filter_type|title }}
+                {% endif %}
+            </div>
         </div>
         <div class="stat-title">Total Revenue</div>
-        <div class="stat-value" data-raw="{{ total_revenue }}" data-prefix="₹" data-float="true">
-            ₹{{ total_revenue|floatformat:2 }}
+        <div class="stat-value" data-raw="{{ total_revenue|default:0 }}" data-prefix="₹" data-float="true">
+            ₹{{ total_revenue|default:0|floatformat:2 }}
         </div>
     </div>
 
@@ -512,11 +521,20 @@
             <div class="stat-icon" style="background-color:#f0fdf4;color:#16a34a;">
                 <i class="fas fa-shopping-bag"></i>
             </div>
-            <div class="stat-change">Excl. Cancelled</div>
+            <div class="stat-change">
+                {% if filter_type == 'all' %}All Time
+                {% elif filter_type == 'daily' %}Daily
+                {% elif filter_type == 'weekly' %}Weekly
+                {% elif filter_type == 'monthly' %}Monthly
+                {% elif filter_type == 'yearly' %}Yearly
+                {% elif filter_type == 'custom' %}Custom Range
+                {% else %}{{ filter_type|title }}
+                {% endif %}
+            </div>
         </div>
         <div class="stat-title">Total Orders</div>
-        <div class="stat-value" data-raw="{{ total_orders }}" data-prefix="" data-float="false">
-            {{ total_orders }}
+        <div class="stat-value" data-raw="{{ total_orders|default:0 }}" data-prefix="" data-float="false">
+            {{ total_orders|default:0 }}
         </div>
     </div>
 
@@ -528,8 +546,8 @@
             <div class="stat-change">Active</div>
         </div>
         <div class="stat-title">Total Customers</div>
-        <div class="stat-value" data-raw="{{ total_customers }}" data-prefix="" data-float="false">
-            {{ total_customers }}
+        <div class="stat-value" data-raw="{{ total_customers|default:0 }}" data-prefix="" data-float="false">
+            {{ total_customers|default:0 }}
         </div>
     </div>
 
@@ -541,8 +559,8 @@
             <div class="stat-change">In Stock</div>
         </div>
         <div class="stat-title">Total Products</div>
-        <div class="stat-value" data-raw="{{ total_products_count }}" data-prefix="" data-float="false">
-            {{ total_products_count }}
+        <div class="stat-value" data-raw="{{ total_products_count|default:0 }}" data-prefix="" data-float="false">
+            {{ total_products_count|default:0 }}
         </div>
     </div>
 
@@ -551,14 +569,24 @@
             <div class="stat-icon" style="background-color:#fdf2f8;color:#db2777;">
                 <i class="fas fa-chart-line"></i>
             </div>
-            <div class="stat-change">Per Order</div>
+            <div class="stat-change">
+                {% if filter_type == 'all' %}All Time
+                {% elif filter_type == 'daily' %}Daily
+                {% elif filter_type == 'weekly' %}Weekly
+                {% elif filter_type == 'monthly' %}Monthly
+                {% elif filter_type == 'yearly' %}Yearly
+                {% elif filter_type == 'custom' %}Custom Range
+                {% else %}{{ filter_type|title }}
+                {% endif %}
+            </div>
         </div>
         <div class="stat-title">Avg. Order Value</div>
-        <div class="stat-value" data-raw="{{ aov }}" data-prefix="₹" data-float="true">
-            ₹{{ aov|floatformat:2 }}
+        <div class="stat-value" data-raw="{{ aov|default:0 }}" data-prefix="₹" data-float="true">
+            ₹{{ aov|default:0|floatformat:2 }}
         </div>
     </div>
 </div>
+
 
 {# ── Sales Ledger & Filtering ── #}
 <div class="ledger-panel">
@@ -637,16 +665,17 @@
             {% if filtered_orders %}
             <tfoot style="background: #f9fafb; font-weight: 700;">
                 <tr>
-                    <td colspan="2">Summary ({{ total_sales_count }} Orders)</td>
+                    <td colspan="2">Summary ({{ total_sales_count|default:0 }} Orders)</td>
                     <td></td>
                     <td></td>
-                    <td style="color: #dc2626;">-₹{{ total_discount|floatformat:2 }}</td>
+                    <td style="color: #dc2626;">-₹{{ total_discount|default:0|floatformat:2 }}</td>
                     <td></td>
                     <td></td>
-                    <td style="font-size: 1.1rem; color: var(--primary-bg);">₹{{ total_order_amount|floatformat:2 }}</td>
+                    <td style="font-size: 1.1rem; color: var(--primary-bg);">₹{{ total_order_amount|default:0|floatformat:2 }}</td>
                 </tr>
             </tfoot>
             {% endif %}
+
         </table>
     </div>
 </div>
