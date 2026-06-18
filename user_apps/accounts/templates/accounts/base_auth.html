@@ -8,7 +8,8 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <meta name="description" content="{% block meta_description %}TimeHub — Manage your time efficiently{% endblock %}">
-    <link rel="stylesheet" href="{% static 'accounts/css/auth.css' %}">
+    {% block extra_meta %}{% endblock %}
+    <meta name="robots" content="noindex, nofollow">
     {% block extra_css %}{% endblock %}
     <style>
         /* Premium Toast Notifications */

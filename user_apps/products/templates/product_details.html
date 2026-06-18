@@ -4,7 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeHub - {{ product.name }}</title>
+    <title>{{ product.name }} | TimeHub Luxury Watches</title>
+    <meta name="description" content="Shop {{ product.name }} at TimeHub. {{ product.description|truncatewords:25 }} Authentic luxury timepiece with certified warranty and free shipping.">
+    <link rel="canonical" href="https://timehub.arrsh.shop/products/{{ product.slug }}/">
+    <!-- Open Graph -->
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="{{ product.name }} | TimeHub">
+    <meta property="og:description" content="Shop {{ product.name }} at TimeHub. Authentic luxury timepiece with certified warranty.">
+    {% if product.image %}
+    <meta property="og:image" content="{{ product.image.url }}">
+    {% else %}
+    <meta property="og:image" content="https://timehub.arrsh.shop/og-image.jpg">
+    {% endif %}
+    <meta property="og:url" content="https://timehub.arrsh.shop/products/{{ product.slug }}/">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ product.name }} | TimeHub">
+    <meta name="twitter:description" content="Shop {{ product.name }} at TimeHub. Authentic luxury timepiece with certified warranty.">
+    {% if product.image %}
+    <meta name="twitter:image" content="{{ product.image.url }}">
+    {% else %}
+    <meta name="twitter:image" content="https://timehub.arrsh.shop/og-image.jpg">
+    {% endif %}
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <!-- Google Fonts -->
