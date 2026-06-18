@@ -17,6 +17,9 @@ media/
 # Static files (collected)
 staticfiles/
 
+# Nginx configuration
+nginx/
+
 # Environment variables
 .env
 .env.*

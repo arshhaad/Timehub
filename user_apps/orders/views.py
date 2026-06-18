@@ -1,4 +1,4 @@
-"""Order and checkout views."""
+
 
 import json
 import random
@@ -34,17 +34,17 @@ except ImportError:
 
 
 SHIPPING_CHARGE = Decimal('49.00')
-TAX_RATE = Decimal('0.03')  # 3% GST
+TAX_RATE = Decimal('0.03')  
 
 
 
 
 def get_cart_totals(cart):
-    """Calculate total cost components for a shopping cart."""
+
     items = cart.items.select_related('product', 'variant').all()
     subtotal = sum(item.total_price for item in items)
 
-    # Free shipping on orders ≥ ₹5,000; flat ₹49 otherwise
+    # free shipping on orders ≥ ₹5,000; flat ₹49 otherwise
     if subtotal == 0:
         shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
@@ -54,11 +54,11 @@ def get_cart_totals(cart):
 
     discount = Decimal('0')
 
-    # Apply coupon if one is attached and still valid
+    # Apply coupon
     if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
         coupon = cart.coupon
 
-        # Narrow down which items the coupon applies to
+        # which items the coupon applies to
         if coupon.applicable_collection:
             collection_ids = coupon.applicable_collection.get_all_descendant_ids()
             applicable_items = [
@@ -68,7 +68,6 @@ def get_cart_totals(cart):
         else:
             applicable_items = list(items)
 
-        # Sort most expensive items first so the discount cap hits the right items
         applicable_items.sort(
             key=lambda x: (
                 x.variant.display_price if x.variant else x.product.display_price
@@ -76,7 +75,7 @@ def get_cart_totals(cart):
             reverse=True,
         )
 
-        # Honour the per-coupon item count limit if one is set
+        
         if coupon.max_items_count:
             discounted_subtotal = Decimal('0')
             remaining_limit = coupon.max_items_count
@@ -102,10 +101,8 @@ def get_cart_totals(cart):
             else:
                 discount = min(coupon.discount_value, applicable_subtotal)
 
-    # Stack the referral first-order discount on top of any coupon saving
     referral_discount = get_referral_first_order_discount(cart.user, items=items)
     discount += referral_discount
-    # Tax is 3% of the subtotal (after item-level offers)
     tax = round(subtotal * TAX_RATE, 2)
     total = subtotal - discount + tax + shipping
 
@@ -176,16 +173,13 @@ def checkout_page(request):
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
 
-    # --- Resolve Buy Now session ---
     buy_now_id = request.GET.get('buy_now_id')
     if buy_now_id and buy_now_id.isdigit():
         request.session['buy_now_id'] = buy_now_id
     elif buy_now_id == 'undefined':
-        # Defensive: explicitly clear if frontend sends "undefined"
         if 'buy_now_id' in request.session:
             del request.session['buy_now_id']
     elif 'buy_now_id' in request.session and not request.GET:
-        # User arrived from the cart page — clear any lingering Buy Now state
         del request.session['buy_now_id']
 
     current_buy_now_id = request.session.get('buy_now_id')
@@ -197,7 +191,7 @@ def checkout_page(request):
                 del request.session['buy_now_id']
             return redirect('cart_view')
     else:
-        # Fallback for invalid or missing buy_now_id
+        # back for invalid or missing buy_now_id
         if 'buy_now_id' in request.session:
             del request.session['buy_now_id']
         items = cart.items.select_related('product', 'variant').all()
@@ -206,7 +200,6 @@ def checkout_page(request):
         messages.warning(request, 'Your cart is empty. Add items before checking out.')
         return redirect('cart_view')
 
-    # --- Availability check before showing the page ---
     for item in items:
         if not item.product.is_active:
             messages.error(request, f"Sorry, '{item.product.name}' is no longer available.")
@@ -226,14 +219,11 @@ def checkout_page(request):
             )
             return redirect('cart_view')
 
-    # --- Price calculations ---
-    # display_price already reflects any active product/category offers
     subtotal = sum(item.total_price for item in items)
     total_quantity = sum(item.quantity for item in items)
 
 
 
-    # How much the customer saved from product-specific offers (display only)
     from django.utils import timezone as _tz
     _now = _tz.now()
 
@@ -254,7 +244,6 @@ def checkout_page(request):
         )
         saving_per_unit = max(Decimal('0'), base_price - discounted)
         if saving_per_unit > 0:
-            # Determine whether the best offer is product-level or category-level
             p_off = item.product.product_offers.filter(
                 is_active=True, valid_from__lte=_now, valid_to__gte=_now
             ).order_by('-discount_percentage').first()
@@ -277,14 +266,13 @@ def checkout_page(request):
     else:
         shipping = Decimal('49.00')
 
-    # Validate and compute coupon discount
+    # validate and compute coupon discount
     coupon_discount = Decimal('0')
     if cart.coupon:
         is_valid, _ = cart.coupon.is_valid_for_user(request.user)
         if is_valid:
             coupon_discount, _ = _build_coupon_discount(cart.coupon, items, subtotal)
             if coupon_discount == 0:
-                # Coupon no longer meets minimum — detach it
                 cart.coupon = None
                 cart.save()
         else:
@@ -294,14 +282,12 @@ def checkout_page(request):
     referral_discount = get_referral_first_order_discount(request.user, items=items)
     discount = coupon_discount + referral_discount
 
-    # Tax is calculated on subtotal (after item offers)
     tax = round(subtotal * TAX_RATE, 2)
     total = subtotal - discount + tax + shipping
 
     addresses = Address.objects.filter(user=request.user)
     default_address = addresses.filter(is_default=True).first() or addresses.first()
 
-    # Shared context for both GET render and error re-renders on POST
     total_saved = offer_savings + coupon_discount + referral_discount
     render_ctx = {
         'items': items,
@@ -322,14 +308,12 @@ def checkout_page(request):
         'total_quantity': total_quantity,
     }
 
-    # ------------------------------------------------------------------
-    # POST — place the order
-    # ------------------------------------------------------------------
+    # place the order
     if request.method == 'POST':
         address_id = request.POST.get('address_id')
         payment_method = request.POST.get('payment_method', 'cod')
-        # Validate COD for high subtotal
-        if payment_method == 'cod' and subtotal > 30000:
+
+        if payment_method == 'cod' and subtotal > 20000:
             messages.error(request, "Sorry, COD payment is not allowed for orders exceeding ₹20,000.")
             return render(request, 'checkout_page.html', render_ctx)
 
@@ -343,7 +327,6 @@ def checkout_page(request):
 
         address = get_object_or_404(Address, id=address_id, user=request.user)
 
-        # Snapshot the address at order time so future edits don't affect it
         address_data = {
             'full_name': address.full_name,
             'street': address.street,
@@ -360,7 +343,6 @@ def checkout_page(request):
                     timezone.now() + timedelta(days=random.randint(3, 7))
                 ).date()
 
-                # Deduct wallet balance upfront; roll back on any later failure
                 if payment_method == 'wallet':
                     wallet, _ = Wallet.objects.get_or_create(user=request.user)
                     if wallet.balance < total:
@@ -396,7 +378,7 @@ def checkout_page(request):
                     cart.coupon.used_count += 1
                     cart.coupon.save()
 
-                # Create order items and decrement stock
+                # create order items and decrement stock
                 for item in items:
                     if not item.product.is_active or (
                         item.variant and not item.variant.is_active
@@ -432,8 +414,7 @@ def checkout_page(request):
                         item.product.stock -= item.quantity
                         item.product.save()
 
-                # Remove ordered items from the cart only for non-Razorpay payments
-                # Razorpay items are cleared in verify_payment after success
+               
                 if payment_method != 'razorpay':
                     items.delete()
                 if current_buy_now_id:
@@ -448,9 +429,7 @@ def checkout_page(request):
             messages.error(request, str(e))
             return render(request, 'checkout_page.html', render_ctx)
 
-    # ------------------------------------------------------------------
-    # GET — render the checkout page
-    # ------------------------------------------------------------------
+    # render the checkout page
     estimated_delivery = timezone.now() + timedelta(days=random.randint(1, 7))
 
     now = timezone.now()
@@ -522,7 +501,7 @@ def order_detail(request, order_uuid):
     except Exception:
         pass
 
-    # Keep totals accurate for in-flight orders
+    
     if order.status in ['Pending', 'Processing', 'Shipped']:
         order.update_totals()
 
@@ -587,7 +566,6 @@ def cancel_order(request, order_uuid):
                 if item.variant:
                     item.variant.stock += item.quantity
                     item.variant.save()
-                    # Sync product-level stock aggregate
                     p = item.variant.product
                     p.stock = p.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
                     p.save(update_fields=['stock'])
@@ -636,7 +614,6 @@ def cancel_order_item(request, item_uuid):
             return redirect('order_detail', order_uuid=order.uuid)
 
         with transaction.atomic():
-            # Capture values before any mutation for refund calculation
             item_subtotal = item.price * item.quantity
             original_order_subtotal = order.subtotal
 
@@ -647,7 +624,6 @@ def cancel_order_item(request, item_uuid):
             if item.variant:
                 item.variant.stock += item.quantity
                 item.variant.save()
-                # Sync product-level stock aggregate
                 p = item.variant.product
                 p.stock = p.variants.filter(is_active=True).aggregate(Sum('stock'))['stock__sum'] or 0
                 p.save(update_fields=['stock'])
@@ -658,7 +634,6 @@ def cancel_order_item(request, item_uuid):
 
             order.update_totals()
 
-            # Refund: prorate discount to avoid zero-refund when coupon absorbs full subtotal
             if order.is_paid:
                 if original_order_subtotal > 0:
                     item_discount_share = (item_subtotal / original_order_subtotal) * order.discount
@@ -725,13 +700,11 @@ def return_order(request, order_uuid):
 
         remaining = order.items.filter(is_cancelled=False, is_returned=False)
         if not remaining.exists():
-            # All items are being returned — full return request
             order.status = 'Return Requested'
             order.return_status = 'Requested'
             order.return_reason = reason
             order.save()
         else:
-            # Partial return
             order.return_status = 'Requested'
             if not order.return_reason:
                 order.return_reason = f"Partial Return: {reason}"
@@ -760,7 +733,6 @@ def download_invoice(request, order_uuid):
     except Exception:
         pass
 
-    # Update totals to reflect current state (especially if returned)
     if order.status in ['Pending', 'Processing', 'Shipped', 'Returned']:
         order.update_totals()
 
@@ -995,7 +967,7 @@ def apply_coupon(request):
     if not is_valid:
         return JsonResponse({'success': False, 'error': error_message})
 
-    # Determine applicable items and their total
+    
     if coupon.applicable_collection:
         collection_ids = coupon.applicable_collection.get_all_descendant_ids()
         applicable_items_list = [
@@ -1045,7 +1017,7 @@ def apply_coupon(request):
     else:
         shipping = Decimal('49.00')
 
-    # 1. Coupon Discount
+    # Coupon Discount
     if coupon.discount_type == 'percentage':
         coupon_discount = (applicable_subtotal * coupon.discount_value) / Decimal('100')
         if coupon.max_discount_amount:
@@ -1053,17 +1025,17 @@ def apply_coupon(request):
     else:
         coupon_discount = min(coupon.discount_value, applicable_subtotal)
 
-    # 2. Referral Discount (Must stack)
+    # Referral Discount
     referral_discount = get_referral_first_order_discount(request.user, items=items)
     
     total_discount = coupon_discount + referral_discount
 
-    # Tax is calculated on the taxable amount (subtotal minus all discounts)
+    # Tax is calculated 
     taxable = max(Decimal('0'), subtotal - total_discount)
     tax = round(taxable * TAX_RATE, 2)
     total = taxable + tax + shipping
 
-    # Calculate offer savings for AJAX response
+    # calculate offer savings 
     offer_savings = Decimal('0')
     for item in items:
         base = item.variant.effective_price if item.variant else item.product.price
@@ -1104,15 +1076,12 @@ def remove_coupon(request):
     else:
         shipping = Decimal('49.00')
 
-    # Referral Discount remains even if coupon is removed
     referral_discount = get_referral_first_order_discount(request.user, items=items)
 
-    # Tax is calculated on the taxable amount (subtotal minus referral discount)
     taxable = max(Decimal('0'), subtotal - referral_discount)
     tax = round(taxable * TAX_RATE, 2)
     total = taxable + tax + shipping
 
-    # Calculate offer savings for AJAX response
     offer_savings = Decimal('0')
     for item in items:
         base = item.variant.effective_price if item.variant else item.product.price

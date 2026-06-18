@@ -1,4 +1,4 @@
-"""User Profile & Shopping Views."""
+"""user profile and shopping views."""
 
 import json
 from decimal import Decimal
@@ -28,10 +28,9 @@ from user_apps.core.models import (
 @login_required
 @never_cache
 def dashboard(request):
-    """Show user account dashboard summary."""
     user = request.user
     
-    # 1. Ensure user has a unique referral code
+    # user has a unique referral code
     if not user.referral_code:
         from user_apps.core.signals import generate_referral_code
         code = f"TH-{generate_referral_code()}"
@@ -40,7 +39,7 @@ def dashboard(request):
         user.referral_code = code
         user.save(update_fields=['referral_code'])
     
-    # 2. Gather simple statistics
+    
     total_orders = user.orders.count()
     wishlist, _ = Wishlist.objects.get_or_create(user=user)
     saved_items = wishlist.items.count()
@@ -48,7 +47,7 @@ def dashboard(request):
     stats = {
         'total_orders': total_orders,
         'saved_items': saved_items,
-        'reward_points': 0, # Future feature placeholder
+        'reward_points': 0,
     }
     
     recent_orders = user.orders.order_by('-created_at')[:5]
@@ -66,26 +65,25 @@ def dashboard(request):
 @login_required
 @never_cache
 def edit_profile(request):
-    """Update user profile personal information."""
     if request.method == 'POST':
         form = UserEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             new_email = form.cleaned_data.get('email')
             
-            # Check if user is trying to change their email address
+            # check if user is trying to change their email address
             if new_email and new_email != request.user.email:
-                # Security: Check if new email is already taken
+                # check if new email is already taken
                 if CustomUser.objects.filter(email=new_email).exclude(id=request.user.id).exists():
                     messages.error(request, 'This email is already linked to another account.')
                     return render(request, 'edit_profile.html', {'form': form})
 
-                # Save non-email changes first
+                # save non-email changes first
                 user = form.save(commit=False)
-                user.email = request.user.email # Revert email for now
+                user.email = request.user.email 
                 user.save()
                 form.save_m2m()
 
-                # Trigger OTP Verification Flow
+                # trigger otp verification
                 request.session['pending_email_change'] = new_email
                 otp_obj = EmailOTP.objects.create(user=request.user)
                 send_otp_email(new_email, otp_obj.otp, context="email_change")
@@ -93,7 +91,7 @@ def edit_profile(request):
                 messages.info(request, f"Please verify the code sent to {new_email} to update your email.")
                 return redirect('verify_email_change')
             
-            # Standard profile update (no email change)
+            # standard profile update
             form.save()
             messages.success(request, 'Profile updated successfully!')
             return redirect('user_dashboard')
@@ -106,12 +104,11 @@ def edit_profile(request):
 @login_required
 @never_cache
 def account_edit(request):
-    """Change account security password."""
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            # Important: Keep the user logged in after password change
+            # keep the user logged in after password change
             update_session_auth_hash(request, user)  
             messages.success(request, 'Password updated successfully!')
             return redirect('user_dashboard')
@@ -128,7 +125,6 @@ def account_edit(request):
 @login_required
 @never_cache
 def verify_email_change(request):
-    """Verify OTP for email update request."""
     new_email = request.session.get('pending_email_change')
     if not new_email:
         return redirect('edit_profile')
@@ -136,7 +132,7 @@ def verify_email_change(request):
     if request.method == 'POST':
         otp_input = request.POST.get('otp', '').strip()
         try:
-            # Check against the latest OTP issued to this user
+            # latest OTP issued to this user
             otp_obj = request.user.otps.latest('created_at')
             
             if otp_obj.is_expired:
@@ -144,12 +140,12 @@ def verify_email_change(request):
                 return redirect('edit_profile')
                 
             if otp_obj.otp == otp_input:
-                # Verification success — update the email for real
+                # verification success - update the email
                 user = request.user
                 user.email = new_email
                 user.save()
                 
-                # Cleanup
+                # cleanup
                 if 'pending_email_change' in request.session:
                     del request.session['pending_email_change']
                 otp_obj.delete()
@@ -168,7 +164,6 @@ def verify_email_change(request):
 @login_required
 @never_cache
 def resend_email_otp(request):
-    """Resend OTP for email verification."""
     new_email = request.session.get('pending_email_change')
     if not new_email:
         return redirect('edit_profile')
@@ -185,7 +180,6 @@ def resend_email_otp(request):
 @login_required
 @never_cache
 def address_list(request):
-    """List all saved delivery addresses."""
     addresses = Address.objects.filter(user=request.user)
     return render(request, 'address.html', {'addresses': addresses})
 
@@ -228,13 +222,13 @@ def edit_address(request, address_uuid):
             return redirect(next_url)
     else:
         form = AddressForm(instance=address)
+        
     return render(request, 'address_form.html', {'form': form, 'next': next_url})
 
 
 @login_required
 @never_cache
 def delete_address(request, address_uuid):
-    """Delete a saved delivery address."""
     address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
     address.delete()
     messages.success(request, 'Address removed.')
@@ -244,7 +238,6 @@ def delete_address(request, address_uuid):
 @login_required
 @never_cache
 def toggle_default_address(request, address_uuid):
-    """Set an address as the primary default."""
     address = get_object_or_404(Address, uuid=address_uuid, user=request.user)
     if not address.is_default:
         Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
@@ -260,11 +253,10 @@ def toggle_default_address(request, address_uuid):
 @login_required
 @never_cache
 def cart_view(request):
-    """View shopping cart and price breakdown."""
     cart, _ = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related('product', 'variant').all()
     
-    # 1. Base Calculations & Offer Savings
+    # base calculations & offer savings
     from django.utils import timezone as _tz
     _now = _tz.now()
 
@@ -274,15 +266,13 @@ def cart_view(request):
     subtotal = Decimal('0')
 
     for item in items:
-        # The price as it appears in the catalog (usually discounted)
         item_price = item.variant.display_price if item.variant else item.product.display_price
-        # The original price (before any offers)
         original_price = item.variant.effective_price if item.variant else item.product.price
         
         subtotal += item_price * item.quantity
         base_subtotal += original_price * item.quantity
         
-        # Calculate specific offer savings for this item
+        # calculate specific offer savings for this item
         saving_per_unit = max(Decimal('0'), original_price - item_price)
         if saving_per_unit > 0:
             p_off = item.product.product_offers.filter(
@@ -300,23 +290,23 @@ def cart_view(request):
             else:
                 category_offer_savings += saving_per_unit * item.quantity
 
-    # Shipping: Free on ₹5000+ else ₹49 (calculated on the discounted subtotal)
+    # shipping: Free on ₹5000+ else ₹49 (calculated on the discounted subtotal)
     if subtotal == 0: shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'): shipping = Decimal('0.00')
     else: shipping = Decimal('49.00')
 
-    # 2. Discount Logic (Coupon & Referral)
+    # discount logic (coupon & referral)
     from admin_apps.offers.services import get_referral_first_order_discount
     coupon_discount = Decimal('0')
     if cart.coupon and cart.coupon.is_valid_for_user(request.user)[0]:
-        # Narrow down collection-specific coupons
+        # narrow down collection-specific coupons
         if cart.coupon.applicable_collection:
             collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
             applicable_items = [i for i in items if i.product.collection_id in collection_ids]
             applicable_subtotal = sum(i.total_price for i in applicable_items)
         else:
             applicable_subtotal = subtotal
-            
+
         if applicable_subtotal >= cart.coupon.min_purchase_amount:
             if cart.coupon.discount_type == 'percentage':
                 coupon_discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
@@ -328,12 +318,12 @@ def cart_view(request):
     referral_discount = get_referral_first_order_discount(request.user, items=items)
     discount = coupon_discount + referral_discount
 
-    # 3. Final Totals
+    # final totals
     taxable = max(Decimal('0'), subtotal - discount)
     tax = round(taxable * Decimal('0.03'), 2)
     total = taxable + tax + shipping
 
-    # 4. Availability Warnings
+    # availability warnings
     has_stock_issues = False
     for item in items:
         if not item.product.is_active or item.product.is_deleted:
@@ -343,7 +333,7 @@ def cart_view(request):
         if stock < item.quantity:
             has_stock_issues = True; break
             
-    # Progress bar for free shipping
+    # progress bar for free shipping
     shipping_needed = max(0, Decimal('5000.00') - subtotal)
     shipping_percent = min(100, int((subtotal / Decimal('5000.00')) * 100)) if subtotal < Decimal('5000.00') else 100
 
@@ -352,7 +342,7 @@ def cart_view(request):
     return render(request, 'cart.html', {
         'cart': cart, 'items': items,
         'base_subtotal': base_subtotal,
-        'subtotal': subtotal, # This is the taxable amount before coupon/referral
+        'subtotal': subtotal,
         'product_offer_savings': product_offer_savings,
         'category_offer_savings': category_offer_savings,
         'coupon_discount': coupon_discount,
@@ -366,7 +356,6 @@ def cart_view(request):
 
 @login_required
 def add_to_cart(request, product_uuid):
-    """Add a product or variant to the cart."""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request'})
 
@@ -379,19 +368,17 @@ def add_to_cart(request, product_uuid):
     except:
         quantity, variant_id = 1, None
             
-    # Basic Validation
+    
     if not product.is_active or product.is_deleted or product.collection.is_deleted:
         return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
             
-    # Resolve Variant
     active_variants = product.variants.filter(is_active=True)
     variant = active_variants.filter(id=variant_id).first() if variant_id else None
     
     if not variant and active_variants.exists():
-        # Fallback to first available if none selected
         variant = active_variants.first()
         
-    # Stock Check
+    # stock check
     stock = variant.stock if variant else product.stock
     if stock <= 0: return JsonResponse({'success': False, 'error': 'Item is out of stock'})
         
@@ -412,7 +399,7 @@ def add_to_cart(request, product_uuid):
         else:
             return JsonResponse({'success': False, 'error': 'Cannot add more: Stock or Limit reached'})
                 
-    # Cleanup Wishlist if added to cart
+    # cleanup wishlist if added to cart
     WishlistItem.objects.filter(wishlist__user=request.user, product=product).delete()
                 
     count = sum(i.quantity for i in cart.items.all())
@@ -434,7 +421,7 @@ def update_cart(request, item_id):
         action = data.get('action')
         item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
         
-        # Increase/Decrease Logic
+        # +/- logic
         if action == 'increase':
             stock = item.variant.stock if item.variant else item.product.stock
             if item.quantity >= 10: return JsonResponse({'success': False, 'error': 'Limit: 10 units'})
@@ -447,8 +434,8 @@ def update_cart(request, item_id):
             
         item.save()
         
-        # Fresh Totals Calculation
-        cart = item.cart  # re-bind after item.save()
+        # fresh totals calculation
+        cart = item.cart  
         all_items = cart.items.select_related('product', 'variant').all()
         from django.utils import timezone as _tz
         from admin_apps.offers.services import get_referral_first_order_discount
@@ -479,7 +466,7 @@ def update_cart(request, item_id):
                 else:
                     category_offer_savings += save_per * i.quantity
 
-        # Coupon discount (on post-offer subtotal)
+        # coupon discount (on post-offer subtotal)
         coupon_discount = Decimal('0')
         if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
             if cart.coupon.applicable_collection:
@@ -499,10 +486,10 @@ def update_cart(request, item_id):
         referral_discount = get_referral_first_order_discount(cart.user, items=all_items)
         discount = coupon_discount + referral_discount
 
-        # Shipping: based on post-offer subtotal
+        # shipping: based on post-offer subtotal
         ship = Decimal('0') if subtotal == 0 or subtotal >= Decimal('5000') else Decimal('49')
 
-        # Tax on (subtotal − coupon/referral discount)
+        # tax on (subtotal - coupon/referral discount)
         taxable = max(Decimal('0'), subtotal - discount)
         tax = round(taxable * Decimal('0.03'), 2)
         total = taxable + tax + ship
@@ -530,7 +517,6 @@ def update_cart(request, item_id):
 
 @login_required
 def remove_from_cart(request, item_id):
-    """Remove an item from the shopping cart."""
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     item.delete()
     messages.success(request, 'Item removed.')
@@ -540,14 +526,12 @@ def remove_from_cart(request, item_id):
 @login_required
 @never_cache
 def wishlist_view(request):
-    """View saved items in the wishlist."""
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
     items = wishlist.items.select_related('product').all()
     return render(request, 'wishlist.html', {'items': items})
 
 
 def toggle_wishlist(request, product_uuid):
-    """Add or remove an item from the wishlist."""
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Please login first.'})
         
@@ -596,7 +580,6 @@ def save_for_later(request, item_id):
 def notifications_view(request):
     """View system and order notifications."""
     notes = Notification.objects.filter(user=request.user).order_by('-created_at')
-    # Auto-read on view
     notes.filter(is_read=False).update(is_read=True)
     return render(request, 'notifications.html', {'notifications': notes})
 
