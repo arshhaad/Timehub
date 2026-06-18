@@ -34,7 +34,7 @@ def home_view(request):
     else:
         cache_key = "home_recommendations_anon"
 
-    # Try to get recommendations from Redis Cache
+  # Try to get recommendations from Redis Cache
     recommended_ids = None
     try:
         recommended_ids = cache.get(cache_key)
@@ -48,50 +48,51 @@ def home_view(request):
                 WishlistItem,
                 OrderItem,
                 ComparisonHistory,
-            )
+        )   
 
-            interacted_pids = set()
+        interacted_pids = set()
 
-            sources = [
-                (CartItem, {"cart__user": request.user}),
-                (WishlistItem, {"wishlist__user": request.user}),
-                (OrderItem, {"order__user": request.user}),
-                (ComparisonHistory, {"user": request.user}),
-            ]
+        sources = [
+            (CartItem, {"cart__user": request.user}),
+            (WishlistItem, {"wishlist__user": request.user}),
+            (OrderItem, {"order__user": request.user}),
+            (ComparisonHistory, {"user": request.user}),
+        ]
 
-            for model, filters in sources:
-                try:
-                    product_ids = model.objects.filter(**filters).values_list(
-                        "product_id", flat=True
-                    )
-                    interacted_pids.update(product_ids)
-                except Exception:
-                    pass
+        for model, filters in sources:
+            try:
+                product_ids = model.objects.filter(**filters).values_list(
+                    "product_id", flat=True
+                )
+                interacted_pids.update(product_ids)
+            except Exception:
+                pass
 
-            # Gather preferences from interacted products
-            pref_collections = set()
-            pref_brands = set()
-            pref_genders = set()
-            pref_occasions = set()
+        # Gather preferences
+        pref_collections = set()
+        pref_brands = set()
+        pref_genders = set()
+        pref_occasions = set()
 
-            if interacted_pids:
-                interacted_products = Product.objects.filter(id__in=interacted_pids)
+        if interacted_pids:
+            interacted_products = Product.objects.filter(id__in=interacted_pids)
 
-                for product in interacted_products:
-                    if product.collection_id:
-                        pref_collections.add(product.collection_id)
-                    if product.brand:
-                        pref_brands.add(product.brand)
-                    if product.gender:
-                        pref_genders.add(product.gender)
-                    if product.occasion:
-                        pref_occasions.add(product.occasion)
+            for product in interacted_products:
+                if product.collection_id:
+                    pref_collections.add(product.collection_id)
 
-            # Score candidates based on preference overlap
-            candidates = Product.objects.filter(
-                is_active=True, is_deleted=False
-            ).exclude(id__in=interacted_pids)
+                if product.brand:
+                    pref_brands.add(product.brand)
 
+                if product.gender:
+                    pref_genders.add(product.gender)
+
+                if product.occasion:
+                    pref_occasions.add(product.occasion)
+
+            
+            candidates = Product.objects.filter(is_active=True, is_deleted=False).exclude(id__in=interacted_pids)
+            
             scored_candidates = []
             for candidate in candidates:
                 score = 0
@@ -105,10 +106,10 @@ def home_view(request):
                     score += 1
                 scored_candidates.append((score, candidate))
 
+            # Sort by score
             scored_candidates.sort(key=lambda x: (x[0], x[1].rating), reverse=True)
             recommended_products = [item[1] for item in scored_candidates[:4]]
-
-            # Fill with fallbacks if less than 4 recommendations
+            
             if len(recommended_products) < 4:
                 needed = 4 - len(recommended_products)
                 exclude_ids = [p.id for p in recommended_products] + list(interacted_pids)
@@ -116,9 +117,7 @@ def home_view(request):
                     is_active=True, is_deleted=False
                 ).exclude(id__in=exclude_ids).order_by('-rating', '-created_at')[:needed]
                 recommended_products.extend(list(fallbacks))
-
         else:
-            # Anonymous users: top rated products
             recommended_products = Product.objects.filter(
                 is_active=True, is_deleted=False
             ).order_by('-rating', '-created_at')[:4]
@@ -129,11 +128,9 @@ def home_view(request):
         except Exception as e:
             logger.error(f"Redis cache set error on home view: {e}")
 
-    # Retrieve products in cached order
     products = list(Product.objects.filter(id__in=recommended_ids, is_active=True, is_deleted=False))
     preserved = {pid: pos for pos, pid in enumerate(recommended_ids)}
     products.sort(key=lambda p: preserved.get(p.id, 999))
-
     if len(products) < 4:
         needed = 4 - len(products)
         exclude_ids = [p.id for p in products]
