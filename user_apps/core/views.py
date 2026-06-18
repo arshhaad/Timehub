@@ -24,17 +24,16 @@ def landing_view(request):
 
 @never_cache
 def home_view(request):
+    if not request.user.is_authenticated:
+        return redirect("landing_view")
     from django.core.cache import cache
     import logging
     logger = logging.getLogger(__name__)
 
-    # Cache Key based on authentication
-    if request.user.is_authenticated:
-        cache_key = f"home_recommendations_user_{request.user.id}"
-    else:
-        cache_key = "home_recommendations_anon"
+    # Cache key — user is always authenticated at this point
+    cache_key = f"home_recommendations_user_{request.user.id}"
 
-  # Try to get recommendations from Redis Cache
+    # Try to get recommendations from Redis Cache
     recommended_ids = None
     try:
         recommended_ids = cache.get(cache_key)
