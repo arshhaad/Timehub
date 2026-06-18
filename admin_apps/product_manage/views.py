@@ -359,7 +359,7 @@ def _save_variants(product, request):
     # De-activate variants removed from the UI
     product.variants.filter(is_active=True).exclude(id__in=seen_ids).update(is_active=False)
     
-    # Sync total product stock and color filters
+    # total product stock and color filters
     active = product.variants.filter(is_active=True)
     product.stock = active.aggregate(Sum('stock'))['stock__sum'] or 0
     product.colors.set(Color.objects.filter(name__in=active.values_list('strap_color', flat=True).distinct()))

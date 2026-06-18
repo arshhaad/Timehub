@@ -142,7 +142,7 @@ def seller_earnings(request):
     if status != 'All':
         earnings = earnings.filter(status=status)
         
-    # Stats for the sidebar/filters
+
     sellers_with_stats = Seller.objects.annotate(
         total_paid=Sum('earnings__amount', filter=Q(earnings__status='Approved'))
     ).order_by('-created_at')
@@ -166,7 +166,7 @@ def process_earning(request, earning_id):
         amt_str = request.POST.get('amount')
         note = request.POST.get('admin_note', '').strip()
         
-        # 1. Optional Amount Update
+
         if amt_str:
             try:
                 earn.amount = Decimal(amt_str)
@@ -182,18 +182,18 @@ def process_earning(request, earning_id):
                 earn.status = 'Approved'
                 earn.save()
                 
-                # Financial Credit
+
                 wallet, _ = Wallet.objects.get_or_create(user=earn.seller.user)
                 wallet.balance += earn.amount
                 wallet.save()
                 
-                # Transaction Ledger
+
                 WalletTransaction.objects.create(
                     wallet=wallet, transaction_type='Credit', amount=earn.amount,
                     description=f"Earnings: {earn.order_item.product.name} (ID: {earn.order_item.id})"
                 )
                 
-                # Notify Seller
+
                 Notification.objects.create(
                     user=earn.seller.user,
                     message=f"Payout Approved: ₹{earn.amount} credited for '{earn.order_item.product.name}'."

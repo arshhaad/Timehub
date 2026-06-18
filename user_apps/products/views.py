@@ -14,20 +14,20 @@ from django.views.decorators.cache import never_cache
 
 
 def product_list(request):
-    # Base queryset: Show active products AND inactive products (to show as unavailable)
+
     products = Product.objects.filter(is_deleted=False).annotate(
         effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
     )
     
-    # Get all categories and annotate with product count (only active/not deleted)
+    
     categories = Collection.objects.filter(is_deleted=False).annotate(
         product_count=Count('products', filter=Q(products__is_active=True, products__is_deleted=False))
     )
-    paginator = Paginator(products, 12) # 12 per page
+    paginator = Paginator(products, 12) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Search functionality
+    # Search 
     query = request.GET.get('q', '')
     if query:
         products = products.filter(
@@ -95,11 +95,10 @@ def product_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Total count for "All Watches" (including inactive but not deleted)
+   
     total_products = Product.objects.filter(is_deleted=False).count()
     
-    # Get Max Price for the slider
-    # Get Max Price for the slider based on effective price
+   
     max_price_db = Product.objects.filter(is_deleted=False).annotate(
         effective_price=Coalesce('discount_price', 'price', output_field=DecimalField())
     ).aggregate(Max('effective_price'))['effective_price__max'] or 1000
@@ -151,7 +150,6 @@ def product_list(request):
         'current_compare_products': compare_products,
     }
     
-    # Add wishlist items if user is authenticated
     if request.user.is_authenticated:
         from user_apps.core.models import WishlistItem
         wishlist_product_ids = WishlistItem.objects.filter(wishlist__user=request.user).values_list('product_id', flat=True)
@@ -162,17 +160,16 @@ def product_list(request):
 @login_required
 @never_cache
 def compare_products(request):
-    # Try to get IDs from session first, then GET
     product_ids = request.session.get('compare_list', [])
     if not product_ids:
         product_ids_str = request.GET.get('ids', '')
         product_ids = [pid for pid in product_ids_str.split(',') if str(pid).isdigit()]
     
-    # Filter out empty strings and invalid IDs
+   
     product_ids = [pid for pid in product_ids if str(pid).isdigit()]
     
     if not product_ids:
-        # Show history if no active comparison
+        #show history if no active comparison
         history = []
         if request.user.is_authenticated:
             history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
@@ -183,10 +180,10 @@ def compare_products(request):
             'places_to_fill': range(3)
         })
         
-    # Get products, limit to 3
+    
     products = Product.objects.filter(id__in=product_ids, is_active=True, is_deleted=False)[:3]
     
-    # Save to history if logged in
+    
     if request.user.is_authenticated and products.exists():
         for p in products:
             ComparisonHistory.objects.update_or_create(
@@ -195,31 +192,29 @@ def compare_products(request):
                 defaults={'created_at': timezone.now()} 
             )
             
-    # Process features for each product
+   
     for product in products:
         if product.features:
             product.features_list = [f.strip() for f in product.features.split(',')]
         else:
             product.features_list = []
             
-    # Get overall history
+    
     history = []
     if request.user.is_authenticated:
         history = ComparisonHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
             
-    # --- Price calculations (mirrors checkout logic) ---
-    # display_price already reflects any active product/category offers
+    
     TAX_RATE = Decimal('0.03')
     
     subtotal = sum(p.display_price for p in products)
     
-    # How much the customer saved from product/category offers (display only)
     offer_savings = sum(
         max(Decimal('0'), p.price - p.display_price)
         for p in products
     )
     
-    # Shipping: free if no items or subtotal >= ₹5000
+    #shipping: free if no items or subtotal >= ₹5000
     if not products.exists() or subtotal == 0:
         shipping = Decimal('0.00')
     elif subtotal >= Decimal('5000.00'):
@@ -227,7 +222,7 @@ def compare_products(request):
     else:
         shipping = Decimal('49.00')
     
-    # Tax: 3% on subtotal
+    # tax: 3% on subtotal
     tax = round(subtotal * TAX_RATE, 2)
     
     # Grand total
@@ -302,20 +297,19 @@ def toggle_compare_mode(request):
 def product_details(request, product_uuid):
     product = get_object_or_404(Product, uuid=product_uuid)
     
-    # Check if the product is active or if its collection/itself is deleted
     if not product.is_active or product.is_deleted or (product.collection and product.collection.is_deleted):
         messages.error(request, "This product is currently unavailable or has been removed.")
         return redirect('product_listing')
         
-    # Get additional images
+    
     images = product.images.all()
     
-    # Process features for the specifications tab
+
     features_list = []
     if product.features:
         features_list = [f.strip() for f in product.features.split(',')]
         
-    # --- Beginner-Friendly Content-Based Recommendation Engine with Redis Caching ---
+    
     from django.core.cache import cache
     import logging
     logger = logging.getLogger(__name__)
@@ -328,45 +322,45 @@ def product_details(request, product_uuid):
         logger.error(f"Redis cache error on details page: {e}")
 
     if recommended_ids is None:
-        # Step 1: Fetch candidate products (all products that are active, not deleted, and NOT the current product)
+        # step 1: fetch candidate products
         candidates = Product.objects.filter(is_active=True, is_deleted=False).exclude(id=product.id)
         
-        # Step 2: Score each candidate product based on matching features
+        # step 2: score each candidate product based on matching features
         scored_candidates = []
         for candidate in candidates:
             score = 0
             
-            # Rule A: Same collection/category is highly relevant (adds 3 points)
+            # rule A: Same collection/category is highly relevant (adds 3 points)
             if candidate.collection == product.collection:
                 score += 3
                 
-            # Rule B: Same brand is important (adds 2 points)
+            # rule B: Same brand is important (adds 2 points)
             if candidate.brand == product.brand:
                 score += 2
                 
-            # Rule C: Matching target gender is important (adds 2 points)
+            # rule C: matching target gender is important (adds 2 points)
             if candidate.gender == product.gender:
                 score += 2
                 
-            # Rule D: Matching occasion adds 1 point
+            #rule D: matching occasion adds 1 point
             if candidate.occasion == product.occasion:
                 score += 1
                 
-            # Rule E: Matching strap material adds 1 point
+            #rule E: matching strap material adds 1 point
             if candidate.strap_material and candidate.strap_material == product.strap_material:
                 score += 1
                 
-            # Rule F: Matching watch function/movement type adds 1 point
+            #rule F: matching watch function/movement type adds 1 point
             if candidate.function == product.function:
                 score += 1
                 
             # Store the calculated score along with the candidate watch
             scored_candidates.append((score, candidate))
         
-        # Step 3: Sort candidates by score (highest first). Use rating as a tie-breaker.
+        #3 Sort candidates by score 
         scored_candidates.sort(key=lambda x: (x[0], x[1].rating), reverse=True)
         
-        # Step 4: Keep only the top 4 recommended watches
+        #4  keep only the top 4 recommended watches
         related_products = [item[1] for item in scored_candidates[:4]]
         recommended_ids = [p.id for p in related_products]
         try:
@@ -374,12 +368,10 @@ def product_details(request, product_uuid):
         except Exception as e:
             logger.error(f"Redis cache set error on details page: {e}")
 
-    # Fetch product details for the cached IDs, preserving the sorted order
     related_products = list(Product.objects.filter(id__in=recommended_ids, is_active=True, is_deleted=False))
     preserved = {pid: pos for pos, pid in enumerate(recommended_ids)}
     related_products.sort(key=lambda p: preserved.get(p.id, 999))
 
-    # Pad if we have less than 4 items (e.g. if some got deleted or deactivated)
     if len(related_products) < 4:
         needed = 4 - len(related_products)
         exclude_ids = [p.id for p in related_products] + [product.id]
@@ -394,10 +386,10 @@ def product_details(request, product_uuid):
     savings = 0
     if product.discount_price:
         savings = product.price - product.discount_price
-    # Get active variants
+    
     active_variants = product.variants.filter(is_active=True).order_by('id')
     
-    # Extract unique attributes for professional selection
+    
     strap_colors = []
 
     materials = []
@@ -407,7 +399,6 @@ def product_details(request, product_uuid):
     seen_material = set()
     seen_dial = set()
     
-    # Try to map color names to hex codes from Color model
     from user_apps.core.models import Color
     color_map = {c.name.lower(): c.hex_code for c in Color.objects.all()}
     
@@ -416,7 +407,7 @@ def product_details(request, product_uuid):
             c_name = v.strap_color.strip()
             strap_colors.append({
                 'name': c_name,
-                'hex': color_map.get(c_name.lower(), '#888') # Default gray if not found
+                'hex': color_map.get(c_name.lower(), '#888') 
             })
             seen_strap.add(c_name.lower())
             
@@ -435,7 +426,7 @@ def product_details(request, product_uuid):
             })
             seen_dial.add(d_name.lower())
 
-    # Add reviews
+   
     reviews = product.reviews.all().order_by('-created_at')
     
     context = {
@@ -454,7 +445,6 @@ def product_details(request, product_uuid):
         'is_in_wishlist': False,
     }
 
-    # Add wishlist status and review permission
     if request.user.is_authenticated:
         from user_apps.core.models import WishlistItem, OrderItem, CartItem
         from admin_apps.offers.models import Coupon
@@ -463,7 +453,7 @@ def product_details(request, product_uuid):
         is_in_wishlist = WishlistItem.objects.filter(wishlist__user=request.user, product=product).exists()
         context['is_in_wishlist'] = is_in_wishlist
 
-        # Cart count for header badge
+        
         cart_count = (
             CartItem.objects.filter(cart__user=request.user)
             .aggregate(Sum('quantity'))['quantity__sum'] or 0
@@ -482,16 +472,16 @@ def product_details(request, product_uuid):
         context['has_reviewed'] = has_reviewed
 
         
-        # Get active coupons for display
+        
         active_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=timezone.now(), valid_to__gte=timezone.now())
         context['available_coupons'] = active_coupons
 
-    # Comparison Data
+    
     compare_ids = request.session.get('compare_list', [])
     context['current_compare_ids'] = [int(pid) for pid in compare_ids if str(pid).isdigit()]
     context['current_compare_products'] = Product.objects.filter(id__in=compare_ids, is_active=True, is_deleted=False)
     
-    # Calculate savings based on display_price
+
     context['savings'] = product.price - product.display_price
 
     return render(request, 'product_details.html', context)
@@ -499,7 +489,6 @@ def product_details(request, product_uuid):
 @login_required
 @never_cache
 def validate_coupon_product(request):
-    """AJAX view to validate a coupon for a specific product price on the detail page."""
     import json
     from decimal import Decimal
     
@@ -524,7 +513,6 @@ def validate_coupon_product(request):
     except Coupon.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid or expired coupon code'})
         
-    # Basic validation (can't check cart subtotal yet, so we check product price)
     if price < coupon.min_purchase_amount:
         return JsonResponse({'success': False, 'error': f'Minimum purchase of ₹{coupon.min_purchase_amount} required'})
         

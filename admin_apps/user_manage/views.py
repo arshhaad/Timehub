@@ -12,7 +12,7 @@ from django.contrib import messages
 from user_apps.edit.models import Address
 from user_apps.core.models import Notification, Wallet, WalletTransaction
 
-# Standard User model reference
+
 User = get_user_model()
 
 
@@ -34,15 +34,15 @@ def superuser_required(view_func):
 @login_required(login_url="admin_login")
 def user_list(request):
     """List and manage all customer accounts."""
-    # Permission check for non-decorated simple views
+
     if not request.user.is_superuser:
         return redirect("home")
 
-    # --- POST: Bulk Actions or Creation ---
+
     if request.method == "POST":
         action = request.POST.get("action")
         
-        # 1. Manually create a new customer
+
         if action == "add_user":
             email = request.POST.get("email")
             fname = request.POST.get("first_name")
@@ -56,7 +56,7 @@ def user_list(request):
                 messages.success(request, f"New user {email} created.")
             return redirect("user_list")
 
-        # 2. Block/Unblock a user
+
         elif action == "toggle_status":
             uid = request.POST.get("user_id")
             target = get_object_or_404(User, id=uid)
@@ -67,8 +67,7 @@ def user_list(request):
             messages.success(request, f"Account {target.email} is now {status}.")
             return redirect("user_list")
 
-    # --- GET: Fetch and Filter Users ---
-    # Annotate each user with their order history stats
+    
     users_qs = User.objects.filter(is_superuser=False).annotate(
         order_count=Count('orders'),
         total_spent=Sum('orders__total_amount')
@@ -89,7 +88,7 @@ def user_list(request):
             Q(email__icontains=search_query)
         )
     
-    # Paginate results (10 per page)
+
     paginator = Paginator(users_qs, 10) 
     page_obj = paginator.get_page(request.GET.get('page'))
     
@@ -104,11 +103,11 @@ def user_profiles(request, user_id):
     """View full customer profile and history."""
     customer = get_object_or_404(User, id=user_id)
     
-    # --- POST: Admin Interventions ---
+    
     if request.method == "POST":
         action = request.POST.get("action")
         
-        # 1. Send an in-app notification (e.g., prompt for password update)
+        # 1. Send an in-app notification
         if action == "send_message":
             msg_type = request.POST.get("msg_type")
             msg_map = {
@@ -139,7 +138,7 @@ def user_profiles(request, user_id):
             messages.success(request, f"User status updated.")
             return redirect("user_profiles", user_id=user_id)
 
-    # --- GET: Gather Data ---
+   
     orders = customer.orders.all().prefetch_related('items__product').order_by('-created_at')
     spent = orders.aggregate(total=Sum('total_amount'))['total'] or 0
     wallet, _ = Wallet.objects.get_or_create(user=customer)

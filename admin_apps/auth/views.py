@@ -33,7 +33,6 @@ def admin_login(request):
             
             if user is not None:
                 if user.is_superuser:
-                    # Check if the superuser is also a seller (should be blocked as per request)
                     if hasattr(user, 'seller_profile'):
                         messages.error(request, "Seller accounts are not authorized to access the admin dashboard.")
                     else:
@@ -68,7 +67,7 @@ def dashboard(request):
             return 100.0 if current > 0 else 0.0
         return round((current - previous) / previous * 100, 1)
 
-    # --- Revenue ---
+
     total_revenue = Order.objects.filter(status='Delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     last_30_revenue = Order.objects.filter(status='Delivered', created_at__gte=last_30_start).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     prev_30_revenue = Order.objects.filter(status='Delivered', created_at__gte=prev_30_start, created_at__lt=last_30_start).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -99,15 +98,14 @@ def dashboard(request):
         order_count=Count('orderitem')
     ).order_by('-order_count')[:4]
 
-    # Low Stock Alerts (Exclude deleted/inactive, threshold < 5)
+
     low_stock = Product.objects.filter(
         is_deleted=False, 
         is_active=True, 
         stock__lt=5
     ).order_by("stock")[:5]
 
-    # --- Chart Data (Revenue Trends) ---
-    # Daily (Last 7 days)
+    # Chart Data: Revenue Trends
     daily_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=7)) \
         .annotate(date=TruncDay('created_at')) \
         .values('date') \
@@ -118,7 +116,7 @@ def dashboard(request):
     daily_rev_map = {s['date'].date(): float(s['revenue']) for s in daily_sales}
     daily_values = [daily_rev_map.get((now - timedelta(days=i)).date(), 0.0) for i in range(6, -1, -1)]
 
-    # Monthly (Last 6 months)
+
     monthly_sales = Order.objects.filter(status='Delivered', created_at__gte=now - timedelta(days=180)) \
         .annotate(month=TruncMonth('created_at')) \
         .values('month') \
@@ -224,13 +222,13 @@ def admin_forgot_password(request):
                 messages.error(request, "You are not authorized to reset passwords here.")
                 return redirect("admin_forgot_password")
             
-            # Generate OTP using the user-side model
+
             otp_obj = EmailOTP.objects.create(user=user)
             
-         # Save the email into the browser session
+
             request.session['admin_reset_email'] = email
             
-            # Dispatch the email
+
             send_otp_email(email, otp_obj.otp, context="password_reset")
             
             messages.success(request, "An OTP has been sent to your admin email address.")
@@ -339,7 +337,7 @@ def admin_reset_password(request):
             user.set_password(password)
             user.save()
 
-            # Clear session
+
             request.session.pop('admin_otp_verified', None)
             request.session.pop('admin_reset_email', None)
 

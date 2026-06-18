@@ -20,7 +20,7 @@ from user_apps.core.models import CartItem, Order, Wallet, WalletTransaction
 from .models import Payment
 from .services import get_razorpay_client
 
-ONLINE_PAYMENT_DISCOUNT_PCT = Decimal("3")   # 5% off when switching COD → Online
+ONLINE_PAYMENT_DISCOUNT_PCT = Decimal("3")   # 3% off when switching COD → Online
 ORDERS_PER_PAGE = 10
 TRANSACTIONS_PER_PAGE = 15
 
@@ -29,7 +29,7 @@ TRANSACTIONS_PER_PAGE = 15
 def payment_list(request):
     user = request.user
 
-    # --- Summary metrics ---
+    
     orders_qs = Order.objects.filter(user=user).order_by("-created_at")
     total_spent = orders_qs.aggregate(total=Sum("total_amount"))["total"] or 0
 
@@ -41,10 +41,10 @@ def payment_list(request):
     )
     transactions_qs = wallet.transactions.all().order_by("-timestamp")
 
-    # --- Paginate orders ---
+    
     orders_page = _paginate(orders_qs, request.GET.get("orders_page", 1), ORDERS_PER_PAGE)
 
-    # --- Paginate wallet transactions ---
+    
     tx_page = _paginate(transactions_qs, request.GET.get("tx_page", 1), TRANSACTIONS_PER_PAGE)
 
     return render(request, "payments/payment_list.html", {
@@ -118,7 +118,7 @@ def start_payment(request, order_id):
 @login_required
 def pay_online_cod(request, order_id):
     """
-    Allow a Cash-on-Delivery order to be paid online in exchange for a 5% discount.
+    Allow a Cash-on-Delivery order to be paid online in exchange for a 3% discount.
 
     - Only available for unpaid COD orders in Pending / Confirmed / Processing state
     - Calculates the discounted total and creates a Razorpay order for that amount
@@ -170,7 +170,6 @@ def pay_online_cod(request, order_id):
             "razorpay_order_id": razor_order["id"],
             "amount": paise,
             "currency": "INR",
-            # Extra context for the template to show discount info
             "online_discount": online_discount,
             "discounted_total": discounted_total,
             "discount_pct": ONLINE_PAYMENT_DISCOUNT_PCT,
@@ -185,45 +184,45 @@ def pay_online_cod(request, order_id):
 
 def _complete_order_payment(order, payment, razorpay_payment_id, razorpay_signature):
     """
-    Atomically finalize an order after Razorpay confirms payment.
+    Finally finalize an order after Razorpay confirms payment.
 
     Steps:
     1. Lock the Payment row to prevent duplicate processing
     2. Mark the payment as SUCCESS
-    3. Apply the 5% online discount if this was a COD → Online switch
+    3. Apply the 3% online discount if this was a COD → Online switch
     4. Mark the order as paid and confirmed
     5. Trigger referral reward logic for the buyer
     6. Clean up any matching cart items
     """
     with transaction.atomic():
-        # Lock to prevent race conditions (e.g. webhook + callback arriving at the same time)
+
         payment = Payment.objects.select_for_update().get(id=payment.id)
 
         if payment.status == "SUCCESS":
-            return order  # Already processed — nothing to do
+            return order  
 
-        # --- Mark payment as successful ---
+        
         payment.razorpay_payment_id = razorpay_payment_id
         payment.razorpay_signature = razorpay_signature
         payment.status = "SUCCESS"
         payment.save()
 
-        # --- Apply COD → Online discount if applicable ---
+        
         if order.payment_method == "cod" and not order.is_paid:
             online_discount = round(order.total_amount * Decimal("0.05"), 2)
             order.discount += online_discount
             order.total_amount = max(Decimal("0"), order.total_amount - online_discount)
 
-        # --- Confirm the order ---
+        
         order.is_paid = True
         order.status = "Confirmed"
         order.payment_method = "razorpay"
         order.save()
 
-        # --- Reward the referrer (if applicable) ---
+        
         process_referrer_reward(order.user, order=order)
 
-        # --- Remove ordered items from the buyer's cart ---
+        
         for order_item in order.items.all():
             CartItem.objects.filter(
                 cart__user=order.user,
@@ -235,11 +234,7 @@ def _complete_order_payment(order, payment, razorpay_payment_id, razorpay_signat
 
 
 def _verify_and_complete_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature):
-    """
-    Core verification logic used by both AJAX and Redirect-based flows.
-    Verifies the signature and marks the order as paid.
-    Returns (success: bool, order: Order, error_msg: str)
-    """
+   
     client = get_razorpay_client()
     try:
         client.utility.verify_payment_signature({
@@ -262,9 +257,7 @@ def _verify_and_complete_payment(razorpay_order_id, razorpay_payment_id, razorpa
 
 @csrf_exempt
 def verify_payment(request):
-    """
-    Step 3 (AJAX path): Verify the Razorpay payment signature and complete the order.
-    """
+  
     if request.method != "POST":
         return render(request, "payments/payment_failed.html")
 
