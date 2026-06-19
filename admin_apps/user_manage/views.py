@@ -107,7 +107,7 @@ def user_profiles(request, user_id):
     if request.method == "POST":
         action = request.POST.get("action")
         
-        # 1. Send an in-app notification
+        # 1 Send -app notification
         if action == "send_message":
             msg_type = request.POST.get("msg_type")
             msg_map = {
@@ -121,7 +121,7 @@ def user_profiles(request, user_id):
                 messages.success(request, f"Alert sent to {customer.first_name}.")
                 return redirect("user_profiles", user_id=user_id)
 
-        # 2. Permanent Account Deletion
+        # 2 Permanent Account Deletion
         elif action == "delete_user":
             if customer.is_superuser:
                 messages.error(request, "Safety Rule: Cannot delete admin accounts from here.")
@@ -131,7 +131,7 @@ def user_profiles(request, user_id):
                 messages.success(request, f"Account {email} deleted forever.")
                 return redirect("user_list")
 
-        # 3. Status Toggle
+        # 3 Status Toggle
         elif action == "toggle_status":
             customer.is_active = not customer.is_active
             customer.save()
@@ -176,14 +176,14 @@ def admin_user_wallet(request, user_id):
             elif action == 'Debit' and wallet.balance < val:
                 messages.error(request, "Customer has insufficient funds for this debit.")
             else:
-                # 1. Update Balance
+                # 1 Update Balance
                 if action == 'Credit':
                     wallet.balance += val
                 else:
                     wallet.balance -= val
                 wallet.save()
                 
-                # 2. Record Transaction
+                # 2 Record Transaction
                 WalletTransaction.objects.create(
                     wallet=wallet, transaction_type=action, 
                     amount=val, description=reason
