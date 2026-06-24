@@ -287,24 +287,3 @@ PostgreSQL is used for reliable transactional data storage and scalability.
 * HTTPS Support
 * Environment-based Configuration
 * Static and Media File Handling
-
----
-
-# 🎯 Project Highlights
-
-✅ Multi-role Platform (User / Seller / Admin)
-✅ Product Comparison System
-✅ Wallet, Cashback & Referral Rewards
-✅ Razorpay Payment Gateway Integration
-✅ Redis Caching for Performance
-✅ Dockerized Infrastructure
-✅ Nginx Reverse Proxy Configuration
-✅ GitHub Actions CI/CD Pipeline
-✅ Automated Testing
-✅ PostgreSQL Database
-✅ Responsive User Interface
-✅ Production-Ready Deployment
----
-
----
-
