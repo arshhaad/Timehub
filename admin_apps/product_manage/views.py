@@ -204,6 +204,7 @@ def add_product(request):
                     brand=request.POST.get("brand", "TimeHub"),
                     gender=request.POST.get("gender", "Unisex"),
                     occasion=request.POST.get("occasion", "Casual"),
+                    badge=request.POST.get("badge") or None,
                 )
                 v_map = _save_variants(p, request)
                 _save_product_images(p, request, v_map)
@@ -225,6 +226,7 @@ def add_product(request):
     return render(request, "add_product.html", {
         'all_categories': Collection.objects.filter(is_deleted=False).order_by('name'),
         'all_colors': Color.objects.all(),
+        'badge_choices': Product.BADGE_CHOICES,
     })
 
 
@@ -241,6 +243,7 @@ def edit_product(request, product_id):
                 p.price = float(request.POST.get("price", p.price))
                 p.description = request.POST.get("description", "").strip()
                 p.is_active = request.POST.get("is_active") == "on"
+                p.badge = request.POST.get("badge") or None
 
                 raw_discount = request.POST.get("discount_price", "").strip()
                 if raw_discount:
@@ -276,6 +279,7 @@ def edit_product(request, product_id):
         'product': p, 'is_edit': True,
         'all_categories': Collection.objects.filter(is_deleted=False).order_by('name'),
         'all_colors': Color.objects.all(),
+        'badge_choices': Product.BADGE_CHOICES,
     })
 
 

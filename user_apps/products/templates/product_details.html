@@ -1736,6 +1736,7 @@
                             "price": "{{ v.display_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
+                            "badge": "{{ product.badge|default:''|escapejs }}",
                             "images": [
                                 {% with all_images=v.get_all_images %}
                                 {% for img_url in all_images %}
@@ -2490,7 +2491,18 @@
             updatePriceUI(element.dataset.price, element.dataset.oldPrice);
             const stock = parseInt(element.dataset.stock);
             updateStockUI(stock);
-            updateBadgeUI(stock, element.dataset.price, element.dataset.oldPrice);
+
+            // Resolve badge: use per-variant badge from JSON data (product badge inherited by all variants)
+            let variantBadge = '';
+            const _vdEl = document.getElementById('variants-data');
+            if (_vdEl) {
+                try {
+                    const _variants = JSON.parse(_vdEl.textContent);
+                    const _v = _variants.find(v => v.id == element.dataset.variantId);
+                    if (_v) variantBadge = _v.badge || '';
+                } catch(e) {}
+            }
+            updateBadgeUI(stock, element.dataset.price, element.dataset.oldPrice, variantBadge);
 
             if (qtyInput) {
                 qtyInput.value = 1;
@@ -2670,22 +2682,44 @@
             }
         }
 
-        function updateBadgeUI(stock, price, oldPrice) {
+        // Badge config map — maps badge value to display label + style
+        const BADGE_STYLE_MAP = {
+            'Sale':             { label: 'Sale',             bg: '#22c55e', color: '#fff' },
+            'New Arrival':      { label: 'New Arrival',      bg: '#3b82f6', color: '#fff' },
+            'Limited Edition':  { label: 'Limited Edition',  bg: '#a855f7', color: '#fff' },
+            'Exclusive':        { label: 'Exclusive',        bg: '#f59e0b', color: '#000' },
+            'Luxury':           { label: 'Luxury',           bg: '#d4a54a', color: '#000' },
+            'Premium':          { label: 'Premium',          bg: '#6366f1', color: '#fff' },
+            'Signature Series': { label: 'Signature Series', bg: '#ec4899', color: '#fff' },
+            'Best Seller':      { label: 'Best Seller',      bg: '#f97316', color: '#000' },
+        };
+
+        function updateBadgeUI(stock, price, oldPrice, variantBadge) {
             const container = document.getElementById('productBadgeContainer');
             if (!container) return;
 
             let badgeHtml = '';
-            const productBadge = "{{ product.badge|default:''|escapejs }}";
-
+            // Priority: OOS > variant/product badge > Sale (auto-detected from price)
             if (stock <= 0) {
                 badgeHtml = `<span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>`;
-            } else if (productBadge) {
-                badgeHtml = `<span class="badge">${productBadge}</span>`;
             } else {
-                const currentPrice = parseFloat(price);
-                const originalPrice = parseFloat(oldPrice);
-                if (!isNaN(originalPrice) && !isNaN(currentPrice) && currentPrice < originalPrice) {
-                    badgeHtml = `<span class="badge">Sale</span>`;
+                // Use the badge carried from the variant data (which inherits product.badge)
+                const activeBadge = (variantBadge || '').trim();
+                if (activeBadge) {
+                    const styleConf = BADGE_STYLE_MAP[activeBadge];
+                    if (styleConf) {
+                        badgeHtml = `<span class="badge" style="background: ${styleConf.bg}; color: ${styleConf.color};">${styleConf.label}</span>`;
+                    } else {
+                        badgeHtml = `<span class="badge">${activeBadge}</span>`;
+                    }
+                } else {
+                    // Auto-detect Sale from pricing
+                    const currentPrice = parseFloat(price);
+                    const originalPrice = parseFloat(oldPrice);
+                    if (!isNaN(originalPrice) && !isNaN(currentPrice) && currentPrice < originalPrice) {
+                        const styleConf = BADGE_STYLE_MAP['Sale'];
+                        badgeHtml = `<span class="badge" style="background: ${styleConf.bg}; color: ${styleConf.color};">Sale</span>`;
+                    }
                 }
             }
             container.innerHTML = badgeHtml;

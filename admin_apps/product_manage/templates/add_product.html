@@ -31,7 +31,7 @@
     }
 
     .form-container {
-        max-width: 1100px;
+        max-width: 900px;
         margin: 0 auto;
         background: #fff;
         border-radius: var(--radius-lg);
@@ -55,39 +55,44 @@
         letter-spacing: -0.5px;
     }
 
-    .modal-tabs {
+    .form-stacked-body {
+        padding: 32px;
         display: flex;
-        border-bottom: 1px solid var(--border-color);
+        flex-direction: column;
+        gap: 32px;
         background: #f8fafc;
-        padding: 0 20px;
     }
 
-    .modal-tab {
-        padding: 16px 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        cursor: pointer;
-        position: relative;
+    .form-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
         transition: var(--transition);
     }
 
-    .modal-tab:hover { color: var(--text-main); }
-    .modal-tab.active { color: var(--primary-bg); }
-
-    .modal-tab.active::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--primary-bg);
-        border-radius: 3px 3px 0 0;
+    .form-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+        border-color: #cbd5e1;
     }
 
-    .tab-panel { display: none; padding: 32px; }
-    .tab-panel.active { display: block; }
+    .form-card-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-bottom: 24px;
+        color: var(--text-main);
+        border-bottom: 1.5px solid #f1f5f9;
+        padding-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-card-title i {
+        color: var(--primary-bg);
+        font-size: 1.15rem;
+    }
 
     .form-grid {
         display: grid;
@@ -400,18 +405,15 @@
         </a>
     </div>
 
-    <div class="modal-tabs">
-        <div class="modal-tab active" data-tab="general">General Info</div>
-        <div class="modal-tab" data-tab="specs">Specifications</div>
-        <div class="modal-tab" data-tab="variants">Variants & Stock</div>
-        <div class="modal-tab" data-tab="images">Product Images</div>
-    </div>
-
     <form id="productForm" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="modal-body">
-            <!-- General Tab -->
-            <div id="tab-general" class="tab-panel active">
+        <div class="form-stacked-body">
+            <!-- Card 1: Product Classification & Info -->
+            <div class="form-card">
+                <div class="form-card-title">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Product Classification & Info</span>
+                </div>
                 <div class="form-grid">
                     <div class="form-group full">
                         <label>Product Name</label>
@@ -430,6 +432,20 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="form-group full">
+                        <label>Product Description</label>
+                        <textarea name="description" id="formDescription" class="form-control" rows="4" placeholder="Describe the product's story, craftsmanship, and appeal..." required>{{ product.description|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Pricing, Inventory & Status -->
+            <div class="form-card">
+                <div class="form-card-title">
+                    <i class="fas fa-tags"></i>
+                    <span>Pricing, Inventory & Status</span>
+                </div>
+                <div class="form-grid">
                     <div class="form-group">
                         <label>Base Price</label>
                         <div style="display: flex; gap: 8px;">
@@ -459,20 +475,29 @@
                         <input type="number" name="stock" id="formStock" class="form-control" readonly style="background: #f8fafc; color: #64748b; font-weight: 700;" placeholder="0" value="{{ product.stock|default:'0' }}">
                     </div>
                     <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 30px;">
+                        <label>Product Badge (Optional)</label>
+                        <select name="badge" id="formBadge" class="form-control">
+                            <option value="">No Badge / Standard</option>
+                            {% for code, label in badge_choices %}
+                            <option value="{{ code }}" {% if product.badge == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group full">
+                        <label style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
                             <input type="checkbox" name="is_active" id="formActive" {% if product.is_active or not is_edit %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--primary-bg);">
                             <span>Active & Visible for Sale</span>
                         </label>
                     </div>
-                    <div class="form-group full">
-                        <label>Product Description</label>
-                        <textarea name="description" id="formDescription" class="form-control" rows="4" placeholder="Describe the product's story, craftsmanship, and appeal..." required>{{ product.description|default:'' }}</textarea>
-                    </div>
                 </div>
             </div>
 
-            <!-- Specs Tab -->
-            <div id="tab-specs" class="tab-panel">
+            <!-- Card 3: Specifications -->
+            <div class="form-card">
+                <div class="form-card-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Specifications</span>
+                </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Gender</label>
@@ -491,7 +516,7 @@
                             <option value="Luxury" {% if product.occasion == 'Luxury' %}selected{% endif %}>Luxury</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group full">
                         <label>Function</label>
                         <select name="function" id="formFunction" class="form-control">
                             <option value="Analog" {% if product.function == 'Analog' %}selected{% endif %}>Analog</option>
@@ -509,8 +534,12 @@
                 </div>
             </div>
 
-            <!-- Variants Tab -->
-            <div id="tab-variants" class="tab-panel">
+            <!-- Card 4: Configurations (Variants) -->
+            <div class="form-card">
+                <div class="form-card-title">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Configurations (Variants)</span>
+                </div>
                 <div class="variant-header">
                     <div>
                         <h4>Product Configurations</h4>
@@ -520,16 +549,18 @@
                         <i class="fas fa-plus"></i> Add New Configuration
                     </button>
                 </div>
-
                 <div id="variantList" class="variant-list">
                     <!-- Cards will be injected by JavaScript -->
                 </div>
             </div>
 
-            <!-- Images Tab -->
-            <div id="tab-images" class="tab-panel">
+            <!-- Card 5: Product Gallery -->
+            <div class="form-card">
+                <div class="form-card-title">
+                    <i class="fas fa-images"></i>
+                    <span>Product Gallery</span>
+                </div>
                 <div style="margin-bottom: 24px;">
-                    <h4 style="font-size: 1rem; font-weight: 800; color: var(--text-main);">Product Photography</h4>
                     <p style="font-size: 0.85rem; color: var(--text-muted);">Upload up to 3 high-quality images and link them to specific variants or keep them as general images.</p>
                 </div>
                 <div class="image-slots" style="display: flex; gap: 20px;">
@@ -636,15 +667,7 @@
         }, 4000);
     }
 
-    // Tab logic
-    document.querySelectorAll('.modal-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-        });
-    });
+
 
     let cropper = null;
     let activeCropSource = null;
@@ -930,25 +953,25 @@
 
         if (!name) {
             showToast('Please enter the product name.');
-            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formName').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('formName').focus();
             return;
         }
         if (!category) {
             showToast('Please select a category.');
-            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formCategory').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('formCategory').focus();
             return;
         }
         if (!price || price <= 0) {
             showToast('Please enter a valid base price.');
-            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formPrice').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('formPrice').focus();
             return;
         }
         if (!description) {
             showToast('Please provide a product description.');
-            document.querySelector('.modal-tab[data-tab="general"]').click();
+            document.getElementById('formDescription').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('formDescription').focus();
             return;
         }
@@ -956,7 +979,7 @@
         // 2. Variants Validation: Need at least one
         if (document.querySelectorAll('.variant-card').length === 0) {
             showToast('Please add at least one product configuration (variant).');
-            document.querySelector('.modal-tab[data-tab="variants"]').click();
+            document.getElementById('variantList').scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
