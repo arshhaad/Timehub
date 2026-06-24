@@ -1521,7 +1521,14 @@
 
             <!-- Right Info -->
             <div class="product-info">
-                <div class="brand-name">{{ product.brand|default:product.collection.name }}</div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div class="brand-name" style="margin-bottom: 0;">{{ product.brand|default:product.collection.name }}</div>
+                    <div id="productTitleBadgeContainer">
+                        {% if product.badge_info %}
+                        <span class="badge" style="background: {{ product.badge_info.bg }} !important; color: {{ product.badge_info.color }} !important; border: {{ product.badge_info.border }} !important; font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">{{ product.badge_info.label }}</span>
+                        {% endif %}
+                    </div>
+                </div>
                 <h1 class="product-title animate-up" id="dynamic-title" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                     {{ product.name }}
                     {% if product.active_product_offer %}
@@ -2693,7 +2700,7 @@
 
         function updateBadgeUI(stock, price, oldPrice, variantBadge, variantBadgeBg, variantBadgeColor, variantBadgeBorder) {
             const container = document.getElementById('productBadgeContainer');
-            if (!container) return;
+            const titleContainer = document.getElementById('productTitleBadgeContainer');
 
             let badgeHtml = '';
             // Priority: OOS > variant/product badge > Sale (auto-detected from price)
@@ -2713,7 +2720,25 @@
                     }
                 }
             }
-            container.innerHTML = badgeHtml;
+            if (container) container.innerHTML = badgeHtml;
+
+            if (titleContainer) {
+                const activeBadge = (variantBadge || '').trim();
+                let titleBadge = '';
+                if (stock <= 0) {
+                    titleBadge = `<span class="badge" style="background: #ef4444 !important; color: #fff !important; font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">Unavailable</span>`;
+                } else if (activeBadge) {
+                    const borderStyle = variantBadgeBorder ? `border: ${variantBadgeBorder} !important;` : '';
+                    titleBadge = `<span class="badge" style="background: ${variantBadgeBg} !important; color: ${variantBadgeColor} !important; ${borderStyle} font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">${activeBadge}</span>`;
+                } else {
+                    const currentPrice = parseFloat(price);
+                    const originalPrice = parseFloat(oldPrice);
+                    if (!isNaN(originalPrice) && !isNaN(currentPrice) && currentPrice < originalPrice) {
+                        titleBadge = `<span class="badge" style="background: #ff6a00 !important; color: #000000 !important; border: none !important; font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">Sale</span>`;
+                    }
+                }
+                titleContainer.innerHTML = titleBadge;
+            }
         }
 
         function updateStockUI(stockCount) {
