@@ -159,10 +159,10 @@
         margin-bottom: 30px;
     }
 
-    /* ── Four-column row ── */
+    /* ── Four-column row (2x2 Grid) ── */
     .four-col-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 25px;
         margin-bottom: 40px;
     }
@@ -302,7 +302,6 @@
     /* ── Responsive ── */
     @media (max-width: 1200px) {
         .dashboard-row { grid-template-columns: 1fr; }
-        .four-col-row { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 900px) {
         .four-col-row { grid-template-columns: 1fr; }
