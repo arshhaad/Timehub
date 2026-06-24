@@ -194,6 +194,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
+        gap: 15px;
     }
     .note-title {
         font-size: 0.95rem;
@@ -202,6 +203,8 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        flex: 1;
+        min-width: 0;
     }
     .panel-action {
         font-size: 0.8rem;
@@ -209,6 +212,8 @@
         text-decoration: none;
         font-weight: 600;
         transition: var(--transition);
+        flex-shrink: 0;
+        white-space: nowrap;
     }
     .panel-action:hover { color: var(--primary-bg); }
 
