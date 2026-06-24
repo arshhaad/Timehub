@@ -159,10 +159,10 @@
         margin-bottom: 30px;
     }
 
-    /* ── Three-column row ── */
-    .three-col-row {
+    /* ── Four-column row ── */
+    .four-col-row {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 25px;
         margin-bottom: 40px;
     }
@@ -297,14 +297,15 @@
     .note-returned::before { background-color: #ef4444; }
     .note-cancelled::before { background-color: #f59e0b; }
     .note-lowstock::before { background-color: #f97316; }
+    .note-outofstock::before { background-color: #dc2626; }
 
     /* ── Responsive ── */
     @media (max-width: 1200px) {
         .dashboard-row { grid-template-columns: 1fr; }
-        .three-col-row { grid-template-columns: 1fr 1fr; }
+        .four-col-row { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 900px) {
-        .three-col-row { grid-template-columns: 1fr; }
+        .four-col-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 1024px) {
         .ledger-header { flex-direction: column; align-items: stretch; gap: 15px; }
@@ -438,45 +439,7 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
-    /* ── Chart Panel ── */
-    .chart-panel {
-        background-color: #fff;
-        padding: 24px;
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border-color);
-        margin-bottom: 35px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    }
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    .chart-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text-main);
-    }
-    .chart-filters {
-        display: flex;
-        gap: 10px;
-    }
-    .chart-filter-btn {
-        background: #f3f4f6;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-    .chart-filter-btn.active {
-        background-color: var(--primary-bg);
-        color: #ffffff;
-    }
+
 
     @media print {
         .sidebar, .page-header, .kpi-grid, .chart-panel, .dashboard-row, .filter-form, .export-btns {
@@ -626,21 +589,7 @@
     </div>
 </div>
 
-<!-- Sales Trend Chart -->
-<div class="chart-panel">
-    <div class="chart-header">
-        <div class="chart-title">Sales Revenue Trends</div>
-        <div class="chart-filters">
-            <button class="chart-filter-btn active" data-period="daily">Daily</button>
-            <button class="chart-filter-btn" data-period="weekly">Weekly</button>
-            <button class="chart-filter-btn" data-period="monthly">Monthly</button>
-            <button class="chart-filter-btn" data-period="yearly">Yearly</button>
-        </div>
-    </div>
-    <div style="height: 300px;">
-        <canvas id="salesChart"></canvas>
-    </div>
-</div>
+
 
 
 {# ── Sales Ledger & Filtering ── #}
@@ -822,8 +771,8 @@
 
 </div>
 
-{# ── Three-column row: Recent Returns | Recent Cancellations | Low Stock ── #}
-<div class="three-col-row">
+{# ── Four-column row: Recent Returns | Recent Cancellations | Low Stock | Out of Stock ── #}
+<div class="four-col-row">
 
     {# Recent Returns #}
     <div class="note-card note-returned">
@@ -922,95 +871,45 @@
         {% endif %}
     </div>
 
+    {# Out of Stock #}
+    <div class="note-card note-outofstock">
+        <div class="note-header">
+            <div class="note-title">
+                <i class="fas fa-circle-xmark" style="color:#dc2626;"></i>
+                Out of Stock
+            </div>
+            <a href="{% url 'admin_inventory_list' %}" class="panel-action">Manage →</a>
+        </div>
+        {% if out_of_stock %}
+        <div class="activity-list">
+            {% for product in out_of_stock %}
+            <div class="activity-item" style="cursor:default;">
+                <div class="activity-icon" style="background:#fef2f2;color:#ef4444;">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="activity-body">
+                    <div class="activity-title">{{ product.name|truncatechars:30 }}</div>
+                    <div class="activity-sub">Stock: <strong style="color:#ef4444;">0 left</strong></div>
+                </div>
+                <div class="activity-right">
+                    <span class="stock-badge stock-critical">Sold Out</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state"><i class="fas fa-check-circle" style="display:block;font-size:1.4rem;margin-bottom:8px;opacity:0.3;color:#10b981;"></i>No products out of stock.</p>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}
 {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 
 {% block extra_js %}
 <script>
-const chartData = {{ chart_data_json|safe }};
-let salesChart;
-
-function initChart(period) {
-    const canvas = document.getElementById('salesChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const data = chartData[period];
-
-    if (salesChart) {
-        salesChart.destroy();
-    }
-
-    // Create premium gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(255, 107, 0, 0.2)');
-    gradient.addColorStop(1, 'rgba(255, 107, 0, 0)');
-
-    salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Revenue',
-                data: data.values,
-                borderColor: '#ff6b00',
-                backgroundColor: gradient,
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#ff6b00',
-                pointBorderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#ff6b00',
-                pointHoverBorderColor: '#ffffff',
-                pointHoverBorderWidth: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index',
-                axis: 'x'
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return '₹' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f3f4f6', drawBorder: false },
-                    ticks: {
-                        callback: function(value) {
-                            if (value >= 1000) return '₹' + (value/1000) + 'k';
-                            return '₹' + value;
-                        }
-                    }
-                },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-}
-
 function animateCounter(el, end, duration, prefix, isFloat) {
     const startTime = performance.now();
     function step(now) {
@@ -1049,16 +948,6 @@ function toggleCustomDates(val) {
 document.addEventListener('DOMContentLoaded', () => {
     runCounters();
     runProgressBars();
-    
-    // Initialize chart
-    initChart('daily');
-    document.querySelectorAll('.chart-filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            initChart(this.dataset.period);
-        });
-    });
 
     const filterSelect = document.querySelector('select[name="filter_type"]');
     if (filterSelect) toggleCustomDates(filterSelect.value);

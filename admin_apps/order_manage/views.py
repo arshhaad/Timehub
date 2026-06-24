@@ -809,6 +809,10 @@ def sales_report(request):
         is_deleted=False, stock__gt=0, stock__lt=10
     ).order_by('stock')[:15]
 
+    out_of_stock = Product.objects.filter(
+        is_deleted=False, stock=0
+    ).order_by('id')[:15]
+
     context = {
         'orders': orders,
         'filtered_orders': orders,
@@ -830,6 +834,7 @@ def sales_report(request):
         'recent_returned': recent_returned,
         'recent_cancelled': recent_cancelled,
         'low_stock': low_stock,
+        'out_of_stock': out_of_stock,
         'aov': orders.aggregate(Avg('total_amount'))['total_amount__avg'] or 0,
         'total_customers': User.objects.filter(is_superuser=False).count(),
         'total_products_count': Product.objects.filter(is_deleted=False).count(),
