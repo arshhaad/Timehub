@@ -1,218 +1,310 @@
-# ⌚ TimeHub – Watch E-commerce Platform
+---
 
-TimeHub is a full-stack multi-role e-commerce platform for watch retail, designed with user, seller, and admin ecosystems. It provides a complete online shopping experience with secure authentication, advanced product discovery, payment processing, order management, analytics, and seller business tools.
+# 🏗 Architecture Overview
+
+TimeHub follows a scalable multi-tier architecture:
+
+```text
+Client Browser
+      │
+      ▼
+   Nginx
+(Reverse Proxy)
+      │
+      ▼
+ Django Application
+      │
+ ┌────┴────┐
+ ▼         ▼
+Redis   PostgreSQL
+Cache    Database
+      │
+      ▼
+ Razorpay API
+```
+
+### Architecture Benefits
+
+* Separation of concerns
+* Improved scalability
+* Better performance through caching
+* Secure reverse proxy layer
+* Production-ready deployment setup
 
 ---
 
-## 🚀 Core Features
+# 🐳 Docker Containerization
 
-## 👤 User Module
+The application is fully containerized using Docker and Docker Compose.
 
-### Authentication & Account
-- **User Registration** – Create a secure customer account with validation.
-- **Login / Logout** – Session-based secure authentication.
-- **Forgot Password** – Recover account access through password reset workflow.
-- **Email Verification** – Verify user identity during registration.
-- **Profile Management** – Update personal details and account preferences.
-- **Address Book** – Manage multiple delivery addresses.
-- **Password Change** – Securely update credentials.
-- **Account Security** – Protected authentication and access control.
+### Services
 
----
+* Django Web Application
+* PostgreSQL Database
+* Redis Cache Server
+* Nginx Reverse Proxy
 
-### Product Discovery
-- **Browse Products** – Explore curated watch collections.
-- **Search Functionality** – Find products instantly using keywords.
-- **Advanced Filtering** – Filter by category, brand, price range, availability, offers.
-- **Sorting Options** – Sort by newest, price low-high, popularity, ratings.
-- **Featured Products** – Highlight trending and promoted products.
-- **New Arrivals** – Showcase recently launched watches.
-- **Best Sellers** – Display top-performing products.
-- **Brand Exploration** – Browse by watch manufacturers.
-- **Category Navigation** – Quick navigation through watch categories.
+### Docker Advantages
 
----
+* Consistent development and production environments
+* Easy deployment and scaling
+* Faster onboarding for developers
+* Simplified dependency management
 
-### Product Experience
-- **Detailed Product View** – View specifications, pricing, and descriptions.
-- **Multiple Product Images** – Product gallery for better visualization.
-- **Stock Availability** – Live inventory visibility.
-- **Discount Pricing** – Show active discounts and offer prices.
-- **Product Comparison** – Compare multiple watches side-by-side.
-- **Specifications Table** – Easy comparison of technical details.
-- **Offer Visibility** – Display coupon and promotional eligibility.
+### Example Services
+
+```yaml
+services:
+  web:
+  postgres:
+  redis:
+  nginx:
+```
 
 ---
 
-### Wishlist & Shopping Cart
-- **Wishlist Support** – Save favorite watches for later.
-- **Add to Cart** – Add selected items instantly.
-- **Cart Quantity Updates** – Increase or reduce quantities dynamically.
-- **Remove Items** – Delete unwanted products from cart.
-- **Cart Summary** – Price breakdown including taxes and discounts.
-- **Persistent Cart** – Maintain cart state during sessions.
+# ⚡ Redis Caching
+
+Redis is used to improve application performance and reduce database load.
+
+### Cached Components
+
+* Product listings
+* Featured products
+* Best-selling products
+* Search results
+* Category data
+* User sessions
+* Frequently accessed pages
+
+### Benefits
+
+* Faster page loading
+* Reduced PostgreSQL queries
+* Improved scalability
+* Better user experience
 
 ---
 
-### Checkout & Payment
-- **Secure Checkout** – Smooth checkout flow with validations.
-- **Address Selection** – Choose preferred delivery destination.
-- **Payment Gateway Integration** – Razorpay payment support.
-- **Multiple Payment Methods** – UPI, debit/credit cards, wallet support.
-- **Coupon Application** – Apply discount codes at checkout.
-- **Wallet Payments** – Use wallet balance for purchases.
-- **Order Confirmation** – Immediate purchase confirmation.
-- **Invoice Generation** – Order billing summary generation.
+# 🌐 Nginx Reverse Proxy
+
+Nginx is used as a production web server and reverse proxy.
+
+### Responsibilities
+
+* Reverse proxy for Django
+* SSL termination
+* Static file serving
+* Media file serving
+* Security header management
+* Request routing
+
+### Benefits
+
+* Improved performance
+* Enhanced security
+* Better handling of concurrent traffic
 
 ---
 
-### Orders & Delivery
-- **Order History** – Access all previously placed orders.
-- **Order Tracking** – Real-time status monitoring.
-- **Order Details View** – Full breakdown of purchased products.
-- **Cancel Orders** – Cancel orders before shipment.
-- **Return Requests** – Request product returns.
-- **Delivery Rescheduling** – Change delivery timing.
-- **Refund Processing** – Refund eligible payments to wallet/payment source.
+# 🔄 CI/CD Pipeline
+
+Automated deployment is implemented using GitHub Actions.
+
+### Pipeline Workflow
+
+```text
+Developer Push
+      │
+      ▼
+ GitHub Repository
+      │
+      ▼
+ GitHub Actions
+      │
+      ▼
+ Run Tests
+      │
+      ▼
+ Build Docker Images
+      │
+      ▼
+ Deploy to Server
+      │
+      ▼
+ Restart Containers
+```
+
+### Automated Tasks
+
+* Code quality checks
+* Dependency installation
+* Automated testing
+* Docker image build
+* Deployment automation
 
 ---
 
-### Rewards & Engagement
-- **Wallet System** – Internal balance management.
-- **Cashback Rewards** – Cashback for selected purchases.
-- **Referral Program** – Invite users and earn rewards.
-- **Coupon Discounts** – Promotional pricing benefits.
-- **Loyalty Experience** – Encourage repeat customer purchases.
+# 🧪 Testing
+
+The project includes automated testing to ensure reliability and maintainability.
+
+### Test Coverage
+
+* Authentication Tests
+* Product Management Tests
+* Cart Tests
+* Checkout Tests
+* Order Processing Tests
+* Payment Integration Tests
+* Seller Module Tests
+* Admin Module Tests
+
+### Testing Tools
+
+* Django Test Framework
+* Pytest
+* Coverage Reports
+
+### Goals
+
+* Ensure feature stability
+* Prevent regressions
+* Improve code quality
 
 ---
 
-## 🛍 Seller Module
+# 🔐 Security Features
 
-### Seller Authentication
-- **Seller Registration** – Onboard sellers securely.
-- **Seller Login / Logout** – Controlled seller access.
-- **Seller Profile Management** – Manage store identity and account details.
-
----
-
-### Seller Product Management
-- **Product Creation** – Add new products to catalog.
-- **Product Editing** – Update descriptions, pricing, and stock.
-- **Product Removal** – Remove unavailable listings.
-- **Image Management** – Upload and maintain product visuals.
-- **Inventory Management** – Monitor and update stock levels.
-- **Price Management** – Modify product pricing dynamically.
+* Role-Based Access Control (RBAC)
+* Secure Authentication System
+* Password Hashing
+* CSRF Protection
+* Session Security
+* Input Validation
+* Secure Payment Handling
+* Environment Variable Configuration
+* HTTPS Support
 
 ---
 
-### Seller Operations
-- **Order Monitoring** – Track customer orders.
-- **Sales Dashboard** – Seller-specific analytics overview.
-- **Revenue Tracking** – Monitor earnings performance.
-- **Product Insights** – Understand product sales metrics.
-- **Stock Alerts** – Detect low inventory products.
-- **Seller Performance Monitoring** – Track business growth.
+# 📦 Database Design
+
+### Core Entities
+
+* Users
+* Sellers
+* Products
+* Categories
+* Brands
+* Orders
+* Order Items
+* Payments
+* Wallet Transactions
+* Coupons
+* Referrals
+* Reviews
+
+### Database Engine
+
+PostgreSQL is used for reliable transactional data storage and scalability.
 
 ---
 
-## 🛠 Admin Module
+# ⚙ Technical Highlights
 
-### Admin Authentication
-- **Secure Admin Login** – Restricted administrative access.
-- **Password Recovery** – Recover admin credentials securely.
-- **Access Protection** – Authentication-based admin control.
-
----
-
-### Dashboard & Analytics
-- **Sales Dashboard** – Revenue overview and performance metrics.
-- **Order Analytics** – Total order and transaction insights.
-- **Customer Analytics** – User engagement tracking.
-- **Revenue Reports** – Financial business summaries.
-- **Sales Trends** – Monitor business growth.
-- **Recent Activity Monitoring** – Live admin overview.
+* Multi-role Authentication System
+* Redis-powered Caching
+* Dockerized Deployment
+* Nginx Reverse Proxy
+* GitHub Actions CI/CD
+* Automated Testing Suite
+* Responsive UI Design
+* PostgreSQL Database
+* Secure Razorpay Integration
+* Modular Django Architecture
+* Reusable Components
+* Production-Ready Infrastructure
 
 ---
 
-### Product Administration
-- **Product Management** – Full product lifecycle control.
-- **Category Management** – Create and organize categories.
-- **Brand Management** – Maintain available watch brands.
-- **Image Management** – Update catalog visuals.
-- **Inventory Control** – Central stock administration.
-- **Low Stock Monitoring** – Inventory risk visibility.
+# 🛠 Tech Stack
+
+### Backend
+
+* Python
+* Django
+
+### Database
+
+* PostgreSQL
+
+### Cache
+
+* Redis
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+* Bootstrap
+
+### Payments
+
+* Razorpay API
+
+### Infrastructure & DevOps
+
+* Docker
+* Docker Compose
+* Nginx
+* GitHub Actions
+
+### Testing
+
+* Django Test Framework
+* Pytest
 
 ---
 
-### User & Seller Management
-- **User Monitoring** – View customer activity.
-- **Block / Unblock Users** – Access restriction control.
-- **Seller Management** – Oversee seller accounts.
-- **Profile Review** – View account details.
-- **Order History Access** – Customer order visibility.
+# 🚀 Deployment
+
+### Production Stack
+
+* Ubuntu Server
+* Docker Compose
+* Nginx
+* Gunicorn
+* PostgreSQL
+* Redis
+* GitHub Actions CI/CD
+
+### Deployment Features
+
+* Containerized Services
+* Automated Deployments
+* HTTPS Support
+* Environment-based Configuration
+* Static and Media File Handling
 
 ---
 
-### Order Administration
-- **Order Management** – Manage platform-wide orders.
-- **Status Updates** – Control fulfillment stages.
-- **Cancellation Processing** – Review cancellations.
-- **Returns Management** – Handle return workflows.
-- **Refund Management** – Manage payment reversals.
-- **Delivery Coordination** – Support delivery changes.
+# 🎯 Project Highlights
+
+✅ Multi-role Platform (User / Seller / Admin)
+✅ Product Comparison System
+✅ Wallet, Cashback & Referral Rewards
+✅ Razorpay Payment Gateway Integration
+✅ Redis Caching for Performance
+✅ Dockerized Infrastructure
+✅ Nginx Reverse Proxy Configuration
+✅ GitHub Actions CI/CD Pipeline
+✅ Automated Testing
+✅ PostgreSQL Database
+✅ Responsive User Interface
+✅ Production-Ready Deployment
+---
 
 ---
 
-### Marketing & Promotions
-- **Coupon Creation** – Generate promotional discounts.
-- **Offer Campaigns** – Manage product offers.
-- **Referral Reward Management** – Incentive tracking.
-- **Featured Product Promotions** – Highlight selected listings.
-- **Campaign Visibility Control** – Admin marketing operations.
-
----
-
-### System Controls
-- **Wallet Administration** – Wallet transaction management.
-- **Payment Configuration** – Payment provider settings.
-- **Tax Management** – Tax rules configuration.
-- **Shipping Management** – Delivery setup and rules.
-- **Admin Settings** – Internal platform preferences.
-
----
-
-## ⚙ Technical Highlights
-- **Multi-role Authentication System** – Separate user/admin/seller workflows.
-- **Session Management** – Secure session handling.
-- **Responsive UI Design** – Mobile-friendly interface.
-- **Modular Django Architecture** – Scalable application structure.
-- **Database-Driven Product Management** – Dynamic inventory handling.
-- **Secure Payment Integration** – Trusted transaction processing.
-- **Reusable Templates & Components** – Maintainable frontend structure.
-
----
-
-## 🛠 Tech Stack
-- Python
-- Django
-- PostgreSQL 
-- HTML5
-- CSS3
-- JavaScript
-- Bootstrap
-- Razorpay API
-
----
-add 
-docker 
-nigex 
-ci/cd test
-redis for ceches 
-
-## 🎯 Highlights
-✅ Multi-role platform (User / Seller / Admin)  
-✅ Advanced filtering & product comparison  
-✅ Secure checkout & payment integration  
-✅ Wallet, cashback & referral rewards  
-✅ Seller inventory & revenue management  
-✅ Admin analytics dashboard  
