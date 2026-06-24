@@ -665,11 +665,17 @@ def sales_report(request):
     stats = orders.aggregate(
         count=Count('id'),
         revenue=Sum('total_amount'),
+        subtotal=Sum('subtotal'),
+        tax=Sum('tax'),
+        shipping_charge=Sum('shipping_charge'),
         discount=Sum('discount')
     )
     
     total_sales_count = stats['count'] or 0
     total_order_amount = stats['revenue'] or 0
+    total_subtotal_amount = stats['subtotal'] or 0
+    total_tax_amount = stats['tax'] or 0
+    total_shipping_amount = stats['shipping_charge'] or 0
     total_discount = stats['discount'] or 0
 
     # CSV Export
@@ -808,6 +814,9 @@ def sales_report(request):
         'filtered_orders': orders,
         'total_sales_count': total_sales_count,
         'total_order_amount': total_order_amount,
+        'total_subtotal_amount': total_subtotal_amount,
+        'total_tax_amount': total_tax_amount,
+        'total_shipping_amount': total_shipping_amount,
         'total_discount': total_discount,
         'total_revenue': total_revenue,
         'total_orders': total_orders,

@@ -1948,10 +1948,8 @@
                 <div class="card-top">
                     {% if p.stock == 0 %}
                         <span class="card-badge" style="background:#333; color:#fff;">Sold Out</span>
-                    {% elif p.badge %}
-                        <span class="card-badge">{{ p.badge }}</span>
-                    {% elif p.discount_price %}
-                        <span class="card-badge">Sale</span>
+                    {% elif p.badge_info %}
+                        <span class="card-badge" style="background: {{ p.badge_info.bg }} !important; color: {{ p.badge_info.color }} !important; border: {{ p.badge_info.border }} !important;">{{ p.badge_info.label }}</span>
                     {% endif %}
 
                     <button class="wish-btn {% if p.id in wishlist_product_ids %}active{% endif %}"

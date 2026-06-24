@@ -2783,10 +2783,8 @@
                             <div class="badge-container">
                                 {% if product.stock == 0 %}
                                 <span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>
-                                {% elif product.badge %}
-                                <span class="badge">{{ product.badge }}</span>
-                                {% elif product.discount_price %}
-                                <span class="badge">Sale</span>
+                                {% elif product.badge_info %}
+                                <span class="badge" style="background: {{ product.badge_info.bg }} !important; color: {{ product.badge_info.color }} !important; border: {{ product.badge_info.border }} !important;">{{ product.badge_info.label }}</span>
                                 {% endif %}
                             </div>
 
