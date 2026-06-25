@@ -244,9 +244,6 @@
                         <td>
                             <div style="font-weight: 800; color: #059669;">₹{{ u.total_spent|default:0|floatformat:2 }}</div>
                         </td>
-                         <td>
-                            <div style="font-weight: 800; color: #059669;">₹{{ u.delivery_count|default:0|floatformat:2 }}</div>
-                        </td>
                         <td>
                             <span class="status-badge {% if u.is_active %}s-Active{% else %}s-Blocked{% endif %}">
                                 <i class="fas fa-{% if u.is_active %}check-circle{% else %}ban{% endif %}"></i>
