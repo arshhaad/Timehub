@@ -203,6 +203,7 @@ class ProductVariant(models.Model):
     stock = models.PositiveIntegerField(default=0)
     sku = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True, null=True)
+    badge = models.CharField(max_length=50, choices=Product.BADGE_CHOICES, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -227,6 +228,45 @@ class ProductVariant(models.Model):
     @property
     def display_price(self):
         return self.get_best_discounted_price()
+
+    @property
+    def badge_info(self):
+        """Returns label and styling dictionary for variant badge."""
+        label = None
+        if self.badge:
+            label = self.badge
+        elif self.product.badge:
+            label = self.product.badge
+        elif self.discount_price or self.get_best_discounted_price() < self.effective_price:
+            label = 'Sale'
+            
+        if not label:
+            return None
+            
+        orange_badges = {'Sale', 'Exclusive', 'Signature Series', 'Best Seller'}
+        black_badges = {'New Arrival', 'Limited Edition', 'Luxury', 'Premium'}
+        
+        if label in orange_badges:
+            return {
+                'label': label,
+                'bg': '#ff6a00',
+                'color': '#000000',
+                'border': 'none'
+            }
+        elif label in black_badges:
+            return {
+                'label': label,
+                'bg': '#000000',
+                'color': '#ffffff',
+                'border': '1px solid #ff6a00'
+            }
+            
+        return {
+            'label': label,
+            'bg': '#ff6a00',
+            'color': '#000000',
+            'border': 'none'
+        }
 
     def __str__(self):
         parts = [self.product.name]
