@@ -70,7 +70,7 @@ def user_list(request):
     
     users_qs = User.objects.filter(is_superuser=False).annotate(
         order_count=Count('orders'),
-        delivered_count=Count(status=('delivered')),
+        delivery_count=Count('orders__delivery_status', distinct=True),
         total_spent=Sum('orders__total_amount')
     ).order_by("-created_at")
     
