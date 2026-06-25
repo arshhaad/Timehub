@@ -316,7 +316,8 @@ def checkout_page(request):
         if payment_method == 'cod' and subtotal > 20000:
             messages.error(request, "Sorry, COD payment is not allowed for orders exceeding ₹20,000.")
             return render(request, 'checkout_page.html', render_ctx)
-
+        
+        
         if payment_method not in ['cod', 'wallet', 'razorpay']:
             messages.error(request, 'Invalid payment method selected.')
             return render(request, 'checkout_page.html', render_ctx)
@@ -1165,3 +1166,4 @@ def available_coupons(request):
     valid_coupons = [c for c in coupons if c.is_valid_for_user(request.user)[0]]
 
     return render(request, 'available_coupons.html', {'active_coupons': valid_coupons})
+
