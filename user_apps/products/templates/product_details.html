@@ -1482,7 +1482,7 @@
                     <div class="badge-container" id="productBadgeContainer" style="position: absolute; top: 20px; left: 20px; z-index: 20; display: flex; flex-direction: column; gap: 8px;">
                         {% if product.stock == 0 %}
                         <span class="badge" style="background: #ef4444; color: #fff;">Unavailable</span>
-                        {% elif product.badge_info %}
+                        {% elif product.badge %}
                         <span class="badge" style="background: {{ product.badge_info.bg }} !important; color: {{ product.badge_info.color }} !important; border: {{ product.badge_info.border }} !important;">{{ product.badge_info.label }}</span>
                         {% endif %}
                     </div>
@@ -1524,7 +1524,7 @@
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                     <div class="brand-name" style="margin-bottom: 0;">{{ product.brand|default:product.collection.name }}</div>
                     <div id="productTitleBadgeContainer">
-                        {% if product.badge_info %}
+                        {% if product.badge %}
                         <span class="badge" style="background: {{ product.badge_info.bg }} !important; color: {{ product.badge_info.color }} !important; border: {{ product.badge_info.border }} !important; font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">{{ product.badge_info.label }}</span>
                         {% endif %}
                     </div>
@@ -1741,10 +1741,17 @@
                             "price": "{{ v.display_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
-                            "badge": "{% if v.badge %}{{ v.badge|escapejs }}{% else %}{{ product.badge_info.label|default:''|escapejs }}{% endif %}",
+                            {% if product.badge %}
+                            "badge": "{{ product.badge_info.label|default:''|escapejs }}",
                             "badge_bg": "{{ product.badge_info.bg|default:''|escapejs }}",
                             "badge_color": "{{ product.badge_info.color|default:''|escapejs }}",
                             "badge_border": "{{ product.badge_info.border|default:''|escapejs }}",
+                            {% else %}
+                            "badge": "",
+                            "badge_bg": "",
+                            "badge_color": "",
+                            "badge_border": "",
+                            {% endif %}
                             "images": [
                                 {% with all_images=v.get_all_images %}
                                 {% for img_url in all_images %}
@@ -2709,20 +2716,8 @@
             } else {
                 const activeBadge = (variantBadge || '').trim();
                 if (activeBadge) {
-                    let bg = variantBadgeBg || '#ff6a00';
-                    let color = variantBadgeColor || '#000000';
-                    let border = variantBadgeBorder || 'none';
-                    
-                    const orangeBadges = ['Sale', 'Exclusive', 'Signature Series', 'Best Seller'];
-                    const blackBadges = ['New Arrival', 'Limited Edition', 'Luxury', 'Premium'];
-                    if (orangeBadges.includes(activeBadge)) {
-                        bg = '#ff6a00'; color = '#000000'; border = 'none';
-                    } else if (blackBadges.includes(activeBadge)) {
-                        bg = '#000000'; color = '#ffffff'; border = '1px solid #ff6a00';
-                    }
-                    
-                    const borderStyle = border !== 'none' ? `border: ${border} !important;` : 'border: none !important;';
-                    badgeHtml = `<span class="badge" style="background: ${bg} !important; color: ${color} !important; ${borderStyle}">${activeBadge}</span>`;
+                    const borderStyle = variantBadgeBorder ? `border: ${variantBadgeBorder} !important;` : '';
+                    badgeHtml = `<span class="badge" style="background: ${variantBadgeBg} !important; color: ${variantBadgeColor} !important; ${borderStyle}">${activeBadge}</span>`;
                 } else {
                     // Auto-detect Sale from pricing
                     const currentPrice = parseFloat(price);
@@ -2740,20 +2735,8 @@
                 if (stock <= 0) {
                     titleBadge = `<span class="badge" style="background: #ef4444 !important; color: #fff !important; font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">Unavailable</span>`;
                 } else if (activeBadge) {
-                    let bg = variantBadgeBg || '#ff6a00';
-                    let color = variantBadgeColor || '#000000';
-                    let border = variantBadgeBorder || 'none';
-                    
-                    const orangeBadges = ['Sale', 'Exclusive', 'Signature Series', 'Best Seller'];
-                    const blackBadges = ['New Arrival', 'Limited Edition', 'Luxury', 'Premium'];
-                    if (orangeBadges.includes(activeBadge)) {
-                        bg = '#ff6a00'; color = '#000000'; border = 'none';
-                    } else if (blackBadges.includes(activeBadge)) {
-                        bg = '#000000'; color = '#ffffff'; border = '1px solid #ff6a00';
-                    }
-                    
-                    const borderStyle = border !== 'none' ? `border: ${border} !important;` : 'border: none !important;';
-                    titleBadge = `<span class="badge" style="background: ${bg} !important; color: ${color} !important; ${borderStyle} font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">${activeBadge}</span>`;
+                    const borderStyle = variantBadgeBorder ? `border: ${variantBadgeBorder} !important;` : '';
+                    titleBadge = `<span class="badge" style="background: ${variantBadgeBg} !important; color: ${variantBadgeColor} !important; ${borderStyle} font-size: 0.65rem !important; padding: 2px 10px !important; border-radius: 12px !important; font-weight: 800; text-transform: uppercase;">${activeBadge}</span>`;
                 } else {
                     const currentPrice = parseFloat(price);
                     const originalPrice = parseFloat(oldPrice);

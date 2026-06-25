@@ -414,9 +414,9 @@ def inventory_list(request):
                     'variant_name': f"{v.strap_color}".strip() or "Standard",
                     'sku': v.sku,
                     'stock': v.stock,
-                    'price': v.price or product.price,
-                    'image': v.image.url if v.image else (product.image.url if product.image else None),
-                    'badge': v.badge,
+                    'image': product.image.url if product.image else None,
+                    'price': v.price if v.price else product.price,
+                    'badge': product.badge,
                 })
                 if v.stock == 0: total_out += 1
                 elif v.stock < 10: total_low += 1
@@ -477,7 +477,7 @@ def inventory_update(request):
         elif 'badge' in data:
             badge = data.get('badge') or None
             if item_type == 'variant':
-                item = ProductVariant.objects.get(id=item_id)
+                item = ProductVariant.objects.get(id=item_id).product
             else:
                 item = Product.objects.get(id=item_id)
             
