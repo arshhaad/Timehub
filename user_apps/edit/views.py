@@ -466,22 +466,28 @@ def update_cart(request, item_id):
                 else:
                     category_offer_savings += save_per * i.quantity
 
-        # coupon discount (on post-offer subtotal)
+        # coupon discount (on post-offer subtotal) + revalidation
         coupon_discount = Decimal('0')
-        if cart.coupon and cart.coupon.is_valid_for_user(cart.user)[0]:
-            if cart.coupon.applicable_collection:
-                collection_ids = cart.coupon.applicable_collection.get_all_descendant_ids()
-                applicable_items = [i for i in all_items if i.product.collection_id in collection_ids]
-                applicable_subtotal = sum(i.total_price for i in applicable_items)
+        coupon_removed = False
+        coupon_removed_message = ''
+        if cart.coupon:
+            is_coupon_valid, _ = cart.coupon.is_valid_for_user(cart.user)
+            if not is_coupon_valid:
+                # Coupon is globally invalid — remove it
+                cart.coupon = None
+                cart.save(update_fields=['coupon'])
+                coupon_removed = True
+                coupon_removed_message = 'Your coupon was removed as it is no longer valid.'
             else:
-                applicable_subtotal = subtotal
-            if applicable_subtotal >= cart.coupon.min_purchase_amount:
-                if cart.coupon.discount_type == 'percentage':
-                    coupon_discount = (applicable_subtotal * cart.coupon.discount_value) / Decimal('100')
-                    if cart.coupon.max_discount_amount:
-                        coupon_discount = min(coupon_discount, cart.coupon.max_discount_amount)
-                else:
-                    coupon_discount = min(cart.coupon.discount_value, applicable_subtotal)
+                # Recompute discount for current basket
+                from user_apps.orders.views import _build_coupon_discount
+                coupon_discount, _ = _build_coupon_discount(cart.coupon, list(all_items), subtotal)
+                if coupon_discount == 0:
+                    # Coupon no longer applicable (e.g. min purchase not met)
+                    cart.coupon = None
+                    cart.save(update_fields=['coupon'])
+                    coupon_removed = True
+                    coupon_removed_message = 'Your coupon was removed because the cart no longer meets its conditions.'
 
         referral_discount = get_referral_first_order_discount(cart.user, items=all_items)
         discount = coupon_discount + referral_discount
@@ -510,7 +516,9 @@ def update_cart(request, item_id):
             'tax': str(tax),
             'total': str(total),
             'total_saved': str(total_saved),
-            'shipping_needed': str(max(Decimal('0'), Decimal('5000') - subtotal))
+            'shipping_needed': str(max(Decimal('0'), Decimal('5000') - subtotal)),
+            'coupon_removed': coupon_removed,
+            'coupon_removed_message': coupon_removed_message,
         })
     except: return JsonResponse({'success': False})
 
@@ -518,7 +526,34 @@ def update_cart(request, item_id):
 @login_required
 def remove_from_cart(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart = item.cart
     item.delete()
+
+    if cart.coupon:
+        remaining_items = list(cart.items.select_related('product', 'variant').all())
+        coupon_removed = False
+        is_valid, _ = cart.coupon.is_valid_for_user(request.user)
+        if not is_valid:
+            coupon_removed = True
+        else:
+            # Check if discount is still > 0 for current cart contents
+            from user_apps.orders.views import _build_coupon_discount
+            subtotal = sum(i.total_price for i in remaining_items)
+            if subtotal > 0:
+                discount, _ = _build_coupon_discount(cart.coupon, remaining_items, subtotal)
+                if discount == 0:
+                    coupon_removed = True
+            else:
+                coupon_removed = True
+
+        if coupon_removed:
+            cart.coupon = None
+            cart.save(update_fields=['coupon'])
+            messages.warning(
+                request,
+                'Your coupon was removed because the cart no longer meets the coupon conditions.',
+            )
+
     messages.success(request, 'Item removed.')
     return redirect('cart_view')
 

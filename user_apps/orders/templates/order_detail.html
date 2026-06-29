@@ -185,12 +185,14 @@
             <p>Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
         </div>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            {% if order.status != 'Cancelled' %}
             <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
                 <i class="fas fa-location-dot"></i> Track Order
             </a>
             <a href="{% url 'download_invoice' order_uuid=order.uuid %}" target="_blank" class="btn-action btn-primary-alt">
                 <i class="fas fa-file-invoice"></i> Download Invoice
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -300,7 +302,7 @@
                                     </td>
                                     <td style="text-align:right; padding: 16px 24px;">
                                         <div class="action-flex-container">
-                                            {% if not item.is_cancelled and not item.is_returned %}
+                                            {% if not item.is_cancelled and not item.is_returned and not item.is_return_requested %}
                                                 {% if order.status == 'Pending' or order.status == 'Confirmed' or order.status == 'Processing' %}
                                                     <button class="btn-action btn-danger-alt btn-sm" onclick="openCancelItemModal('{% url 'cancel_order_item' item_uuid=item.uuid %}', '{{ item.product.name|escapejs }}')">Cancel</button>
                                                 {% elif order.status == 'Delivered' %}
@@ -309,12 +311,14 @@
                                                     {% else %}
                                                         <button class="btn-action btn-primary-alt btn-sm" onclick="openReviewModal('{{ item.product.id }}', '{{ item.product.name|escapejs }}')">Rate</button>
                                                     {% endif %}
-                                                    {% if not item.is_returned %}
-                                                        <button class="btn-action btn-outline-alt btn-sm" onclick="openItemReturnModal('{{ item.id }}', '{{ item.product.name|escapejs }}')">Return</button>
-                                                    {% endif %}
+                                                    <button class="btn-action btn-outline-alt btn-sm" onclick="openItemReturnModal('{{ item.id }}', '{{ item.product.name|escapejs }}')">Return</button>
                                                 {% endif %}
                                             {% elif item.is_cancelled %}
                                                 <span class="status-badge s-Cancelled">Cancelled</span>
+                                            {% elif item.is_return_requested and not item.is_returned %}
+                                                <span class="status-badge" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
+                                                    <i class="fas fa-clock"></i> Return Requested
+                                                </span>
                                             {% elif item.is_returned %}
                                                 <span class="status-badge s-Returned">Returned</span>
                                             {% endif %}

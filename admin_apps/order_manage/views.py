@@ -172,10 +172,17 @@ def order_detail(request, order_id):
                     if new_return_status == 'Rejected':
                         order.status = 'Delivered'
                         order.return_status = 'Rejected'
+                        # Clear return-requested flags so items show as not-returned
+                        order.items.filter(is_return_requested=True).update(
+                            is_return_requested=False
+                        )
                     elif new_return_status == 'Returned':
                         if order.status != 'Returned':
                             order.status = 'Returned'
                             process_full_return(order, request.POST.get('refund_method') or 'Wallet')
+                        order.items.filter(
+                            is_return_requested=True, is_cancelled=False
+                        ).update(is_returned=True, is_return_requested=False)
                         order.return_status = 'Returned'
                     else:
                         order.return_status = new_return_status
@@ -244,7 +251,10 @@ def process_full_return(order, refund_method):
             order.return_status = 'Returned'
         
         if not order.items.filter(is_returned=True).exists():
-            order.items.filter(is_cancelled=False).update(is_returned=True)
+            order.items.filter(is_cancelled=False).update(
+                is_returned=True,
+                is_return_requested=False,
+            )
 
     order.update_totals()
     refund_amount = original_total - order.total_amount

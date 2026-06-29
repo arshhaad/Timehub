@@ -518,6 +518,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (couponRow) couponRow.style.display = couponVal > 0 ? 'flex' : 'none';
                     if (couponEl) couponEl.textContent = couponVal.toFixed(2);
 
+                    // ── Bug Fix: Handle coupon removal triggered by cart change ──
+                    if (data.coupon_removed) {
+                        // Hide applied-coupon badge and show input field
+                        const appliedState = document.getElementById('coupon-applied-state');
+                        const inputState = document.getElementById('coupon-input-state');
+                        if (appliedState) appliedState.style.display = 'none';
+                        if (inputState) inputState.style.display = 'block';
+
+                        // Show dismissible notice
+                        const existingToast = document.getElementById('coupon-removed-toast');
+                        if (!existingToast) {
+                            const toast = document.createElement('div');
+                            toast.id = 'coupon-removed-toast';
+                            toast.style.cssText = `
+                                position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+                                background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35);
+                                color: #fbbf24; padding: 12px 20px; border-radius: 12px; font-size: 0.85rem;
+                                font-weight: 600; z-index: 9999; display: flex; align-items: center; gap: 10px;
+                                max-width: 90%; box-shadow: 0 8px 30px rgba(0,0,0,0.4); white-space: nowrap;
+                            `;
+                            toast.innerHTML = `<i class="fas fa-tag"></i> ${data.coupon_removed_message || 'Coupon removed.'}
+                                <button onclick="this.parentElement.remove()" style="margin-left:12px;background:none;border:none;color:#fbbf24;cursor:pointer;font-size:1rem;">×</button>`;
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 5000);
+                        }
+                    }
+
                     // Update Referral row (if present in DOM)
                     const referralVal = parseFloat(data.referral_discount || 0);
                     const referralRow = document.getElementById('cart-referral-row');

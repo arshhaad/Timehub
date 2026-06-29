@@ -1616,6 +1616,17 @@
 
                 <!-- Professional Variations -->
                 <div class="variations animate-right" id="selection-container" style="gap: 20px; display: flex; flex-direction: column; margin-bottom: 25px;">
+
+                    {% if has_no_available_variants %}
+                    <!-- All variants are out of stock — show notice and skip selector -->
+                    <div style="display:flex; align-items:center; gap:12px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.25); border-radius:14px; padding:16px 20px;">
+                        <i class="fas fa-circle-xmark" style="color:#ef4444; font-size:1.3rem; flex-shrink:0;"></i>
+                        <div>
+                            <p style="font-weight:700; color:#ef4444; margin:0 0 2px;">All Variants Out of Stock</p>
+                            <p style="font-size:0.82rem; color:var(--text-muted); margin:0;">This product's variants are temporarily unavailable. Check back soon.</p>
+                        </div>
+                    </div>
+                    {% else %}
                     <!-- Available Colors (from Product model) -->
                     {% if product.colors.exists %}
                     <div class="variation-group animate-up" style="margin-bottom: 0;">
@@ -1727,6 +1738,7 @@
                             </div>
                         </div>
                     {% endif %}
+                    {% endif %}{# end has_no_available_variants #}
                 </div>
 
                 <script id="variants-data" type="application/json">

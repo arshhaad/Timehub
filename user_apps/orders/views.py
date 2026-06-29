@@ -635,6 +635,13 @@ def cancel_order_item(request, item_uuid):
 
             order.update_totals()
 
+            # ── Bug Fix: If every item is now cancelled, mark the order Cancelled ──
+            if not order.items.filter(is_cancelled=False).exists():
+                order.status = 'Cancelled'
+                if not order.cancel_reason:
+                    order.cancel_reason = reason
+                order.save(update_fields=['status', 'cancel_reason'])
+
             if order.is_paid:
                 if original_order_subtotal > 0:
                     item_discount_share = (item_subtotal / original_order_subtotal) * order.discount
@@ -688,18 +695,24 @@ def return_order(request, order_uuid):
 
     with transaction.atomic():
         items_to_return = order.items.filter(
-            id__in=item_ids, is_returned=False, is_cancelled=False
+            id__in=item_ids,
+            is_returned=False,
+            is_return_requested=False,
+            is_cancelled=False,
         )
         if not items_to_return.exists():
             messages.error(request, 'Selected items are not eligible for return.')
             return redirect('order_detail', order_uuid=order.uuid)
 
         for item in items_to_return:
-            item.is_returned = True
+            item.is_return_requested = True
             item.return_reason = reason
             item.save()
-
-        remaining = order.items.filter(is_cancelled=False, is_returned=False)
+        remaining = order.items.filter(
+            is_cancelled=False,
+            is_returned=False,
+            is_return_requested=False,
+        )
         if not remaining.exists():
             order.status = 'Return Requested'
             order.return_status = 'Requested'
@@ -721,8 +734,12 @@ def return_order(request, order_uuid):
 def download_invoice(request, order_uuid):
     """Render a printable invoice for an order."""
     order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+
+    if order.status == 'Cancelled':
+        messages.error(request, 'Invoice is not available for cancelled orders.')
+        return redirect('order_detail', order_uuid=order.uuid)
+
     
-    # Filter out cancelled and returned items (if return is completed)
     if order.return_status == 'Returned':
         items = order.items.filter(is_cancelled=False, is_returned=False)
     else:
@@ -834,6 +851,11 @@ def track_order(request, order_uuid):
         order = get_object_or_404(Order, uuid=order_uuid)
     else:
         order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
+
+    
+    if order.status == 'Cancelled':
+        messages.error(request, 'Order tracking is not available for cancelled orders.')
+        return redirect('order_detail', order_uuid=order.uuid)
 
     items = order.items.select_related('product').all()
 

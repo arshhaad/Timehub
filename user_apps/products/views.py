@@ -387,7 +387,9 @@ def product_details(request, product_uuid):
     if product.discount_price:
         savings = product.price - product.discount_price
     
-    active_variants = product.variants.filter(is_active=True).order_by('id')
+    all_active_variants = product.variants.filter(is_active=True)
+    active_variants = all_active_variants.filter(stock__gt=0).order_by('id')
+    has_no_available_variants = all_active_variants.exists() and not active_variants.exists()
     
     
     strap_colors = []
@@ -437,6 +439,7 @@ def product_details(request, product_uuid):
         'MAX_QTY': MAX_QTY,
         'savings': savings,
         'active_variants': active_variants,
+        'has_no_available_variants': has_no_available_variants,
         'strap_colors': strap_colors,
         'dial_colors': dial_colors,
         'materials': materials,

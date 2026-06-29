@@ -369,6 +369,7 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     is_cancelled = models.BooleanField(default=False)
     cancel_reason = models.TextField(blank=True, null=True)
+    is_return_requested = models.BooleanField(default=False)
     is_returned = models.BooleanField(default=False)
     return_reason = models.TextField(blank=True, null=True)
 
