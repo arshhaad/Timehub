@@ -339,6 +339,11 @@ def cart_view(request):
 
     total_saved = product_offer_savings + category_offer_savings + coupon_discount + referral_discount
 
+    from admin_apps.offers.models import Coupon
+    _now = timezone.now()
+    _all_coupons = Coupon.objects.filter(is_active=True, valid_from__lte=_now, valid_to__gte=_now).order_by('-discount_value')
+    available_coupons = [c for c in _all_coupons if c.is_valid_for_user(request.user)[0]]
+
     return render(request, 'cart.html', {
         'cart': cart, 'items': items,
         'base_subtotal': base_subtotal,
@@ -350,7 +355,8 @@ def cart_view(request):
         'total_saved': total_saved,
         'shipping': shipping, 'tax': tax, 'total': total,
         'has_stock_issues': has_stock_issues,
-        'shipping_needed': shipping_needed, 'shipping_percentage': shipping_percent
+        'shipping_needed': shipping_needed, 'shipping_percentage': shipping_percent,
+        'available_coupons': available_coupons,
     })
 
 
