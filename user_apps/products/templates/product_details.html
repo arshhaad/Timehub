@@ -1718,20 +1718,21 @@
                         <div class="variation-group animate-up" style="margin-bottom: 0;">
                             <div class="variation-label">
                                 <span>Select Size / Variant</span>
-                                <span id="label-size" class="selected-val">{{ active_variants.first.sku|default:"Standard" }}</span>
+                                <span id="label-size" class="selected-val">{{ in_stock_variants.first.sku|default:active_variants.first.sku|default:"Standard" }}</span>
                             </div>
                             <div class="options-row" style="margin-top: 10px;">
                                 {% for v in active_variants %}
-                                <button class="opt-btn {% if forloop.first %}active{% endif %}"
+                                <button class="opt-btn {% if forloop.first and v.stock > 0 %}active{% endif %} {% if v.stock == 0 %}oos-btn{% endif %}"
                                         data-type="variant"
                                         data-variant-id="{{ v.id }}"
                                         data-price="{{ v.display_price }}"
                                         data-old-price="{{ v.effective_price }}"
                                         data-stock="{{ v.stock }}"
+                                        {% if v.stock == 0 %}data-oos="true" disabled{% endif %}
                                         onclick="handleSizeSelection(this)">
                                     <div class="variant-chip" style="pointer-events: none;">
                                         <span>{{ v.sku|default:"Standard" }}</span>
-                                        <span>{{ v.stock }} left</span>
+                                        <span>{% if v.stock == 0 %}Sold Out{% else %}{{ v.stock }} left{% endif %}</span>
                                     </div>
                                 </button>
                                 {% endfor %}
@@ -1753,6 +1754,7 @@
                             "price": "{{ v.display_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
+                            "oos": {{ v.stock|yesno:"false,true" }},
                             {% if v.badge_info %}
                             "badge": "{{ v.badge_info.label|default:''|escapejs }}",
                             "badge_bg": "{{ v.badge_info.bg|default:''|escapejs }}",
@@ -2530,6 +2532,9 @@
         }
 
         window.handleSizeSelection = function(element, isAutoTriggered = false) {
+            // Guard: do not allow selection of OOS variants
+            if (element.getAttribute('data-oos') === 'true' || element.disabled) return;
+
             const group = element.parentElement;
             group.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
@@ -2686,18 +2691,21 @@
             updateAvailableOptions();
             autoSelectVariant();
             
-            // Mark OOS variants
+            // Mark OOS variants (server already sets data-oos/disabled, this is a safety net)
             document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
-                if (parseInt(btn.dataset.stock, 10) <= 0) {
+                const stock = parseInt(btn.dataset.stock, 10);
+                if (stock <= 0) {
                     btn.setAttribute('data-oos', 'true');
                     btn.disabled = true;
+                    btn.classList.remove('active');
                 }
             });
 
             if (!selectedVariantId) {
-                const firstBtn = document.querySelector('.opt-btn[data-type="variant"]:not([data-oos="true"])') || 
-                               document.querySelector('.opt-btn[data-type="variant"]');
-                if (firstBtn) handleSizeSelection(firstBtn, true);
+                // Prefer the first in-stock variant; fall back to first overall
+                const firstInStockBtn = document.querySelector('.opt-btn[data-type="variant"]:not([data-oos="true"]):not([disabled])');
+                const firstBtn = firstInStockBtn || document.querySelector('.opt-btn[data-type="variant"]');
+                if (firstBtn && !firstBtn.getAttribute('data-oos')) handleSizeSelection(firstBtn, true);
             }
         });
 

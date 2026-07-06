@@ -379,12 +379,18 @@ def add_to_cart(request, product_uuid):
         return JsonResponse({'success': False, 'error': 'Product is currently unavailable'})
             
     active_variants = product.variants.filter(is_active=True)
-    variant = active_variants.filter(id=variant_id).first() if variant_id else None
-    
-    if not variant and active_variants.exists():
-        variant = active_variants.first()
-        
-    # stock check
+    variant = None
+
+    if variant_id:
+        variant = active_variants.filter(id=variant_id).first()
+        if variant is None:
+            return JsonResponse({'success': False, 'error': 'Variant not found or is inactive'})
+        if variant.stock <= 0:
+            return JsonResponse({'success': False, 'error': 'This variant is out of stock'})
+    elif active_variants.exists():
+        variant = active_variants.filter(stock__gt=0).first()
+        if variant is None:
+            return JsonResponse({'success': False, 'error': 'All variants are out of stock'})
     stock = variant.stock if variant else product.stock
     if stock <= 0: return JsonResponse({'success': False, 'error': 'Item is out of stock'})
         

@@ -387,9 +387,9 @@ def product_details(request, product_uuid):
     if product.discount_price:
         savings = product.price - product.discount_price
     
-    all_active_variants = product.variants.filter(is_active=True)
-    active_variants = all_active_variants.filter(stock__gt=0).order_by('id')
-    has_no_available_variants = all_active_variants.exists() and not active_variants.exists()
+    all_active_variants = product.variants.filter(is_active=True).order_by('id')
+    in_stock_variants = all_active_variants.filter(stock__gt=0)
+    has_no_available_variants = all_active_variants.exists() and not in_stock_variants.exists()
     
     
     strap_colors = []
@@ -404,7 +404,7 @@ def product_details(request, product_uuid):
     from user_apps.core.models import Color
     color_map = {c.name.lower(): c.hex_code for c in Color.objects.all()}
     
-    for v in active_variants:
+    for v in in_stock_variants:
         if v.strap_color and v.strap_color.strip().lower() not in seen_strap:
             c_name = v.strap_color.strip()
             strap_colors.append({
@@ -438,7 +438,8 @@ def product_details(request, product_uuid):
         'related_products': related_products,
         'MAX_QTY': MAX_QTY,
         'savings': savings,
-        'active_variants': active_variants,
+        'active_variants': all_active_variants,   
+        'in_stock_variants': in_stock_variants,     
         'has_no_available_variants': has_no_available_variants,
         'strap_colors': strap_colors,
         'dial_colors': dial_colors,
