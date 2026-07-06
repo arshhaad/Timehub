@@ -26,7 +26,8 @@ services:
     build: .
     container_name: ecommerce_web
     command: >
-      sh -c "python manage.py collectstatic --noinput &&
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              gunicorn project.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app
