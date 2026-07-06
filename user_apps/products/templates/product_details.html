@@ -1714,11 +1714,11 @@
 
 
                     {% if active_variants %}
-                        <!-- Size/Variant Selection -->
+                        <!-- Select Variant -->
                         <div class="variation-group animate-up" style="margin-bottom: 0;">
                             <div class="variation-label">
-                                <span>Select Size / Variant</span>
-                                <span id="label-size" class="selected-val">{{ in_stock_variants.first.sku|default:active_variants.first.sku|default:"Standard" }}</span>
+                                <span>Select Variant</span>
+                                <span id="label-size" class="selected-val">{{ in_stock_variants.first.display_label|default:active_variants.first.display_label|default:"Standard" }}</span>
                             </div>
                             <div class="options-row" style="margin-top: 10px;">
                                 {% for v in active_variants %}
@@ -1728,10 +1728,11 @@
                                         data-price="{{ v.display_price }}"
                                         data-old-price="{{ v.effective_price }}"
                                         data-stock="{{ v.stock }}"
+                                        data-label="{{ v.display_label|escapejs }}"
                                         {% if v.stock == 0 %}data-oos="true" disabled{% endif %}
                                         onclick="handleSizeSelection(this)">
                                     <div class="variant-chip" style="pointer-events: none;">
-                                        <span>{{ v.sku|default:"Standard" }}</span>
+                                        <span>{{ v.display_label }}</span>
                                         <span>{% if v.stock == 0 %}Sold Out{% else %}{{ v.stock }} left{% endif %}</span>
                                     </div>
                                 </button>
@@ -1747,7 +1748,7 @@
                         {% for v in active_variants %}
                         {
                             "id": "{{ v.id }}",
-
+                            "label": "{{ v.display_label|escapejs }}",
                             "strap": "{{ v.strap_color|default:''|escapejs }}",
                             "dial": "{{ v.dial_color|default:''|escapejs }}",
                             "material": "{{ v.strap_material|default:''|escapejs }}",
@@ -2542,7 +2543,9 @@
             selectedVariantId = element.dataset.variantId;
 
             if(document.getElementById('label-size')) {
-                document.getElementById('label-size').textContent = element.querySelector('.variant-chip span:first-child').textContent;
+                // Use the data-label attribute (meaningful composed name) not the inner span
+                const labelText = element.dataset.label || element.querySelector('.variant-chip span:first-child')?.textContent || '';
+                document.getElementById('label-size').textContent = labelText;
             }
 
             updatePriceUI(element.dataset.price, element.dataset.oldPrice);
@@ -2705,7 +2708,13 @@
                 // Prefer the first in-stock variant; fall back to first overall
                 const firstInStockBtn = document.querySelector('.opt-btn[data-type="variant"]:not([data-oos="true"]):not([disabled])');
                 const firstBtn = firstInStockBtn || document.querySelector('.opt-btn[data-type="variant"]');
-                if (firstBtn && !firstBtn.getAttribute('data-oos')) handleSizeSelection(firstBtn, true);
+                if (firstBtn && !firstBtn.getAttribute('data-oos')) {
+                    handleSizeSelection(firstBtn, true);
+                } else if (firstBtn) {
+                    // All OOS – at least update the label to show what's selected
+                    const labelEl = document.getElementById('label-size');
+                    if (labelEl) labelEl.textContent = firstBtn.dataset.label || '';
+                }
             }
         });
 
