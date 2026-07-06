@@ -1753,11 +1753,11 @@
                             "price": "{{ v.display_price }}",
                             "old_price": "{{ v.effective_price }}",
                             "stock": {{ v.stock }},
-                            {% if product.badge %}
-                            "badge": "{{ product.badge_info.label|default:''|escapejs }}",
-                            "badge_bg": "{{ product.badge_info.bg|default:''|escapejs }}",
-                            "badge_color": "{{ product.badge_info.color|default:''|escapejs }}",
-                            "badge_border": "{{ product.badge_info.border|default:''|escapejs }}",
+                            {% if v.badge_info %}
+                            "badge": "{{ v.badge_info.label|default:''|escapejs }}",
+                            "badge_bg": "{{ v.badge_info.bg|default:''|escapejs }}",
+                            "badge_color": "{{ v.badge_info.color|default:''|escapejs }}",
+                            "badge_border": "{{ v.badge_info.border|default:''|escapejs }}",
                             {% else %}
                             "badge": "",
                             "badge_bg": "",

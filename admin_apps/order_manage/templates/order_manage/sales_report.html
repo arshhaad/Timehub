@@ -913,7 +913,6 @@
 
 
 {% block extra_js %}
-<script>
 function animateCounter(el, end, duration, prefix, isFloat) {
     const startTime = performance.now();
     function step(now) {
@@ -956,5 +955,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterSelect = document.querySelector('select[name="filter_type"]');
     if (filterSelect) toggleCustomDates(filterSelect.value);
 });
-</script>
 {% endblock %}

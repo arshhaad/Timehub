@@ -132,8 +132,14 @@ class Product(models.Model):
         label = None
         if self.badge:
             label = self.badge
-        elif self.discount_price or self.has_offer:
-            label = 'Sale'
+        else:
+            first_var = self.variants.filter(is_active=True).first()
+            if first_var and first_var.badge:
+                label = first_var.badge
+                
+        if not label:
+            if self.discount_price or self.has_offer:
+                label = 'Sale'
             
         if not label:
             return None
@@ -202,9 +208,48 @@ class ProductVariant(models.Model):
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
     sku = models.CharField(max_length=100, blank=True)
+    badge = models.CharField(max_length=50, choices=Product.BADGE_CHOICES, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def badge_info(self):
+        """Returns label and styling dictionary for variant badge, falling back to parent if not set."""
+        label = self.badge or self.product.badge
+        
+        # If no explicit badge, check if there is a discount/offer
+        if not label:
+            if self.discount_price or self.product.discount_price or self.product.has_offer:
+                label = 'Sale'
+                
+        if not label:
+            return None
+            
+        orange_badges = {'Sale', 'Exclusive', 'Signature Series', 'Best Seller'}
+        black_badges = {'New Arrival', 'Limited Edition', 'Luxury', 'Premium'}
+        
+        if label in orange_badges:
+            return {
+                'label': label,
+                'bg': '#ff6a00',
+                'color': '#000000',
+                'border': 'none'
+            }
+        elif label in black_badges:
+            return {
+                'label': label,
+                'bg': '#000000',
+                'color': '#ffffff',
+                'border': '1px solid #ff6a00'
+            }
+            
+        return {
+            'label': label,
+            'bg': '#ff6a00',
+            'color': '#000000',
+            'border': 'none'
+        }
 
     @property
     def effective_price(self):

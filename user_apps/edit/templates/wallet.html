@@ -92,8 +92,14 @@
     /* Main Content Layout */
     .main-grid {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 25px;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 30px;
+    }
+
+    .actions-column {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
     }
 
     /* Panel Styling */
@@ -209,6 +215,12 @@
         margin-bottom: 30px;
     }
 
+    .mini-stats-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
     .virtual-card {
         background: linear-gradient(135deg, #1e293b, #0f172a);
         border-radius: 30px;
@@ -221,6 +233,21 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+    }
+
+    .card-balance-value {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #fff;
+        font-family: 'Outfit', sans-serif;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+    }
+
+    .card-balance-symbol {
+        font-size: 1.8rem;
+        color: var(--primary-color);
     }
 
     .referral-stats-grid {
@@ -241,7 +268,44 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .quick-deposit-form-group {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 15px;
+        align-items: flex-end;
+        max-width: 600px;
+    }
+
+    .quick-deposit-btn {
+        background: #fff;
+        color: #1e3a8a;
+        height: 48px;
+        padding: 0 25px;
+        border-radius: 12px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.3s;
+    }
+
+    .quick-deposit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Media Queries */
     @media (max-width: 1024px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        .actions-column {
+            gap: 25px;
+        }
         .wallet-top-grid {
             grid-template-columns: 1fr;
         }
@@ -249,6 +313,14 @@
             height: auto;
             min-height: 240px;
             padding: 30px;
+        }
+    }
+
+    @media (min-width: 576px) and (max-width: 1024px) {
+        .mini-stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
     }
 
@@ -269,11 +341,30 @@
             width: 100% !important;
             height: 50px !important;
         }
-        .virtual-card div[style*="font-size: 2.8rem"] {
-            font-size: 2.2rem !important;
+        .card-balance-value {
+            font-size: 2.2rem;
+        }
+        .card-balance-symbol {
+            font-size: 1.5rem;
         }
     }
 
+    @media (max-width: 600px) {
+        .data-table th, .data-table td {
+            padding: 10px 8px;
+            font-size: 0.8rem;
+        }
+        .data-table th {
+            font-size: 0.7rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .quick-deposit-form-group {
+            grid-template-columns: 1fr;
+        }
+        .quick-deposit-btn {
+            width: 100%;
         }
     }
 
@@ -414,8 +505,8 @@
 
             <div style="position: relative; z-index: 2;">
                 <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px;">Available Balance</div>
-                <div style="font-size: 2.8rem; font-weight: 800; color: #fff; font-family: 'Outfit', sans-serif; display: flex; align-items: baseline; gap: 10px;">
-                    <span style="font-size: 1.8rem; color: var(--primary-color);">₹</span>{{ wallet.balance }}
+                <div class="card-balance-value">
+                    <span class="card-balance-symbol">₹</span>{{ wallet.balance }}
                 </div>
             </div>
 
@@ -432,7 +523,7 @@
         </div>
 
         <!-- Mini Stats -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="mini-stats-container">
             <div class="stat-card" style="flex: 1; padding: 20px; border-radius: 24px;">
                 <div class="stat-icon icon-added" style="width: 45px; height: 45px; font-size: 1.1rem;">
                     <i class="fas fa-arrow-down-long"></i>
@@ -510,97 +601,100 @@
                 </table>
             </div>
         </div>
-        <!-- Quick Deposit -->
-        <div class="panel" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); border: none; color: #fff; position: relative; overflow: hidden; margin-bottom: 5px;">
-            <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.03); transform: rotate(15deg);">
-                <i class="fas fa-wallet"></i>
-            </div>
-            
-            <div style="position: relative; z-index: 1;">
-                <div class="panel-header" style="margin-bottom: 15px;">
-                    <h2 style="color: #fff;"><i class="fas fa-plus-circle" style="color: #4ade80;"></i> Quick Deposit</h2>
-                    <span class="badge" style="background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3);">Secure Payment</span>
+        
+        <!-- Actions Column: Deposit & Referral -->
+        <div class="actions-column">
+            <!-- Quick Deposit -->
+            <div class="panel" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); border: none; color: #fff; position: relative; overflow: hidden; margin-bottom: 5px;">
+                <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.03); transform: rotate(15deg);">
+                    <i class="fas fa-wallet"></i>
                 </div>
                 
-                <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 25px; max-width: 500px;">
-                    Instantly top up your TimeHub wallet using Razorpay. Your funds are available for immediate use.
-                </p>
-
-                <form action="{% url 'payments:add_wallet_fund' %}" method="POST" id="quickDepositForm">
-                    {% csrf_token %}
-                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: flex-end; max-width: 600px;">
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Amount to Add (₹)</span>
-                            <div style="position: relative;">
-                                <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #fff;">₹</span>
-                                <input type="number" name="amount" id="quickAmount" value="1000" min="1" required
-                                       style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 15px 12px 35px; color: #fff; font-size: 1.1rem; font-weight: 700; width: 100%; outline: none; transition: 0.3s;"
-                                       onfocus="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.3)'"
-                                       onblur="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)'">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-sm" style="background: #fff; color: #1e3a8a; height: 48px; padding: 0 25px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            Add Funds <i class="fas fa-arrow-right"></i>
-                        </button>
+                <div style="position: relative; z-index: 1;">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <h2 style="color: #fff;"><i class="fas fa-plus-circle" style="color: #4ade80;"></i> Quick Deposit</h2>
+                        <span class="badge" style="background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3);">Secure Payment</span>
                     </div>
-                </form>
+                    
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 25px; max-width: 500px;">
+                        Instantly top up your TimeHub wallet using Razorpay. Your funds are available for immediate use.
+                    </p>
 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button type="button" onclick="setQuickAmount(500)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹500</button>
-                    <button type="button" onclick="setQuickAmount(1000)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹1000</button>
-                    <button type="button" onclick="setQuickAmount(5000)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹5000</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Refer & Earn -->
-        <div class="panel" style="background: linear-gradient(135deg, #1e1b4b, #312e81); border: none; color: #fff; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.03); transform: rotate(15deg);">
-                <i class="fas fa-gift"></i>
-            </div>
-            
-            <div style="position: relative; z-index: 1;">
-                <div class="panel-header" style="margin-bottom: 15px;">
-                    <h2 style="color: #fff;"><i class="fas fa-gift" style="color: #fbbf24;"></i> Refer & Earn</h2>
-                    <span class="badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">Invite Friends</span>
-                </div>
-                
-                <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 25px; max-width: 500px;">
-                    Share the luxury of TimeHub with your friends. They get a discount on their first order, and you earn rewards in your wallet!
-                </p>
-
-                <div class="referral-stats-grid">
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 5px;">
-                        <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Your Referral Code</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: #fbbf24;">{{ user.referral_code }}</span>
-                            <button onclick="copyToClipboard('{{ user.referral_code }}')" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
-                                <i class="far fa-copy"></i>
+                    <form action="{% url 'payments:add_wallet_fund' %}" method="POST" id="quickDepositForm">
+                        {% csrf_token %}
+                        <div class="quick-deposit-form-group">
+                            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Amount to Add (₹)</span>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #fff;">₹</span>
+                                    <input type="number" name="amount" id="quickAmount" value="1000" min="1" required
+                                           style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 15px 12px 35px; color: #fff; font-size: 1.1rem; font-weight: 700; width: 100%; outline: none; transition: 0.3s;"
+                                           onfocus="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.3)'"
+                                           onblur="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)'">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-sm quick-deposit-btn">
+                                Add Funds <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 5px;">
-                        <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Total Referrals</span>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">{{ user.referrals.count }}</span>
-                            <span style="font-size: 0.8rem; color: #4ade80;"><i class="fas fa-users"></i> Friends Joined</span>
-                        </div>
+                    </form>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                        <button type="button" onclick="setQuickAmount(500)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹500</button>
+                        <button type="button" onclick="setQuickAmount(1000)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹1000</button>
+                        <button type="button" onclick="setQuickAmount(5000)" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">+ ₹5000</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="referral-actions">
-                    <button onclick="copyReferralLink()" class="btn-sm" style="background: #fff; color: #1e1b4b; padding: 12px 20px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <i class="fas fa-share-nodes"></i> Copy Referral Link
-                    </button>
-                    <a href="https://wa.me/?text=Check out TimeHub for premium luxury watches! Use my code {{ user.referral_code }} for a special discount: {{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}?ref={{ user.referral_code }}" target="_blank" style="background: #25d366; color: #fff; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; text-decoration: none;">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
+            <!-- Refer & Earn -->
+            <div class="panel" style="background: linear-gradient(135deg, #1e1b4b, #312e81); border: none; color: #fff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.03); transform: rotate(15deg);">
+                    <i class="fas fa-gift"></i>
+                </div>
+                
+                <div style="position: relative; z-index: 1;">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <h2 style="color: #fff;"><i class="fas fa-gift" style="color: #fbbf24;"></i> Refer & Earn</h2>
+                        <span class="badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">Invite Friends</span>
+                    </div>
+                    
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 25px; max-width: 500px;">
+                        Share the luxury of TimeHub with your friends. They get a discount on their first order, and you earn rewards in your wallet!
+                    </p>
+
+                    <div class="referral-stats-grid">
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Your Referral Code</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: #fbbf24;">{{ user.referral_code }}</span>
+                                <button onclick="copyToClipboard('{{ user.referral_code }}')" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5);">Total Referrals</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.4rem; font-weight: 800; color: #fff;">{{ user.referrals.count }}</span>
+                                <span style="font-size: 0.8rem; color: #4ade80;"><i class="fas fa-users"></i> Friends Joined</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="referral-actions">
+                        <button onclick="copyReferralLink()" class="btn-sm" style="background: #fff; color: #1e1b4b; padding: 12px 20px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <i class="fas fa-share-nodes"></i> Copy Referral Link
+                        </button>
+                        <a href="https://wa.me/?text=Check out TimeHub for premium luxury watches! Use my code {{ user.referral_code }} for a special discount: {{ request.scheme }}://{{ request.get_host }}{% url 'signup' %}?ref={{ user.referral_code }}" target="_blank" style="background: #25d366; color: #fff; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; text-decoration: none;">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 
 <script>
 function copyToClipboard(text) {
@@ -639,8 +733,6 @@ const handleLoading = function(e) {
 
 if (quickForm) quickForm.addEventListener('submit', handleLoading);
 </script>
-    </div>
-</div>
 {% endblock %}
 
 {% block nav_wallet %}active{% endblock %}

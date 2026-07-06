@@ -426,7 +426,7 @@ def inventory_list(request):
                     'stock': v.stock,
                     'image': product.image.url if product.image else None,
                     'price': v.price if v.price else product.price,
-                    'badge': product.badge,
+                    'badge': v.badge,
                 })
                 if v.stock == 0: total_out += 1
                 elif v.stock < 10: total_low += 1
@@ -487,7 +487,7 @@ def inventory_update(request):
         elif 'badge' in data:
             badge = data.get('badge') or None
             if item_type == 'variant':
-                item = ProductVariant.objects.get(id=item_id).product
+                item = ProductVariant.objects.get(id=item_id)
             else:
                 item = Product.objects.get(id=item_id)
             
@@ -657,7 +657,7 @@ def sales_report(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     
-    orders = Order.objects.filter(status='Delivered').select_related('user').order_by('-created_at')
+    orders = Order.objects.filter(status__in=['Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered']).select_related('user').order_by('-created_at')
     today = timezone.now().date()
 
     if filter_type == 'daily':
@@ -815,13 +815,59 @@ def sales_report(request):
         status='Cancelled'
     ).select_related('user').prefetch_related('items__product').order_by('-updated_at')[:10]
 
-    low_stock = Product.objects.filter(
-        is_deleted=False, stock__gt=0, stock__lt=10
-    ).order_by('stock')[:15]
+    low_stock_variants = ProductVariant.objects.filter(
+        product__is_deleted=False,
+        is_active=True,
+        stock__gt=0,
+        stock__lt=10
+    ).select_related('product')
 
-    out_of_stock = Product.objects.filter(
-        is_deleted=False, stock=0
-    ).order_by('id')[:15]
+    low_stock_products = Product.objects.filter(
+        is_deleted=False,
+        stock__gt=0,
+        stock__lt=10
+    ).annotate(
+        active_variant_count=Count('variants', filter=Q(variants__is_active=True))
+    ).filter(active_variant_count=0)
+
+    low_stock = []
+    for v in low_stock_variants:
+        low_stock.append({
+            'name': f"{v.product.name} ({v.strap_color or 'Standard'})",
+            'stock': v.stock,
+        })
+    for p in low_stock_products:
+        low_stock.append({
+            'name': p.name,
+            'stock': p.stock,
+        })
+    low_stock = sorted(low_stock, key=lambda x: x['stock'])[:15]
+
+    out_of_stock_variants = ProductVariant.objects.filter(
+        product__is_deleted=False,
+        is_active=True,
+        stock=0
+    ).select_related('product')
+
+    out_of_stock_products = Product.objects.filter(
+        is_deleted=False,
+        stock=0
+    ).annotate(
+        active_variant_count=Count('variants', filter=Q(variants__is_active=True))
+    ).filter(active_variant_count=0)
+
+    out_of_stock = []
+    for v in out_of_stock_variants:
+        out_of_stock.append({
+            'name': f"{v.product.name} ({v.strap_color or 'Standard'})",
+            'stock': v.stock,
+        })
+    for p in out_of_stock_products:
+        out_of_stock.append({
+            'name': p.name,
+            'stock': p.stock,
+        })
+    out_of_stock = out_of_stock[:15]
 
     context = {
         'orders': orders,
