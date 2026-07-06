@@ -70,6 +70,7 @@
     .s-Shipped { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
     .s-Delivered { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
     .s-Cancelled, .s-Returned { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .s-ReturnRequested { background: rgba(255, 106, 0, 0.1); color: var(--primary-color); border: 1px solid rgba(255, 106, 0, 0.3); }
 
     /* Action Buttons */
     .btn-group { display: flex; gap: 12px; margin-top: 24px; }
@@ -209,19 +210,19 @@
     </div>
     {% elif order.status == 'Return Requested' or order.status == 'Returned' %}
     <div class="stepper">
-        <div class="stepper-item {% if order.return_status != 'None' %}done{% else %}current{% endif %}">
+        <div class="stepper-item {% if order.return_status == 'Requested' %}current{% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
             <div class="stepper-icon"><i class="fas fa-undo"></i></div>
             <div class="stepper-label">Return Requested</div>
         </div>
-        <div class="stepper-item {% if order.return_status == 'Requested' %}current{% elif order.return_status in 'Processing,Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-item {% if order.return_status == 'Processing' %}current{% elif order.return_status in 'Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
             <div class="stepper-icon"><i class="fas fa-cog"></i></div>
             <div class="stepper-label">Processing</div>
         </div>
-        <div class="stepper-item {% if order.return_status == 'Processing' %}current{% elif order.return_status in 'Pickup Scheduled,Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-item {% if order.return_status == 'Pickup Scheduled' %}current{% elif order.return_status in 'Returned' %}done{% else %}pending{% endif %}">
             <div class="stepper-icon"><i class="fas fa-calendar-check"></i></div>
             <div class="stepper-label">Pickup Scheduled</div>
         </div>
-        <div class="stepper-item {% if order.return_status == 'Pickup Scheduled' %}current{% elif order.return_status == 'Returned' %}done{% else %}pending{% endif %}">
+        <div class="stepper-item {% if order.return_status == 'Returned' %}current done{% else %}pending{% endif %}">
             <div class="stepper-icon"><i class="fas fa-box-open"></i></div>
             <div class="stepper-label">Returned</div>
         </div>

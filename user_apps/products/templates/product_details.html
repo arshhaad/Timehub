@@ -2392,6 +2392,11 @@
                 return strapMatch && dialMatch && matMatch;
             });
 
+            if (!matched && selectedMaterial) {
+                // Fallback to first variant matching the selected material
+                matched = variants.find(v => v.material === selectedMaterial);
+            }
+
             if (matched) {
                 const btn = document.querySelector(`.opt-btn[data-variant-id="${matched.id}"]`);
                 if (btn) {
@@ -2400,10 +2405,17 @@
                 }
             } else if (variants.length > 0) {
                 document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
-                    btn.style.display = 'inline-block';
+                    const variantId = btn.getAttribute('data-variant-id');
+                    const v = variants.find(x => x.id == variantId);
+                    if (v && selectedMaterial && v.material !== selectedMaterial) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.style.display = 'inline-block';
+                    }
                 });
                 if (!selectedVariantId) {
-                    const firstBtn = document.querySelector('.opt-btn[data-type="variant"]');
+                    const firstBtn = document.querySelector('.opt-btn[data-type="variant"]:not([style*="display: none"])') || 
+                                     document.querySelector('.opt-btn[data-type="variant"]');
                     if (firstBtn) handleSizeSelection(firstBtn, true);
                 }
             }
@@ -2426,6 +2438,19 @@
                 if (strapMatch && dialMatch && v.material) availableMats.add(v.material);
                 if (matMatch && dialMatch && v.strap) availableStrapClrs.add(v.strap);
                 if (matMatch && strapMatch && v.dial) availableDialClrs.add(v.dial);
+            });
+
+            // Update Variant Buttons
+            document.querySelectorAll('.opt-btn[data-type="variant"]').forEach(btn => {
+                const variantId = btn.getAttribute('data-variant-id');
+                const v = variants.find(x => x.id == variantId);
+                if (v) {
+                    if (selectedMaterial && v.material !== selectedMaterial) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.style.display = 'inline-block';
+                    }
+                }
             });
 
             // Update Materials
@@ -2585,17 +2610,15 @@
                 }
             }
 
-            if (!isAutoTriggered) {
-                const dataEl = document.getElementById('variants-data');
-                if (dataEl) {
-                    const variants = JSON.parse(dataEl.textContent);
-                    const variant = variants.find(v => v.id == selectedVariantId);
-                    if (variant) {
-                        syncChip('#label-color',    '.color-option',  '.color-name',                        variant.strap,     v => selectedColor    = v);
-                        syncChip('#label-strapclr', '.color-option',  '.color-name',                        variant.strap,     v => selectedStrapClr = v);
-                        syncChip('#label-dialclr',  '.color-option',  '.color-name',                        variant.dial,      v => selectedDialClr  = v);
-                        syncChip('#label-material', '.material-chip', '.material-label span:first-child',   variant.material,  v => selectedMaterial = v);
-                    }
+            const dataEl = document.getElementById('variants-data');
+            if (dataEl) {
+                const variants = JSON.parse(dataEl.textContent);
+                const variant = variants.find(v => v.id == selectedVariantId);
+                if (variant) {
+                    syncChip('#label-color',    '.color-option',  '.color-name',                        variant.strap,     v => selectedColor    = v);
+                    syncChip('#label-strapclr', '.color-option',  '.color-name',                        variant.strap,     v => selectedStrapClr = v);
+                    syncChip('#label-dialclr',  '.color-option',  '.color-name',                        variant.dial,      v => selectedDialClr  = v);
+                    syncChip('#label-material', '.material-chip', '.material-label span:first-child',   variant.material,  v => selectedMaterial = v);
                 }
             }
         };

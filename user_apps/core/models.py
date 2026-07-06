@@ -356,6 +356,13 @@ class Order(models.Model):
         
         # Final Total
         self.total_amount = taxable + self.tax + self.shipping_charge
+
+        # If all items are cancelled, mark the order as Cancelled
+        if self.items.exists() and not self.items.filter(is_cancelled=False).exists():
+            self.status = 'Cancelled'
+            if not self.cancel_reason:
+                self.cancel_reason = 'All products in this order have been cancelled.'
+
         self.save()
 
 

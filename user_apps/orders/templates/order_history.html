@@ -259,9 +259,11 @@
 
         <div class="order-actions">
             <a href="{% url 'order_detail' order_uuid=order.uuid %}" class="btn-action btn-primary-alt">View Details</a>
+            {% if order.status != 'Cancelled' %}
             <a href="{% url 'track_order' order_uuid=order.uuid %}" class="btn-action btn-outline-alt">
                 <i class="fas fa-location-dot"></i> Track Order
             </a>
+            {% endif %}
 
             {% if order.status == 'Pending' or order.status == 'Confirmed' or order.status == 'Processing' or order.status == 'Shipped' or order.status == 'Out for Delivery' %}
                 {% if order.reschedule_status != 'Rejected' and order.reschedule_count == 0 and order.reschedule_status != 'Pending' %}

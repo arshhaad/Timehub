@@ -735,7 +735,7 @@ def download_invoice(request, order_uuid):
     """Render a printable invoice for an order."""
     order = get_object_or_404(Order, uuid=order_uuid, user=request.user)
 
-    if order.status == 'Cancelled':
+    if order.status == 'Cancelled' or not order.items.filter(is_cancelled=False).exists():
         messages.error(request, 'Invoice is not available for cancelled orders.')
         return redirect('order_detail', order_uuid=order.uuid)
 

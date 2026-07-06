@@ -536,29 +536,12 @@ def remove_from_cart(request, item_id):
     item.delete()
 
     if cart.coupon:
-        remaining_items = list(cart.items.select_related('product', 'variant').all())
-        coupon_removed = False
-        is_valid, _ = cart.coupon.is_valid_for_user(request.user)
-        if not is_valid:
-            coupon_removed = True
-        else:
-            # Check if discount is still > 0 for current cart contents
-            from user_apps.orders.views import _build_coupon_discount
-            subtotal = sum(i.total_price for i in remaining_items)
-            if subtotal > 0:
-                discount, _ = _build_coupon_discount(cart.coupon, remaining_items, subtotal)
-                if discount == 0:
-                    coupon_removed = True
-            else:
-                coupon_removed = True
-
-        if coupon_removed:
-            cart.coupon = None
-            cart.save(update_fields=['coupon'])
-            messages.warning(
-                request,
-                'Your coupon was removed because the cart no longer meets the coupon conditions.',
-            )
+        cart.coupon = None
+        cart.save(update_fields=['coupon'])
+        messages.warning(
+            request,
+            'Applied coupon was removed because an item was removed from the cart.',
+        )
 
     messages.success(request, 'Item removed.')
     return redirect('cart_view')
