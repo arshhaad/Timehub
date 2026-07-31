@@ -113,3 +113,62 @@ class ResetPasswordForm(forms.Form):
             'placeholder': 'Confirm Password'
         })
     )
+
+
+COUNTRY_CHOICES = [
+    ('+91', '🇮🇳 India (+91)'),
+    ('+1', '🇺🇸 USA / Canada (+1)'),
+    ('+44', '🇬🇧 UK (+44)'),
+    ('+971', '🇦🇪 UAE (+971)'),
+    ('+966', '🇸🇦 Saudi Arabia (+966)'),
+    ('+61', '🇦🇺 Australia (+61)'),
+    ('+65', '🇸🇬 Singapore (+65)'),
+    ('+49', '🇩🇪 Germany (+49)'),
+    ('+33', '🇫🇷 France (+33)'),
+    ('+974', '🇶🇦 Qatar (+974)'),
+    ('+965', '🇰🇼 Kuwait (+965)'),
+    ('+968', '🇴🇲 Oman (+968)'),
+    ('+973', '🇧🇭 Bahrain (+973)'),
+    ('+977', '🇳🇵 Nepal (+977)'),
+    ('+880', '🇧🇩 Bangladesh (+880)'),
+    ('+94', '🇱🇰 Sri Lanka (+94)'),
+    ('+92', '🇵🇰 Pakistan (+92)'),
+]
+
+class PhoneLoginForm(forms.Form):
+    country_code = forms.ChoiceField(
+        choices=COUNTRY_CHOICES,
+        initial='+91',
+        widget=forms.Select(attrs={
+            'class': 'country-code-select',
+            'id': 'id_country_code',
+        })
+    )
+    phone_number = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'placeholder': '9876543210',
+            'autocomplete': 'tel-national',
+            'class': 'phone-number-input',
+            'id': 'id_phone_number',
+        }),
+    )
+
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number', '').strip()
+        if phone:
+            phone_clean = phone.replace(' ', '').replace('-', '').lstrip('0')
+            if not phone_clean.isdigit() and not (phone_clean.startswith('+') and phone_clean[1:].isdigit()):
+                raise forms.ValidationError("Phone number must contain only digits.")
+            if len(phone_clean) < 7 or len(phone_clean) > 13:
+                raise forms.ValidationError("Please enter a valid phone number (7 to 13 digits).")
+            return phone_clean
+        raise forms.ValidationError("Phone number is required.")
+
+    def get_full_phone_number(self):
+        country_code = self.cleaned_data.get('country_code', '+91')
+        phone_number = self.cleaned_data.get('phone_number', '')
+        if phone_number.startswith('+'):
+            return phone_number
+        return f"{country_code}{phone_number}"
+

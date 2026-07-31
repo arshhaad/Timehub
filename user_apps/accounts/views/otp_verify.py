@@ -7,9 +7,10 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.db import transaction
 
-from ..models import CustomUser, EmailOTP
-from ..utils import send_otp_email
+from ..models import CustomUser, EmailOTP, PhoneOTP
+from ..utils import send_otp_email, send_otp_sms
 from admin_apps.offers.services import process_referee_reward
+
 
 
 
@@ -185,3 +186,92 @@ def resend_otp(request):
 
     messages.success(request, f"A new security code has been dispatched to {email}.")
     return redirect("verify-otp") if not is_reset else redirect("verify-otp-reset")
+
+
+@never_cache
+def verify_phone_otp(request):
+    """Verify OTP for phone number login."""
+    phone_number = request.session.get('login_phone_number')
+
+    if not phone_number:
+        return redirect('login-phone')
+
+    if request.method == "POST":
+        otp_input = request.POST.get("otp", "").strip()
+
+        # Locate valid PhoneOTP object
+        otp_obj = PhoneOTP.objects.filter(phone_number=phone_number).order_by('-created_at').first()
+
+        if not otp_obj:
+            messages.error(request, "Session expired or verification session not found. Please try again.")
+            return redirect("login-phone")
+
+        if otp_obj.is_expired:
+            messages.error(request, "The verification code has expired. Please request a fresh one.")
+            return redirect("verify-phone-otp")
+
+        if otp_obj.otp != otp_input:
+            messages.error(request, "Invalid verification code. Please check and try again.")
+            return redirect("verify-phone-otp")
+
+        # OTP is valid! Retrieve user
+        user = otp_obj.user
+        if not user:
+            user = CustomUser.objects.filter(phone_number=phone_number).first()
+            if not user and phone_number.startswith('+'):
+                user = CustomUser.objects.filter(phone_number=phone_number[1:]).first()
+            elif not user and not phone_number.startswith('+'):
+                user = CustomUser.objects.filter(phone_number='+' + phone_number).first()
+
+        if not user:
+            messages.error(request, "Account not found for this phone number.")
+            return redirect("login-phone")
+
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+
+        # Cleanup Security Tokens
+        otp_obj.delete()
+        request.session.pop('login_phone_number', None)
+
+        # Log user in
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, f"Welcome back! Successfully signed in.")
+        return redirect("home")
+
+    # Calculate timer for frontend
+    seconds_left = 0
+    latest_otp = PhoneOTP.objects.filter(phone_number=phone_number).order_by('-created_at').first()
+
+    if latest_otp:
+        expiry = latest_otp.created_at + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        seconds_left = max(0, int((expiry - timezone.now()).total_seconds()))
+
+    return render(request, "accounts/verify_phone_otp.html", {
+        "phone_number": phone_number,
+        "seconds_left": seconds_left
+    })
+
+
+@never_cache
+def resend_phone_otp(request):
+    """Resend a fresh OTP to the user's phone number."""
+    phone_number = request.session.get('login_phone_number')
+
+    if not phone_number:
+        return redirect('login-phone')
+
+    # Cooldown check
+    last_otp = PhoneOTP.objects.filter(phone_number=phone_number).order_by('-created_at').first()
+
+    if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < settings.RESET_OTP_COOLDWON_SEC:
+        messages.error(request, "Security wait: Please wait a moment before requesting another code.")
+        return redirect("verify-phone-otp")
+
+    user = CustomUser.objects.filter(phone_number=phone_number).first()
+    otp_obj = PhoneOTP.objects.create(user=user, phone_number=phone_number)
+    send_otp_sms(phone_number, otp_obj.otp)
+
+    messages.success(request, f"A new security code has been sent to {phone_number}.")
+    return redirect("verify-phone-otp")

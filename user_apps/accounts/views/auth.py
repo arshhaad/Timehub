@@ -3,10 +3,11 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.core.mail import send_mail
 from django.conf import settings
-from ..forms import SignupForm, LoginForm,ForgotPasswordForm,ResetPasswordForm
-from ..models import CustomUser, EmailOTP
+from ..forms import SignupForm, LoginForm, ForgotPasswordForm, ResetPasswordForm, PhoneLoginForm
+from ..models import CustomUser, EmailOTP, PhoneOTP
 from django.views.decorators.cache import never_cache
-from ..utils import send_otp_email
+from ..utils import send_otp_email, send_otp_sms
+
 
 
 @never_cache
@@ -91,6 +92,48 @@ def login_view(request):
         form = LoginForm()
 
     return render(request, 'accounts/login.html', {'form': form})
+
+
+@never_cache
+def login_phone_view(request):
+    if request.user.is_authenticated:
+        return redirect('landing_view')
+
+    if request.method == 'POST':
+        form = PhoneLoginForm(request.POST)
+        if form.is_valid():
+            full_phone = form.get_full_phone_number()
+            raw_phone = form.cleaned_data['phone_number']
+
+            # Robust Lookup order across database formats:
+            user = CustomUser.objects.filter(phone_number=full_phone).first()
+            if not user:
+                user = CustomUser.objects.filter(phone_number=full_phone.lstrip('+')).first()
+            if not user:
+                user = CustomUser.objects.filter(phone_number=raw_phone).first()
+            if not user:
+                user = CustomUser.objects.filter(phone_number__endswith=raw_phone).first()
+
+            if not user:
+                messages.error(request, f'No account found with phone number {full_phone}. Please check or sign up.')
+                return render(request, 'accounts/login_phone.html', {'form': form})
+
+            # User exists, create PhoneOTP
+            otp_obj = PhoneOTP.objects.create(user=user, phone_number=full_phone)
+
+            # Send SMS (Real gateway or console fallback)
+            send_otp_sms(full_phone, otp_obj.otp)
+
+            # Store phone number in session for verification
+            request.session['login_phone_number'] = full_phone
+            messages.success(request, f'Verification code dispatched to {full_phone}.')
+            return redirect('verify-phone-otp')
+    else:
+        form = PhoneLoginForm()
+
+    return render(request, 'accounts/login_phone.html', {'form': form})
+
+
 
 
 @never_cache

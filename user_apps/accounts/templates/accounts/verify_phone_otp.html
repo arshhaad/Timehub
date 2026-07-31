@@ -1,0 +1,121 @@
+{% extends "accounts/base_auth.html" %}
+{% load static %}
+
+{% block title %}Verify Phone — TimeHub{% endblock %}
+{% block meta_description %}Verify your phone number with OTP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .otp-timer {
+        margin: 20px 0;
+        text-align: center;
+        font-weight: 600;
+        color: #9ca3af;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    .timer-count {
+        font-size: 1.8rem;
+        color: #7c3aed;
+        font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .resend-inactive {
+        pointer-events: none;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block auth_icon %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+</svg>
+{% endblock %}
+
+{% block auth_title %}Verify Phone Number{% endblock %}
+{% block auth_subtitle %}Enter the 6-digit verification code sent to your phone{% endblock %}
+
+{% block auth_content %}
+{% if phone_number %}
+<div class="email-display" style="text-align: center; margin-bottom: 15px; font-size: 0.95rem; color: #a0a0b0;">
+    Code sent to <strong style="color: #ffffff;">{{ phone_number }}</strong>
+</div>
+{% endif %}
+
+<div class="otp-timer">
+    <span>OTP expires in</span>
+    <div id="timer-display" class="timer-count">00:00</div>
+</div>
+
+<form method="post" novalidate id="verify-phone-otp-form">
+    {% csrf_token %}
+
+    <!-- OTP Input -->
+    <div class="form-group">
+        <label for="id_otp">Verification Code</label>
+        <input type="text"
+               name="otp"
+               id="id_otp"
+               class="otp-input"
+               placeholder="000000"
+               maxlength="6"
+               pattern="[0-9]{6}"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               required
+               autofocus>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-primary" id="verify-btn">Verify & Sign In</button>
+</form>
+
+<!-- Resend OTP -->
+<div style="text-align: center; margin-top: 15px;">
+    <a href="{% url 'resend-phone-otp' %}" class="btn-secondary resend-inactive" id="resend-otp-btn" style="display: inline-block; padding: 10px 20px; text-decoration: none; border-radius: var(--radius-md, 12px);">Resend Code</a>
+</div>
+{% endblock %}
+
+{% block auth_switch %}
+<p class="auth-switch">Wrong phone number? <a href="{% url 'login-phone' %}" id="back-phone-link">Change phone number</a></p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const otpInput = document.getElementById('id_otp');
+    const timerDisplay = document.getElementById('timer-display');
+    const resendBtn = document.getElementById('resend-otp-btn');
+    let timeLeft = {{ seconds_left|default:0 }};
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            timerDisplay.textContent = "00:00";
+            timerDisplay.style.color = "#ef4444";
+            resendBtn.classList.remove('resend-inactive');
+            resendBtn.style.opacity = "1";
+            resendBtn.style.pointerEvents = "auto";
+            clearInterval(timerInterval);
+            return;
+        }
+
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timeLeft--;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Auto-focus and only allow digits in OTP input
+    otpInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+        if (e.target.value.length === 6) {
+            document.getElementById('verify-phone-otp-form').submit();
+        }
+    });
+</script>
+{% endblock %}
