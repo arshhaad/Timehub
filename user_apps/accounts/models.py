@@ -126,30 +126,3 @@ class EmailOTP(models.Model):
         super().save(*args, **kwargs)
 
 
-class PhoneOTP(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="phone_otps", null=True, blank=True)
-    phone_number = models.CharField(max_length=15, null=True, blank=True)
-    otp = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    @staticmethod
-    def generate_otp():
-        return str(random.randint(100000, 999999))
-
-    @property
-    def is_expired(self):
-        return self.created_at < timezone.now() - timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
-
-    def save(self, *args, **kwargs):
-        if not self.otp:
-            self.otp = self.generate_otp()
-
-        if self.user:
-            PhoneOTP.objects.filter(user=self.user).delete()
-        elif self.phone_number:
-            PhoneOTP.objects.filter(phone_number=self.phone_number).delete()
-
-        super().save(*args, **kwargs)
-
-
-
